@@ -14,7 +14,8 @@ class Migration_20241001000004createpasswordresetstable {
                 email VARCHAR(100) NOT NULL,
                 token VARCHAR(255) NOT NULL UNIQUE,
                 expires_at DATETIME NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         ");
     }

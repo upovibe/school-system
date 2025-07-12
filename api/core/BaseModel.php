@@ -5,6 +5,7 @@ class BaseModel {
     protected $pdo;
     protected static $table = '';
     protected $attributes = [];
+    protected $whereConditions = [];
     protected static $fillable = [];
     protected static $hidden = [];
     protected static $timestamps = true;

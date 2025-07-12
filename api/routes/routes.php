@@ -78,6 +78,54 @@ Router::get('/tracks/{id}', 'TrackController@show');
 Router::put('/tracks/{id}', 'TrackController@update');
 Router::delete('/tracks/{id}', 'TrackController@destroy');
 
+// People Management Routes
+// Departments (admin only)
+Router::get('/departments', 'DepartmentController@index');
+Router::post('/departments', 'DepartmentController@store');
+Router::get('/departments/{id}', 'DepartmentController@show');
+Router::put('/departments/{id}', 'DepartmentController@update');
+Router::delete('/departments/{id}', 'DepartmentController@destroy');
+Router::get('/departments/{id}/teachers', 'DepartmentController@getTeachers');
+
+// Teachers (admin only for create/update/delete, authenticated for view)
+Router::get('/teachers', 'TeacherController@index');
+Router::post('/teachers', 'TeacherController@store');
+Router::get('/teachers/{id}', 'TeacherController@show');
+Router::put('/teachers/{id}', 'TeacherController@update');
+Router::delete('/teachers/{id}', 'TeacherController@destroy');
+Router::get('/teachers/department/{departmentId}', 'TeacherController@getByDepartment');
+Router::get('/teachers/{id}/profile', 'TeacherController@profile');
+
+// Students (admin only for create/update/delete, authenticated for view)
+Router::get('/students', 'StudentController@index');
+Router::post('/students', 'StudentController@store');
+Router::get('/students/{id}', 'StudentController@show');
+Router::put('/students/{id}', 'StudentController@update');
+Router::delete('/students/{id}', 'StudentController@destroy');
+Router::get('/students/{id}/parents', 'StudentController@getParents');
+Router::get('/students/{id}/profile', 'StudentController@profile');
+
+// Parents (admin only for create/update/delete, authenticated for view)
+Router::get('/parents', 'ParentController@index');
+Router::post('/parents', 'ParentController@store');
+Router::get('/parents/{id}', 'ParentController@show');
+Router::put('/parents/{id}', 'ParentController@update');
+Router::delete('/parents/{id}', 'ParentController@destroy');
+Router::get('/parents/{id}/students', 'ParentController@getStudents');
+Router::post('/parents/{id}/link-student', 'ParentController@linkToStudent');
+Router::post('/parents/{id}/unlink-student', 'ParentController@unlinkFromStudent');
+Router::get('/parents/{id}/profile', 'ParentController@profile');
+
+// Staff (admin only for create/update/delete, authenticated for view)
+Router::get('/staff', 'StaffController@index');
+Router::post('/staff', 'StaffController@store');
+Router::get('/staff/{id}', 'StaffController@show');
+Router::put('/staff/{id}', 'StaffController@update');
+Router::delete('/staff/{id}', 'StaffController@destroy');
+Router::get('/staff/department/{department}', 'StaffController@getByDepartment');
+Router::get('/staff/position/{position}', 'StaffController@getByPosition');
+Router::get('/staff/{id}/profile', 'StaffController@profile');
+
 // Example of how to add new protected routes:
 // Router::get('/assignments', 'AssignmentController@index'); // Teachers and admins
 // Router::post('/assignments', 'AssignmentController@store'); // Teachers and admins

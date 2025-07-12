@@ -13,6 +13,7 @@ class Seed {
         
         $this->seedAdminUser();
         $this->seedAcademicStructure();
+        $this->seedPeople();
         
         echo "\n✅ Database seeding completed!\n";
     }
@@ -78,6 +79,14 @@ class Seed {
         require_once __DIR__ . '/academic_seed.php';
         $academicSeed = new AcademicSeed($this->pdo);
         $academicSeed->run();
+    }
+    
+    private function seedPeople() {
+        echo "📝 Seeding people and departments...\n";
+        
+        require_once __DIR__ . '/people_seed.php';
+        $peopleSeed = new PeopleSeed($this->pdo);
+        $peopleSeed->run();
     }
 }
 ?> 

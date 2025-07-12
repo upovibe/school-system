@@ -16,7 +16,6 @@ class ForgotPasswordPage extends App {
         this.formData = {
             email: ''
         };
-        this.isSubmitting = false;
     }
 
     connectedCallback() {
@@ -53,9 +52,6 @@ class ForgotPasswordPage extends App {
             return;
         }
 
-        this.isSubmitting = true;
-        this.updateSubmitButton();
-
         try {
             await this.sendPasswordReset(email);
         } catch (error) {
@@ -65,9 +61,6 @@ class ForgotPasswordPage extends App {
                 variant: 'error',
                 duration: 3000
             });
-        } finally {
-            this.isSubmitting = false;
-            this.updateSubmitButton();
         }
     }
 
@@ -106,24 +99,7 @@ class ForgotPasswordPage extends App {
         }
     }
 
-    updateSubmitButton() {
-        const submitButton = this.querySelector('[data-submit-button]');
-        if (submitButton) {
-            if (this.isSubmitting) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = `
-                    <i class="fas fa-spinner fa-spin text-lg mr-2"></i>
-                    Sending...
-                `;
-            } else {
-                submitButton.disabled = false;
-                submitButton.innerHTML = `
-                    <i class="fas fa-envelope text-lg mr-2"></i>
-                    Send Reset Email
-                `;
-            }
-        }
-    }
+    // Removed updateSubmitButton method - simplified like login page
 
     render() {
         return `
@@ -155,7 +131,6 @@ class ForgotPasswordPage extends App {
 
                             <div class="pt-4">
                                 <ui-button 
-                                    data-submit-button
                                     type="submit" 
                                     color="primary" 
                                     class="w-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95">

@@ -12,6 +12,7 @@ class Seed {
         echo "🌱 Starting database seeding...\n\n";
         
         $this->seedAdminUser();
+        $this->seedAcademicStructure();
         
         echo "\n✅ Database seeding completed!\n";
     }
@@ -69,6 +70,14 @@ class Seed {
         echo "✅ Seeded admin user\n";
         echo "📧 Email: admin@school.com\n";
         echo "🔑 Password: admin123\n";
+    }
+    
+    private function seedAcademicStructure() {
+        echo "📝 Seeding academic structure...\n";
+        
+        require_once __DIR__ . '/academic_seed.php';
+        $academicSeed = new AcademicSeed($this->pdo);
+        $academicSeed->run();
     }
 }
 ?> 

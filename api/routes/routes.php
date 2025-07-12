@@ -35,6 +35,49 @@ Router::delete('/roles/{id}', 'RoleController@destroy');
 Router::get('/logs', 'LogController@index');
 Router::get('/logs/{id}', 'LogController@show');
 
+// Academic Structure Routes
+// Schools (admin only)
+Router::get('/schools', 'SchoolController@index');
+Router::post('/schools', 'SchoolController@store');
+Router::get('/schools/{id}', 'SchoolController@show');
+Router::put('/schools/{id}', 'SchoolController@update');
+Router::delete('/schools/{id}', 'SchoolController@destroy');
+
+// Levels (admin only)
+Router::get('/levels', 'LevelController@index');
+Router::post('/levels', 'LevelController@store');
+Router::get('/levels/{id}', 'LevelController@show');
+Router::put('/levels/{id}', 'LevelController@update');
+Router::delete('/levels/{id}', 'LevelController@destroy');
+Router::get('/levels/stage/{stage}', 'LevelController@getByStage');
+
+// Academic Years (admin only)
+Router::get('/academic-years', 'AcademicYearController@index');
+Router::post('/academic-years', 'AcademicYearController@store');
+Router::get('/academic-years/{id}', 'AcademicYearController@show');
+Router::put('/academic-years/{id}', 'AcademicYearController@update');
+Router::delete('/academic-years/{id}', 'AcademicYearController@destroy');
+Router::get('/academic-years/active', 'AcademicYearController@getActive');
+Router::post('/academic-years/{id}/activate', 'AcademicYearController@setActive');
+
+// Terms (admin only)
+Router::get('/terms', 'TermController@index');
+Router::post('/terms', 'TermController@store');
+Router::get('/terms/{id}', 'TermController@show');
+Router::put('/terms/{id}', 'TermController@update');
+Router::delete('/terms/{id}', 'TermController@destroy');
+Router::get('/terms/academic-year/{academicYearId}', 'TermController@getByAcademicYear');
+Router::get('/terms/active', 'TermController@getActive');
+Router::get('/terms/current', 'TermController@getCurrent');
+Router::post('/terms/{id}/activate', 'TermController@setActive');
+
+// Tracks (admin only)
+Router::get('/tracks', 'TrackController@index');
+Router::post('/tracks', 'TrackController@store');
+Router::get('/tracks/{id}', 'TrackController@show');
+Router::put('/tracks/{id}', 'TrackController@update');
+Router::delete('/tracks/{id}', 'TrackController@destroy');
+
 // Example of how to add new protected routes:
 // Router::get('/assignments', 'AssignmentController@index'); // Teachers and admins
 // Router::post('/assignments', 'AssignmentController@store'); // Teachers and admins

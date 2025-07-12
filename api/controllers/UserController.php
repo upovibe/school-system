@@ -18,6 +18,11 @@ class UserController {
 
     public function index() {
         try {
+            // Require authentication
+            require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
+            global $pdo;
+            AuthMiddleware::requireAuth($pdo);
+            
             ob_clean();
             
             $users = $this->userModel->findAll();

@@ -33,6 +33,8 @@ class UserLogModel extends BaseModel {
      * Log user action
      */
     public static function logAction($userId, $action, $description = null, $metadata = null) {
+        global $pdo;
+        
         $data = [
             'user_id' => $userId,
             'action' => $action,
@@ -42,7 +44,7 @@ class UserLogModel extends BaseModel {
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
         ];
         
-        return (new self(static::$pdo))->create($data);
+        return (new self($pdo))->create($data);
     }
     
     /**

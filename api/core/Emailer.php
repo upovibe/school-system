@@ -4,6 +4,13 @@
 class Emailer {
     
     private static function getEmailerEnv($key, $default = null) {
+        static $envCache = [];
+        
+        // Check if we already have this value cached
+        if (isset($envCache[$key])) {
+            return $envCache[$key];
+        }
+        
         $envFile = __DIR__ . '/../.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -12,11 +19,13 @@ class Emailer {
                 if (strpos($line, '=') === false) continue; // Skip lines without =
                 list($envKey, $value) = explode('=', $line, 2);
                 if (trim($envKey) === $key) {
-                    return trim($value);
+                    $envCache[$key] = trim($value);
+                    return $envCache[$key];
                 }
             }
         }
-        return $default;
+        $envCache[$key] = $default;
+        return $envCache[$key];
     }
     
     public static function test($emailAddress) {

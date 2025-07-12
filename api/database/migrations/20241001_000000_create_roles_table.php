@@ -1,6 +1,6 @@
 <?php
 
-class Migration_20241001000001createrolestable {
+class Migration_20241001000000createrolestable {
     private $pdo;
 
     public function __construct($pdo) {

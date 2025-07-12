@@ -275,7 +275,7 @@ class ParentController {
             }
             
             $relationship = $data['relationship'] ?? null;
-            $isPrimaryContact = $data['is_primary_contact'] ?? false;
+            $isPrimaryContact = $data['is_primary_contact'] ?? 0;
             
             $result = $this->parentModel->linkToStudent($id, $data['student_id'], $relationship, $isPrimaryContact);
             

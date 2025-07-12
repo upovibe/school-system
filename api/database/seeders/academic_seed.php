@@ -129,13 +129,13 @@ class AcademicSeed {
                 'name' => '2024/2025',
                 'start_date' => '2024-09-01',
                 'end_date' => '2025-07-31',
-                'is_active' => true
+                'is_active' => 1
             ],
             [
                 'name' => '2025/2026',
                 'start_date' => '2025-09-01',
                 'end_date' => '2026-07-31',
-                'is_active' => false
+                'is_active' => 0
             ]
         ];
         
@@ -191,7 +191,7 @@ class AcademicSeed {
                 'end_date' => '2024-12-20',
                 'break_start' => '2024-12-21',
                 'break_end' => '2025-01-05',
-                'is_active' => false
+                'is_active' => 0
             ],
             [
                 'academic_year_id' => $academicYear['id'],
@@ -201,7 +201,7 @@ class AcademicSeed {
                 'end_date' => '2025-04-15',
                 'break_start' => '2025-04-16',
                 'break_end' => '2025-04-30',
-                'is_active' => false
+                'is_active' => 0
             ],
             [
                 'academic_year_id' => $academicYear['id'],
@@ -211,7 +211,7 @@ class AcademicSeed {
                 'end_date' => '2025-07-31',
                 'break_start' => null,
                 'break_end' => null,
-                'is_active' => false
+                'is_active' => 0
             ]
         ];
         

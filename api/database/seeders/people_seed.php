@@ -228,22 +228,44 @@ class PeopleSeed {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ');
         
+        $checkUserStmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $checkTeacherStmt = $this->pdo->prepare('SELECT id FROM teachers WHERE user_id = ?');
+        
         $inserted = 0;
         
         foreach ($teachers as $teacher) {
-            // Insert user
-            $userStmt->execute([
-                $teacher['name'],
-                $teacher['email'],
-                $teacher['phone'],
-                $teacher['password'],
-                $teacher['role_id'],
-                $teacher['gender'],
-                date('Y-m-d H:i:s'),
-                date('Y-m-d H:i:s')
-            ]);
+            // Check if user already exists
+            $checkUserStmt->execute([$teacher['email']]);
+            $existingUser = $checkUserStmt->fetch();
             
-            $userId = $this->pdo->lastInsertId();
+            if ($existingUser) {
+                echo "    ⏭️  User '{$teacher['email']}' already exists, checking teacher record...\n";
+                
+                // Check if teacher record exists
+                $checkTeacherStmt->execute([$existingUser['id']]);
+                $existingTeacher = $checkTeacherStmt->fetch();
+                
+                if ($existingTeacher) {
+                    echo "    ⏭️  Teacher record already exists, skipping...\n";
+                    continue;
+                }
+                
+                $userId = $existingUser['id'];
+            } else {
+                // Insert user
+                $userStmt->execute([
+                    $teacher['name'],
+                    $teacher['email'],
+                    $teacher['phone'],
+                    $teacher['password'],
+                    $teacher['role_id'],
+                    $teacher['gender'],
+                    date('Y-m-d H:i:s'),
+                    date('Y-m-d H:i:s')
+                ]);
+                
+                $userId = $this->pdo->lastInsertId();
+            }
             
             // Insert teacher
             $teacherStmt->execute([
@@ -275,22 +297,44 @@ class PeopleSeed {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ');
         
+        $checkUserStmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $checkStudentStmt = $this->pdo->prepare('SELECT id FROM students WHERE user_id = ?');
+        
         $inserted = 0;
         
         foreach ($students as $student) {
-            // Insert user
-            $userStmt->execute([
-                $student['name'],
-                $student['email'],
-                $student['phone'],
-                $student['password'],
-                $student['role_id'],
-                $student['gender'],
-                date('Y-m-d H:i:s'),
-                date('Y-m-d H:i:s')
-            ]);
+            // Check if user already exists
+            $checkUserStmt->execute([$student['email']]);
+            $existingUser = $checkUserStmt->fetch();
             
-            $userId = $this->pdo->lastInsertId();
+            if ($existingUser) {
+                echo "    ⏭️  User '{$student['email']}' already exists, checking student record...\n";
+                
+                // Check if student record exists
+                $checkStudentStmt->execute([$existingUser['id']]);
+                $existingStudent = $checkStudentStmt->fetch();
+                
+                if ($existingStudent) {
+                    echo "    ⏭️  Student record already exists, skipping...\n";
+                    continue;
+                }
+                
+                $userId = $existingUser['id'];
+            } else {
+                // Insert user
+                $userStmt->execute([
+                    $student['name'],
+                    $student['email'],
+                    $student['phone'],
+                    $student['password'],
+                    $student['role_id'],
+                    $student['gender'],
+                    date('Y-m-d H:i:s'),
+                    date('Y-m-d H:i:s')
+                ]);
+                
+                $userId = $this->pdo->lastInsertId();
+            }
             
             // Insert student
             $studentStmt->execute([
@@ -322,22 +366,44 @@ class PeopleSeed {
             VALUES (?, ?, ?, ?, ?, ?)
         ');
         
+        $checkUserStmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $checkParentStmt = $this->pdo->prepare('SELECT id FROM parents WHERE user_id = ?');
+        
         $inserted = 0;
         
         foreach ($parents as $parent) {
-            // Insert user
-            $userStmt->execute([
-                $parent['name'],
-                $parent['email'],
-                $parent['phone'],
-                $parent['password'],
-                $parent['role_id'],
-                $parent['gender'],
-                date('Y-m-d H:i:s'),
-                date('Y-m-d H:i:s')
-            ]);
+            // Check if user already exists
+            $checkUserStmt->execute([$parent['email']]);
+            $existingUser = $checkUserStmt->fetch();
             
-            $userId = $this->pdo->lastInsertId();
+            if ($existingUser) {
+                echo "    ⏭️  User '{$parent['email']}' already exists, checking parent record...\n";
+                
+                // Check if parent record exists
+                $checkParentStmt->execute([$existingUser['id']]);
+                $existingParent = $checkParentStmt->fetch();
+                
+                if ($existingParent) {
+                    echo "    ⏭️  Parent record already exists, skipping...\n";
+                    continue;
+                }
+                
+                $userId = $existingUser['id'];
+            } else {
+                // Insert user
+                $userStmt->execute([
+                    $parent['name'],
+                    $parent['email'],
+                    $parent['phone'],
+                    $parent['password'],
+                    $parent['role_id'],
+                    $parent['gender'],
+                    date('Y-m-d H:i:s'),
+                    date('Y-m-d H:i:s')
+                ]);
+                
+                $userId = $this->pdo->lastInsertId();
+            }
             
             // Insert parent
             $parentStmt->execute([
@@ -368,22 +434,44 @@ class PeopleSeed {
             VALUES (?, ?, ?, ?, ?, ?)
         ');
         
+        $checkUserStmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $checkStaffStmt = $this->pdo->prepare('SELECT id FROM staff WHERE user_id = ?');
+        
         $inserted = 0;
         
         foreach ($staff as $staffMember) {
-            // Insert user
-            $userStmt->execute([
-                $staffMember['name'],
-                $staffMember['email'],
-                $staffMember['phone'],
-                $staffMember['password'],
-                $staffMember['role_id'],
-                $staffMember['gender'],
-                date('Y-m-d H:i:s'),
-                date('Y-m-d H:i:s')
-            ]);
+            // Check if user already exists
+            $checkUserStmt->execute([$staffMember['email']]);
+            $existingUser = $checkUserStmt->fetch();
             
-            $userId = $this->pdo->lastInsertId();
+            if ($existingUser) {
+                echo "    ⏭️  User '{$staffMember['email']}' already exists, checking staff record...\n";
+                
+                // Check if staff record exists
+                $checkStaffStmt->execute([$existingUser['id']]);
+                $existingStaff = $checkStaffStmt->fetch();
+                
+                if ($existingStaff) {
+                    echo "    ⏭️  Staff record already exists, skipping...\n";
+                    continue;
+                }
+                
+                $userId = $existingUser['id'];
+            } else {
+                // Insert user
+                $userStmt->execute([
+                    $staffMember['name'],
+                    $staffMember['email'],
+                    $staffMember['phone'],
+                    $staffMember['password'],
+                    $staffMember['role_id'],
+                    $staffMember['gender'],
+                    date('Y-m-d H:i:s'),
+                    date('Y-m-d H:i:s')
+                ]);
+                
+                $userId = $this->pdo->lastInsertId();
+            }
             
             // Insert staff
             $staffStmt->execute([
@@ -426,17 +514,28 @@ class PeopleSeed {
             VALUES (?, ?, ?, ?, ?, ?)
         ');
         
+        $checkLinkStmt = $this->pdo->prepare('
+            SELECT id FROM parent_student WHERE parent_id = ? AND student_id = ?
+        ');
+        
         $linked = 0;
         
         foreach ($parents as $parent) {
             foreach ($students as $student) {
+                // Check if relationship already exists
+                $checkLinkStmt->execute([$parent['id'], $student['id']]);
+                if ($checkLinkStmt->fetch()) {
+                    echo "    ⏭️  Parent-student relationship already exists, skipping...\n";
+                    continue;
+                }
+                
                 // Simple matching logic - in real app you'd have more sophisticated matching
                 if (strpos($parent['name'], 'Wilson') !== false && strpos($student['name'], 'Emma') !== false) {
                     $linkStmt->execute([
                         $parent['id'],
                         $student['id'],
                         $parent['relationship_to_student'],
-                        true,
+                        1,
                         date('Y-m-d H:i:s'),
                         date('Y-m-d H:i:s')
                     ]);
@@ -446,7 +545,7 @@ class PeopleSeed {
                         $parent['id'],
                         $student['id'],
                         $parent['relationship_to_student'],
-                        true,
+                        1,
                         date('Y-m-d H:i:s'),
                         date('Y-m-d H:i:s')
                     ]);

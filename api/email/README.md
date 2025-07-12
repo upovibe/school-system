@@ -68,25 +68,65 @@ The EmailService is automatically loaded in the AuthController and used for pass
 ## File Structure
 
 ```
-api/email/
+api/
 ├── config/
-│   └── mail.php          # Email configuration
-├── services/
-│   └── EmailService.php  # Email service class
-├── templates/            # Email templates
-│   ├── password-reset.php
-│   └── welcome.php
-└── README.md            # This file
+│   └── mail.php                  # SMTP configuration
+├── core/
+│   └── EmailService.php          # Email service class
+├── email/
+│   ├── config/
+│   │   └── email-functions.php   # Email function definitions
+│   ├── templates/                # Email templates
+│   │   ├── password-reset.php
+│   │   ├── welcome.php
+│   │   ├── account-verification.php
+│   │   ├── password-changed.php
+│   │   └── account-locked.php
+│   └── README.md                # This file
 ```
+
+## Adding New Email Types
+
+To add a new email type, developers only need to:
+
+1. **Add configuration** in `email/config/email-functions.php`:
+```php
+'new-email-type' => [
+    'subject' => 'Your Subject Here',
+    'template' => 'new-email-template',
+    'variables' => ['variable1', 'variable2']
+]
+```
+
+2. **Create template** in `email/templates/new-email-template.php`
+
+3. **Use the method** automatically: `sendNewEmailTypeEmail($toEmail, $variable1, $variable2)`
+
+No code changes needed in EmailService!
 
 ## Available Email Templates
 
 ### Password Reset Email
-- **Template**: `templates/password-reset.php`
-- **Method**: `sendPasswordResetEmail($toEmail, $resetToken, $resetUrl)`
+- **Template**: `email/templates/password-reset.php`
+- **Method**: `sendPasswordResetEmail($toEmail, $resetUrl)`
 - **Usage**: Sent when user requests password reset
 
 ### Welcome Email
-- **Template**: `templates/welcome.php`
+- **Template**: `email/templates/welcome.php`
 - **Method**: `sendWelcomeEmail($toEmail, $userName, $loginUrl)`
-- **Usage**: Sent when new user account is created 
+- **Usage**: Sent when new user account is created
+
+### Account Verification Email
+- **Template**: `email/templates/account-verification.php`
+- **Method**: `sendAccountVerificationEmail($toEmail, $userName, $verificationUrl)`
+- **Usage**: Sent when user needs to verify their account
+
+### Password Changed Email
+- **Template**: `email/templates/password-changed.php`
+- **Method**: `sendPasswordChangedEmail($toEmail, $userName, $loginUrl)`
+- **Usage**: Sent when password is successfully changed
+
+### Account Locked Email
+- **Template**: `email/templates/account-locked.php`
+- **Method**: `sendAccountLockedEmail($toEmail, $userName, $unlockUrl)`
+- **Usage**: Sent when account is locked for security 

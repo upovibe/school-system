@@ -5,7 +5,7 @@ require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/UserSessionModel.php';
 require_once __DIR__ . '/../models/PasswordResetModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
-require_once __DIR__ . '/../email/services/EmailService.php';
+require_once __DIR__ . '/../core/EmailService.php';
 
 class AuthController {
     private $userModel;

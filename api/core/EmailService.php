@@ -3,29 +3,84 @@
 
 class EmailService {
     private $config;
+    private $templatesPath;
+    private $emailFunctions;
 
     public function __construct() {
         $this->config = require __DIR__ . '/../config/mail.php';
+        $this->templatesPath = __DIR__ . '/../email/templates/';
+        $this->emailFunctions = require __DIR__ . '/../email/config/email-functions.php';
     }
 
     /**
-     * Send password reset email
+     * Magic method to handle dynamic email function calls
      */
-    public function sendPasswordResetEmail($toEmail, $resetToken, $resetUrl) {
-        $subject = 'Password Reset Request - School System';
-        $message = $this->getPasswordResetEmailTemplate($resetUrl);
+    public function __call($method, $arguments) {
+        // Convert method name to email type (e.g., sendPasswordResetEmail -> password-reset)
+        $emailType = $this->methodToEmailType($method);
         
-        return $this->send($toEmail, $subject, $message);
+        if (!$emailType || !isset($this->emailFunctions[$emailType])) {
+            throw new Exception("Email function not found: $method");
+        }
+        
+        $emailConfig = $this->emailFunctions[$emailType];
+        $variables = $this->mapArgumentsToVariables($arguments, $emailConfig['variables']);
+        
+        $message = $this->loadTemplate($emailConfig['template'], $variables);
+        return $this->send($arguments[0], $emailConfig['subject'], $message);
     }
 
     /**
-     * Send welcome email
+     * Convert method name to email type
      */
-    public function sendWelcomeEmail($toEmail, $userName, $loginUrl) {
-        $subject = 'Welcome to School System';
-        $message = $this->getWelcomeEmailTemplate($userName, $loginUrl);
+    private function methodToEmailType($method) {
+        // Remove 'send' prefix and 'Email' suffix, convert to kebab-case
+        $type = preg_replace('/^send/', '', $method);
+        $type = preg_replace('/Email$/', '', $type);
+        $type = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $type));
         
-        return $this->send($toEmail, $subject, $message);
+        return $type;
+    }
+
+    /**
+     * Map function arguments to template variables
+     */
+    private function mapArgumentsToVariables($arguments, $expectedVariables) {
+        $variables = [];
+        
+        // First argument is always the email address
+        $email = array_shift($arguments);
+        
+        // Map remaining arguments to expected variables
+        foreach ($expectedVariables as $index => $variableName) {
+            if (isset($arguments[$index])) {
+                $variables[$variableName] = $arguments[$index];
+            }
+        }
+        
+        return $variables;
+    }
+
+    /**
+     * Load template with variables
+     */
+    private function loadTemplate($templateName, $variables = []) {
+        $templateFile = $this->templatesPath . $templateName . '.php';
+        
+        if (!file_exists($templateFile)) {
+            error_log("Email template not found: $templateFile");
+            return false;
+        }
+
+        // Extract variables to make them available in template
+        extract($variables);
+        
+        // Start output buffering to capture template content
+        ob_start();
+        include $templateFile;
+        $content = ob_get_clean();
+        
+        return $content;
     }
 
     /**
@@ -154,22 +209,6 @@ class EmailService {
         fclose($smtp);
         
         return true;
-    }
-
-    /**
-     * Get password reset email template
-     */
-    private function getPasswordResetEmailTemplate($resetUrl) {
-        require_once __DIR__ . '/../templates/password-reset.php';
-        return getPasswordResetEmailTemplate($resetUrl);
-    }
-
-    /**
-     * Get welcome email template
-     */
-    private function getWelcomeEmailTemplate($userName, $loginUrl) {
-        require_once __DIR__ . '/../templates/welcome.php';
-        return getWelcomeEmailTemplate($userName, $loginUrl);
     }
 }
 ?> 

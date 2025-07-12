@@ -55,10 +55,10 @@ class LoginPage extends App {
 
     render() {
         return `
-            <div class="flex items-center justify-center min-h-screen">
+            <div class="flex items-center justify-center min-h-screen p-5">
                     <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm">
                         <!-- Logo/Icon Section -->
-                        <div class="text-center mb-8">
+                        <div class="text-center mb-4">
                             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6 shadow-lg">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -73,9 +73,9 @@ class LoginPage extends App {
                         </div>
 
                         <!-- Form Section -->
-                        <form class="space-y-6" onsubmit="event.preventDefault(); this.closest('app-login-page').handleSubmit();">
-                            <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <form class="space-y-3" onsubmit="event.preventDefault(); this.closest('app-login-page').handleSubmit();">
+                            <div class="space-y-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">
                                     Email Address
                                 </label>
                                 <ui-input 
@@ -86,8 +86,8 @@ class LoginPage extends App {
                                 </ui-input>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <div class="space-y-1">
+                                <label class="block text-sm font-semibold text-gray-700">
                                     Password
                                 </label>
                                 <ui-input 

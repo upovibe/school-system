@@ -3,7 +3,7 @@
 
 class Emailer {
     
-    private static function getEnvValue($key, $default = null) {
+    private static function getEmailerEnv($key, $default = null) {
         $envFile = __DIR__ . '/../.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -47,7 +47,7 @@ class Emailer {
             
             try {
                 // Use APP_URL from environment for testing
-                $appUrl = self::getEnvValue('APP_URL', 'http://localhost:8000');
+                $appUrl = self::getEmailerEnv('APP_URL', 'http://localhost:8000');
                 $testUrl = $appUrl . '/email-test';
                 
                 // Test with a simple welcome email

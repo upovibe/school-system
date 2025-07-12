@@ -130,16 +130,11 @@ class LoginPage extends App {
                         <!-- Logo/Icon Section -->
                         <div class="text-center mb-4">
                             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6 shadow-lg">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
+                                <i class="fas fa-lock text-white text-2xl"></i>
                             </div>
                             <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
                                 Welcome Back
                             </h1>
-                            <p class="text-gray-600 text-lg">
-                                Sign in to your account
-                            </p>
                         </div>
 
                         <!-- Form Section -->
@@ -177,7 +172,7 @@ class LoginPage extends App {
                                     </ui-checkbox>
                                 </div>
                                 <div class="text-sm">
-                                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200 hover:underline">
+                                    <a href="/auth/forgot-password" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200 hover:underline">
                                         Forgot password?
                                     </a>
                                 </div>
@@ -187,11 +182,8 @@ class LoginPage extends App {
                                 <ui-button 
                                     type="submit" 
                                     color="primary" 
-                                    size="lg" 
                                     class="w-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                                    </svg>
+                                    <i class="fas fa-sign-in-alt text-lg mr-2"></i>
                                     Sign In
                                 </ui-button>
                             </div>

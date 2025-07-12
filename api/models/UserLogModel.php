@@ -40,7 +40,7 @@ class UserLogModel extends BaseModel {
             'action' => $action,
             'description' => $description,
             'metadata' => $metadata ? json_encode($metadata) : null,
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'ip_address' => self::getRealIpAddress(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
         ];
         

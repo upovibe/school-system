@@ -61,7 +61,7 @@ class AuthController {
                 'user_id' => $user['id'],
                 'token' => $token,
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'ip_address' => $this->getRealIpAddress(),
                 'expires_at' => date('Y-m-d H:i:s', strtotime('+24 hours'))
             ];
             
@@ -287,6 +287,37 @@ class AuthController {
         $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
         
         return $base64Header . "." . $base64Payload . "." . $base64Signature;
+    }
+    
+    /**
+     * Get real IP address
+     */
+    private function getRealIpAddress() {
+        // Check for forwarded IP addresses
+        $ipKeys = [
+            'HTTP_CF_CONNECTING_IP', // Cloudflare
+            'HTTP_CLIENT_IP',        // Client IP
+            'HTTP_X_FORWARDED_FOR',  // Forwarded IP
+            'HTTP_X_FORWARDED',      // Forwarded IP
+            'HTTP_X_CLUSTER_CLIENT_IP', // Cluster client IP
+            'HTTP_FORWARDED_FOR',    // Forwarded for
+            'HTTP_FORWARDED',        // Forwarded
+            'REMOTE_ADDR'            // Direct IP
+        ];
+        
+        foreach ($ipKeys as $key) {
+            if (array_key_exists($key, $_SERVER) === true) {
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+        
+        // Fallback to REMOTE_ADDR
+        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
 }
 ?> 

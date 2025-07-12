@@ -186,6 +186,37 @@ class BaseModel {
         global $pdo; // Assuming you have a global PDO instance
         return $pdo;
     }
+    
+    /**
+     * Get real IP address
+     */
+    protected static function getRealIpAddress() {
+        // Check for forwarded IP addresses
+        $ipKeys = [
+            'HTTP_CF_CONNECTING_IP', // Cloudflare
+            'HTTP_CLIENT_IP',        // Client IP
+            'HTTP_X_FORWARDED_FOR',  // Forwarded IP
+            'HTTP_X_FORWARDED',      // Forwarded IP
+            'HTTP_X_CLUSTER_CLIENT_IP', // Cluster client IP
+            'HTTP_FORWARDED_FOR',    // Forwarded for
+            'HTTP_FORWARDED',        // Forwarded
+            'REMOTE_ADDR'            // Direct IP
+        ];
+        
+        foreach ($ipKeys as $key) {
+            if (array_key_exists($key, $_SERVER) === true) {
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+        
+        // Fallback to REMOTE_ADDR
+        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    }
 
     // Override in child classes to define table schema
     public static function schema() {

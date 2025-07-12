@@ -7,8 +7,7 @@ This email system uses environment variables for configuration, similar to Larav
 Create a `.env` file in the `api` directory with the following variables:
 
 ```env
-# Email Configuration
-MAIL_MAILER=smtp
+# Email Configuration (SMTP Only)
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com
@@ -22,7 +21,6 @@ MAIL_FROM_NAME="School System"
 
 ### 1. Gmail SMTP
 ```env
-MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com
@@ -32,7 +30,6 @@ MAIL_ENCRYPTION=tls
 
 ### 2. Mailtrap (for testing)
 ```env
-MAIL_MAILER=smtp
 MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=your-mailtrap-username
@@ -40,14 +37,13 @@ MAIL_PASSWORD=your-mailtrap-password
 MAIL_ENCRYPTION=tls
 ```
 
-### 3. Development (log emails)
+### 3. Other SMTP Providers
 ```env
-MAIL_MAILER=log
-```
-
-### 4. PHP Mail (fallback)
-```env
-MAIL_MAILER=mail
+MAIL_HOST=your-smtp-server.com
+MAIL_PORT=587
+MAIL_USERNAME=your-username
+MAIL_PASSWORD=your-password
+MAIL_ENCRYPTION=tls
 ```
 
 ## Setup Instructions

@@ -18,41 +18,18 @@ function getMailEnv($key, $default = null) {
 }
 
 return [
-    'default' => getMailEnv('MAIL_MAILER', 'smtp'),
-    
-    'mailers' => [
-        'smtp' => [
-            'transport' => 'smtp',
-            'host' => getMailEnv('MAIL_HOST', 'smtp.gmail.com'),
-            'port' => getMailEnv('MAIL_PORT', 587),
-            'encryption' => getMailEnv('MAIL_ENCRYPTION', 'tls'),
-            'username' => getMailEnv('MAIL_USERNAME', ''),
-            'password' => getMailEnv('MAIL_PASSWORD', ''),
-            'timeout' => null,
-            'local_domain' => null,
-        ],
-        
-        'sendmail' => [
-            'transport' => 'sendmail',
-            'path' => '/usr/sbin/sendmail -bs',
-        ],
-        
-        'log' => [
-            'transport' => 'log',
-            'channel' => null,
-        ],
+    'smtp' => [
+        'host' => getMailEnv('MAIL_HOST', 'smtp.gmail.com'),
+        'port' => getMailEnv('MAIL_PORT', 587),
+        'encryption' => getMailEnv('MAIL_ENCRYPTION', 'tls'),
+        'username' => getMailEnv('MAIL_USERNAME', ''),
+        'password' => getMailEnv('MAIL_PASSWORD', ''),
+        'timeout' => 30,
     ],
     
     'from' => [
         'address' => getMailEnv('MAIL_FROM_ADDRESS', 'noreply@schoolsystem.com'),
         'name' => getMailEnv('MAIL_FROM_NAME', 'School System'),
-    ],
-    
-    'markdown' => [
-        'theme' => 'default',
-        'paths' => [
-            __DIR__ . '/../templates',
-        ],
     ],
 ];
 ?> 

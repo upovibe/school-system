@@ -3,11 +3,9 @@
 
 class EmailService {
     private $config;
-    private $mailer;
 
     public function __construct() {
         $this->config = require __DIR__ . '/../config/mail.php';
-        $this->mailer = $this->config['default'];
     }
 
     /**
@@ -31,37 +29,10 @@ class EmailService {
     }
 
     /**
-     * Send email using configured mailer
+     * Send email using SMTP
      */
     private function send($to, $subject, $message) {
-        $mailerConfig = $this->config['mailers'][$this->mailer];
-        
-        switch ($mailerConfig['transport']) {
-            case 'smtp':
-                return $this->sendViaSmtp($to, $subject, $message, $mailerConfig);
-            case 'sendmail':
-                return $this->sendViaSendmail($to, $subject, $message);
-            case 'log':
-                return $this->sendViaLog($to, $subject, $message);
-            default:
-                return $this->sendViaPhpMail($to, $subject, $message);
-        }
-    }
-
-    /**
-     * Send email using PHP's built-in mail function
-     */
-    private function sendViaPhpMail($to, $subject, $message) {
-        $headers = [
-            'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
-            'Reply-To: ' . $this->config['from']['address'],
-            'MIME-Version: 1.0',
-            'Content-Type: text/html; charset=UTF-8',
-            'X-Mailer: PHP/' . phpversion()
-        ];
-        
-        $headerString = implode("\r\n", $headers);
-        return mail($to, $subject, $message, $headerString);
+        return $this->sendViaSmtp($to, $subject, $message, $this->config['smtp']);
     }
 
     /**
@@ -69,12 +40,12 @@ class EmailService {
      */
     private function sendViaSmtp($to, $subject, $message, $config) {
         if (!$config['host'] || !$config['username'] || !$config['password']) {
-            error_log('SMTP configuration incomplete');
+            error_log('SMTP configuration incomplete. Please check your .env file.');
             return false;
         }
 
         // Create SMTP connection
-        $smtp = fsockopen($config['host'], $config['port'], $errno, $errstr, 30);
+        $smtp = fsockopen($config['host'], $config['port'], $errno, $errstr, $config['timeout']);
         if (!$smtp) {
             error_log("SMTP connection failed: $errstr ($errno)");
             return false;
@@ -182,30 +153,6 @@ class EmailService {
         fputs($smtp, "QUIT\r\n");
         fclose($smtp);
         
-        return true;
-    }
-
-    /**
-     * Send email using sendmail
-     */
-    private function sendViaSendmail($to, $subject, $message) {
-        $headers = [
-            'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
-            'Reply-To: ' . $this->config['from']['address'],
-            'MIME-Version: 1.0',
-            'Content-Type: text/html; charset=UTF-8'
-        ];
-        
-        $headerString = implode("\r\n", $headers);
-        return mail($to, $subject, $message, $headerString);
-    }
-
-    /**
-     * Log email instead of sending (for development)
-     */
-    private function sendViaLog($to, $subject, $message) {
-        $logMessage = "Email would be sent to: $to\nSubject: $subject\nMessage: $message\n";
-        error_log($logMessage);
         return true;
     }
 

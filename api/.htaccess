@@ -1,0 +1,15 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.php/$1 [L]
+
+# api/.htaccess - Protect API internals
+
+<Files ~ "^(config|controllers|database|models|core|routes|migrate|storage)\."&gt;
+    Deny from all
+</Files&gt;
+
+# Also protect .php files not in public/
+<Files ~ "\.(php)$"&gt;
+    Deny from all
+</Files&gt;

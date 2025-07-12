@@ -5,18 +5,23 @@ require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/UserSessionModel.php';
 require_once __DIR__ . '/../models/PasswordResetModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../email/services/EmailService.php';
 
 class AuthController {
     private $userModel;
     private $sessionModel;
     private $passwordResetModel;
     private $logModel;
+    private $emailService;
 
     public function __construct($pdo) {
         $this->userModel = new UserModel($pdo);
         $this->sessionModel = new UserSessionModel($pdo);
         $this->passwordResetModel = new PasswordResetModel($pdo);
         $this->logModel = new UserLogModel($pdo);
+        
+        // Initialize email service
+        $this->emailService = new EmailService();
     }
 
     public function login() {
@@ -206,12 +211,18 @@ class AuthController {
             
             $this->passwordResetModel->create($resetData);
             
-            // TODO: Send email with reset link
-            // For now, just return the token (in production, send via email)
+            // Send email with reset link
+            $resetUrl = 'http://localhost:3000/reset-password?token=' . $token;
+            $emailSent = $this->emailService->sendPasswordResetEmail($data['email'], $token, $resetUrl);
+            
+            if (!$emailSent) {
+                // Log the error but don't expose it to the user
+                error_log('Failed to send password reset email to: ' . $data['email']);
+            }
             
             echo json_encode([
                 'message' => 'Password reset link sent to email',
-                'token' => $token // Remove this in production
+                'email_sent' => $emailSent
             ], JSON_PRETTY_PRINT);
             
         } catch (Exception $e) {
@@ -269,6 +280,8 @@ class AuthController {
             echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
         }
     }
+
+
 
     private function generateJWT($user) {
         $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);

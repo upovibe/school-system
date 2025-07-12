@@ -3,11 +3,30 @@
 
 require_once __DIR__ . '/../core/Router.php';
 
-// Example route (developers add more here)
-// Router::get('/users', 'UserController@index');
-// Router::post('/users', 'UserController@store');
+// Authentication routes
+Router::post('/auth/login', 'AuthController@login');
+Router::post('/auth/logout', 'AuthController@logout');
+Router::post('/auth/refresh', 'AuthController@refresh');
+Router::post('/auth/forgot-password', 'AuthController@forgotPassword');
+Router::post('/auth/reset-password', 'AuthController@resetPassword');
 
-// Add your routes below...
+// User management routes
 Router::get('/users', 'UserController@index');
 Router::post('/users', 'UserController@store');
+Router::get('/users/{id}', 'UserController@show');
+Router::put('/users/{id}', 'UserController@update');
+Router::delete('/users/{id}', 'UserController@destroy');
+Router::get('/users/{id}/profile', 'UserController@profile');
+Router::put('/users/{id}/profile', 'UserController@updateProfile');
+
+// Role management routes
+Router::get('/roles', 'RoleController@index');
+Router::post('/roles', 'RoleController@store');
+Router::get('/roles/{id}', 'RoleController@show');
+Router::put('/roles/{id}', 'RoleController@update');
+Router::delete('/roles/{id}', 'RoleController@destroy');
+
+// Audit logs (admin only)
+Router::get('/logs', 'LogController@index');
+Router::get('/logs/{id}', 'LogController@show');
 ?> 

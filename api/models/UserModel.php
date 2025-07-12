@@ -12,7 +12,11 @@ class UserModel extends BaseModel {
         'name',
         'email', 
         'password',
-        'phone'
+        'phone',
+        'role_id',
+        'gender',
+        'profile_image',
+        'status'
     ];
     
     // Fields that should be hidden from JSON/array output
@@ -23,7 +27,8 @@ class UserModel extends BaseModel {
     // Fields that should be cast to specific types
     protected static $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'metadata' => 'json'
     ];
     
     // Whether the model uses timestamps

@@ -16,7 +16,17 @@ class Router {
         self::add('POST', $path, $controllerAction);
     }
 
-    // Add more methods as needed (put, delete, etc.)
+    public static function put($path, $controllerAction) {
+        self::add('PUT', $path, $controllerAction);
+    }
+
+    public static function delete($path, $controllerAction) {
+        self::add('DELETE', $path, $controllerAction);
+    }
+
+    public static function patch($path, $controllerAction) {
+        self::add('PATCH', $path, $controllerAction);
+    }
 
     public static function dispatch($uri, $method, $pdo) {
         $method = strtoupper($method);

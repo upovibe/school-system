@@ -11,58 +11,64 @@ class Seed {
     public function run() {
         echo "🌱 Starting database seeding...\n\n";
         
-        $this->seedUsers();
+        $this->seedAdminUser();
         
         echo "\n✅ Database seeding completed!\n";
     }
     
-    private function seedUsers() {
-        echo "📝 Seeding users...\n";
+    private function seedAdminUser() {
+        echo "📝 Seeding admin user...\n";
         
-        $users = [
-            [
-                'name' => 'John Doe',
-                'email' => 'johns@example.com',
-                'phone' => '+1234567890',
-                'password' => password_hash('password123', PASSWORD_DEFAULT),
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'name' => 'Jane Smith',
-                'email' => 'jane@example.com',
-                'phone' => '+1234567891',
-                'password' => password_hash('password123', PASSWORD_DEFAULT),
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'name' => 'Bob Johnson',
-                'email' => 'bob@example.com',
-                'phone' => '+1234567892',
-                'password' => password_hash('password123', PASSWORD_DEFAULT),
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]
+        // Get admin role ID
+        $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
+        $stmt->execute(['admin']);
+        $adminRole = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$adminRole) {
+            echo "❌ Admin role not found. Please run migrations first.\n";
+            return;
+        }
+        
+        // Check if admin user already exists
+        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute(['admin@school.com']);
+        $existingAdmin = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingAdmin) {
+            echo "⚠️  Admin user already exists\n";
+            return;
+        }
+        
+        $adminUser = [
+            'name' => 'System Administrator',
+            'email' => 'admin@school.com',
+            'phone' => '+1234567890',
+            'password' => password_hash('admin123', PASSWORD_DEFAULT),
+            'role_id' => $adminRole['id'],
+            'status' => 'active',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, role_id, status, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
-        foreach ($users as $user) {
-            $stmt->execute([
-                $user['name'],
-                $user['email'],
-                $user['phone'],
-                $user['password'],
-                $user['created_at'],
-                $user['updated_at']
-            ]);
-        }
+        $stmt->execute([
+            $adminUser['name'],
+            $adminUser['email'],
+            $adminUser['phone'],
+            $adminUser['password'],
+            $adminUser['role_id'],
+            $adminUser['status'],
+            $adminUser['created_at'],
+            $adminUser['updated_at']
+        ]);
         
-        echo "✅ Seeded " . count($users) . " users\n";
+        echo "✅ Seeded admin user\n";
+        echo "📧 Email: admin@school.com\n";
+        echo "🔑 Password: admin123\n";
     }
 }
 ?> 

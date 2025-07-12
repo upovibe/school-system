@@ -126,6 +126,40 @@ Router::get('/staff/department/{department}', 'StaffController@getByDepartment')
 Router::get('/staff/position/{position}', 'StaffController@getByPosition');
 Router::get('/staff/{id}/profile', 'StaffController@profile');
 
+// Academic Management Routes
+// Subjects (admin only for create/update/delete, authenticated for view)
+Router::get('/subjects', 'SubjectController@index');
+Router::post('/subjects', 'SubjectController@store');
+Router::get('/subjects/{id}', 'SubjectController@show');
+Router::put('/subjects/{id}', 'SubjectController@update');
+Router::delete('/subjects/{id}', 'SubjectController@destroy');
+Router::get('/subjects/level/{levelId}', 'SubjectController@getByLevel');
+Router::get('/subjects/department/{departmentId}', 'SubjectController@getByDepartment');
+Router::get('/subjects/core', 'SubjectController@getCoreSubjects');
+Router::get('/subjects/core/{levelId}', 'SubjectController@getCoreSubjects');
+
+// Classes (admin only for create/update/delete, authenticated for view)
+Router::get('/classes', 'ClassController@index');
+Router::post('/classes', 'ClassController@store');
+Router::get('/classes/{id}', 'ClassController@show');
+Router::put('/classes/{id}', 'ClassController@update');
+Router::delete('/classes/{id}', 'ClassController@destroy');
+Router::get('/classes/level/{levelId}', 'ClassController@getByLevel');
+Router::get('/classes/school/{schoolId}', 'ClassController@getBySchool');
+Router::get('/classes/teacher/{teacherId}', 'ClassController@getByTeacher');
+Router::get('/classes/track/{trackId}', 'ClassController@getByTrack');
+Router::get('/classes/{id}/subjects', 'ClassController@getWithSubjects');
+
+// Class-Subject Assignments (admin only for create/update/delete, authenticated for view)
+Router::get('/class-subjects', 'ClassSubjectController@index');
+Router::post('/class-subjects', 'ClassSubjectController@store');
+Router::get('/class-subjects/{id}', 'ClassSubjectController@show');
+Router::put('/class-subjects/{id}', 'ClassSubjectController@update');
+Router::delete('/class-subjects/{id}', 'ClassSubjectController@destroy');
+Router::get('/class-subjects/class/{classId}', 'ClassSubjectController@getByClass');
+Router::get('/class-subjects/subject/{subjectId}', 'ClassSubjectController@getBySubject');
+Router::get('/class-subjects/teacher/{teacherId}', 'ClassSubjectController@getByTeacher');
+
 // Example of how to add new protected routes:
 // Router::get('/assignments', 'AssignmentController@index'); // Teachers and admins
 // Router::post('/assignments', 'AssignmentController@store'); // Teachers and admins

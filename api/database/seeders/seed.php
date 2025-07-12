@@ -79,6 +79,10 @@ class Seed {
         require_once __DIR__ . '/academic_seed.php';
         $academicSeed = new AcademicSeed($this->pdo);
         $academicSeed->run();
+        
+        require_once __DIR__ . '/academic_structure_seed.php';
+        $academicStructureSeed = new AcademicStructureSeed($this->pdo);
+        $academicStructureSeed->run();
     }
     
     private function seedPeople() {

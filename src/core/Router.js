@@ -1,4 +1,5 @@
 import '@/app/rootLayout.js';
+import middleware from './middleware.js';
 
 /**
  * UPO UI App-Based Router - File-System Routing + Layouts
@@ -276,6 +277,23 @@ class Router {
 
         const path = window.location.pathname || '/';
         const queryParams = this.parseQueryParams(window.location.search);
+        
+        // Execute middleware before rendering
+        const middlewareResult = await middleware.execute(path, { queryParams });
+        
+        if (!middlewareResult.success) {
+            console.log(`🚫 Middleware blocked access to ${path}: ${middlewareResult.reason}`);
+            
+            if (middlewareResult.redirect) {
+                // Redirect to specified path
+                this.navigate(middlewareResult.redirect);
+                return;
+            } else {
+                // Show 404 for blocked access
+                this.renderNotFound();
+                return;
+            }
+        }
         
         // Handle index.html redirect to clean URL with base path
         if (window.location.pathname.includes('/index.html')) {

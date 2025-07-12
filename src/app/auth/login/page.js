@@ -4,6 +4,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Checkbox.js';
 import '@/components/ui/Toast.js';
+import api from '@/services/api.js';
 
 /**
  * Login Page Component (/auth/login)
@@ -29,7 +30,7 @@ class LoginPage extends App {
         this.formData[field] = value;
     }
 
-    handleSubmit() {
+    async handleSubmit() {
         const { email, password, rememberMe } = this.formData;
         
         if (!email || !password) {
@@ -42,15 +43,84 @@ class LoginPage extends App {
             return;
         }
 
-        // Here you would typically make an API call to authenticate
-        console.log('Login attempt:', { email, password, rememberMe });
-        
-        Toast.show({
-            title: 'Login Attempt',
-            message: 'Login functionality will be implemented here',
-            variant: 'info',
-            duration: 3000
-        });
+        try {
+            // Call the actual API
+            await this.authenticateUser(email, password);
+        } catch (error) {
+            Toast.show({
+                title: 'Login Failed',
+                message: error.response?.data?.error || 'An error occurred during login',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
+    async authenticateUser(email, password) {
+        try {
+            // Make API call to authenticate
+            const response = await api.post('/auth/login', {
+                email: email,
+                password: password
+            });
+
+            const { user } = response.data;
+            
+            // Map role_id to role name (temporary solution)
+            const roleMap = {
+                1: 'admin',
+                2: 'teacher', 
+                3: 'student',
+                4: 'parent',
+                5: 'staff'
+            };
+
+            const roleName = roleMap[user.role_id] || 'admin';
+
+            // Store user data and token
+            localStorage.setItem('userData', JSON.stringify({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: roleName
+            }));
+            localStorage.setItem('token', user.token);
+
+            Toast.show({
+                title: 'Login Successful',
+                message: `Welcome back, ${user.name}!`,
+                variant: 'success',
+                duration: 2000
+            });
+
+            // Redirect to appropriate dashboard based on role
+            setTimeout(() => {
+                this.redirectToDashboard(roleName);
+            }, 2000);
+
+        } catch (error) {
+            // Handle specific API errors
+            if (error.response?.status === 401) {
+                throw new Error('Invalid email or password');
+            } else if (error.response?.status === 422) {
+                throw new Error('Please check your input and try again');
+            } else {
+                throw new Error('Network error. Please try again.');
+            }
+        }
+    }
+
+    redirectToDashboard(role) {
+        const dashboardRoutes = {
+            'admin': '/dashboard/admin',
+            'teacher': '/dashboard/teacher',
+            'student': '/dashboard/student',
+            'parent': '/dashboard/parent',
+            'staff': '/dashboard/staff'
+        };
+
+        const route = dashboardRoutes[role] || '/dashboard/admin';
+        window.location.href = route;
     }
 
     render() {

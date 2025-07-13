@@ -12,6 +12,7 @@ class Seed {
         echo "🌱 Starting database seeding...\n\n";
         
         $this->seedAdminUser();
+        $this->seedPageSettings();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -68,6 +69,15 @@ class Seed {
         echo "✅ Seeded admin user\n";
         echo "📧 Email: admin@school.com\n";
         echo "🔑 Password: admin123\n";
+    }
+    
+    private function seedPageSettings() {
+        echo "📄 Seeding page settings...\n";
+        
+        // Include the page settings seeder
+        require_once __DIR__ . '/page_settings_seeder.php';
+        $pageSettingsSeeder = new PageSettingsSeeder($this->pdo);
+        $pageSettingsSeeder->run();
     }
     
 }

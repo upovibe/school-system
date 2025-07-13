@@ -112,6 +112,11 @@ class DropdownMenu extends HTMLElement {
                     left: 0;
                 }
                 
+                .upo-dropdown-menu-content-container.right-aligned {
+                    left: auto;
+                    right: 0;
+                }
+                
                 /* Menu items */
                 .upo-dropdown-menu-item {
                     display: flex;
@@ -300,6 +305,9 @@ class DropdownMenu extends HTMLElement {
         this.isOpen = true;
         this.contentContainer.classList.add('open');
         this.triggerContainer.setAttribute('aria-expanded', 'true');
+        
+        // Check for overflow and adjust position
+        this.adjustPosition();
     }
     
     close() {
@@ -435,6 +443,31 @@ class DropdownMenu extends HTMLElement {
     
     closeDropdown() {
         this.close();
+    }
+    
+    adjustPosition() {
+        // Wait for the next frame to ensure the dropdown is rendered
+        requestAnimationFrame(() => {
+            const container = this.container;
+            const content = this.contentContainer;
+            
+            if (!container || !content) return;
+            
+            // Get container and content dimensions
+            const containerRect = container.getBoundingClientRect();
+            const contentRect = content.getBoundingClientRect();
+            
+            // Check if content would overflow to the right
+            const wouldOverflowRight = containerRect.left + contentRect.width > window.innerWidth;
+            
+            // Remove any existing alignment classes
+            content.classList.remove('right-aligned');
+            
+            // If it would overflow, align to the right
+            if (wouldOverflowRight) {
+                content.classList.add('right-aligned');
+            }
+        });
     }
 }
 

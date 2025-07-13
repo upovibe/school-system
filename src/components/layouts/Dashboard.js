@@ -18,7 +18,6 @@ import '@/components/ui/Avatar.js';
 class Dashboard extends App {
     unsubscribe = null;
     sidebarOpen = false;
-    sidebarCollapsed = false;
 
     connectedCallback() {
         // Load user data first before calling super
@@ -67,15 +66,6 @@ class Dashboard extends App {
             }
         });
 
-        // Handle sidebar collapse
-        this.addEventListener('click', (e) => {
-            if (e.target.matches('[data-sidebar-collapse]')) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.toggleSidebarCollapse();
-            }
-        });
-
         // Handle logout from dropdown menu
         this.addEventListener('item-click', (e) => {
             if (e.detail.text === 'Logout') {
@@ -104,24 +94,7 @@ class Dashboard extends App {
         }
     }
 
-    toggleSidebarCollapse() {
-        this.sidebarCollapsed = !this.sidebarCollapsed;
-        this.updateSidebarCollapseState();
-        // Force re-render to update the button icon immediately
-        this.render();
-    }
 
-    updateSidebarCollapseState() {
-        const sidebar = this.querySelector('[data-sidebar]');
-        
-        if (this.sidebarCollapsed) {
-            sidebar?.classList.add('lg:w-16');
-            sidebar?.classList.remove('lg:w-64');
-        } else {
-            sidebar?.classList.remove('lg:w-16');
-            sidebar?.classList.add('lg:w-64');
-        }
-    }
 
 
 
@@ -298,31 +271,31 @@ class Dashboard extends App {
         const navigationItems = this.getNavigationItems();
 
         return `
-            <div class="min-h-screen bg-gray-50 p-4">
+            <div class="min-h-screen bg-gray-50 p-2">
                 <!-- Main Container -->
                 <div class="flex h-[calc(100vh-2rem)] gap-4">
-                    <!-- Mobile Sidebar Overlay -->
+                    <!-- Mobile/Tablet Sidebar Overlay -->
                     <div 
                         data-sidebar-overlay
-                        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden hidden"
+                        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 xl:hidden hidden"
                         onclick="this.closest('app-dashboard').toggleSidebar()"
                     ></div>
 
                     <!-- Sidebar -->
                     <aside 
                         data-sidebar
-                        class="relative lg:static lg:block w-64 bg-gray-900 text-white transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out rounded-2xl shadow-lg ${this.sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}"
+                        class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
                     >
                         <!-- Sidebar Header -->
                         <div class="flex items-center justify-between h-16 px-4 border-b border-gray-700">
-                            <div class="flex items-center space-x-3 ${this.sidebarCollapsed ? 'justify-center' : ''}">
+                            <div class="flex items-center space-x-3">
                                 <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                                <span class="text-lg font-semibold text-white ${this.sidebarCollapsed ? 'hidden' : ''}">School System</span>
+                                <span class="text-lg font-semibold text-white">School System</span>
                             </div>
                             <button 
                                 type="button"
                                 data-sidebar-toggle
-                                class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-300 hover:bg-gray-800"
+                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-300 hover:bg-gray-800"
                             >
                                 <i class="fas fa-times text-lg"></i>
                             </button>
@@ -342,8 +315,8 @@ class Dashboard extends App {
                                     }"
                                     title="${this.sidebarCollapsed ? item.label : ''}"
                                 >
-                                    <i class="${item.icon} w-5 h-5 ${this.sidebarCollapsed ? '' : 'mr-3'}"></i>
-                                    <span class="${this.sidebarCollapsed ? 'hidden' : ''}">${item.label}</span>
+                                    <i class="${item.icon} w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
+                                    <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">${item.label}</span>
                                     ${this.sidebarCollapsed ? `
                                         <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                                             ${item.label}
@@ -360,8 +333,8 @@ class Dashboard extends App {
                                 class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-600 hover:text-white rounded-md transition-colors relative"
                                 title="${this.sidebarCollapsed ? 'Logout' : ''}"
                             >
-                                <i class="fas fa-sign-out-alt w-5 h-5 ${this.sidebarCollapsed ? '' : 'mr-3'}"></i>
-                                <span class="${this.sidebarCollapsed ? 'hidden' : ''}">Logout</span>
+                                <i class="fas fa-sign-out-alt w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
+                                <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">Logout</span>
                                 ${this.sidebarCollapsed ? `
                                     <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                                         Logout
@@ -372,7 +345,7 @@ class Dashboard extends App {
                     </aside>
 
                     <!-- Main Content Area -->
-                    <div class="flex-1 flex flex-col" data-main-content>
+                    <div class="flex-1 flex flex-col w-full" data-main-content>
                         <!-- Header -->
                         <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 rounded-2xl">
                             <div class="flex items-center justify-between p-2">
@@ -381,17 +354,9 @@ class Dashboard extends App {
                                     <button 
                                         type="button"
                                         data-sidebar-toggle
-                                        class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                        class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                                     >
                                         <i class="fas fa-bars text-lg"></i>
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        data-sidebar-collapse
-                                        class="hidden lg:flex items-center justify-center size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
-                                        title="${this.sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}"
-                                    >
-                                        <i class="fas ${this.sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-lg"></i>
                                     </button>
                                     <h1 class="text-xl font-semibold text-gray-900">
                                         ${this.getPageTitle()}
@@ -409,7 +374,7 @@ class Dashboard extends App {
                                     <!-- User Menu Dropdown -->
                                     <ui-dropdown-menu>
                                         <ui-dropdown-menu-trigger>
-                                            <div class="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors">
+                                            <div class="flex items-center space-x-3 p-1 rounded-full hover:bg-gray-100 transition-colors">
                                                 <ui-avatar 
                                                     src="${this.currentUser?.profile_image || ''}" 
                                                     alt="${userName}" 
@@ -420,7 +385,6 @@ class Dashboard extends App {
                                                     <p class="text-sm font-medium text-gray-700">${userName}</p>
                                                     <p class="text-xs text-gray-500">${userEmail}</p>
                                                 </div>
-                                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                                             </div>
                                         </ui-dropdown-menu-trigger>
                                         

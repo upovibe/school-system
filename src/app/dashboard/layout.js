@@ -159,172 +159,7 @@ class DashboardLayout extends App {
         this.innerHTML = this.render();
     }
 
-    render() {
-        // If no user data, try to load it again
-        if (!this.currentUser) {
-            this.loadUserData();
-            return '<div class="flex h-screen bg-gray-50 items-center justify-center"><div class="text-gray-500">Loading...</div></div>';
-        }
-        
-        const userRole = this.currentUser?.role || 'User';
-        const userName = this.currentUser?.name || this.currentUser?.username || 'User';
-        const userEmail = this.currentUser?.email || '';
-        const navigationItems = this.getNavigationItems();
-
-        return `
-            <div class="min-h-screen bg-gray-50 p-2">
-                <!-- Main Container -->
-                <div class="flex h-[calc(100vh-2rem)] gap-4">
-                    <!-- Mobile/Tablet Sidebar Overlay -->
-                    <div 
-                        data-sidebar-overlay
-                        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 xl:hidden hidden"
-                        onclick="this.closest('app-dashboard-layout').toggleSidebar()"
-                    ></div>
-
-                    <!-- Sidebar -->
-                    <aside 
-                        data-sidebar
-                        class="fixed inset-y-0 left-0 z-50 w-64 bg-white text-gray-900 transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
-                    >
-                        <!-- Sidebar Header -->
-                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-                            <div class="flex items-center space-x-3">
-                                <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                                <span class="text-lg font-semibold text-gray-900">School System</span>
-                            </div>
-                            <button 
-                                type="button"
-                                data-sidebar-toggle
-                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                            >
-                                <i class="fas fa-times text-lg"></i>
-                            </button>
-                        </div>
-
-                        <!-- Navigation -->
-                        <nav class="px-4 py-4 flex-1 overflow-y-auto flex flex-col gap-2">
-                            ${navigationItems.map(item => `
-                                <ui-link 
-                                    href="${item.href}"
-                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline relative ${
-                                        item.active 
-                                            ? 'bg-blue-600 text-white' 
-                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                    }"
-                                    title="${this.sidebarCollapsed ? item.label : ''}"
-                                >
-                                    <i class="${item.icon} w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
-                                    <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">${item.label}</span>
-                                    ${this.sidebarCollapsed ? `
-                                        <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                            ${item.label}
-                                        </div>
-                                    ` : ''}
-                                </ui-link>
-                            `).join('')}
-                        </nav>
-
-                        <!-- Sidebar Footer -->
-                        <div class="p-4 border-t border-gray-200">
-                            <button 
-                                data-action="logout"
-                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors relative"
-                                title="${this.sidebarCollapsed ? 'Logout' : ''}"
-                            >
-                                <i class="fas fa-sign-out-alt w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
-                                <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">Logout</span>
-                                ${this.sidebarCollapsed ? `
-                                    <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                        Logout
-                                    </div>
-                                ` : ''}
-                            </button>
-                        </div>
-                    </aside>
-
-                    <!-- Main Content Area -->
-                    <div class="flex-1 flex flex-col w-full" data-main-content>
-                        <!-- Header -->
-                        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 rounded-2xl">
-                            <div class="flex items-center justify-between p-2">
-                                <!-- Left side -->
-                                <div class="flex items-center gap-4">
-                                    <button 
-                                        type="button"
-                                        data-sidebar-toggle
-                                        class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                    >
-                                        <i class="fas fa-bars text-lg"></i>
-                                    </button>
-                                    <h1 class="text-xl font-semibold text-gray-900">
-                                        ${this.getPageTitle()}
-                                    </h1>
-                                </div>
-
-                                <!-- Right side -->
-                                <div class="flex items-center space-x-4">
-                                    <!-- Notifications -->
-                                    <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md relative">
-                                        <i class="fas fa-bell text-lg"></i>
-                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                    </button>
-
-                                    <!-- User Menu Dropdown -->
-                                    <ui-dropdown-menu>
-                                        <ui-dropdown-menu-trigger>
-                                            <div class="flex items-center space-x-3 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                                                <ui-avatar 
-                                                    src="${this.currentUser?.profile_image || ''}" 
-                                                    alt="${userName}" 
-                                                    name="${userName}" 
-                                                    size="md"
-                                                ></ui-avatar>
-                                                <div class="hidden md:block text-left">
-                                                    <p class="text-sm font-medium text-gray-700">${userName}</p>
-                                                    <p class="text-xs text-gray-500">${userEmail}</p>
-                                                </div>
-                                            </div>
-                                        </ui-dropdown-menu-trigger>
-                                        
-                                        <ui-dropdown-menu-content>
-                                            <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
-                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
-                                            <ui-dropdown-menu-item>
-                                                <a href="/profile" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
-                                                    <i class="fas fa-user w-4 h-4 mr-3"></i>
-                                                    Profile
-                                                </a>
-                                            </ui-dropdown-menu-item>
-                                            <ui-dropdown-menu-item>
-                                                <a href="/settings" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
-                                                    <i class="fas fa-cog w-4 h-4 mr-3"></i>
-                                                    Settings
-                                                </a>
-                                            </ui-dropdown-menu-item>
-                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
-                                            <ui-dropdown-menu-item color="red">
-                                                <button data-action="logout" class="w-full text-left bg-transparent border-none p-0 m-0 cursor-pointer text-red-500 hover:text-red-700 flex items-center">
-                                                    <i class="fas fa-sign-out-alt w-4 h-4 mr-3"></i>
-                                                    Logout
-                                                </button>
-                                            </ui-dropdown-menu-item>
-                                        </ui-dropdown-menu-content>
-                                    </ui-dropdown-menu>
-                                </div>
-                            </div>
-                        </header>
-
-                        <!-- Page Content Area -->
-                        <main class="flex-1 overflow-y-auto p-6 bg-transparent">
-                            ${this.pageContent}
-                        </main>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
+    
     /**
      * Get navigation items based on user role
      */
@@ -505,6 +340,172 @@ class DashboardLayout extends App {
         };
         
         return titles[lastSegment] || 'Dashboard';
+    }
+
+    render() {
+        // If no user data, try to load it again
+        if (!this.currentUser) {
+            this.loadUserData();
+            return '<div class="flex h-screen bg-gray-50 items-center justify-center"><div class="text-gray-500">Loading...</div></div>';
+        }
+        
+        const userRole = this.currentUser?.role || 'User';
+        const userName = this.currentUser?.name || this.currentUser?.username || 'User';
+        const userEmail = this.currentUser?.email || '';
+        const navigationItems = this.getNavigationItems();
+
+        return `
+            <div class="min-h-screen bg-gray-50 p-2">
+                <!-- Main Container -->
+                <div class="flex h-[calc(100vh-2rem)] gap-4">
+                    <!-- Mobile/Tablet Sidebar Overlay -->
+                    <div 
+                        data-sidebar-overlay
+                        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 xl:hidden hidden"
+                        onclick="this.closest('app-dashboard-layout').toggleSidebar()"
+                    ></div>
+
+                    <!-- Sidebar -->
+                    <aside 
+                        data-sidebar
+                        class="fixed inset-y-0 left-0 z-50 w-64 bg-white text-gray-900 transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
+                    >
+                        <!-- Sidebar Header -->
+                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+                            <div class="flex items-center space-x-3">
+                                <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
+                                <span class="text-lg font-semibold text-gray-900">School System</span>
+                            </div>
+                            <button 
+                                type="button"
+                                data-sidebar-toggle
+                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            >
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Navigation -->
+                        <nav class="px-4 py-4 flex-1 overflow-y-auto flex flex-col gap-2">
+                            ${navigationItems.map(item => `
+                                <ui-link 
+                                    href="${item.href}"
+                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline relative ${
+                                        item.active 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    }"
+                                    title="${this.sidebarCollapsed ? item.label : ''}"
+                                >
+                                    <i class="${item.icon} w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
+                                    <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">${item.label}</span>
+                                    ${this.sidebarCollapsed ? `
+                                        <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                                            ${item.label}
+                                        </div>
+                                    ` : ''}
+                                </ui-link>
+                            `).join('')}
+                        </nav>
+
+                        <!-- Sidebar Footer -->
+                        <div class="p-4 border-t border-gray-200">
+                            <button 
+                                data-action="logout"
+                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors relative"
+                                title="${this.sidebarCollapsed ? 'Logout' : ''}"
+                            >
+                                <i class="fas fa-sign-out-alt w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
+                                <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">Logout</span>
+                                ${this.sidebarCollapsed ? `
+                                    <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                                        Logout
+                                    </div>
+                                ` : ''}
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content Area -->
+                    <div class="flex-1 flex flex-col w-full" data-main-content>
+                        <!-- Header -->
+                        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 rounded-2xl">
+                            <div class="flex items-center justify-between p-2">
+                                <!-- Left side -->
+                                <div class="flex items-center gap-4">
+                                    <button 
+                                        type="button"
+                                        data-sidebar-toggle
+                                        class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                    >
+                                        <i class="fas fa-bars text-lg"></i>
+                                    </button>
+                                    <h1 class="text-xl font-semibold text-gray-900">
+                                        ${this.getPageTitle()}
+                                    </h1>
+                                </div>
+
+                                <!-- Right side -->
+                                <div class="flex items-center space-x-4">
+                                    <!-- Notifications -->
+                                    <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md relative">
+                                        <i class="fas fa-bell text-lg"></i>
+                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    </button>
+
+                                    <!-- User Menu Dropdown -->
+                                    <ui-dropdown-menu>
+                                        <ui-dropdown-menu-trigger>
+                                            <div class="flex items-center space-x-3 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                                                <ui-avatar 
+                                                    src="${this.currentUser?.profile_image || ''}" 
+                                                    alt="${userName}" 
+                                                    name="${userName}" 
+                                                    size="md"
+                                                ></ui-avatar>
+                                                <div class="hidden md:block text-left">
+                                                    <p class="text-sm font-medium text-gray-700">${userName}</p>
+                                                    <p class="text-xs text-gray-500">${userEmail}</p>
+                                                </div>
+                                            </div>
+                                        </ui-dropdown-menu-trigger>
+                                        
+                                        <ui-dropdown-menu-content>
+                                            <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
+                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
+                                            <ui-dropdown-menu-item>
+                                                <a href="/profile" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                                    <i class="fas fa-user w-4 h-4 mr-3"></i>
+                                                    Profile
+                                                </a>
+                                            </ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-item>
+                                                <a href="/settings" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                                    <i class="fas fa-cog w-4 h-4 mr-3"></i>
+                                                    Settings
+                                                </a>
+                                            </ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
+                                            <ui-dropdown-menu-item color="red">
+                                                <button data-action="logout" class="w-full text-left bg-transparent border-none p-0 m-0 cursor-pointer text-red-500 hover:text-red-700 flex items-center">
+                                                    <i class="fas fa-sign-out-alt w-4 h-4 mr-3"></i>
+                                                    Logout
+                                                </button>
+                                            </ui-dropdown-menu-item>
+                                        </ui-dropdown-menu-content>
+                                    </ui-dropdown-menu>
+                                </div>
+                            </div>
+                        </header>
+
+                        <!-- Page Content Area -->
+                        <main class="flex-1 overflow-y-auto p-6 bg-transparent">
+                            ${this.pageContent}
+                        </main>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 }
 

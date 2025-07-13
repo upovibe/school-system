@@ -46,59 +46,46 @@ class Emailer {
         try {
             $emailService = new EmailService();
             
-            // Test email configuration
-            echo "🔧 Checking email configuration...\n";
+            // Use APP_URL from environment for testing
+            $appUrl = self::getEmailerEnv('APP_URL', 'http://localhost:8000');
+            $testUrl = $appUrl . '/email-test';
             
-            // Simple test - just send a basic welcome email
-            echo "\n📨 Testing basic email sending...\n";
-            echo "   To: $emailAddress\n";
-            echo "   Subject: Test Email - School System\n";
+            // Test with the dedicated test email function
+            $result = $emailService->sendTestEmailEmail($emailAddress, $emailAddress, $testUrl);
             
-            try {
-                // Use APP_URL from environment for testing
-                $appUrl = self::getEmailerEnv('APP_URL', 'http://localhost:8000');
-                $testUrl = $appUrl . '/email-test';
-                
-                // Test with the dedicated test email function
-                $result = $emailService->sendTestEmailEmail($emailAddress, $emailAddress, $testUrl);
-                
-                if ($result) {
-                    echo "   ✅ SUCCESS: Email sent successfully!\n";
-                    echo "\n🎉 Email system is working properly!\n";
-                    echo "   - SMTP configuration is correct\n";
-                    echo "   - Email templates are loading\n";
-                    echo "   - Email functions are working\n";
-                    echo "   - Email sent to: $emailAddress\n";
-                    return true;
-                } else {
-                    echo "   ❌ FAILED: Email not sent\n";
-                    echo "\n🔧 Troubleshooting:\n";
-                    echo "   - Check your .env file SMTP configuration\n";
-                    echo "   - Verify MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD\n";
-                    echo "   - For development, consider using Mailtrap\n";
-                    echo "   - Check server logs for detailed error messages\n";
-                    return false;
-                }
-                
-            } catch (Exception $e) {
-                echo "   ❌ ERROR: " . $e->getMessage() . "\n";
-                echo "\n🔧 Troubleshooting:\n";
-                echo "   - Check if email templates exist in email/templates/\n";
-                echo "   - Verify email-functions.php configuration\n";
-                echo "   - Check SMTP settings in .env file\n";
+            if ($result) {
+                echo "✅ Email sent successfully!\n";
+                self::logEmailTest($emailAddress, true);
+                return true;
+            } else {
+                echo "❌ Email not sent\n";
+                self::logEmailTest($emailAddress, false);
                 return false;
             }
             
-            echo "\n💡 Usage: php index.php --email:user@example.com\n";
-            
         } catch (Exception $e) {
-            echo "❌ Error initializing email service: " . $e->getMessage() . "\n";
-            echo "\n💡 Make sure:\n";
-            echo "- config/mail.php exists\n";
-            echo "- email/config/email-functions.php exists\n";
-            echo "- email/templates/ directory contains template files\n";
+            echo "❌ Error: " . $e->getMessage() . "\n";
+            self::logEmailTest($emailAddress, false, $e->getMessage());
             return false;
         }
+    }
+    
+    private static function logEmailTest($emailAddress, $success, $error = null) {
+        $logFile = __DIR__ . '/../storage/logs/upoui.log';
+        $logDir = dirname($logFile);
+        
+        // Create logs directory if it doesn't exist
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        $timestamp = date('Y-m-d H:i:s');
+        $status = $success ? 'SUCCESS' : 'FAILED';
+        $message = $success ? 'Email sent successfully' : ($error ? "Error: $error" : 'Email not sent');
+        
+        $logEntry = "[$timestamp] EMAIL_TEST [$status] To: $emailAddress - $message\n";
+        
+        file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
     }
     
     public static function run() {

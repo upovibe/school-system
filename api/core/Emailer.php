@@ -46,9 +46,9 @@ class Emailer {
         try {
             $emailService = new EmailService();
             
-            // Use APP_URL from environment for testing
-            $appUrl = self::getEmailerEnv('APP_URL', 'http://localhost:8000');
-            $testUrl = $appUrl . '/email-test';
+            // Use CLIENT_URL from environment for testing (frontend URL)
+            $clientUrl = self::getEmailerEnv('CLIENT_URL', 'http://localhost:8000');
+            $testUrl = $clientUrl . '/email-test';
             
             // Test with the dedicated test email function
             $result = $emailService->sendTestEmailEmail($emailAddress, $emailAddress, $testUrl);

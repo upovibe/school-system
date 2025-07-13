@@ -26,7 +26,7 @@ class AuthController {
         $this->emailService = new EmailService();
         
         // Load environment variables
-        $this->env = loadEnv(__DIR__ . '/../../.env');
+        $this->env = loadEnv(__DIR__ . '/../../../.env');
     }
 
     public function login() {

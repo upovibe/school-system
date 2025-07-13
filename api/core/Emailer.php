@@ -11,7 +11,7 @@ class Emailer {
             return $envCache[$key];
         }
         
-        $envFile = __DIR__ . '/../.env';
+        $envFile = __DIR__ . '/../../.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
@@ -47,7 +47,7 @@ class Emailer {
             $emailService = new EmailService();
             
             // Use CLIENT_URL from environment for testing (frontend URL)
-            $clientUrl = self::getEmailerEnv('CLIENT_URL', 'http://localhost:8000');
+            $clientUrl = self::getEmailerEnv('CLIENT_URL');
             $testUrl = $clientUrl . '/email-test';
             
             // Test with the dedicated test email function

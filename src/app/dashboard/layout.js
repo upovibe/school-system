@@ -499,7 +499,7 @@ class DashboardLayout extends App {
                         </header>
 
                         <!-- Page Content Area -->
-                        <main class="flex-1 overflow-y-auto p-6 bg-transparent">
+                        <main class="flex-1 overflow-y-auto p-6 bg-transparent container mx-auto">
                             ${this.pageContent}
                         </main>
                     </div>

@@ -1,7 +1,7 @@
 /**
  * DropdownMenu Component
  * 
- * A customizable dropdown menu component with proper structure.
+ * A flexible dropdown menu component that allows custom HTML content.
  * 
  * Usage:
  * <ui-dropdown-menu>
@@ -9,12 +9,33 @@
  *   <ui-dropdown-menu-content>
  *     <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
  *     <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
- *     <ui-dropdown-menu-item icon="fas fa-user">Profile</ui-dropdown-menu-item>
- *     <ui-dropdown-menu-item icon="fas fa-cog">Settings</ui-dropdown-menu-item>
+ *     <ui-dropdown-menu-item>
+ *       <a href="/profile" data-action="navigate" class="flex items-center">
+ *         <i class="fas fa-user w-4 h-4 mr-3"></i>
+ *         Profile
+ *       </a>
+ *     </ui-dropdown-menu-item>
+ *     <ui-dropdown-menu-item>
+ *       <button data-action="settings" class="flex items-center">
+ *         <i class="fas fa-cog w-4 h-4 mr-3"></i>
+ *         Settings
+ *       </button>
+ *     </ui-dropdown-menu-item>
  *     <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
- *     <ui-dropdown-menu-item icon="fas fa-sign-out-alt" color="red">Logout</ui-dropdown-menu-item>
+ *     <ui-dropdown-menu-item color="red">
+ *       <button data-action="logout" class="flex items-center text-red-500">
+ *         <i class="fas fa-sign-out-alt w-4 h-4 mr-3"></i>
+ *         Logout
+ *       </button>
+ *     </ui-dropdown-menu-item>
  *   </ui-dropdown-menu-content>
  * </ui-dropdown-menu>
+ * 
+ * Features:
+ * - Flexible content: Put any HTML inside menu items
+ * - Action-based events: Use data-action for custom actions
+ * - Custom styling: Full control over appearance
+ * - Event handling: item-click events with action details
  */
 
 class DropdownMenu extends HTMLElement {
@@ -270,6 +291,24 @@ class DropdownMenu extends HTMLElement {
         this.contentContainer.addEventListener('click', (e) => {
             const menuItem = e.target.closest('.upo-dropdown-menu-item');
             if (menuItem && !menuItem.classList.contains('disabled')) {
+                // Check if click was on a custom element with data-action
+                const customElement = e.target.closest('[data-action]');
+                if (customElement) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.close();
+                    
+                    this.dispatchEvent(new CustomEvent('item-click', {
+                        detail: {
+                            text: customElement.textContent.trim(),
+                            action: customElement.getAttribute('data-action'),
+                            icon: menuItem.querySelector('.upo-dropdown-menu-item-icon')?.innerHTML || '',
+                            color: this.getMenuItemColor(menuItem)
+                        }
+                    }));
+                    return;
+                }
+                
                 this.close();
                 // Dispatch custom event
                 this.dispatchEvent(new CustomEvent('item-click', {
@@ -535,13 +574,7 @@ class DropdownMenuItem extends HTMLElement {
             this.classList.add('disabled');
         }
         
-        // Create icon if specified
-        if (this.hasAttribute('icon')) {
-            const icon = document.createElement('div');
-            icon.className = 'upo-dropdown-menu-item-icon';
-            icon.innerHTML = `<i class="${this.getAttribute('icon')}"></i>`;
-            this.insertBefore(icon, this.firstChild);
-        }
+        // No automatic icon creation - let users put whatever they want inside
     }
 }
 

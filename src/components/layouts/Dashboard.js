@@ -391,10 +391,25 @@ class Dashboard extends App {
                                         <ui-dropdown-menu-content>
                                             <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
                                             <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
-                                            <ui-dropdown-menu-item icon="fas fa-user">Profile</ui-dropdown-menu-item>
-                                            <ui-dropdown-menu-item icon="fas fa-cog">Settings</ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-item>
+                                                <a href="/profile" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                                    <i class="fas fa-user w-4 h-4 mr-3"></i>
+                                                    Profile
+                                                </a>
+                                            </ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-item>
+                                                <a href="/settings" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                                    <i class="fas fa-cog w-4 h-4 mr-3"></i>
+                                                    Settings
+                                                </a>
+                                            </ui-dropdown-menu-item>
                                             <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
-                                            <ui-dropdown-menu-item icon="fas fa-sign-out-alt" color="red">Logout</ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-item color="red">
+                                                <button data-action="logout" class="w-full text-left bg-transparent border-none p-0 m-0 cursor-pointer text-red-500 hover:text-red-700 flex items-center">
+                                                    <i class="fas fa-sign-out-alt w-4 h-4 mr-3"></i>
+                                                    Logout
+                                                </button>
+                                            </ui-dropdown-menu-item>
                                         </ui-dropdown-menu-content>
                                     </ui-dropdown-menu>
                                 </div>

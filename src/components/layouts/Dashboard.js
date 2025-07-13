@@ -284,18 +284,18 @@ class Dashboard extends App {
                     <!-- Sidebar -->
                     <aside 
                         data-sidebar
-                        class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
+                        class="fixed inset-y-0 left-0 z-50 w-64 bg-white text-gray-900 transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
                     >
                         <!-- Sidebar Header -->
-                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-700">
+                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
                             <div class="flex items-center space-x-3">
                                 <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                                <span class="text-lg font-semibold text-white">School System</span>
+                                <span class="text-lg font-semibold text-gray-900">School System</span>
                             </div>
                             <button 
                                 type="button"
                                 data-sidebar-toggle
-                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-300 hover:bg-gray-800"
+                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                             >
                                 <i class="fas fa-times text-lg"></i>
                             </button>
@@ -304,21 +304,21 @@ class Dashboard extends App {
 
 
                         <!-- Navigation -->
-                        <nav class="px-4 py-4 space-y-1 flex-1 overflow-y-auto">
+                        <nav class="px-4 py-4 flex-1 overflow-y-auto flex flex-col gap-2">
                             ${navigationItems.map(item => `
                                 <ui-link 
                                     href="${item.href}"
                                     class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline relative ${
                                         item.active 
                                             ? 'bg-blue-600 text-white' 
-                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                     }"
                                     title="${this.sidebarCollapsed ? item.label : ''}"
                                 >
                                     <i class="${item.icon} w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
                                     <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">${item.label}</span>
                                     ${this.sidebarCollapsed ? `
-                                        <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                        <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
                                             ${item.label}
                                         </div>
                                     ` : ''}
@@ -327,16 +327,16 @@ class Dashboard extends App {
                         </nav>
 
                         <!-- Sidebar Footer -->
-                        <div class="p-4 border-t border-gray-700">
+                        <div class="p-4 border-t border-gray-200">
                             <button 
                                 data-logout
-                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-600 hover:text-white rounded-md transition-colors relative"
+                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors relative"
                                 title="${this.sidebarCollapsed ? 'Logout' : ''}"
                             >
                                 <i class="fas fa-sign-out-alt w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
                                 <span class="transition-all duration-300 ${this.sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden max-w-0 hidden' : 'opacity-100 w-auto max-w-full'}">Logout</span>
                                 ${this.sidebarCollapsed ? `
-                                    <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                    <div class="absolute left-full ml-2 px-2 py-1 text-xs text-gray-900 bg-white border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
                                         Logout
                                     </div>
                                 ` : ''}
@@ -347,7 +347,7 @@ class Dashboard extends App {
                     <!-- Main Content Area -->
                     <div class="flex-1 flex flex-col w-full" data-main-content>
                         <!-- Header -->
-                        <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 rounded-2xl">
+                        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 rounded-2xl">
                             <div class="flex items-center justify-between p-2">
                                 <!-- Left side -->
                                 <div class="flex items-center gap-4">

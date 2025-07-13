@@ -12,9 +12,6 @@ class Seed {
         echo "🌱 Starting database seeding...\n\n";
         
         $this->seedAdminUser();
-        $this->seedAcademicStructure();
-        $this->seedPeople();
-        
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -73,24 +70,5 @@ class Seed {
         echo "🔑 Password: admin123\n";
     }
     
-    private function seedAcademicStructure() {
-        echo "📝 Seeding academic structure...\n";
-        
-        require_once __DIR__ . '/academic_seed.php';
-        $academicSeed = new AcademicSeed($this->pdo);
-        $academicSeed->run();
-        
-        require_once __DIR__ . '/academic_structure_seed.php';
-        $academicStructureSeed = new AcademicStructureSeed($this->pdo);
-        $academicStructureSeed->run();
-    }
-    
-    private function seedPeople() {
-        echo "📝 Seeding people and departments...\n";
-        
-        require_once __DIR__ . '/people_seed.php';
-        $peopleSeed = new PeopleSeed($this->pdo);
-        $peopleSeed->run();
-    }
 }
 ?> 

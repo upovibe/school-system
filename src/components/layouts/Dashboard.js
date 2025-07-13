@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import store from '@/core/store.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/DropdownMenu.js';
 
 /**
  * 🎯 Dashboard Component with Sidebar and Header
@@ -16,17 +17,21 @@ import '@/components/ui/Toast.js';
 class Dashboard extends App {
     unsubscribe = null;
     sidebarOpen = false;
+    sidebarCollapsed = false;
 
     connectedCallback() {
-        super.connectedCallback();
-
+        // Load user data first before calling super
+        this.loadUserData();
+        
         // Subscribe to global state (following header pattern)
         this.unsubscribe = store.subscribe((newState) => {
             this.set('isAuthenticated', newState.isAuthenticated);
         });
 
-        this.loadUserData();
         this.setupEventListeners();
+        
+        // Call super after user data is loaded
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
@@ -38,6 +43,7 @@ class Dashboard extends App {
 
     loadUserData() {
         const userData = localStorage.getItem('userData');
+        
         if (userData) {
             try {
                 this.currentUser = JSON.parse(userData);
@@ -45,6 +51,8 @@ class Dashboard extends App {
                 console.error('Error parsing user data:', error);
                 this.currentUser = null;
             }
+        } else {
+            this.currentUser = null;
         }
     }
 
@@ -56,12 +64,26 @@ class Dashboard extends App {
             }
         });
 
-        // Handle logout
+        // Handle sidebar collapse
         this.addEventListener('click', (e) => {
-            if (e.target.matches('[data-logout]')) {
+            if (e.target.matches('[data-sidebar-collapse]')) {
+                // Prevent rapid clicking
+                e.target.disabled = true;
+                setTimeout(() => {
+                    e.target.disabled = false;
+                }, 300);
+                this.toggleSidebarCollapse();
+            }
+        });
+
+        // Handle logout from dropdown menu
+        this.addEventListener('item-click', (e) => {
+            if (e.detail.text === 'Logout') {
                 this.handleLogout();
             }
         });
+
+
     }
 
     toggleSidebar() {
@@ -83,6 +105,27 @@ class Dashboard extends App {
             overlay?.classList.add('hidden');
         }
     }
+
+    toggleSidebarCollapse() {
+        this.sidebarCollapsed = !this.sidebarCollapsed;
+        this.updateSidebarCollapseState();
+        // Force re-render to update the button icon immediately
+        this.render();
+    }
+
+    updateSidebarCollapseState() {
+        const sidebar = this.querySelector('[data-sidebar]');
+        
+        if (this.sidebarCollapsed) {
+            sidebar?.classList.add('lg:w-16');
+            sidebar?.classList.remove('lg:w-64');
+        } else {
+            sidebar?.classList.remove('lg:w-16');
+            sidebar?.classList.add('lg:w-64');
+        }
+    }
+
+
 
     handleLogout() {
         // Show logout toast
@@ -107,27 +150,6 @@ class Dashboard extends App {
      * Get navigation items based on user role
      */
     getNavigationItems() {
-        const baseItems = [
-            {
-                label: 'Dashboard',
-                icon: 'fas fa-tachometer-alt',
-                href: '/dashboard',
-                active: window.location.pathname === '/dashboard'
-            },
-            {
-                label: 'Profile',
-                icon: 'fas fa-user',
-                href: '/profile',
-                active: window.location.pathname === '/profile'
-            },
-            {
-                label: 'Settings',
-                icon: 'fas fa-cog',
-                href: '/settings',
-                active: window.location.pathname === '/settings'
-            }
-        ];
-
         const roleItems = {
             admin: [
                 {
@@ -262,130 +284,158 @@ class Dashboard extends App {
         };
 
         const userRole = this.currentUser?.role || 'student';
-        const roleSpecificItems = roleItems[userRole] || [];
-
-        return [...baseItems, ...roleSpecificItems];
+        return roleItems[userRole] || [];
     }
 
     render() {
+        // If no user data, try to load it again
+        if (!this.currentUser) {
+            this.loadUserData();
+            return '<div class="flex h-screen bg-gray-50 items-center justify-center"><div class="text-gray-500">Loading...</div></div>';
+        }
+        
         const userRole = this.currentUser?.role || 'User';
         const userName = this.currentUser?.name || this.currentUser?.username || 'User';
         const userEmail = this.currentUser?.email || '';
         const navigationItems = this.getNavigationItems();
 
         return `
-            <div class="flex h-screen bg-gray-50">
-                <!-- Mobile Sidebar Overlay -->
-                <div 
-                    data-sidebar-overlay
-                    class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden hidden"
-                    onclick="this.closest('app-dashboard').toggleSidebar()"
-                ></div>
+            <div class="min-h-screen bg-gray-50 p-4">
+                <!-- Main Container -->
+                <div class="flex h-[calc(100vh-2rem)] gap-4">
+                    <!-- Mobile Sidebar Overlay -->
+                    <div 
+                        data-sidebar-overlay
+                        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden hidden"
+                        onclick="this.closest('app-dashboard').toggleSidebar()"
+                    ></div>
 
-                <!-- Sidebar -->
-                <aside 
-                    data-sidebar
-                    class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
-                >
-                    <!-- Sidebar Header -->
-                    <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-                        <div class="flex items-center space-x-3">
-                            <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                            <span class="text-lg font-semibold text-gray-900">School System</span>
-                        </div>
-                        <button 
-                            data-sidebar-toggle
-                            class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                        >
-                            <i class="fas fa-times text-lg"></i>
-                        </button>
-                    </div>
-
-                    <!-- User Info -->
-                    <div class="px-4 py-4 border-b border-gray-200">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-white"></i>
+                    <!-- Sidebar -->
+                    <aside 
+                        data-sidebar
+                        class="relative lg:static lg:block w-64 bg-gray-900 text-white transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out rounded-2xl shadow-lg ${this.sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}"
+                    >
+                        <!-- Sidebar Header -->
+                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-700">
+                            <div class="flex items-center space-x-3 ${this.sidebarCollapsed ? 'justify-center' : ''}">
+                                <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
+                                <span class="text-lg font-semibold text-white ${this.sidebarCollapsed ? 'hidden' : ''}">School System</span>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate">${userName}</p>
-                                <p class="text-xs text-gray-500 truncate">${userEmail}</p>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                    ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Navigation -->
-                    <nav class="px-4 py-4 space-y-1 flex-1 overflow-y-auto">
-                        ${navigationItems.map(item => `
-                            <ui-link 
-                                href="${item.href}"
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${
-                                    item.active 
-                                        ? 'bg-blue-100 text-blue-900 border-r-2 border-blue-500' 
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                }"
+                            <button 
+                                data-sidebar-toggle
+                                class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-300 hover:bg-gray-800"
                             >
-                                <i class="${item.icon} w-5 h-5 mr-3"></i>
-                                ${item.label}
-                            </ui-link>
-                        `).join('')}
-                    </nav>
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
 
-                    <!-- Sidebar Footer -->
-                    <div class="p-4 border-t border-gray-200">
-                        <button 
-                            data-logout
-                            class="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors"
-                        >
-                            <i class="fas fa-sign-out-alt w-5 h-5 mr-3"></i>
-                            Logout
-                        </button>
-                    </div>
-                </aside>
 
-                <!-- Main Content Area -->
-                <div class="flex-1 flex flex-col lg:ml-64">
-                    <!-- Header (following existing header pattern) -->
-                    <header class="bg-white shadow-sm border-b border-gray-200">
-                        <div class="flex items-center justify-between px-4 py-4">
-                            <!-- Left side -->
-                            <div class="flex items-center">
-                                <button 
-                                    data-sidebar-toggle
-                                    class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 mr-2"
+
+                        <!-- Navigation -->
+                        <nav class="px-4 py-4 space-y-1 flex-1 overflow-y-auto">
+                            ${navigationItems.map(item => `
+                                <ui-link 
+                                    href="${item.href}"
+                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline relative ${
+                                        item.active 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                    }"
+                                    title="${this.sidebarCollapsed ? item.label : ''}"
                                 >
-                                    <i class="fas fa-bars text-lg"></i>
-                                </button>
-                                <h1 class="text-xl font-semibold text-gray-900">
-                                    ${this.getPageTitle()}
-                                </h1>
-                            </div>
+                                    <i class="${item.icon} w-5 h-5 ${this.sidebarCollapsed ? '' : 'mr-3'}"></i>
+                                    <span class="${this.sidebarCollapsed ? 'hidden' : ''}">${item.label}</span>
+                                    ${this.sidebarCollapsed ? `
+                                        <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                            ${item.label}
+                                        </div>
+                                    ` : ''}
+                                </ui-link>
+                            `).join('')}
+                        </nav>
 
-                            <!-- Right side (following header pattern) -->
-                            <div class="flex items-center space-x-4">
-                                <!-- Notifications -->
-                                <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md relative">
-                                    <i class="fas fa-bell text-lg"></i>
-                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                </button>
+                        <!-- Sidebar Footer -->
+                        <div class="p-4 border-t border-gray-700">
+                            <button 
+                                data-logout
+                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-600 hover:text-white rounded-md transition-colors relative"
+                                title="${this.sidebarCollapsed ? 'Logout' : ''}"
+                            >
+                                <i class="fas fa-sign-out-alt w-5 h-5 ${this.sidebarCollapsed ? '' : 'mr-3'}"></i>
+                                <span class="${this.sidebarCollapsed ? 'hidden' : ''}">Logout</span>
+                                ${this.sidebarCollapsed ? `
+                                    <div class="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                        Logout
+                                    </div>
+                                ` : ''}
+                            </button>
+                        </div>
+                    </aside>
 
-                                <!-- User Menu -->
-                                <div class="flex items-center space-x-2">
-                                    <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="User" />
-                                    <span class="hidden md:block text-sm font-medium text-gray-700">${userName}</span>
-                                    <span class="text-xs text-gray-500">(${userRole})</span>
+                    <!-- Main Content Area -->
+                    <div class="flex-1 flex flex-col" data-main-content>
+                        <!-- Header -->
+                        <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 rounded-2xl">
+                            <div class="flex items-center justify-between px-6 py-4">
+                                <!-- Left side -->
+                                <div class="flex items-center gap-4">
+                                    <button 
+                                        data-sidebar-toggle
+                                        class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                    >
+                                        <i class="fas fa-bars text-lg"></i>
+                                    </button>
+                                    <button 
+                                        data-sidebar-collapse
+                                        class="hidden lg:flex items-center justify-center size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                        title="${this.sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}"
+                                    >
+                                        <i class="fas ${this.sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-lg"></i>
+                                    </button>
+                                    <h1 class="text-xl font-semibold text-gray-900">
+                                        ${this.getPageTitle()}
+                                    </h1>
+                                </div>
+
+                                <!-- Right side -->
+                                <div class="flex items-center space-x-4">
+                                    <!-- Notifications -->
+                                    <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md relative">
+                                        <i class="fas fa-bell text-lg"></i>
+                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    </button>
+
+                                    <!-- User Menu Dropdown -->
+                                    <ui-dropdown-menu>
+                                        <ui-dropdown-menu-trigger>
+                                            <div class="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors">
+                                                <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="User" />
+                                                <div class="hidden md:block text-left">
+                                                    <p class="text-sm font-medium text-gray-700">${userName}</p>
+                                                    <p class="text-xs text-gray-500">${userEmail}</p>
+                                                </div>
+                                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                                            </div>
+                                        </ui-dropdown-menu-trigger>
+                                        
+                                        <ui-dropdown-menu-content>
+                                            <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
+                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
+                                            <ui-dropdown-menu-item icon="fas fa-user">Profile</ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-item icon="fas fa-cog">Settings</ui-dropdown-menu-item>
+                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
+                                            <ui-dropdown-menu-item icon="fas fa-sign-out-alt" color="red">Logout</ui-dropdown-menu-item>
+                                        </ui-dropdown-menu-content>
+                                    </ui-dropdown-menu>
                                 </div>
                             </div>
-                        </div>
-                    </header>
+                        </header>
 
-                    <!-- Page Content Area -->
-                    <main class="flex-1 overflow-y-auto p-6">
-                        <slot></slot>
-                    </main>
+                        <!-- Page Content Area -->
+                        <main class="flex-1 overflow-y-auto p-6 bg-transparent">
+                            <slot></slot>
+                        </main>
+                    </div>
                 </div>
             </div>
         `;

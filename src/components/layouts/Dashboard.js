@@ -3,6 +3,7 @@ import store from '@/core/store.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';
+import '@/components/ui/Avatar.js';
 
 /**
  * 🎯 Dashboard Component with Sidebar and Header
@@ -60,6 +61,8 @@ class Dashboard extends App {
         // Handle sidebar toggle
         this.addEventListener('click', (e) => {
             if (e.target.matches('[data-sidebar-toggle]')) {
+                e.preventDefault();
+                e.stopPropagation();
                 this.toggleSidebar();
             }
         });
@@ -67,11 +70,8 @@ class Dashboard extends App {
         // Handle sidebar collapse
         this.addEventListener('click', (e) => {
             if (e.target.matches('[data-sidebar-collapse]')) {
-                // Prevent rapid clicking
-                e.target.disabled = true;
-                setTimeout(() => {
-                    e.target.disabled = false;
-                }, 300);
+                e.preventDefault();
+                e.stopPropagation();
                 this.toggleSidebarCollapse();
             }
         });
@@ -82,8 +82,6 @@ class Dashboard extends App {
                 this.handleLogout();
             }
         });
-
-
     }
 
     toggleSidebar() {
@@ -322,6 +320,7 @@ class Dashboard extends App {
                                 <span class="text-lg font-semibold text-white ${this.sidebarCollapsed ? 'hidden' : ''}">School System</span>
                             </div>
                             <button 
+                                type="button"
                                 data-sidebar-toggle
                                 class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-300 hover:bg-gray-800"
                             >
@@ -376,18 +375,20 @@ class Dashboard extends App {
                     <div class="flex-1 flex flex-col" data-main-content>
                         <!-- Header -->
                         <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 rounded-2xl">
-                            <div class="flex items-center justify-between px-6 py-4">
+                            <div class="flex items-center justify-between p-2">
                                 <!-- Left side -->
                                 <div class="flex items-center gap-4">
                                     <button 
+                                        type="button"
                                         data-sidebar-toggle
                                         class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                                     >
                                         <i class="fas fa-bars text-lg"></i>
                                     </button>
                                     <button 
+                                        type="button"
                                         data-sidebar-collapse
-                                        class="hidden lg:flex items-center justify-center size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                        class="hidden lg:flex items-center justify-center size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
                                         title="${this.sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}"
                                     >
                                         <i class="fas ${this.sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-lg"></i>
@@ -409,7 +410,12 @@ class Dashboard extends App {
                                     <ui-dropdown-menu>
                                         <ui-dropdown-menu-trigger>
                                             <div class="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors">
-                                                <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="User" />
+                                                <ui-avatar 
+                                                    src="${this.currentUser?.profile_image || ''}" 
+                                                    alt="${userName}" 
+                                                    name="${userName}" 
+                                                    size="md"
+                                                ></ui-avatar>
                                                 <div class="hidden md:block text-left">
                                                     <p class="text-sm font-medium text-gray-700">${userName}</p>
                                                     <p class="text-xs text-gray-500">${userEmail}</p>

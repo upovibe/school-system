@@ -27,7 +27,12 @@ class EmailService {
         $variables = $this->mapArgumentsToVariables($arguments, $emailConfig['variables']);
         
         $message = $this->loadTemplate($emailConfig['template'], $variables);
-        return $this->send($arguments[0], $emailConfig['subject'], $message);
+        
+        // Debug: Check what subject is being passed
+        $subject = $emailConfig['subject'];
+        error_log("Email subject: " . $subject);
+        
+        return $this->send($arguments[0], $subject, $message);
     }
 
     /**
@@ -235,6 +240,7 @@ class EmailService {
         $headers = [
             'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
             'Reply-To: ' . $this->config['from']['address'],
+            'Subject: ' . $subject,
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
             'X-Mailer: PHP/' . phpversion()

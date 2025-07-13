@@ -104,7 +104,7 @@ class ForgotPasswordPage extends App {
     render() {
         return `
             <div class="flex items-center justify-center min-h-screen p-5">
-                    <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm max-w-md w-full">
+                    <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm max-w-sm w-full">
                         <!-- Logo/Icon Section -->
                         <div class="text-center mb-4">
                             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full mb-6 shadow-lg">

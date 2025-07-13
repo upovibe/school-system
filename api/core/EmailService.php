@@ -153,7 +153,7 @@ class EmailService {
         
         // Read multi-line EHLO response
         do {
-            $response = fgets($smtp, 515);
+        $response = fgets($smtp, 515);
         } while (substr($response, 3, 1) == '-');
         
         if (substr($response, 0, 3) != '250') {
@@ -180,7 +180,7 @@ class EmailService {
             // Send EHLO again after TLS
             fputs($smtp, "EHLO $serverName\r\n");
             do {
-                $response = fgets($smtp, 515);
+            $response = fgets($smtp, 515);
             } while (substr($response, 3, 1) == '-');
         }
 

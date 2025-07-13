@@ -282,3 +282,4 @@ class ResetPasswordPage extends App {
 
 customElements.define('app-reset-password-page', ResetPasswordPage);
 export default ResetPasswordPage;
+ 

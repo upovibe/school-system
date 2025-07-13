@@ -170,22 +170,22 @@ class Dashboard extends App {
                     active: window.location.pathname === '/dashboard/admin/users'
                 },
                 {
-                    label: 'System Reports',
-                    icon: 'fas fa-chart-bar',
-                    href: '/dashboard/admin/reports',
-                    active: window.location.pathname === '/dashboard/admin/reports'
-                },
-                {
-                    label: 'School Settings',
-                    icon: 'fas fa-school',
-                    href: '/dashboard/admin/settings',
-                    active: window.location.pathname === '/dashboard/admin/settings'
+                    label: 'Page Settings',
+                    icon: 'fas fa-file-alt',
+                    href: '/dashboard/admin/page-settings',
+                    active: window.location.pathname === '/dashboard/admin/page-settings'
                 },
                 {
                     label: 'System Settings',
                     icon: 'fas fa-cog',
                     href: '/dashboard/admin/system-settings',
                     active: window.location.pathname === '/dashboard/admin/system-settings'
+                },
+                {
+                    label: 'System Reports',
+                    icon: 'fas fa-chart-bar',
+                    href: '/dashboard/admin/reports',
+                    active: window.location.pathname === '/dashboard/admin/reports'
                 }
             ],
             teacher: [
@@ -485,6 +485,8 @@ class Dashboard extends App {
             'staff': 'Staff Dashboard',
             'profile': 'Profile',
             'settings': 'Settings',
+            'page-settings': 'Page Settings',
+            'system-settings': 'System Settings',
             'users': 'User Management',
             'reports': 'Reports',
             'classes': 'Classes',

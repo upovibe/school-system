@@ -204,8 +204,9 @@ class DropdownMenu extends HTMLElement {
                 
                 /* Separator */
                 .upo-dropdown-menu-separator {
+                    display: block;
                     height: 1px;
-                    background-color: #e5e7eb;
+                    background-color: #9ca3af;
                     margin: 0.5rem 0;
                     width: 100%;
                 }

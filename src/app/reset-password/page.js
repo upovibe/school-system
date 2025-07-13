@@ -155,7 +155,8 @@ class ResetPasswordPage extends App {
         } catch (error) {
             // Handle specific API errors
             if (error.response?.status === 400) {
-                throw new Error('Invalid or expired reset token. Please request a new password reset.');
+                const errorMessage = error.response?.data?.error || 'Invalid or expired reset token. Please request a new password reset.';
+                throw new Error(errorMessage);
             } else if (error.response?.status === 422) {
                 throw new Error('Please check your password and try again');
             } else {

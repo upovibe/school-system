@@ -59,8 +59,8 @@ class Emailer {
                 $appUrl = self::getEmailerEnv('APP_URL', 'http://localhost:8000');
                 $testUrl = $appUrl . '/email-test';
                 
-                // Test with a simple welcome email
-                $result = $emailService->sendWelcomeEmail($emailAddress, 'Test User', $testUrl);
+                // Test with the dedicated test email function
+                $result = $emailService->sendTestEmailEmail($emailAddress, $emailAddress, $testUrl);
                 
                 if ($result) {
                     echo "   ✅ SUCCESS: Email sent successfully!\n";
@@ -77,16 +77,6 @@ class Emailer {
                     echo "   - Verify MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD\n";
                     echo "   - For development, consider using Mailtrap\n";
                     echo "   - Check server logs for detailed error messages\n";
-                    
-                    // Show current SMTP configuration (without password)
-                    echo "\n📋 Current SMTP Configuration:\n";
-                    $mailConfig = require __DIR__ . '/../config/mail.php';
-                    echo "   Host: " . $mailConfig['smtp']['host'] . "\n";
-                    echo "   Port: " . $mailConfig['smtp']['port'] . "\n";
-                    echo "   Encryption: " . $mailConfig['smtp']['encryption'] . "\n";
-                    echo "   Username: " . $mailConfig['smtp']['username'] . "\n";
-                    echo "   Password: " . (empty($mailConfig['smtp']['password']) ? '❌ NOT SET' : '✅ SET') . "\n";
-                    echo "   From: " . $mailConfig['from']['address'] . "\n";
                     return false;
                 }
                 
@@ -96,20 +86,6 @@ class Emailer {
                 echo "   - Check if email templates exist in email/templates/\n";
                 echo "   - Verify email-functions.php configuration\n";
                 echo "   - Check SMTP settings in .env file\n";
-                
-                // Show current SMTP configuration on error too
-                echo "\n📋 Current SMTP Configuration:\n";
-                try {
-                    $mailConfig = require __DIR__ . '/../config/mail.php';
-                    echo "   Host: " . $mailConfig['smtp']['host'] . "\n";
-                    echo "   Port: " . $mailConfig['smtp']['port'] . "\n";
-                    echo "   Encryption: " . $mailConfig['smtp']['encryption'] . "\n";
-                    echo "   Username: " . $mailConfig['smtp']['username'] . "\n";
-                    echo "   Password: " . (empty($mailConfig['smtp']['password']) ? '❌ NOT SET' : '✅ SET') . "\n";
-                    echo "   From: " . $mailConfig['from']['address'] . "\n";
-                } catch (Exception $configError) {
-                    echo "   ❌ Could not load mail configuration: " . $configError->getMessage() . "\n";
-                }
                 return false;
             }
             

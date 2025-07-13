@@ -99,8 +99,31 @@ class EmailService {
             return false;
         }
 
-        // Create SMTP connection
-        $smtp = fsockopen($config['host'], $config['port'], $errno, $errstr, $config['timeout']);
+        // Create SMTP connection based on encryption type
+        if ($config['encryption'] == 'ssl') {
+            // Use SSL connection
+            $context = stream_context_create([
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ]
+            ]);
+            
+            $connectionString = "ssl://{$config['host']}:{$config['port']}";
+            $smtp = @stream_socket_client(
+                $connectionString, 
+                $errno, 
+                $errstr, 
+                $config['timeout'],
+                STREAM_CLIENT_CONNECT,
+                $context
+            );
+        } else {
+            // Use regular connection
+            $smtp = @fsockopen($config['host'], $config['port'], $errno, $errstr, $config['timeout']);
+        }
+
         if (!$smtp) {
             error_log("SMTP connection failed: $errstr ($errno)");
             return false;
@@ -108,6 +131,11 @@ class EmailService {
 
         // Read server greeting
         $response = fgets($smtp, 515);
+        if (!$response) {
+            fclose($smtp);
+            return false;
+        }
+        
         if (substr($response, 0, 3) != '220') {
             error_log("SMTP greeting failed: $response");
             fclose($smtp);
@@ -115,23 +143,40 @@ class EmailService {
         }
 
         // Send EHLO
-        fputs($smtp, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
-        $response = fgets($smtp, 515);
+        $serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost';
+        fputs($smtp, "EHLO $serverName\r\n");
+        
+        // Read multi-line EHLO response
+        do {
+            $response = fgets($smtp, 515);
+        } while (substr($response, 3, 1) == '-');
+        
+        if (substr($response, 0, 3) != '250') {
+            fclose($smtp);
+            return false;
+        }
 
-        // Start TLS if required
+        // Start TLS if required (only for non-SSL connections)
         if ($config['encryption'] == 'tls') {
             fputs($smtp, "STARTTLS\r\n");
             $response = fgets($smtp, 515);
+            
             if (substr($response, 0, 3) != '220') {
                 error_log("STARTTLS failed: $response");
                 fclose($smtp);
                 return false;
             }
-            stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            
+            if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($smtp);
+                return false;
+            }
             
             // Send EHLO again after TLS
-            fputs($smtp, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
-            $response = fgets($smtp, 515);
+            fputs($smtp, "EHLO $serverName\r\n");
+            do {
+                $response = fgets($smtp, 515);
+            } while (substr($response, 3, 1) == '-');
         }
 
         // Authenticate

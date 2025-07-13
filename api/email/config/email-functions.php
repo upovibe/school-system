@@ -2,6 +2,12 @@
 // api/email/config/email-functions.php - Email function definitions
 
 return [
+    'test-email' => [
+        'subject' => 'Email Test - School System',
+        'template' => 'test-email',
+        'variables' => ['to', 'testUrl']
+    ],
+    
     'password-reset' => [
         'subject' => 'Password Reset Request - School System',
         'template' => 'password-reset',

@@ -29,17 +29,17 @@ class PasswordResetModel extends BaseModel {
     /**
      * Find reset by token
      */
-    public static function findByToken($token) {
-        return static::where('token', $token)->first();
+    public function findByToken($token) {
+        return $this->where('token', $token)->first();
     }
     
     /**
      * Find active reset by token
      */
-    public static function findActiveReset($token) {
+    public function findActiveReset($token) {
         $sql = "SELECT * FROM password_resets 
                 WHERE token = ? AND expires_at > NOW()";
-        $stmt = static::$pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$token]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

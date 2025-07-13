@@ -5,16 +5,19 @@ require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../core/ImageUpload.php';
 require_once __DIR__ . '/../models/SettingModel.php';
+require_once __DIR__ . '/../models/UserLogModel.php';
 
 class SettingController {
     private $pdo;
     private $settingModel;
     private $imageUpload;
+    private $userLogModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->settingModel = new SettingModel($pdo);
         $this->imageUpload = new \Core\ImageUpload('uploads', 5242880); // 5MB max
+        $this->userLogModel = new UserLogModel($pdo);
     }
 
     /**
@@ -74,6 +77,13 @@ class SettingController {
             }
             
             $settingId = $this->settingModel->create($data);
+            
+            // Log the action
+            $this->logAction('setting_created', "Created setting: {$data['setting_key']}", [
+                'setting_id' => $settingId,
+                'setting_key' => $data['setting_key'],
+                'category' => $data['category'] ?? 'general'
+            ]);
             
             http_response_code(201);
             echo json_encode([
@@ -206,6 +216,13 @@ class SettingController {
             $result = $this->settingModel->update($id, $data);
             
             if ($result) {
+                // Log the action
+                $this->logAction('setting_updated', "Updated setting: {$existingSetting['setting_key']}", [
+                    'setting_id' => $id,
+                    'setting_key' => $existingSetting['setting_key'],
+                    'category' => $existingSetting['category']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -249,6 +266,13 @@ class SettingController {
             $result = $this->settingModel->delete($id);
             
             if ($result) {
+                // Log the action
+                $this->logAction('setting_deleted', "Deleted setting: {$existingSetting['setting_key']}", [
+                    'setting_id' => $id,
+                    'setting_key' => $existingSetting['setting_key'],
+                    'category' => $existingSetting['category']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -434,6 +458,14 @@ class SettingController {
             $uploadResult = $this->handleImageUpload($data['key'], $data['category'] ?? 'general');
             
             if ($result) {
+                // Log the action
+                $this->logAction('setting_value_updated', "Updated setting value: {$data['key']}", [
+                    'setting_key' => $data['key'],
+                    'category' => $category,
+                    'type' => $type,
+                    'image_uploaded' => $uploadResult['uploaded']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -494,6 +526,13 @@ class SettingController {
             if ($result['success']) {
                 // Update setting with image path
                 $this->settingModel->setValue($data['setting_key'], $result['data']['path'], 'image', $data['category'] ?? 'branding');
+                
+                // Log the action
+                $this->logAction('setting_image_uploaded', "Uploaded image for setting: {$data['setting_key']}", [
+                    'setting_key' => $data['setting_key'],
+                    'category' => $data['category'] ?? 'branding',
+                    'image_path' => $result['data']['path']
+                ]);
                 
                 http_response_code(200);
                 echo json_encode([
@@ -568,6 +607,12 @@ class SettingController {
                 // Update setting to remove image reference
                 $this->settingModel->setValue($data['setting_key'], null, 'image', $setting['category']);
                 
+                // Log the action
+                $this->logAction('setting_image_deleted', "Deleted image for setting: {$data['setting_key']}", [
+                    'setting_key' => $data['setting_key'],
+                    'category' => $setting['category']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -587,6 +632,44 @@ class SettingController {
                 'message' => 'Error deleting image: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Log user action
+     * @param string $action Action name
+     * @param string $description Action description
+     * @param array $metadata Additional metadata
+     */
+    private function logAction($action, $description = null, $metadata = null) {
+        try {
+            // Get current user from session
+            $token = $this->getAuthToken();
+            if ($token) {
+                $userSessionModel = new UserSessionModel($this->pdo);
+                $session = $userSessionModel->findActiveSession($token);
+                if ($session) {
+                    UserLogModel::logAction($session['user_id'], $action, $description, $metadata);
+                }
+            }
+        } catch (Exception $e) {
+            // Don't fail the main operation if logging fails
+            error_log("Failed to log action: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get auth token from headers
+     * @return string|null
+     */
+    private function getAuthToken() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        
+        if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            return $matches[1];
+        }
+        
+        return null;
     }
 
     /**

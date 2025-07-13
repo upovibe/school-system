@@ -5,16 +5,19 @@ require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../core/ImageUpload.php';
 require_once __DIR__ . '/../models/PageModel.php';
+require_once __DIR__ . '/../models/UserLogModel.php';
 
 class PageController {
     private $pdo;
     private $pageModel;
     private $imageUpload;
+    private $userLogModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->pageModel = new PageModel($pdo);
         $this->imageUpload = new \Core\ImageUpload('uploads', 5242880); // 5MB max
+        $this->userLogModel = new UserLogModel($pdo);
     }
 
     /**
@@ -77,6 +80,14 @@ class PageController {
             
             // Handle banner upload if present
             $uploadResult = $this->handleBannerUpload($pageId);
+            
+            // Log the action
+            $this->logAction('page_created', "Created page: {$data['title']}", [
+                'page_id' => $pageId,
+                'slug' => $data['slug'],
+                'title' => $data['title'],
+                'banner_uploaded' => $uploadResult['uploaded']
+            ]);
             
             http_response_code(201);
             echo json_encode([
@@ -226,6 +237,14 @@ class PageController {
             $uploadResult = $this->handleBannerUpload($id);
             
             if ($result) {
+                // Log the action
+                $this->logAction('page_updated', "Updated page: {$existingPage['title']}", [
+                    'page_id' => $id,
+                    'slug' => $data['slug'] ?? $existingPage['slug'],
+                    'title' => $data['title'] ?? $existingPage['title'],
+                    'banner_uploaded' => $uploadResult['uploaded']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -272,6 +291,13 @@ class PageController {
             $result = $this->pageModel->delete($id);
             
             if ($result) {
+                // Log the action
+                $this->logAction('page_deleted', "Deleted page: {$existingPage['title']}", [
+                    'page_id' => $id,
+                    'slug' => $existingPage['slug'],
+                    'title' => $existingPage['title']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -326,6 +352,18 @@ class PageController {
             $result = $this->pageModel->toggleActive($id);
             
             if ($result) {
+                // Get page info for logging
+                $page = $this->pageModel->findById($id);
+                $newStatus = $page['is_active'] ? 'activated' : 'deactivated';
+                
+                // Log the action
+                $this->logAction('page_status_toggled', "{$newStatus} page: {$page['title']}", [
+                    'page_id' => $id,
+                    'slug' => $page['slug'],
+                    'title' => $page['title'],
+                    'new_status' => $page['is_active']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -383,6 +421,14 @@ class PageController {
                 // Update page with banner path
                 $this->pageModel->update($id, ['banner_image' => $result['data']['path']]);
                 
+                // Log the action
+                $this->logAction('page_banner_uploaded', "Uploaded banner for page: {$existingPage['title']}", [
+                    'page_id' => $id,
+                    'slug' => $existingPage['slug'],
+                    'title' => $existingPage['title'],
+                    'banner_path' => $result['data']['path']
+                ]);
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
@@ -403,6 +449,44 @@ class PageController {
                 'message' => 'Error uploading banner: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Log user action
+     * @param string $action Action name
+     * @param string $description Action description
+     * @param array $metadata Additional metadata
+     */
+    private function logAction($action, $description = null, $metadata = null) {
+        try {
+            // Get current user from session
+            $token = $this->getAuthToken();
+            if ($token) {
+                $userSessionModel = new UserSessionModel($this->pdo);
+                $session = $userSessionModel->findActiveSession($token);
+                if ($session) {
+                    UserLogModel::logAction($session['user_id'], $action, $description, $metadata);
+                }
+            }
+        } catch (Exception $e) {
+            // Don't fail the main operation if logging fails
+            error_log("Failed to log action: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get auth token from headers
+     * @return string|null
+     */
+    private function getAuthToken() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        
+        if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            return $matches[1];
+        }
+        
+        return null;
     }
 
     /**
@@ -481,6 +565,13 @@ class PageController {
             if ($result['success']) {
                 // Update page to remove banner reference
                 $this->pageModel->update($id, ['banner_image' => null]);
+                
+                // Log the action
+                $this->logAction('page_banner_deleted', "Deleted banner for page: {$existingPage['title']}", [
+                    'page_id' => $id,
+                    'slug' => $existingPage['slug'],
+                    'title' => $existingPage['title']
+                ]);
                 
                 http_response_code(200);
                 echo json_encode([

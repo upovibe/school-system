@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import '@/components/ui/Toast.js';
-import '@/components/layouts/Dashboard.js';
+import '@/components/layout/Dashboard.js';
 
 /**
  * Dashboard Layout Component

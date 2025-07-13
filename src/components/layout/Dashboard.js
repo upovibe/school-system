@@ -166,130 +166,130 @@ class Dashboard extends App {
                 {
                     label: 'User Management',
                     icon: 'fas fa-users',
-                    href: '/admin/users',
-                    active: window.location.pathname === '/admin/users'
+                    href: '/dashboard/admin/users',
+                    active: window.location.pathname === '/dashboard/admin/users'
                 },
                 {
                     label: 'System Reports',
                     icon: 'fas fa-chart-bar',
-                    href: '/admin/reports',
-                    active: window.location.pathname === '/admin/reports'
+                    href: '/dashboard/admin/reports',
+                    active: window.location.pathname === '/dashboard/admin/reports'
                 },
                 {
                     label: 'School Settings',
                     icon: 'fas fa-school',
-                    href: '/admin/settings',
-                    active: window.location.pathname === '/admin/settings'
+                    href: '/dashboard/admin/settings',
+                    active: window.location.pathname === '/dashboard/admin/settings'
                 },
                 {
                     label: 'System Settings',
                     icon: 'fas fa-cog',
-                    href: '/admin/system-settings',
-                    active: window.location.pathname === '/admin/system-settings'
+                    href: '/dashboard/admin/system-settings',
+                    active: window.location.pathname === '/dashboard/admin/system-settings'
                 }
             ],
             teacher: [
                 {
                     label: 'Teacher Dashboard',
                     icon: 'fas fa-chalkboard-teacher',
-                    href: '/dashboard/teacher',
-                    active: window.location.pathname === '/dashboard/teacher'
+                    href: '/dashboard/teacher/dashboard',
+                    active: window.location.pathname === '/dashboard/teacher/dashboard'
                 },
                 {
                     label: 'My Classes',
                     icon: 'fas fa-book',
-                    href: '/teacher/classes',
-                    active: window.location.pathname === '/teacher/classes'
+                    href: '/dashboard/teacher/classes',
+                    active: window.location.pathname === '/dashboard/teacher/classes'
                 },
                 {
                     label: 'Grades',
                     icon: 'fas fa-graduation-cap',
-                    href: '/teacher/grades',
-                    active: window.location.pathname === '/teacher/grades'
+                    href: '/dashboard/teacher/grades',
+                    active: window.location.pathname === '/dashboard/teacher/grades'
                 },
                 {
                     label: 'Attendance',
                     icon: 'fas fa-calendar-check',
-                    href: '/teacher/attendance',
-                    active: window.location.pathname === '/teacher/attendance'
+                    href: '/dashboard/teacher/attendance',
+                    active: window.location.pathname === '/dashboard/teacher/attendance'
                 }
             ],
             student: [
                 {
                     label: 'Student Dashboard',
                     icon: 'fas fa-user-graduate',
-                    href: '/dashboard/student',
-                    active: window.location.pathname === '/dashboard/student'
+                    href: '/dashboard/student/dashboard',
+                    active: window.location.pathname === '/dashboard/student/dashboard'
                 },
                 {
                     label: 'My Courses',
                     icon: 'fas fa-book-open',
-                    href: '/student/courses',
-                    active: window.location.pathname === '/student/courses'
+                    href: '/dashboard/student/courses',
+                    active: window.location.pathname === '/dashboard/student/courses'
                 },
                 {
                     label: 'Assignments',
                     icon: 'fas fa-tasks',
-                    href: '/student/assignments',
-                    active: window.location.pathname === '/student/assignments'
+                    href: '/dashboard/student/assignments',
+                    active: window.location.pathname === '/dashboard/student/assignments'
                 },
                 {
                     label: 'Grades',
                     icon: 'fas fa-chart-line',
-                    href: '/student/grades',
-                    active: window.location.pathname === '/student/grades'
+                    href: '/dashboard/student/grades',
+                    active: window.location.pathname === '/dashboard/student/grades'
                 }
             ],
             parent: [
                 {
                     label: 'Parent Dashboard',
                     icon: 'fas fa-users',
-                    href: '/dashboard/parent',
-                    active: window.location.pathname === '/dashboard/parent'
+                    href: '/dashboard/parent/dashboard',
+                    active: window.location.pathname === '/dashboard/parent/dashboard'
                 },
                 {
                     label: 'My Children',
                     icon: 'fas fa-child',
-                    href: '/parent/children',
-                    active: window.location.pathname === '/parent/children'
+                    href: '/dashboard/parent/children',
+                    active: window.location.pathname === '/dashboard/parent/children'
                 },
                 {
                     label: 'Progress Reports',
                     icon: 'fas fa-chart-pie',
-                    href: '/parent/reports',
-                    active: window.location.pathname === '/parent/reports'
+                    href: '/dashboard/parent/reports',
+                    active: window.location.pathname === '/dashboard/parent/reports'
                 },
                 {
                     label: 'Communications',
                     icon: 'fas fa-comments',
-                    href: '/parent/messages',
-                    active: window.location.pathname === '/parent/messages'
+                    href: '/dashboard/parent/messages',
+                    active: window.location.pathname === '/dashboard/parent/messages'
                 }
             ],
             staff: [
                 {
                     label: 'Staff Dashboard',
                     icon: 'fas fa-user-tie',
-                    href: '/dashboard/staff',
-                    active: window.location.pathname === '/dashboard/staff'
+                    href: '/dashboard/staff/dashboard',
+                    active: window.location.pathname === '/dashboard/staff/dashboard'
                 },
                 {
                     label: 'Administration',
                     icon: 'fas fa-clipboard-list',
-                    href: '/staff/admin',
-                    active: window.location.pathname === '/staff/admin'
+                    href: '/dashboard/staff/admin',
+                    active: window.location.pathname === '/dashboard/staff/admin'
                 },
                 {
                     label: 'Reports',
                     icon: 'fas fa-file-alt',
-                    href: '/staff/reports',
-                    active: window.location.pathname === '/staff/reports'
+                    href: '/dashboard/staff/reports',
+                    active: window.location.pathname === '/dashboard/staff/reports'
                 },
                 {
                     label: 'Support',
                     icon: 'fas fa-headset',
-                    href: '/staff/support',
-                    active: window.location.pathname === '/staff/support'
+                    href: '/dashboard/staff/support',
+                    active: window.location.pathname === '/dashboard/staff/support'
                 }
             ]
         };

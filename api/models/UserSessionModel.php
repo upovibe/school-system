@@ -32,16 +32,21 @@ class UserSessionModel extends BaseModel {
      * Find session by token
      */
     public static function findByToken($token) {
-        return static::where('token', $token)->first();
+        $pdo = static::getPdo();
+        $sql = "SELECT * FROM user_sessions WHERE token = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$token]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
     /**
      * Find active session by token
      */
     public static function findActiveSession($token) {
+        $pdo = static::getPdo();
         $sql = "SELECT * FROM user_sessions 
                 WHERE token = ? AND expires_at > NOW()";
-        $stmt = static::$pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([$token]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

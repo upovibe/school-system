@@ -1,17 +1,20 @@
 <?php
 // api/controllers/SettingController.php - Controller for settings management
 
-require_once __DIR__ . '/../core/AuthMiddleware.php';
-require_once __DIR__ . '/../core/RoleMiddleware.php';
+require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
+require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
+require_once __DIR__ . '/../core/ImageUpload.php';
 require_once __DIR__ . '/../models/SettingModel.php';
 
 class SettingController {
     private $pdo;
     private $settingModel;
+    private $imageUpload;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->settingModel = new SettingModel($pdo);
+        $this->imageUpload = new \Core\ImageUpload('uploads', 5242880); // 5MB max
     }
 
     /**
@@ -427,11 +430,17 @@ class SettingController {
             
             $result = $this->settingModel->setValue($data['key'], $data['value'], $type, $category);
             
+            // Handle image upload if present
+            $uploadResult = $this->handleImageUpload($data['key'], $data['category'] ?? 'general');
+            
             if ($result) {
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Setting value updated successfully'
+                    'message' => 'Setting value updated successfully',
+                    'data' => [
+                        'image_upload' => $uploadResult
+                    ]
                 ]);
             } else {
                 http_response_code(500);
@@ -445,6 +454,200 @@ class SettingController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error updating setting value: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Upload setting image (logo, favicon, etc.) (admin only)
+     */
+    public function uploadImage() {
+        try {
+            // Require admin authentication
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (empty($data['setting_key'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Setting key is required'
+                ]);
+                return;
+            }
+            
+            // Check if file was uploaded
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No file uploaded'
+                ]);
+                return;
+            }
+            
+            // Upload image with setting key as source
+            $result = $this->imageUpload->uploadSingle($_FILES['image'], 'settings', $data['setting_key']);
+            
+            if ($result['success']) {
+                // Update setting with image path
+                $this->settingModel->setValue($data['setting_key'], $result['data']['path'], 'image', $data['category'] ?? 'branding');
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Image uploaded successfully',
+                    'data' => $result['data']
+                ]);
+            } else {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error uploading image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete setting image (admin only)
+     */
+    public function deleteImage() {
+        try {
+            // Require admin authentication
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (empty($data['setting_key'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Setting key is required'
+                ]);
+                return;
+            }
+            
+            // Get current setting value
+            $setting = $this->settingModel->findByKey($data['setting_key']);
+            if (!$setting) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Setting not found'
+                ]);
+                return;
+            }
+            
+            $imagePath = $setting['setting_value'];
+            if (!$imagePath) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No image found for this setting'
+                ]);
+                return;
+            }
+            
+            // Extract filename from path
+            $filename = basename($imagePath);
+            
+            // Delete image
+            $result = $this->imageUpload->deleteImage($filename, 'settings');
+            
+            if ($result['success']) {
+                // Update setting to remove image reference
+                $this->settingModel->setValue($data['setting_key'], null, 'image', $setting['category']);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Image deleted successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Handle image upload automatically
+     * @param string $settingKey Setting key
+     * @param string $category Setting category
+     * @return array Upload result
+     */
+    private function handleImageUpload($settingKey, $category = 'general') {
+        // Check if image file was uploaded
+        if (!isset($_FILES['image']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
+            return ['uploaded' => false, 'message' => 'No image uploaded'];
+        }
+        
+        try {
+            // Upload image with setting key as source
+            $result = $this->imageUpload->uploadSingle($_FILES['image'], 'settings', $settingKey);
+            
+            if ($result['success']) {
+                // Update setting with image path
+                $this->settingModel->setValue($settingKey, $result['data']['path'], 'image', $category);
+                return [
+                    'uploaded' => true,
+                    'message' => 'Image uploaded successfully',
+                    'data' => $result['data']
+                ];
+            } else {
+                return [
+                    'uploaded' => false,
+                    'message' => $result['message']
+                ];
+            }
+        } catch (Exception $e) {
+            return [
+                'uploaded' => false,
+                'message' => 'Error uploading image: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get upload statistics (admin only)
+     */
+    public function getUploadStats() {
+        try {
+            // Require admin authentication
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            $stats = $this->imageUpload->getStats();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $stats,
+                'message' => 'Upload statistics retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving upload statistics: ' . $e->getMessage()
             ]);
         }
     }

@@ -298,13 +298,21 @@ class DropdownMenu extends HTMLElement {
                     e.stopPropagation();
                     this.close();
                     
+                    const eventDetail = {
+                        text: customElement.textContent.trim(),
+                        action: customElement.getAttribute('data-action'),
+                        icon: menuItem.querySelector('.upo-dropdown-menu-item-icon')?.innerHTML || '',
+                        color: this.getMenuItemColor(menuItem)
+                    };
+                    
+                    // Dispatch on the dropdown menu element
                     this.dispatchEvent(new CustomEvent('item-click', {
-                        detail: {
-                            text: customElement.textContent.trim(),
-                            action: customElement.getAttribute('data-action'),
-                            icon: menuItem.querySelector('.upo-dropdown-menu-item-icon')?.innerHTML || '',
-                            color: this.getMenuItemColor(menuItem)
-                        }
+                        detail: eventDetail
+                    }));
+                    
+                    // Also dispatch on document to ensure it bubbles up
+                    document.dispatchEvent(new CustomEvent('item-click', {
+                        detail: eventDetail
                     }));
                     return;
                 }

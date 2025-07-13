@@ -72,6 +72,22 @@ class Dashboard extends App {
                 this.handleLogout();
             }
         });
+
+        // Also listen for the event on the document to catch it if it bubbles up
+        document.addEventListener('item-click', (e) => {
+            if (e.detail.text === 'Logout') {
+                this.handleLogout();
+            }
+        });
+
+        // Handle sidebar logout button
+        this.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="logout"]')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleLogout();
+            }
+        });
     }
 
     toggleSidebar() {
@@ -94,11 +110,33 @@ class Dashboard extends App {
         }
     }
 
-
-
-
-
-    handleLogout() {
+    async handleLogout() {
+        try {
+            // Get the current token
+            const token = localStorage.getItem('token');
+            
+            if (token) {
+                // Call logout API to invalidate server-side session
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.warn('Server logout failed, but continuing with client logout');
+                }
+            }
+        } catch (error) {
+            console.warn('Error calling logout API:', error);
+        }
+        
+        // Clear user data immediately
+        localStorage.removeItem('userData');
+        localStorage.removeItem('token');
+        
         // Show logout toast
         Toast.show({
             title: 'Logout Successful',
@@ -106,10 +144,6 @@ class Dashboard extends App {
             variant: 'info',
             duration: 2000
         });
-
-        // Clear user data
-        localStorage.removeItem('userData');
-        localStorage.removeItem('token');
         
         // Redirect after toast
         setTimeout(() => {
@@ -329,7 +363,7 @@ class Dashboard extends App {
                         <!-- Sidebar Footer -->
                         <div class="p-4 border-t border-gray-200">
                             <button 
-                                data-logout
+                                data-action="logout"
                                 class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors relative"
                                 title="${this.sidebarCollapsed ? 'Logout' : ''}"
                             >

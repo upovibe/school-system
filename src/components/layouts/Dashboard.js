@@ -180,6 +180,12 @@ class Dashboard extends App {
                     icon: 'fas fa-school',
                     href: '/admin/settings',
                     active: window.location.pathname === '/admin/settings'
+                },
+                {
+                    label: 'System Settings',
+                    icon: 'fas fa-cog',
+                    href: '/admin/system-settings',
+                    active: window.location.pathname === '/admin/system-settings'
                 }
             ],
             teacher: [

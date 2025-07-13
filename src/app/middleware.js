@@ -59,6 +59,42 @@ export default {
         notifyOnAccess: false
     },
     
+    // Role-specific dashboard access
+    'dashboard/admin': {
+        requireAuth: true,
+        requireRole: 'admin',
+        logAccess: true,
+        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
+    },
+    
+    'dashboard/teacher': {
+        requireAuth: true,
+        requireRole: 'teacher',
+        logAccess: true,
+        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
+    },
+    
+    'dashboard/student': {
+        requireAuth: true,
+        requireRole: 'student',
+        logAccess: true,
+        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
+    },
+    
+    'dashboard/parent': {
+        requireAuth: true,
+        requireRole: 'parent',
+        logAccess: true,
+        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
+    },
+    
+    'dashboard/staff': {
+        requireAuth: true,
+        requireRole: 'staff',
+        logAccess: true,
+        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
+    },
+    
     // STANDALONE PAGES (no layout, custom behavior)
     '': {
         requireAuth: false,

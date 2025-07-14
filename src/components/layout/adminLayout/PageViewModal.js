@@ -1,7 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
-import '@/components/ui/Tooltip.js';
 
 /**
  * Page View Modal Component
@@ -69,38 +68,16 @@ class PageViewModal extends HTMLElement {
                 <div>
                     ${this.pageData ? `
                                                  <!-- Page Title -->
-                         <div class="border-b pb-4">
-                             <div class="flex items-center gap-3">
+                         <div class="flex items-center gap-3 border-b pb-4">
                                  <h3 class="text-xl font-semibold text-gray-900">${this.pageData.title || 'N/A'}</h3>
-                                 <ui-badge color="secondary">${this.pageData.category || 'N/A'}</ui-badge>
-                                 <ui-tooltip content="${this.pageData.is_active ? 'Active' : 'Inactive'}" position="top">
-                                     <ui-badge color="${this.pageData.is_active ? 'success' : 'error'}">
-                                         ${this.pageData.is_active ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
+                                 <ui-badge color="secondary"><i class="fas fa-tag mr-1"></i>${this.pageData.category || 'N/A'}</ui-badge>
+                                 <ui-badge color="${this.pageData.is_active ? 'success' : 'error'}">
+                                    ${this.pageData.is_active ? '<i class="fas fa-check mr-1"></i> Active' : '<i class="fas fa-times mr-1"></i> Inactive'}
                                      </ui-badge>
-                                 </ui-tooltip>
                              </div>
-                         </div>
-
-                        <!-- Page Details -->
-                        <div class="border-b pb-4">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3">Details</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${this.pageData.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                        ${this.pageData.is_active ? 'Active' : 'Inactive'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Sort Order</label>
-                                    <p class="text-gray-900">${this.pageData.sort_order || 0}</p>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Banner Image Preview -->
                         <div class="border-b pb-4">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3">Banner Image</h4>
                             ${this.pageData.banner_image ? `
                                 <div class="space-y-2">
                                     <img src="${this.pageData.banner_image}" 
@@ -121,15 +98,22 @@ class PageViewModal extends HTMLElement {
 
                         <!-- SEO Information -->
                         <div class="border-b pb-4">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3">SEO Information</h4>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Meta Description</label>
-                                    <p class="text-gray-900 text-sm">${this.pageData.meta_description || 'No meta description set'}</p>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-search text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">SEO Information</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-align-left mr-1"></i>Meta Description
+                                    </label>
+                                    <p class="text-gray-900 text-sm leading-relaxed">${this.pageData.meta_description || 'No meta description set'}</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Meta Keywords</label>
-                                    <p class="text-gray-900 text-sm">${this.pageData.meta_keywords || 'No meta keywords set'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-tags mr-1"></i>Meta Keywords
+                                    </label>
+                                    <p class="text-gray-900 text-sm leading-relaxed">${this.pageData.meta_keywords || 'No meta keywords set'}</p>
                                 </div>
                             </div>
                         </div>

@@ -22,7 +22,6 @@ import api from '@/services/api.js';
 class PageSettingsModal extends HTMLElement {
     constructor() {
         super();
-        this.isOpen = false;
     }
 
     static get observedAttributes() {
@@ -32,46 +31,26 @@ class PageSettingsModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.updateOpenState();
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue && name === 'open') {
-            this.updateOpenState();
-        }
     }
 
     setupEventListeners() {
-        // Listen for modal close events
-        this.addEventListener('modal-close', () => {
+        // Listen for confirm button click (Save Page)
+        this.addEventListener('confirm', () => {
+            this.savePage();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
             this.close();
         });
     }
 
-    updateOpenState() {
-        const shouldBeOpen = this.hasAttribute('open');
-        
-        if (shouldBeOpen && !this.isOpen) {
-            this.open();
-        } else if (!shouldBeOpen && this.isOpen) {
-            this.close();
-        }
-    }
-
     open() {
-        if (this.isOpen) return;
-        
-        this.isOpen = true;
         this.setAttribute('open', '');
-        this.dispatchEvent(new CustomEvent('modal-opened'));
     }
 
     close() {
-        if (!this.isOpen) return;
-        
-        this.isOpen = false;
         this.removeAttribute('open');
-        this.dispatchEvent(new CustomEvent('modal-closed'));
     }
 
     // Save the new page
@@ -153,7 +132,7 @@ class PageSettingsModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal 
-                ${this.isOpen ? 'open' : ''} 
+                ${this.hasAttribute('open') ? 'open' : ''} 
                 position="right" 
                 close-button="true">
                 <div slot="title">Page Settings</div>
@@ -261,14 +240,6 @@ class PageSettingsModal extends HTMLElement {
                             </ui-input>
                         </div>
                     </div>
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-settings-modal').close()">
-                        Cancel
-                    </button>
-                    <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-settings-modal').savePage()">
-                        Save Page
-                    </button>
-                </div>
             </ui-modal>
         `;
     }

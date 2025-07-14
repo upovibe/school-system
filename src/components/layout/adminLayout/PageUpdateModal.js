@@ -22,7 +22,6 @@ import api from '@/services/api.js';
 class PageUpdateModal extends HTMLElement {
     constructor() {
         super();
-        this.isOpen = false;
         this.pageData = null;
     }
 
@@ -33,60 +32,34 @@ class PageUpdateModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.updateOpenState();
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue && name === 'open') {
-            this.updateOpenState();
-        }
     }
 
     setupEventListeners() {
-        // Listen for modal close events
-        this.addEventListener('modal-close', () => {
+        // Listen for confirm button click (Update Page)
+        this.addEventListener('confirm', () => {
+            this.updatePage();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
             this.close();
         });
-    }
-
-    updateOpenState() {
-        const shouldBeOpen = this.hasAttribute('open');
-        
-        if (shouldBeOpen && !this.isOpen) {
-            this.open();
-        } else if (!shouldBeOpen && this.isOpen) {
-            this.close();
-        }
-    }
-
-    open() {
-        if (this.isOpen) return;
-        
-        this.isOpen = true;
-        this.setAttribute('open', '');
-        this.dispatchEvent(new CustomEvent('modal-opened'));
-        
-        // Populate form if page data is available
-        if (this.pageData) {
-            this.populateForm();
-        }
-    }
-
-    close() {
-        if (!this.isOpen) return;
-        
-        this.isOpen = false;
-        this.removeAttribute('open');
-        this.pageData = null;
-        this.dispatchEvent(new CustomEvent('modal-closed'));
     }
 
     // Set page data for editing
     setPageData(pageData) {
         this.pageData = pageData;
-        if (this.isOpen) {
+        if (this.hasAttribute('open')) {
             this.populateForm();
         }
+    }
+
+    open() {
+        this.setAttribute('open', '');
+    }
+
+    close() {
+        this.removeAttribute('open');
     }
 
     // Populate form with existing data
@@ -222,7 +195,7 @@ class PageUpdateModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal 
-                ${this.isOpen ? 'open' : ''} 
+                ${this.hasAttribute('open') ? 'open' : ''} 
                 position="right" 
                 close-button="true">
                 <div slot="title">Page Update</div>
@@ -335,14 +308,6 @@ class PageUpdateModal extends HTMLElement {
                             </ui-input>
                         </div>
                     </div>
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-update-modal').close()">
-                        Cancel
-                    </button>
-                    <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-update-modal').updatePage()">
-                        Update Page
-                    </button>
-                </div>
             </ui-modal>
         `;
     }

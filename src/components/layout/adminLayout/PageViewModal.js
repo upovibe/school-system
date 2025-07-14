@@ -15,7 +15,6 @@ import '@/components/ui/Toast.js';
 class PageViewModal extends HTMLElement {
     constructor() {
         super();
-        this.isOpen = false;
         this.pageData = null;
     }
 
@@ -26,39 +25,22 @@ class PageViewModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.updateOpenState();
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue && name === 'open') {
-            this.updateOpenState();
-        }
     }
 
     setupEventListeners() {
-        // Listen for modal close events
-        this.addEventListener('modal-close', () => {
+        // Listen for confirm button click (Close)
+        this.addEventListener('confirm', () => {
+            this.close();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
             this.close();
         });
     }
 
-    updateOpenState() {
-        const shouldBeOpen = this.hasAttribute('open');
-        
-        if (shouldBeOpen && !this.isOpen) {
-            this.open();
-        } else if (!shouldBeOpen && this.isOpen) {
-            this.close();
-        }
-    }
-
     open() {
-        if (this.isOpen) return;
-        
-        this.isOpen = true;
         this.setAttribute('open', '');
-        this.dispatchEvent(new CustomEvent('modal-opened'));
-        
         // Log the page data when modal opens
         if (this.pageData) {
             console.log('🔍 VIEW MODAL DATA:', this.pageData);
@@ -66,12 +48,8 @@ class PageViewModal extends HTMLElement {
     }
 
     close() {
-        if (!this.isOpen) return;
-        
-        this.isOpen = false;
         this.removeAttribute('open');
         this.pageData = null;
-        this.dispatchEvent(new CustomEvent('modal-closed'));
     }
 
     // Set page data for viewing
@@ -82,7 +60,7 @@ class PageViewModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal 
-                ${this.isOpen ? 'open' : ''} 
+                ${this.hasAttribute('open') ? 'open' : ''} 
                 position="bottom" 
                 size="lg"
                 close-button="true">
@@ -91,12 +69,6 @@ class PageViewModal extends HTMLElement {
                 <div class="p-6">
                     <p class="text-gray-600">Page data has been logged to console.</p>
                     <p class="text-sm text-gray-500 mt-2">Check browser console to see the page data.</p>
-                </div>
-                
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-view-modal').close()">
-                        Close
-                    </button>
                 </div>
             </ui-modal>
         `;

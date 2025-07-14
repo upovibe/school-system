@@ -12,6 +12,7 @@
  * - close-on-escape: boolean (default: true) - close on escape key
  * - close-on-backdrop-click: boolean (default: true) - close on backdrop click
  * - close-button: boolean (default: true) - show/hide close button
+ * - variant: string (default: "default") - button variant: "default", "danger" for delete confirmations
  * 
  * Slots:
  * - default: Main modal content
@@ -21,9 +22,11 @@
  * Events:
  * - modal-open: Fired when modal opens
  * - modal-close: Fired when modal closes
+ * - cancel: Fired when cancel button is clicked
+ * - confirm: Fired when confirm button is clicked
  * 
  * Usage:
- * <ui-modal open position="right" size="md">
+ * <ui-modal open position="right" size="md" variant="danger">
  *   <div slot="title">Modal Title</div>
  *   <div>Modal content goes here</div>
  *   <div slot="footer">Footer content</div>
@@ -39,7 +42,7 @@ class Modal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open', 'position', 'size', 'backdrop', 'close-on-escape', 'close-on-backdrop-click', 'close-button'];
+        return ['open', 'position', 'size', 'backdrop', 'close-on-escape', 'close-on-backdrop-click', 'close-button', 'variant'];
     }
 
     connectedCallback() {
@@ -48,6 +51,7 @@ class Modal extends HTMLElement {
         this.updateOpenState();
         // Add explicit close button event after render
         this.addCloseButtonHandler();
+        this.addFooterButtonHandlers();
     }
 
     disconnectedCallback() {
@@ -61,6 +65,7 @@ class Modal extends HTMLElement {
             } else {
                 this.render();
                 this.addCloseButtonHandler();
+                this.addFooterButtonHandlers();
             }
         }
     }
@@ -142,6 +147,7 @@ class Modal extends HTMLElement {
         const size = this.getAttribute('size') || 'md';
         const backdrop = this.getAttribute('backdrop') !== 'false';
         const showClose = this.getAttribute('close-button') === 'true';
+        const variant = this.getAttribute('variant') || 'default';
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -407,6 +413,45 @@ class Modal extends HTMLElement {
                     background: #f9fafb;
                 }
 
+                .modal-footer button {
+                    padding: 0.5rem 1rem;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    border-radius: 0.375rem;
+                    border: 1px solid #d1d5db;
+                    background: white;
+                    color: #374151;
+                    cursor: pointer;
+                    transition: all 0.15s ease-in-out;
+                }
+                
+                .modal-footer button:hover {
+                    background-color: #f9fafb;
+                    border-color: #9ca3af;
+                }
+                
+                .modal-footer button.primary {
+                    background-color: #3b82f6;
+                    border-color: #3b82f6;
+                    color: white;
+                }
+                
+                .modal-footer button.primary:hover {
+                    background-color: #2563eb;
+                    border-color: #2563eb;
+                }
+                
+                .modal-footer button.danger {
+                    background-color: #ef4444;
+                    border-color: #ef4444;
+                    color: white;
+                }
+                
+                .modal-footer button.danger:hover {
+                    background-color: #dc2626;
+                    border-color: #dc2626;
+                }
+
                 /* Responsive adjustments */
                 @media (max-width: 768px) {
                     .modal-content[data-position="left"],
@@ -455,7 +500,12 @@ class Modal extends HTMLElement {
                 </div>
                 
                 <div class="modal-footer">
-                    <slot name="footer"></slot>
+                    <slot name="footer">
+                        <button class="secondary" id="cancel-btn">Cancel</button>
+                        <button class="${variant === 'danger' ? 'danger' : 'primary'}" id="confirm-btn">
+                            ${variant === 'danger' ? 'Delete' : 'Confirm'}
+                        </button>
+                    </slot>
                 </div>
             </div>
         `;
@@ -466,6 +516,29 @@ class Modal extends HTMLElement {
         if (closeBtn) {
             closeBtn.onclick = (e) => {
                 e.stopPropagation();
+                this.close();
+            };
+        }
+    }
+
+    addFooterButtonHandlers() {
+        const cancelBtn = this.shadowRoot.getElementById('cancel-btn');
+        const confirmBtn = this.shadowRoot.getElementById('confirm-btn');
+
+        // Cancel button
+        if (cancelBtn) {
+            cancelBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.dispatchEvent(new CustomEvent('cancel', { bubbles: true }));
+                this.close();
+            };
+        }
+
+        // Confirm button
+        if (confirmBtn) {
+            confirmBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.dispatchEvent(new CustomEvent('confirm', { bubbles: true }));
                 this.close();
             };
         }

@@ -423,7 +423,6 @@ class Dropdown extends HTMLElement {
     setupEventListeners() {
         // Toggle dropdown
         this.trigger.addEventListener('click', (e) => {
-            console.log('Trigger clicked!');
             e.preventDefault();
             e.stopPropagation();
             if (this.hasAttribute('disabled')) return;
@@ -513,7 +512,6 @@ class Dropdown extends HTMLElement {
     }
 
     toggleDropdown() {
-        console.log('toggleDropdown called, current state:', this.isOpen);
         if (this.isOpen) {
             this.closeDropdown();
         } else {
@@ -522,7 +520,6 @@ class Dropdown extends HTMLElement {
     }
 
     openDropdown() {
-        console.log('openDropdown called');
         this.isOpen = true;
         this.container.classList.add('open');
         

@@ -122,10 +122,15 @@ class PageSettingsPage extends App {
         const { detail } = event;
         const viewPage = this.get('pages').find(page => page.id === detail.row.id);
         if (viewPage) {
-            // Close any open modals first
             this.closeAllModals();
             this.set('viewPageData', viewPage);
             this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('page-view-modal');
+                if (viewModal) {
+                    viewModal.setPageData(viewPage);
+                }
+            }, 100);
         }
     }
 

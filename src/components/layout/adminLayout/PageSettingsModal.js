@@ -75,7 +75,7 @@ class PageSettingsModal extends HTMLElement {
                 meta_description: metaDescriptionTextarea.value,
                 meta_keywords: metaKeywordsInput.value,
                 banner_image: bannerImageInput.value,
-                is_active: statusRadioGroup.value === 'active',
+                is_active: statusRadioGroup.value === 'active' ? 1 : 0,
                 sort_order: parseInt(sortOrderInput.value) || 0
             };
 

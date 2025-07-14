@@ -35,18 +35,11 @@ class PageSettingsPage extends App {
         this.loadData();
         
         // Add event listeners for table events
-        this.addEventListener('table-view', this.handleTableEvent.bind(this));
-        this.addEventListener('table-edit', this.handleTableEvent.bind(this));
-        this.addEventListener('table-delete', this.handleTableEvent.bind(this));
-        this.addEventListener('table-add', this.handleTableEvent.bind(this));
-        this.addEventListener('table-refresh', this.handleTableEvent.bind(this));
-        
-        // Add modal event listeners
-        this.addEventListener('modal-closed', () => {
-            this.closeAddModal();
-            this.closeUpdateModal();
-            this.closeViewModal();
-        });
+        this.addEventListener('table-view', this.onView.bind(this));
+        this.addEventListener('table-edit', this.onEdit.bind(this));
+        this.addEventListener('table-delete', this.onDelete.bind(this));
+        this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-refresh', this.onRefresh.bind(this));
         
         // Listen for dialog events
         this.addEventListener('dialog-opened', (event) => {
@@ -59,18 +52,16 @@ class PageSettingsPage extends App {
             }
         });
         
+        // Listen for success events to refresh data
         this.addEventListener('page-deleted', () => {
-            this.closeDeleteDialog();
             this.loadData();
         });
         
         this.addEventListener('page-saved', () => {
-            this.closeAddModal();
             this.loadData();
         });
         
         this.addEventListener('page-updated', () => {
-            this.closeUpdateModal();
             this.loadData();
         });
         
@@ -126,56 +117,48 @@ class PageSettingsPage extends App {
         }
     }
 
-    // Handle table events
-    handleTableEvent(event) {
-        const { type, detail } = event;
-        
-        // First, close all modals and dialogs
-        this.closeAllModals();
-        
-        switch (type) {
-            case 'table-view':
-                // Find the original page data from the pages array
-                const viewPage = this.get('pages').find(page => page.id === detail.row.id);
-                if (viewPage) {
-                    this.set('viewPageData', viewPage);
-                    this.set('showViewModal', true);
-                } else {
-                    console.error('❌ Could not find page data for viewing:', detail.row);
-                }
-                break;
-                
-            case 'table-edit':
-                // Find the original page data from the pages array
-                const originalPage = this.get('pages').find(page => page.id === detail.row.id);
-                if (originalPage) {
-                    this.set('updatePageData', originalPage);
-                    this.set('showUpdateModal', true);
-                } else {
-                    console.error('❌ Could not find page data for updating:', detail.row);
-                }
-                break;
-                
-            case 'table-delete':
-                // Find the original page data from the pages array
-                const deletePage = this.get('pages').find(page => page.id === detail.row.id);
-                if (deletePage) {
-                    this.set('deletePageData', deletePage);
-                    this.set('showDeleteDialog', true);
-                } else {
-                    console.error('❌ Could not find page data for deleting:', detail.row);
-                }
-                break;
-                
-            case 'table-add':
-                this.set('updatePageData', null);
-                this.set('showAddModal', true);
-                break;
-                
-            case 'table-refresh':
-                this.loadData();
-                break;
+    // Action handlers
+    onView(event) {
+        const { detail } = event;
+        const viewPage = this.get('pages').find(page => page.id === detail.row.id);
+        if (viewPage) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('viewPageData', viewPage);
+            this.set('showViewModal', true);
         }
+    }
+
+    onEdit(event) {
+        const { detail } = event;
+        const editPage = this.get('pages').find(page => page.id === detail.row.id);
+        if (editPage) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('updatePageData', editPage);
+            this.set('showUpdateModal', true);
+        }
+    }
+
+    onDelete(event) {
+        const { detail } = event;
+        const deletePage = this.get('pages').find(page => page.id === detail.row.id);
+        if (deletePage) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('deletePageData', deletePage);
+            this.set('showDeleteDialog', true);
+        }
+    }
+
+    onAdd(event) {
+        // Close any open modals first
+        this.closeAllModals();
+        this.set('showAddModal', true);
+    }
+
+    onRefresh(event) {
+        this.loadData();
     }
 
     // Close all modals and dialogs
@@ -274,28 +257,13 @@ class PageSettingsPage extends App {
         `;
     }
 
-    // Close the add modal
-    closeAddModal() {
-        this.closeAllModals();
-    }
-
-    // Close the update modal
-    closeUpdateModal() {
-        this.closeAllModals();
-    }
-
-    // Close the view modal
-    closeViewModal() {
-        this.closeAllModals();
-    }
-
-    // Close the delete dialog
-    closeDeleteDialog() {
-        this.closeAllModals();
-    }
-
 
 }
 
 customElements.define('app-page-settings-page', PageSettingsPage);
 export default PageSettingsPage;
+
+
+
+
+

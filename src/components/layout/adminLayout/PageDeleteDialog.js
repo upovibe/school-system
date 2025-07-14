@@ -17,7 +17,6 @@ import api from '@/services/api.js';
 class PageDeleteDialog extends HTMLElement {
     constructor() {
         super();
-        this.isOpen = false;
         this.pageData = null;
     }
 
@@ -28,56 +27,26 @@ class PageDeleteDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.updateOpenState();
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue && name === 'open') {
-            this.updateOpenState();
-        }
     }
 
     setupEventListeners() {
-        // Listen for dialog close events
-        this.addEventListener('dialog-close', () => {
-            this.close();
-        });
-
         // Listen for dialog confirm/cancel events
         this.addEventListener('confirm', () => {
             this.confirmDelete();
         });
 
         this.addEventListener('cancel', () => {
-            this.cancelDelete();
+            this.close();
         });
     }
 
-    updateOpenState() {
-        const shouldBeOpen = this.hasAttribute('open');
-        
-        if (shouldBeOpen && !this.isOpen) {
-            this.open();
-        } else if (!shouldBeOpen && this.isOpen) {
-            this.close();
-        }
-    }
-
     open() {
-        if (this.isOpen) return;
-        
-        this.isOpen = true;
         this.setAttribute('open', '');
-        this.dispatchEvent(new CustomEvent('dialog-opened'));
     }
 
     close() {
-        if (!this.isOpen) return;
-        
-        this.isOpen = false;
         this.removeAttribute('open');
         this.pageData = null;
-        this.dispatchEvent(new CustomEvent('dialog-closed'));
     }
 
     // Set page data for deletion
@@ -124,15 +93,10 @@ class PageDeleteDialog extends HTMLElement {
         }
     }
 
-    // Handle delete cancellation
-    cancelDelete() {
-        this.close();
-    }
-
     render() {
         this.innerHTML = `
             <ui-dialog 
-                ${this.isOpen ? 'open' : ''} 
+                ${this.hasAttribute('open') ? 'open' : ''} 
                 title="Confirm Delete" 
                 position="center"
                 variant="danger">
@@ -146,12 +110,6 @@ class PageDeleteDialog extends HTMLElement {
                 </div>
             </ui-dialog>
         `;
-        
-        // Ensure event listeners are set up after render
-        const dialog = this.querySelector('ui-dialog');
-        if (dialog) {
-            dialog.ensureEventListeners();
-        }
     }
 }
 

@@ -4,6 +4,7 @@ import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/layout/adminLayout/PageSettingsModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -16,6 +17,7 @@ class PageSettingsPage extends App {
         super();
         this.pages = null;
         this.loading = false;
+        this.showAddModal = false;
     }
 
     connectedCallback() {
@@ -99,12 +101,7 @@ class PageSettingsPage extends App {
                 
             case 'table-add':
                 console.log('Add new page');
-                Toast.show({
-                    title: 'Add Page',
-                    message: 'Opening add page form...',
-                    variant: 'info',
-                    duration: 2000
-                });
+                this.set('showAddModal', true);
                 break;
                 
             case 'table-refresh':
@@ -118,6 +115,7 @@ class PageSettingsPage extends App {
         console.log('🔧 PageSettingsPage render called');
         const pages = this.get('pages');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
         
         // Prepare table data and columns for pages
         const tableData = pages ? pages.map(page => ({
@@ -181,7 +179,15 @@ class PageSettingsPage extends App {
                     </div>
                 `}
             </div>
+            
+            <!-- Page Settings Modal -->
+            <page-settings-modal ${showAddModal ? 'open' : ''}></page-settings-modal>
         `;
+    }
+
+    // Close the add modal
+    closeAddModal() {
+        this.set('showAddModal', false);
     }
 
     // Override connectedCallback to add event listeners after render
@@ -196,6 +202,16 @@ class PageSettingsPage extends App {
         this.addEventListener('table-delete', this.handleTableEvent.bind(this));
         this.addEventListener('table-add', this.handleTableEvent.bind(this));
         this.addEventListener('table-refresh', this.handleTableEvent.bind(this));
+        
+        // Add modal event listeners
+        this.addEventListener('modal-closed', () => {
+            this.closeAddModal();
+        });
+        
+        this.addEventListener('page-saved', () => {
+            this.closeAddModal();
+            this.loadData();
+        });
     }
 }
 

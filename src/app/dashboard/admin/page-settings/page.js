@@ -142,6 +142,14 @@ class PageSettingsPage extends App {
             this.closeAllModals();
             this.set('updatePageData', editPage);
             this.set('showUpdateModal', true);
+            
+            // Ensure modal is open and data is set
+            setTimeout(() => {
+                const updateModal = this.querySelector('page-update-modal');
+                if (updateModal) {
+                    updateModal.setPageData(editPage);
+                }
+            }, 100);
         }
     }
 

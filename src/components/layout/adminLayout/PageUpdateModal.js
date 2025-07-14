@@ -32,6 +32,13 @@ class PageUpdateModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+        
+        // Listen for modal open event to populate form
+        this.addEventListener('modal-opened', () => {
+            if (this.pageData) {
+                this.populateForm();
+            }
+        });
     }
 
     setupEventListeners() {
@@ -48,14 +55,18 @@ class PageUpdateModal extends HTMLElement {
 
     // Set page data for editing
     setPageData(pageData) {
+        console.log('🔍 setPageData called with:', pageData);
         this.pageData = pageData;
-        if (this.hasAttribute('open')) {
-            this.populateForm();
-        }
+        // Always populate form when data is set, regardless of modal state
+        this.populateForm();
     }
 
     open() {
         this.setAttribute('open', '');
+        // Populate form when modal opens
+        if (this.pageData) {
+            this.populateForm();
+        }
     }
 
     close() {
@@ -64,6 +75,7 @@ class PageUpdateModal extends HTMLElement {
 
     // Populate form with existing data
     populateForm() {
+        console.log('📝 populateForm called, pageData:', this.pageData);
         if (this.pageData) {
             const titleInput = this.querySelector('ui-input[data-field="title"]');
             const slugInput = this.querySelector('ui-input[data-field="slug"]');
@@ -75,21 +87,39 @@ class PageUpdateModal extends HTMLElement {
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
             const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
 
+            console.log('🔍 Form elements found:', {
+                titleInput: !!titleInput,
+                slugInput: !!slugInput,
+                categoryDropdown: !!categoryDropdown,
+                contentWysiwyg: !!contentWysiwyg,
+                metaDescriptionTextarea: !!metaDescriptionTextarea,
+                metaKeywordsInput: !!metaKeywordsInput,
+                bannerImageInput: !!bannerImageInput,
+                statusRadioGroup: !!statusRadioGroup,
+                sortOrderInput: !!sortOrderInput
+            });
+
             // Set input values using setValue method with delay to ensure initialization
             setTimeout(() => {
+                console.log('⏰ Setting form values after delay...');
                 if (titleInput) {
+                    console.log('📝 Setting title to:', this.pageData.title || '');
                     titleInput.setValue(this.pageData.title || '');
                 }
                 if (slugInput) {
+                    console.log('📝 Setting slug to:', this.pageData.slug || '');
                     slugInput.setValue(this.pageData.slug || '');
                 }
                 if (metaKeywordsInput) {
+                    console.log('📝 Setting meta keywords to:', this.pageData.meta_keywords || '');
                     metaKeywordsInput.setValue(this.pageData.meta_keywords || '');
                 }
                 if (bannerImageInput) {
+                    console.log('📝 Setting banner image to:', this.pageData.banner_image || '');
                     bannerImageInput.setValue(this.pageData.banner_image || '');
                 }
                 if (sortOrderInput) {
+                    console.log('📝 Setting sort order to:', this.pageData.sort_order || 0);
                     sortOrderInput.setValue(this.pageData.sort_order || 0);
                 }
             }, 200);

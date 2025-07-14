@@ -818,7 +818,7 @@ class Table extends HTMLElement {
     /**
      * Print table data
      */
-    print() {
+    printTable() {
         try {
             // Create a print-friendly version of the table
             const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
@@ -1249,7 +1249,7 @@ class Table extends HTMLElement {
         // Print button (icon only) - right side (only if print is enabled)
         if (this.print) {
             tableHTML += `
-                <button class="upo-table-print" onclick="this.closest('ui-table').print()" aria-label="Print table">
+                <button class="upo-table-print" aria-label="Print table">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M6 9V2H18V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V11C2 10.4696 2.21071 9.96086 2.58579 9.58579C2.96086 9.21071 3.46957 9 4 9H20C20.5304 9 21.0391 9.21071 21.4142 9.58579C21.7893 9.96086 22 10.4696 22 11V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1511,6 +1511,16 @@ class Table extends HTMLElement {
                     if (e.key === 'Enter') {
                         e.target.blur(); // Trigger change event
                     }
+                });
+            }
+        }
+
+        // Add print button event listener
+        if (this.print) {
+            const printButton = this.querySelector('.upo-table-print');
+            if (printButton) {
+                printButton.addEventListener('click', () => {
+                    this.printTable();
                 });
             }
         }

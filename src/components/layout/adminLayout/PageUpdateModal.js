@@ -234,7 +234,7 @@ class PageUpdateModal extends HTMLElement {
                         <p class="text-gray-600">Update the page information.</p>
                     </div>
                     
-                    <div class="space-y-4">
+                    <form id="page-update-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
                             <ui-input 
@@ -337,7 +337,7 @@ class PageUpdateModal extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                    </div>
+                    </form>
             </ui-modal>
         `;
     }

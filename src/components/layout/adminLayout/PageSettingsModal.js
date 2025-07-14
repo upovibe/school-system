@@ -141,7 +141,7 @@ class PageSettingsModal extends HTMLElement {
                         <p class="text-gray-600">Create a new page for your website.</p>
                     </div>
                     
-                    <div class="space-y-4">
+                    <form id="page-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
                             <ui-input 
@@ -239,7 +239,7 @@ class PageSettingsModal extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                    </div>
+                    </form>
             </ui-modal>
         `;
     }

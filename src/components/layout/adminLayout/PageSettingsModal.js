@@ -116,10 +116,28 @@ class PageSettingsModal extends HTMLElement {
                 duration: 3000
             });
 
+            // Construct the new page data from form data and API response
+            const newPage = {
+                id: response.data.id,
+                title: pageData.title,
+                slug: pageData.slug,
+                category: pageData.category,
+                content: pageData.content,
+                meta_description: pageData.meta_description,
+                meta_keywords: pageData.meta_keywords,
+                banner_image: pageData.banner_image,
+                is_active: pageData.is_active,
+                sort_order: pageData.sort_order,
+                created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            };
+
             // Close modal and dispatch event
             this.close();
             this.dispatchEvent(new CustomEvent('page-saved', {
-                detail: { page: response.data }
+                detail: { page: newPage },
+                bubbles: true,
+                composed: true
             }));
 
         } catch (error) {

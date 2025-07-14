@@ -122,10 +122,27 @@ class PageUpdateModal extends HTMLElement {
                 duration: 3000
             });
 
+            // Construct the updated page data from form data and existing page data
+            const updatedPage = {
+                ...this.pageData, // Keep existing fields like id, created_at
+                title: pageData.title,
+                slug: pageData.slug,
+                category: pageData.category,
+                content: pageData.content,
+                meta_description: pageData.meta_description,
+                meta_keywords: pageData.meta_keywords,
+                banner_image: pageData.banner_image,
+                is_active: pageData.is_active,
+                sort_order: pageData.sort_order,
+                updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            };
+
             // Close modal and dispatch event
             this.close();
             this.dispatchEvent(new CustomEvent('page-updated', {
-                detail: { page: response.data }
+                detail: { page: updatedPage },
+                bubbles: true,
+                composed: true
             }));
 
         } catch (error) {

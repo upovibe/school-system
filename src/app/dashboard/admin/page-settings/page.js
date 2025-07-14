@@ -57,12 +57,35 @@ class PageSettingsPage extends App {
             this.loadData();
         });
         
-        this.addEventListener('page-saved', () => {
-            this.loadData();
+        this.addEventListener('page-saved', (event) => {
+            // Add the new page to the existing data
+            const newPage = event.detail.page;
+            if (newPage) {
+                const currentPages = this.get('pages') || [];
+                this.set('pages', [...currentPages, newPage]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
         });
         
-        this.addEventListener('page-updated', () => {
-            this.loadData();
+        this.addEventListener('page-updated', (event) => {
+            // Update the existing page in the data
+            const updatedPage = event.detail.page;
+            if (updatedPage) {
+                const currentPages = this.get('pages') || [];
+                const updatedPages = currentPages.map(page => 
+                    page.id === updatedPage.id ? updatedPage : page
+                );
+                this.set('pages', updatedPages);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
+            } else {
+                this.loadData();
+            }
         });
         
         // Listen for modal opened event to pass data
@@ -172,6 +195,31 @@ class PageSettingsPage extends App {
 
     onRefresh(event) {
         this.loadData();
+    }
+
+    // Update table data without full page reload
+    updateTableData() {
+        const pages = this.get('pages');
+        if (!pages) return;
+
+        // Prepare table data
+        const tableData = pages.map(page => ({
+            id: page.id,
+            title: page.title,
+            slug: page.slug,
+            category: page.category,
+            status: page.is_active ? 'Active' : 'Inactive',
+            sort_order: page.sort_order,
+            created: page.created_at,
+            updated: page.updated_at,
+            banner: page.banner_image || 'No banner'
+        }));
+
+        // Find the table component and update its data
+        const tableComponent = this.querySelector('ui-table');
+        if (tableComponent) {
+            tableComponent.setAttribute('data', JSON.stringify(tableData));
+        }
     }
 
     // Close all modals and dialogs

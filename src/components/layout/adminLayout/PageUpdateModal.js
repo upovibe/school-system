@@ -78,13 +78,16 @@ class PageUpdateModal extends HTMLElement {
             
             // Get radio group value separately
             const statusRadioGroup = this.querySelector('ui-radio-group[name="status"]');
+            
+            // Get textarea value separately
+            const metaDescriptionTextarea = this.querySelector('ui-textarea[name="meta-description"]');
 
             const pageData = {
                 title: formData.get('title'),
                 slug: formData.get('slug'),
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
-                meta_description: formData.get('meta-description'),
+                meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
                 meta_keywords: formData.get('meta-keywords'),
                 banner_image: formData.get('banner-image'),
                 is_active: statusRadioGroup ? statusRadioGroup.value === 'active' : false,
@@ -198,11 +201,13 @@ class PageUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                            <textarea 
+                            <ui-textarea 
                                 name="meta-description"
                                 placeholder="Enter meta description for SEO"
+                                value="${this.pageData?.meta_description || ''}"
                                 rows="3"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.pageData?.meta_description || ''}</textarea>
+                                class="w-full">
+                            </ui-textarea>
                         </div>
                         
                         <div>

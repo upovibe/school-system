@@ -32,13 +32,6 @@ class PageUpdateModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        
-        // Listen for modal open event to populate form
-        this.addEventListener('modal-opened', () => {
-            if (this.pageData) {
-                this.populateForm();
-            }
-        });
     }
 
     setupEventListeners() {
@@ -55,121 +48,56 @@ class PageUpdateModal extends HTMLElement {
 
     // Set page data for editing
     setPageData(pageData) {
-        console.log('🔍 setPageData called with:', pageData);
         this.pageData = pageData;
-        // Always populate form when data is set, regardless of modal state
-        this.populateForm();
+        // Re-render the modal with the new data
+        this.render();
+        
+        // Set WYSIWYG content
+        const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
+        if (contentWysiwyg && this.pageData) {
+            contentWysiwyg.value = this.pageData.content || '';
+        }
+        
+        // Set dropdown value
+        const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
+        if (categoryDropdown && this.pageData) {
+            categoryDropdown.value = this.pageData.category || '';
+        }
     }
 
     open() {
         this.setAttribute('open', '');
-        // Populate form when modal opens
-        if (this.pageData) {
-            this.populateForm();
-        }
     }
 
     close() {
         this.removeAttribute('open');
     }
 
-    // Populate form with existing data
-    populateForm() {
-        console.log('📝 populateForm called, pageData:', this.pageData);
-        if (this.pageData) {
-            const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const slugInput = this.querySelector('ui-input[data-field="slug"]');
-            const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
-            const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
-            const metaDescriptionTextarea = this.querySelector('ui-textarea[data-field="meta-description"]');
-            const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
-            const bannerImageInput = this.querySelector('ui-input[data-field="banner-image"]');
-            const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
-            const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
 
-            console.log('🔍 Form elements found:', {
-                titleInput: !!titleInput,
-                slugInput: !!slugInput,
-                categoryDropdown: !!categoryDropdown,
-                contentWysiwyg: !!contentWysiwyg,
-                metaDescriptionTextarea: !!metaDescriptionTextarea,
-                metaKeywordsInput: !!metaKeywordsInput,
-                bannerImageInput: !!bannerImageInput,
-                statusRadioGroup: !!statusRadioGroup,
-                sortOrderInput: !!sortOrderInput
-            });
-
-            // Set input values using setValue method with delay to ensure initialization
-            setTimeout(() => {
-                console.log('⏰ Setting form values after delay...');
-                if (titleInput) {
-                    console.log('📝 Setting title to:', this.pageData.title || '');
-                    titleInput.setValue(this.pageData.title || '');
-                }
-                if (slugInput) {
-                    console.log('📝 Setting slug to:', this.pageData.slug || '');
-                    slugInput.setValue(this.pageData.slug || '');
-                }
-                if (metaKeywordsInput) {
-                    console.log('📝 Setting meta keywords to:', this.pageData.meta_keywords || '');
-                    metaKeywordsInput.setValue(this.pageData.meta_keywords || '');
-                }
-                if (bannerImageInput) {
-                    console.log('📝 Setting banner image to:', this.pageData.banner_image || '');
-                    bannerImageInput.setValue(this.pageData.banner_image || '');
-                }
-                if (sortOrderInput) {
-                    console.log('📝 Setting sort order to:', this.pageData.sort_order || 0);
-                    sortOrderInput.setValue(this.pageData.sort_order || 0);
-                }
-            }, 200);
-
-            // Set textarea values
-            if (metaDescriptionTextarea) {
-                metaDescriptionTextarea.setValue(this.pageData.meta_description || '');
-            }
-
-            // Set dropdown value
-            if (categoryDropdown) {
-                categoryDropdown.value = this.pageData.category || '';
-            }
-
-            // Set radio group value
-            if (statusRadioGroup) {
-                statusRadioGroup.value = this.pageData.is_active ? 'active' : 'inactive';
-            }
-
-            // Set WYSIWYG content
-            if (contentWysiwyg) {
-                contentWysiwyg.value = this.pageData.content || '';
-            }
-        }
-    }
 
     // Update the page
     async updatePage() {
         try {
-            // Get form data using the new UI components
-            const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const slugInput = this.querySelector('ui-input[data-field="slug"]');
-            const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
+            // Get form data using normal HTML inputs
+            const form = this.querySelector('#page-update-form');
+            const formData = new FormData(form);
+            
+            // Get WYSIWYG content separately
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
-            const metaDescriptionTextarea = this.querySelector('ui-textarea[data-field="meta-description"]');
-            const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
-            const bannerImageInput = this.querySelector('ui-input[data-field="banner-image"]');
-            const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
-            const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
+            
+            // Get dropdown value separately
+            const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
 
             const pageData = {
-                title: titleInput.value,
-                slug: slugInput.value,
-                category: categoryDropdown.value,
-                content: contentWysiwyg.value,
-                meta_description: metaDescriptionTextarea.value,
-                meta_keywords: metaKeywordsInput.value,
-                banner_image: bannerImageInput.value,
-                is_active: statusRadioGroup.value === 'active',
-                sort_order: parseInt(sortOrderInput.value) || 0
+                title: formData.get('title'),
+                slug: formData.get('slug'),
+                category: categoryDropdown ? categoryDropdown.value : '',
+                content: contentWysiwyg ? contentWysiwyg.value : '',
+                meta_description: formData.get('meta-description'),
+                meta_keywords: formData.get('meta-keywords'),
+                banner_image: formData.get('banner-image'),
+                is_active: formData.get('status') === 'active',
+                sort_order: parseInt(formData.get('sort-order')) || 0
             };
 
             // Validate required fields
@@ -232,24 +160,22 @@ class PageUpdateModal extends HTMLElement {
                     <form id="page-update-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
-                            <ui-input 
-                                data-field="title"
+                            <input 
+                                name="title"
                                 type="text" 
                                 placeholder="Enter page title"
                                 value="${this.pageData?.title || ''}"
-                                class="w-full">
-                            </ui-input>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Slug</label>
-                            <ui-input 
-                                data-field="slug"
+                            <input 
+                                name="slug"
                                 type="text" 
                                 placeholder="Enter page slug"
                                 value="${this.pageData?.slug || ''}"
-                                class="w-full">
-                            </ui-input>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         
                         <div>
@@ -279,58 +205,65 @@ class PageUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                            <ui-textarea 
-                                data-field="meta-description"
+                            <textarea 
+                                name="meta-description"
                                 placeholder="Enter meta description for SEO"
-                                rows="2"
-                                value="${this.pageData?.meta_description || ''}"
-                                class="w-full">
-                            </ui-textarea>
+                                rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.pageData?.meta_description || ''}</textarea>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
-                            <ui-input 
-                                data-field="meta-keywords"
+                            <input 
+                                name="meta-keywords"
                                 type="text" 
                                 placeholder="Enter meta keywords (comma separated)"
                                 value="${this.pageData?.meta_keywords || ''}"
-                                class="w-full">
-                            </ui-input>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image URL</label>
-                            <ui-input 
-                                data-field="banner-image"
+                            <input 
+                                name="banner-image"
                                 type="text" 
                                 placeholder="Enter banner image URL"
                                 value="${this.pageData?.banner_image || ''}"
-                                class="w-full">
-                            </ui-input>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <ui-radio-group 
-                                data-field="status"
-                                name="status" 
-                                value="active"
-                                layout="horizontal">
-                                <ui-radio-option value="active" label="Active"></ui-radio-option>
-                                <ui-radio-option value="inactive" label="Inactive"></ui-radio-option>
-                            </ui-radio-group>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input 
+                                        type="radio" 
+                                        name="status" 
+                                        value="active" 
+                                        ${this.pageData?.is_active ? 'checked' : ''}
+                                        class="mr-2">
+                                    Active
+                                </label>
+                                <label class="flex items-center">
+                                    <input 
+                                        type="radio" 
+                                        name="status" 
+                                        value="inactive" 
+                                        ${!this.pageData?.is_active ? 'checked' : ''}
+                                        class="mr-2">
+                                    Inactive
+                                </label>
+                            </div>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
-                            <ui-input 
-                                data-field="sort-order"
+                            <input 
+                                name="sort-order"
                                 type="number" 
                                 placeholder="Enter sort order" 
                                 value="${this.pageData?.sort_order || 0}"
-                                class="w-full">
-                            </ui-input>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                     </form>
             </ui-modal>

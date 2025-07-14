@@ -24,7 +24,6 @@ class Middleware {
      */
     register(name, fn) {
         this.middlewares.set(name, fn);
-        console.log(`🔧 Middleware registered: ${name}`);
     }
 
     /**
@@ -33,7 +32,6 @@ class Middleware {
      */
     protectRoute(route) {
         this.protectedRoutes.add(route);
-        console.log(`🔒 Protected route added: ${route}`);
     }
 
     /**
@@ -42,7 +40,6 @@ class Middleware {
      */
     addPublicRoute(route) {
         this.publicRoutes.add(route);
-        console.log(`🌐 Public route added: ${route}`);
     }
 
     /**
@@ -113,8 +110,6 @@ class Middleware {
      * @returns {object} Result with success, redirect, or error
      */
     async execute(path, context = {}) {
-        console.log(`🔍 Middleware executing for path: ${path}`);
-        
         // Get page path without leading slash
         const pagePath = path.replace(/^\//, '');
         
@@ -124,11 +119,9 @@ class Middleware {
         // Add layout information to context
         context.layout = this.detectLayout(pagePath);
         context.pagePath = pagePath;
-        console.log(`🏗️ Layout detected: ${context.layout} for page: ${pagePath}`);
 
         // Check authentication requirement
         if (pageConfig.requireAuth && !this.isAuthenticated()) {
-            console.log(`❌ Authentication required for ${pagePath}`);
             return {
                 success: false,
                 redirect: '/auth/login',
@@ -140,8 +133,6 @@ class Middleware {
         if (pageConfig.requireRole) {
             const user = this.getCurrentUser();
             if (!user || user.role !== pageConfig.requireRole) {
-                console.log(`❌ Role ${pageConfig.requireRole} required for ${pagePath}`);
-                
                 // Handle dynamic redirect functions
                 let redirectPath = '/dashboard';
                 if (typeof pageConfig.redirectTo === 'function') {
@@ -159,12 +150,6 @@ class Middleware {
         }
 
         // Check if authenticated users should be redirected (for auth pages)
-        console.log(`🔍 Checking redirect for ${pagePath}:`, {
-            redirectIfAuth: pageConfig.redirectIfAuth,
-            isAuthenticated: this.isAuthenticated(),
-            pageConfig: pageConfig
-        });
-        
         if (pageConfig.redirectIfAuth && this.isAuthenticated()) {
             const user = this.getCurrentUser();
             
@@ -175,8 +160,6 @@ class Middleware {
             } else {
                 redirectPath = pageConfig.redirectTo || '/';
             }
-            
-            console.log(`🔄 Redirecting authenticated user from ${pagePath} to ${redirectPath}`);
             
             return {
                 success: false,
@@ -191,7 +174,6 @@ class Middleware {
             const { startHour, endHour, message } = pageConfig.timeRestriction;
             
             if (currentHour < startHour || currentHour > endHour) {
-                console.log(`❌ Time restriction for ${pagePath}: ${message}`);
                 return {
                     success: false,
                     redirect: '/maintenance',
@@ -228,7 +210,6 @@ class Middleware {
         if (pageConfig.logAccess) {
             const user = this.getCurrentUser();
             const timestamp = new Date().toISOString();
-            console.log(`📝 [${timestamp}] ${user ? user.role : 'guest'} accessed ${pagePath}`);
         }
 
         // Execute custom middlewares
@@ -250,7 +231,6 @@ class Middleware {
             }
         }
 
-        console.log(`✅ Middleware passed for path: ${pagePath}`);
         return { success: true };
     }
 
@@ -365,14 +345,7 @@ class Middleware {
             ...pageConfig
         };
         
-        console.log(`🧠 Smart config for ${pagePath}:`, {
-            layout,
-            pageConfig,
-            layoutConfig,
-            wildcardConfig,
-            systemLayoutRules,
-            finalConfig: combinedConfig
-        });
+
         
         return combinedConfig;
     }
@@ -425,7 +398,6 @@ class Middleware {
     logout() {
         localStorage.removeItem('userData');
         localStorage.removeItem('token');
-        console.log('👋 User logged out');
     }
 }
 

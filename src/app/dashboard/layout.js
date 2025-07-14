@@ -154,7 +154,6 @@ class DashboardLayout extends App {
      * @param {string} content - HTML content to render
      */
     setPageContent(content) {
-        console.log('🔧 DashboardLayout setPageContent called with:', content);
         this.pageContent = content;
         this.innerHTML = this.render();
     }

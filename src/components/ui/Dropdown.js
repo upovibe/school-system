@@ -544,19 +544,16 @@ class Dropdown extends HTMLElement {
     }
     }
     
-    updateOptions() {
+        updateOptions() {
         // Use internal options array
         const options = this._options || [];
         this.filteredOptions = options.filter(option => {
             if (this.searchTerm) {
                 return option.textContent.toLowerCase().includes(this.searchTerm) ||
                        option.getAttribute('value').toLowerCase().includes(this.searchTerm);
-    }
+            }
             return true;
         });
-        
-        console.log('updateOptions called, selectedValues:', this.selectedValues);
-        console.log('filteredOptions count:', this.filteredOptions.length);
         
         if (this.filteredOptions.length === 0) {
             this.optionsContainer.innerHTML = `
@@ -574,8 +571,6 @@ class Dropdown extends HTMLElement {
             const selected = this.selectedValues.has(value);
             const focused = index === this.focusedIndex;
             
-            console.log(`Option ${value}: selected=${selected}, text=${text}`);
-            
             let optionHtml = `<div class="upo-dropdown-option`;
             if (selected) optionHtml += ' selected';
             if (focused) optionHtml += ' focused';
@@ -586,8 +581,8 @@ class Dropdown extends HTMLElement {
                 optionHtml += `
                     <div class="upo-dropdown-option-checkbox">
                         ${selected ? '✓' : ''}
-                </div>
-            `;
+                    </div>
+                `;
             }
             
             optionHtml += `<span class="upo-dropdown-option-text">${text}</span></div>`;
@@ -667,7 +662,6 @@ class Dropdown extends HTMLElement {
     }
     
     set value(val) {
-        console.log('set value called with:', val);
         this.selectedValues.clear();
         if (this.hasAttribute('multiple')) {
             if (Array.isArray(val)) {
@@ -678,7 +672,6 @@ class Dropdown extends HTMLElement {
         } else {
             this.selectedValues.add(val);
         }
-        console.log('selectedValues after set:', this.selectedValues);
         this.updateSelection();
         this.updateOptions();
     }

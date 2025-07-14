@@ -102,54 +102,43 @@ class PageUpdateModal extends HTMLElement {
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
             const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
 
-            console.log('🔧 Populating update form with data:', this.pageData);
-
             // Set input values using setValue method with delay to ensure initialization
             setTimeout(() => {
                 if (titleInput) {
                     titleInput.setValue(this.pageData.title || '');
-                    console.log('🔧 Set title:', this.pageData.title);
                 }
                 if (slugInput) {
                     slugInput.setValue(this.pageData.slug || '');
-                    console.log('🔧 Set slug:', this.pageData.slug);
                 }
                 if (metaKeywordsInput) {
                     metaKeywordsInput.setValue(this.pageData.meta_keywords || '');
-                    console.log('🔧 Set meta keywords:', this.pageData.meta_keywords);
                 }
                 if (bannerImageInput) {
                     bannerImageInput.setValue(this.pageData.banner_image || '');
-                    console.log('🔧 Set banner image:', this.pageData.banner_image);
                 }
                 if (sortOrderInput) {
                     sortOrderInput.setValue(this.pageData.sort_order || 0);
-                    console.log('🔧 Set sort order:', this.pageData.sort_order);
                 }
             }, 200);
 
             // Set textarea values
             if (metaDescriptionTextarea) {
                 metaDescriptionTextarea.setValue(this.pageData.meta_description || '');
-                console.log('🔧 Set meta description:', this.pageData.meta_description);
             }
 
             // Set dropdown value
             if (categoryDropdown) {
                 categoryDropdown.value = this.pageData.category || '';
-                console.log('🔧 Set category:', this.pageData.category);
             }
 
             // Set radio group value
             if (statusRadioGroup) {
                 statusRadioGroup.value = this.pageData.is_active ? 'active' : 'inactive';
-                console.log('🔧 Set status:', this.pageData.is_active ? 'active' : 'inactive');
             }
 
             // Set WYSIWYG content
             if (contentWysiwyg) {
                 contentWysiwyg.value = this.pageData.content || '';
-                console.log('🔧 Set content:', this.pageData.content);
             }
         }
     }

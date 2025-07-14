@@ -25,15 +25,47 @@ class PageSettingsPage extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        console.log('🔧 PageSettingsPage connectedCallback');
         document.title = 'Page Settings | School System';
         this.loadData();
+        
+        // Add event listeners for table events
+        this.addEventListener('table-view', this.handleTableEvent.bind(this));
+        this.addEventListener('table-edit', this.handleTableEvent.bind(this));
+        this.addEventListener('table-delete', this.handleTableEvent.bind(this));
+        this.addEventListener('table-add', this.handleTableEvent.bind(this));
+        this.addEventListener('table-refresh', this.handleTableEvent.bind(this));
+        
+        // Add modal event listeners
+        this.addEventListener('modal-closed', () => {
+            this.closeAddModal();
+            this.closeUpdateModal();
+        });
+        
+        this.addEventListener('page-saved', () => {
+            this.closeAddModal();
+            this.loadData();
+        });
+        
+        this.addEventListener('page-updated', () => {
+            this.closeUpdateModal();
+            this.loadData();
+        });
+        
+        // Listen for modal opened event to pass data
+        this.addEventListener('modal-opened', (event) => {
+            const modal = event.target;
+            if (modal.tagName === 'PAGE-UPDATE-MODAL') {
+                const updatePageData = this.get('updatePageData');
+                if (updatePageData) {
+                    modal.setPageData(updatePageData);
+                }
+            }
+        });
     }
 
     async loadData() {
         try {
             this.set('loading', true);
-            console.log('🔧 Loading pages data...');
             
             // Get the auth token
             const token = localStorage.getItem('token');
@@ -49,7 +81,6 @@ class PageSettingsPage extends App {
 
             // Load pages data
             const pagesResponse = await api.withToken(token).get('/pages');
-            console.log('🔧 Pages response:', pagesResponse.data);
             
             this.set('pages', pagesResponse.data.data);
             this.set('loading', false);
@@ -73,7 +104,6 @@ class PageSettingsPage extends App {
         
         switch (type) {
             case 'table-view':
-                console.log('View page:', detail.row);
                 Toast.show({
                     title: 'View Page',
                     message: `Viewing: ${detail.row.title}`,
@@ -83,11 +113,11 @@ class PageSettingsPage extends App {
                 break;
                 
             case 'table-edit':
-                console.log('Edit page:', detail.row);
                 // Find the original page data from the pages array
                 const originalPage = this.get('pages').find(page => page.id === detail.row.id);
                 if (originalPage) {
-                    console.log('🔧 Original page data for update:', originalPage);
+                    // Make sure add modal is closed first
+                    this.set('showAddModal', false);
                     this.set('updatePageData', originalPage);
                     this.set('showUpdateModal', true);
                 } else {
@@ -101,7 +131,6 @@ class PageSettingsPage extends App {
                 break;
                 
             case 'table-delete':
-                console.log('Delete page:', detail.row);
                 Toast.show({
                     title: 'Delete Page',
                     message: `Deleting: ${detail.row.title}`,
@@ -111,19 +140,19 @@ class PageSettingsPage extends App {
                 break;
                 
             case 'table-add':
-                console.log('Add new page');
+                // Make sure update modal is closed first
+                this.set('showUpdateModal', false);
+                this.set('updatePageData', null);
                 this.set('showAddModal', true);
                 break;
                 
             case 'table-refresh':
-                console.log('Refresh table');
                 this.loadData();
                 break;
         }
     }
 
     render() {
-        console.log('🔧 PageSettingsPage render called');
         const pages = this.get('pages');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
@@ -211,47 +240,7 @@ class PageSettingsPage extends App {
         this.set('updatePageData', null);
     }
 
-    // Override connectedCallback to add event listeners after render
-    connectedCallback() {
-        super.connectedCallback();
-        document.title = 'Page Settings | School System';
-        this.loadData();
-        
-        // Add event listeners for table events
-        this.addEventListener('table-view', this.handleTableEvent.bind(this));
-        this.addEventListener('table-edit', this.handleTableEvent.bind(this));
-        this.addEventListener('table-delete', this.handleTableEvent.bind(this));
-        this.addEventListener('table-add', this.handleTableEvent.bind(this));
-        this.addEventListener('table-refresh', this.handleTableEvent.bind(this));
-        
-        // Add modal event listeners
-        this.addEventListener('modal-closed', () => {
-            this.closeAddModal();
-            this.closeUpdateModal();
-        });
-        
-        this.addEventListener('page-saved', () => {
-            this.closeAddModal();
-            this.loadData();
-        });
-        
-        this.addEventListener('page-updated', () => {
-            this.closeUpdateModal();
-            this.loadData();
-        });
-        
-        // Listen for modal opened event to pass data
-        this.addEventListener('modal-opened', (event) => {
-            const modal = event.target;
-            if (modal.tagName === 'PAGE-UPDATE-MODAL') {
-                const updatePageData = this.get('updatePageData');
-                if (updatePageData) {
-                    console.log('🔧 Passing data to update modal:', updatePageData);
-                    modal.setPageData(updatePageData);
-                }
-            }
-        });
-    }
+
 }
 
 customElements.define('app-page-settings-page', PageSettingsPage);

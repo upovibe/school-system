@@ -61,7 +61,7 @@ class PageViewModal extends HTMLElement {
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="bottom" 
+                position="right" 
                 size="lg"
                 close-button="true">
                 <div slot="title">View Page</div>

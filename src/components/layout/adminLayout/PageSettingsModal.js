@@ -56,27 +56,31 @@ class PageSettingsModal extends HTMLElement {
     // Save the new page
     async savePage() {
         try {
-            // Get form data using the new UI components
-            const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const slugInput = this.querySelector('ui-input[data-field="slug"]');
+            // Get form data using the new UI components - query by order since some components might not be fully initialized
+            const allInputs = this.querySelectorAll('ui-input');
+            const titleInput = allInputs[0]; // First input
+            const slugInput = allInputs[1]; // Second input
+            const metaKeywordsInput = allInputs[2]; // Third input
+            const bannerImageInput = allInputs[3]; // Fourth input
+            const sortOrderInput = allInputs[4]; // Fifth input
+            
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const metaDescriptionTextarea = this.querySelector('ui-textarea[data-field="meta-description"]');
-            const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
-            const bannerImageInput = this.querySelector('ui-input[data-field="banner-image"]');
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
-            const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
+
+
 
             const pageData = {
-                title: titleInput.value,
-                slug: slugInput.value,
-                category: categoryDropdown.value,
-                content: contentWysiwyg.value,
-                meta_description: metaDescriptionTextarea.value,
-                meta_keywords: metaKeywordsInput.value,
-                banner_image: bannerImageInput.value,
-                is_active: statusRadioGroup.value === 'active' ? 1 : 0,
-                sort_order: parseInt(sortOrderInput.value) || 0
+                title: titleInput ? titleInput.value : '',
+                slug: slugInput ? slugInput.value : '',
+                category: categoryDropdown ? categoryDropdown.value : '',
+                content: contentWysiwyg ? contentWysiwyg.value : '',
+                meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
+                meta_keywords: metaKeywordsInput ? metaKeywordsInput.value : '',
+                banner_image: bannerImageInput ? bannerImageInput.value : '',
+                is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
+                sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
 
             // Validate required fields

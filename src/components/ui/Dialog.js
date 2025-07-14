@@ -7,6 +7,7 @@
  * - open: boolean (default: false) - controls dialog visibility
  * - title: string - sets the header title
  * - position: string (default: "center") - dialog position: "top", "bottom", "left", "right", "center"
+ * - variant: string (default: "default") - button variant: "default", "danger" for delete confirmations
  * 
  * Usage:
  * <ui-dialog open title="My Dialog" position="top">
@@ -29,6 +30,7 @@ class Dialog extends HTMLElement {
     render() {
         const title = this.getAttribute('title') || 'Dialog';
         const position = this.getAttribute('position') || 'center';
+        const variant = this.getAttribute('variant') || 'default';
         
         this.shadowRoot.innerHTML = `
             <style>
@@ -236,7 +238,9 @@ class Dialog extends HTMLElement {
                     <div class="dialog-footer">
                         <slot name="footer">
                             <button class="secondary" id="cancel-btn">Cancel</button>
-                            <button class="primary" id="confirm-btn">Confirm</button>
+                            <button class="${variant === 'danger' ? 'danger' : 'primary'}" id="confirm-btn">
+                                ${variant === 'danger' ? 'Delete' : 'Confirm'}
+                            </button>
                         </slot>
                     </div>
                 </div>
@@ -250,31 +254,44 @@ class Dialog extends HTMLElement {
         const cancelBtn = this.shadowRoot.getElementById('cancel-btn');
         const confirmBtn = this.shadowRoot.getElementById('confirm-btn');
 
-        // Close on overlay click
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                this.close();
-            }
-        });
 
-        // Close on close button
-        closeBtn.addEventListener('click', () => {
-            this.close();
-        });
+
+        // Overlay click
+        if (overlay) {
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    this.close();
+                }
+            };
+        }
+
+        // Close button - using direct onclick like Modal
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.close();
+            };
+        }
 
         // Cancel button
-        cancelBtn.addEventListener('click', () => {
-            this.dispatchEvent(new CustomEvent('cancel', { bubbles: true }));
-            this.close();
-        });
+        if (cancelBtn) {
+            cancelBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.dispatchEvent(new CustomEvent('cancel', { bubbles: true }));
+                this.close();
+            };
+        }
 
         // Confirm button
-        confirmBtn.addEventListener('click', () => {
-            this.dispatchEvent(new CustomEvent('confirm', { bubbles: true }));
-            this.close();
-        });
+        if (confirmBtn) {
+            confirmBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.dispatchEvent(new CustomEvent('confirm', { bubbles: true }));
+                this.close();
+            };
+        }
 
-        // Close on Escape key
+        // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
@@ -286,16 +303,34 @@ class Dialog extends HTMLElement {
         if (this.isOpen) return;
         this.isOpen = true;
         this.setAttribute('open', '');
+        
+        // Update visual state
+        const overlay = this.shadowRoot.querySelector('.dialog-overlay');
+        if (overlay) {
+            overlay.classList.add('open');
+        }
+        
+        // Dispatch open event
+        this.dispatchEvent(new CustomEvent('dialog-open', { bubbles: true }));
     }
 
     close() {
         if (!this.isOpen) return;
         this.isOpen = false;
         this.removeAttribute('open');
+        
+        // Update visual state
+        const overlay = this.shadowRoot.querySelector('.dialog-overlay');
+        if (overlay) {
+            overlay.classList.remove('open');
+        }
+        
+        // Dispatch close event
+        this.dispatchEvent(new CustomEvent('dialog-close', { bubbles: true }));
     }
 
     static get observedAttributes() {
-        return ['open', 'title', 'position'];
+        return ['open', 'title', 'position', 'variant'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -310,10 +345,18 @@ class Dialog extends HTMLElement {
                 this.shadowRoot.querySelector('.dialog-overlay').classList.remove('open');
                 this.dispatchEvent(new CustomEvent('dialog-close', { bubbles: true }));
             }
-        } else if (name === 'title' || name === 'position') {
+        } else if (name === 'title' || name === 'position' || name === 'variant') {
             this.render();
             this.setupEventListeners();
         }
+    }
+
+    // Method to ensure event listeners are set up after render
+    ensureEventListeners() {
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            this.setupEventListeners();
+        }, 0);
     }
 }
 

@@ -42,6 +42,15 @@ class PageDeleteDialog extends HTMLElement {
         this.addEventListener('dialog-close', () => {
             this.close();
         });
+
+        // Listen for dialog confirm/cancel events
+        this.addEventListener('confirm', () => {
+            this.confirmDelete();
+        });
+
+        this.addEventListener('cancel', () => {
+            this.cancelDelete();
+        });
     }
 
     updateOpenState() {
@@ -125,7 +134,8 @@ class PageDeleteDialog extends HTMLElement {
             <ui-dialog 
                 ${this.isOpen ? 'open' : ''} 
                 title="Confirm Delete" 
-                position="center">
+                position="center"
+                variant="danger">
                 <div slot="content">
                     <p class="text-gray-700 mb-4">
                         Are you sure you want to delete the page "<strong>${this.pageData?.title || 'Unknown'}</strong>"?
@@ -134,16 +144,14 @@ class PageDeleteDialog extends HTMLElement {
                         This action cannot be undone. The page and all its content will be permanently removed.
                     </p>
                 </div>
-                <div slot="footer">
-                    <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="this.closest('page-delete-dialog').cancelDelete()">
-                        Cancel
-                    </button>
-                    <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="this.closest('page-delete-dialog').confirmDelete()">
-                        Delete Page
-                    </button>
-                </div>
             </ui-dialog>
         `;
+        
+        // Ensure event listeners are set up after render
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.ensureEventListeners();
+        }
     }
 }
 

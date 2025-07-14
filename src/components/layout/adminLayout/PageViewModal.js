@@ -1,5 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
 
 /**
  * Page View Modal Component
@@ -66,19 +67,16 @@ class PageViewModal extends HTMLElement {
                 
                 <div>
                     ${this.pageData ? `
-                        <!-- Page Title -->
-                        <div class="border-b pb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Title</label>
-                                    <p class="text-gray-900 font-medium">${this.pageData.title || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Category</label>
-                                    <p class="text-gray-900">${this.pageData.category || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
+                                                 <!-- Page Title -->
+                         <div class="border-b pb-4">
+                             <div class="flex items-center gap-3">
+                                 <h3 class="text-xl font-semibold text-gray-900">${this.pageData.title || 'N/A'}</h3>
+                                 <ui-badge color="secondary">${this.pageData.category || 'N/A'}</ui-badge>
+                                 <ui-badge color="${this.pageData.is_active ? 'success' : 'error'}">
+                                     ${this.pageData.is_active ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
+                                 </ui-badge>
+                             </div>
+                         </div>
 
                         <!-- Page Details -->
                         <div class="border-b pb-4">

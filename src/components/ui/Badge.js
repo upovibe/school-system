@@ -201,10 +201,10 @@ class Badge extends HTMLElement {
         if (this.initialized) return;
         this.initialized = true;
 
-        // Store original content before building the badge
+        // Store original content before building the badge (preserve HTML)
         const originalContent = Array.from(this.childNodes)
             .filter(node => node !== this.badgeElement)
-            .map(node => node.textContent || '')
+            .map(node => node.outerHTML || node.textContent || '')
             .join('').trim();
 
         // Move any existing children (except our badgeElement) to avoid duplication
@@ -223,8 +223,8 @@ class Badge extends HTMLElement {
             this.badgeElement.classList.add('upo-badge-rounded');
         }
         
-        // Set the text content from the original content
-        this.badgeElement.textContent = originalContent || 'Badge';
+        // Set the content from the original content (support HTML)
+        this.badgeElement.innerHTML = originalContent || 'Badge';
     }
 
     // Called when attributes change

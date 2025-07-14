@@ -130,14 +130,14 @@ class PageSettingsPage extends App {
     handleTableEvent(event) {
         const { type, detail } = event;
         
+        // First, close all modals and dialogs
+        this.closeAllModals();
+        
         switch (type) {
             case 'table-view':
                 // Find the original page data from the pages array
                 const viewPage = this.get('pages').find(page => page.id === detail.row.id);
                 if (viewPage) {
-                    // Close other modals first
-                    this.set('showAddModal', false);
-                    this.set('showUpdateModal', false);
                     this.set('viewPageData', viewPage);
                     this.set('showViewModal', true);
                 } else {
@@ -149,8 +149,6 @@ class PageSettingsPage extends App {
                 // Find the original page data from the pages array
                 const originalPage = this.get('pages').find(page => page.id === detail.row.id);
                 if (originalPage) {
-                    // Make sure add modal is closed first
-                    this.set('showAddModal', false);
                     this.set('updatePageData', originalPage);
                     this.set('showUpdateModal', true);
                 } else {
@@ -162,10 +160,6 @@ class PageSettingsPage extends App {
                 // Find the original page data from the pages array
                 const deletePage = this.get('pages').find(page => page.id === detail.row.id);
                 if (deletePage) {
-                    // Close other modals first
-                    this.set('showAddModal', false);
-                    this.set('showUpdateModal', false);
-                    this.set('showViewModal', false);
                     this.set('deletePageData', deletePage);
                     this.set('showDeleteDialog', true);
                 } else {
@@ -174,8 +168,6 @@ class PageSettingsPage extends App {
                 break;
                 
             case 'table-add':
-                // Make sure update modal is closed first
-                this.set('showUpdateModal', false);
                 this.set('updatePageData', null);
                 this.set('showAddModal', true);
                 break;
@@ -184,6 +176,17 @@ class PageSettingsPage extends App {
                 this.loadData();
                 break;
         }
+    }
+
+    // Close all modals and dialogs
+    closeAllModals() {
+        this.set('showAddModal', false);
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
+        this.set('showDeleteDialog', false);
+        this.set('updatePageData', null);
+        this.set('viewPageData', null);
+        this.set('deletePageData', null);
     }
 
     render() {
@@ -273,25 +276,22 @@ class PageSettingsPage extends App {
 
     // Close the add modal
     closeAddModal() {
-        this.set('showAddModal', false);
+        this.closeAllModals();
     }
 
     // Close the update modal
     closeUpdateModal() {
-        this.set('showUpdateModal', false);
-        this.set('updatePageData', null);
+        this.closeAllModals();
     }
 
     // Close the view modal
     closeViewModal() {
-        this.set('showViewModal', false);
-        this.set('viewPageData', null);
+        this.closeAllModals();
     }
 
     // Close the delete dialog
     closeDeleteDialog() {
-        this.set('showDeleteDialog', false);
-        this.set('deletePageData', null);
+        this.closeAllModals();
     }
 
 

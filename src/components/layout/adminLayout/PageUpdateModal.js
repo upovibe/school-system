@@ -229,11 +229,6 @@ class PageUpdateModal extends HTMLElement {
                 position="right" 
                 close-button="true">
                 <div slot="title">Page Update</div>
-                <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Edit Page</h3>
-                        <p class="text-gray-600">Update the page information.</p>
-                    </div>
-                    
                     <form id="page-update-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>

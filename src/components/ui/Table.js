@@ -313,8 +313,9 @@ class Table extends HTMLElement {
                 }
                 
                 .upo-table-container {
-                    border-radius: 0.375rem;
+                    border-radius:0.375rem 0.375rem 0 0;
                     border: 1px solid #e5e7eb;
+                    border-bottom: none;
                 }
                 
                 .upo-table-scroll-container {
@@ -327,6 +328,7 @@ class Table extends HTMLElement {
                     padding: 1rem 1rem 0.5rem 1rem;
                     background-color: #f9fafb;
                     border-bottom: 1px solid #e5e7eb;
+
                 }
                 
                 .upo-table-title {

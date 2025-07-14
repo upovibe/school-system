@@ -136,11 +136,6 @@ class PageSettingsModal extends HTMLElement {
                 position="right" 
                 close-button="true">
                 <div slot="title">Page Settings</div>
-                <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Add New Page</h3>
-                        <p class="text-gray-600">Create a new page for your website.</p>
-                    </div>
-                    
                     <form id="page-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>

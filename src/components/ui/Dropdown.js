@@ -359,6 +359,41 @@ class Dropdown extends HTMLElement {
         }
     }
     
+    static get observedAttributes() {
+        return ['value', 'placeholder', 'disabled', 'multiple', 'searchable'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) return;
+        
+        switch (name) {
+            case 'value':
+                if (newValue) {
+                    this.selectedValues.clear();
+                    if (this.hasAttribute('multiple')) {
+                        newValue.split(',').forEach(v => this.selectedValues.add(v.trim()));
+                    } else {
+                        this.selectedValues.add(newValue);
+                    }
+                    this.updateSelection();
+                    this.updateOptions();
+                }
+                break;
+            case 'placeholder':
+                if (this.selectedValues.size === 0) {
+                    this.updateSelection();
+                }
+                break;
+            case 'disabled':
+                if (this.hasAttribute('disabled')) {
+                    this.trigger.classList.add('disabled');
+                } else {
+                    this.trigger.classList.remove('disabled');
+                }
+                break;
+        }
+    }
+
     connectedCallback() {
         // Prevent double processing
         if (this.initialized) return;
@@ -370,6 +405,16 @@ class Dropdown extends HTMLElement {
 
         // Force clear any initial selections - start completely empty
         this.selectedValues.clear();
+
+        // Set initial value if provided
+        const initialValue = this.getAttribute('value');
+        if (initialValue) {
+            if (this.hasAttribute('multiple')) {
+                initialValue.split(',').forEach(v => this.selectedValues.add(v.trim()));
+            } else {
+                this.selectedValues.add(initialValue);
+            }
+        }
 
         this.updateSelection();
         this.updateOptions();

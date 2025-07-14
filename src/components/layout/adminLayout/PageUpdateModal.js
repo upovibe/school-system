@@ -51,18 +51,6 @@ class PageUpdateModal extends HTMLElement {
         this.pageData = pageData;
         // Re-render the modal with the new data
         this.render();
-        
-        // Set WYSIWYG content
-        const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
-        if (contentWysiwyg && this.pageData) {
-            contentWysiwyg.value = this.pageData.content || '';
-        }
-        
-        // Set dropdown value
-        const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
-        if (categoryDropdown && this.pageData) {
-            categoryDropdown.value = this.pageData.category || '';
-        }
     }
 
     open() {
@@ -183,6 +171,7 @@ class PageUpdateModal extends HTMLElement {
                             <ui-dropdown 
                                 data-field="category"
                                 placeholder="Select category"
+                                value="${this.pageData?.category || ''}"
                                 class="w-full">
                                 <ui-option value="general">General</ui-option>
                                 <ui-option value="about">About</ui-option>
@@ -199,6 +188,7 @@ class PageUpdateModal extends HTMLElement {
                                 placeholder="Enter page content..."
                                 height="200px"
                                 toolbar="full"
+                                value="${this.pageData?.content || ''}"
                                 class="w-full">
                             </ui-wysiwyg>
                         </div>

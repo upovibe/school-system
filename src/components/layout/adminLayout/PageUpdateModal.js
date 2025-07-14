@@ -66,32 +66,27 @@ class PageUpdateModal extends HTMLElement {
     // Update the page
     async updatePage() {
         try {
-            // Get form data using normal HTML inputs
-            const form = this.querySelector('#page-update-form');
-            const formData = new FormData(form);
-            
-            // Get WYSIWYG content separately
+            // Get values from custom UI components
+            const titleInput = this.querySelector('ui-input');
+            const slugInput = this.querySelectorAll('ui-input')[1];
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
-            
-            // Get dropdown value separately
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
-            
-            // Get radio group value separately
             const statusRadioGroup = this.querySelector('ui-radio-group[name="status"]');
-            
-            // Get textarea value separately
             const metaDescriptionTextarea = this.querySelector('ui-textarea[name="meta-description"]');
+            const metaKeywordsInput = this.querySelectorAll('ui-input')[2];
+            const bannerImageInput = this.querySelectorAll('ui-input')[3];
+            const sortOrderInput = this.querySelectorAll('ui-input')[4];
 
             const pageData = {
-                title: formData.get('title'),
-                slug: formData.get('slug'),
+                title: titleInput ? titleInput.value : '',
+                slug: slugInput ? slugInput.value : '',
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
-                meta_keywords: formData.get('meta-keywords'),
-                banner_image: formData.get('banner-image'),
-                is_active: statusRadioGroup ? statusRadioGroup.value === 'active' : false,
-                sort_order: parseInt(formData.get('sort-order')) || 0
+                meta_keywords: metaKeywordsInput ? metaKeywordsInput.value : '',
+                banner_image: bannerImageInput ? bannerImageInput.value : '',
+                is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
+                sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
 
             // Validate required fields

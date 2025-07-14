@@ -10,6 +10,7 @@ class PageModel extends BaseModel {
     protected static $fillable = [
         'slug',
         'title',
+        'category',
         'content',
         'meta_description',
         'meta_keywords',

@@ -15,6 +15,10 @@ class BaseModel {
         $this->table = static::$table;
     }
 
+    protected function getTableName() {
+        return static::$table;
+    }
+
     // Dynamic property handling
     public function __get($name) {
         return $this->attributes[$name] ?? null;
@@ -64,7 +68,8 @@ class BaseModel {
                 $values[] = $condition[1];
             }
             $whereClause = implode(' AND ', $conditions);
-            $sql = "SELECT * FROM {$this->table} WHERE {$whereClause} LIMIT 1";
+            $tableName = $this->getTableName();
+            $sql = "SELECT * FROM {$tableName} WHERE {$whereClause} LIMIT 1";
             
             try {
                 $stmt = $this->pdo->prepare($sql);
@@ -83,7 +88,8 @@ class BaseModel {
 
     public function findAll() {
         try {
-            $stmt = $this->pdo->query("SELECT * FROM {$this->table}");
+            $tableName = $this->getTableName();
+            $stmt = $this->pdo->query("SELECT * FROM {$tableName}");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception('Error fetching all records: ' . $e->getMessage());
@@ -92,7 +98,8 @@ class BaseModel {
 
     public function findById($id) {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+            $tableName = $this->getTableName();
+            $stmt = $this->pdo->prepare("SELECT * FROM {$tableName} WHERE id = ?");
             $stmt->execute([$id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($result) {
@@ -114,7 +121,8 @@ class BaseModel {
 
             $keys = implode(', ', array_keys($data));
             $placeholders = ':' . implode(', :', array_keys($data));
-            $stmt = $this->pdo->prepare("INSERT INTO {$this->table} ($keys) VALUES ($placeholders)");
+            $tableName = $this->getTableName();
+            $stmt = $this->pdo->prepare("INSERT INTO {$tableName} ($keys) VALUES ($placeholders)");
             foreach ($data as $key => $value) {
                 $stmt->bindValue(':' . $key, $value);
             }
@@ -137,17 +145,27 @@ class BaseModel {
                 $data['updated_at'] = date('Y-m-d H:i:s');
             }
 
-            $set = '';
-            foreach (array_keys($data) as $key) {
-                $set .= "$key = :$key, ";
-            }
-            $set = rtrim($set, ', ');
-            $stmt = $this->pdo->prepare("UPDATE {$this->table} SET $set WHERE id = :id");
-            $stmt->bindValue(':id', $id);
+
+
+            // Build SET clause with placeholders
+            $setParts = [];
+            $params = [];
+            
             foreach ($data as $key => $value) {
-                $stmt->bindValue(':' . $key, $value);
+                $setParts[] = "$key = ?";
+                $params[] = $value;
             }
-            $result = $stmt->execute();
+            
+            $setClause = implode(', ', $setParts);
+            $params[] = $id; // Add ID for WHERE clause
+            
+            $tableName = $this->getTableName();
+            $sql = "UPDATE {$tableName} SET $setClause WHERE id = ?";
+            
+
+            
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute($params);
             
             if ($result) {
                 $this->attributes = array_merge($this->attributes, $data);
@@ -161,7 +179,8 @@ class BaseModel {
 
     public function delete($id) {
         try {
-            $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE id = ?");
+            $tableName = $this->getTableName();
+            $stmt = $this->pdo->prepare("DELETE FROM {$tableName} WHERE id = ?");
             return $stmt->execute([$id]);
         } catch (PDOException $e) {
             throw new Exception('Error deleting record: ' . $e->getMessage());

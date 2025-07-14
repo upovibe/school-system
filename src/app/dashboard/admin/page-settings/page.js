@@ -6,6 +6,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/PageSettingsModal.js';
 import '@/components/layout/adminLayout/PageUpdateModal.js';
+import '@/components/layout/adminLayout/PageViewModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -20,7 +21,9 @@ class PageSettingsPage extends App {
         this.loading = false;
         this.showAddModal = false;
         this.showUpdateModal = false;
+        this.showViewModal = false;
         this.updatePageData = null;
+        this.viewPageData = null;
     }
 
     connectedCallback() {
@@ -39,6 +42,7 @@ class PageSettingsPage extends App {
         this.addEventListener('modal-closed', () => {
             this.closeAddModal();
             this.closeUpdateModal();
+            this.closeViewModal();
         });
         
         this.addEventListener('page-saved', () => {
@@ -58,6 +62,11 @@ class PageSettingsPage extends App {
                 const updatePageData = this.get('updatePageData');
                 if (updatePageData) {
                     modal.setPageData(updatePageData);
+                }
+            } else if (modal.tagName === 'PAGE-VIEW-MODAL') {
+                const viewPageData = this.get('viewPageData');
+                if (viewPageData) {
+                    modal.setPageData(viewPageData);
                 }
             }
         });
@@ -104,12 +113,17 @@ class PageSettingsPage extends App {
         
         switch (type) {
             case 'table-view':
-                Toast.show({
-                    title: 'View Page',
-                    message: `Viewing: ${detail.row.title}`,
-                    variant: 'info',
-                    duration: 2000
-                });
+                // Find the original page data from the pages array
+                const viewPage = this.get('pages').find(page => page.id === detail.row.id);
+                if (viewPage) {
+                    // Close other modals first
+                    this.set('showAddModal', false);
+                    this.set('showUpdateModal', false);
+                    this.set('viewPageData', viewPage);
+                    this.set('showViewModal', true);
+                } else {
+                    console.error('❌ Could not find page data for viewing:', detail.row);
+                }
                 break;
                 
             case 'table-edit':
@@ -121,12 +135,7 @@ class PageSettingsPage extends App {
                     this.set('updatePageData', originalPage);
                     this.set('showUpdateModal', true);
                 } else {
-                    Toast.show({
-                        title: 'Error',
-                        message: 'Could not find page data for updating',
-                        variant: 'error',
-                        duration: 3000
-                    });
+                    console.error('❌ Could not find page data for updating:', detail.row);
                 }
                 break;
                 
@@ -157,6 +166,7 @@ class PageSettingsPage extends App {
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
+        const showViewModal = this.get('showViewModal');
         
         // Prepare table data and columns for pages
         const tableData = pages ? pages.map(page => ({
@@ -226,6 +236,9 @@ class PageSettingsPage extends App {
             
             <!-- Update Page Modal -->
             <page-update-modal ${showUpdateModal ? 'open' : ''}></page-update-modal>
+            
+            <!-- View Page Modal -->
+            <page-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></page-view-modal>
         `;
     }
 
@@ -238,6 +251,12 @@ class PageSettingsPage extends App {
     closeUpdateModal() {
         this.set('showUpdateModal', false);
         this.set('updatePageData', null);
+    }
+
+    // Close the view modal
+    closeViewModal() {
+        this.set('showViewModal', false);
+        this.set('viewPageData', null);
     }
 
 

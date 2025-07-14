@@ -154,22 +154,24 @@ class PageUpdateModal extends HTMLElement {
                     <form id="page-update-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
-                            <input 
+                            <ui-input 
                                 name="title"
                                 type="text" 
                                 placeholder="Enter page title"
                                 value="${this.pageData?.title || ''}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full">
+                            </ui-input>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Slug</label>
-                            <input 
+                            <ui-input 
                                 name="slug"
                                 type="text" 
                                 placeholder="Enter page slug"
                                 value="${this.pageData?.slug || ''}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full">
+                            </ui-input>
                         </div>
                         
                         <div>
@@ -212,22 +214,24 @@ class PageUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
-                            <input 
+                            <ui-input 
                                 name="meta-keywords"
                                 type="text" 
                                 placeholder="Enter meta keywords (comma separated)"
                                 value="${this.pageData?.meta_keywords || ''}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full">
+                            </ui-input>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image URL</label>
-                            <input 
+                            <ui-input 
                                 name="banner-image"
                                 type="text" 
                                 placeholder="Enter banner image URL"
                                 value="${this.pageData?.banner_image || ''}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full">
+                            </ui-input>
                         </div>
                         
                         <div>
@@ -244,12 +248,13 @@ class PageUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
-                            <input 
+                            <ui-input 
                                 name="sort-order"
                                 type="number" 
                                 placeholder="Enter sort order" 
                                 value="${this.pageData?.sort_order || 0}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full">
+                            </ui-input>
                         </div>
                     </form>
             </ui-modal>

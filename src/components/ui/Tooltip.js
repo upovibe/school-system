@@ -388,6 +388,8 @@ class Tooltip extends HTMLElement {
     }
 
     updatePosition() {
+        if (!this.tooltipElement) return;
+        
         const position = this.getAttribute('position') || 'top';
         this.tooltipElement.className = this.tooltipElement.className.replace(/tooltip--(top|bottom|left|right)(-start|-end)?/, `tooltip--${position}`);
         
@@ -397,11 +399,15 @@ class Tooltip extends HTMLElement {
     }
 
     updateVariant() {
+        if (!this.tooltipElement) return;
+        
         const variant = this.getAttribute('variant') || 'default';
         this.tooltipElement.className = this.tooltipElement.className.replace(/tooltip--(default|primary|success|warning|error|info)/, `tooltip--${variant}`);
     }
 
     updateDisabledState() {
+        if (!this.tooltipElement) return;
+        
         const disabled = this.hasAttribute('disabled');
         this.tooltipElement.classList.toggle('tooltip--disabled', disabled);
         

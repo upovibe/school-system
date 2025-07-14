@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/Tooltip.js';
 
 /**
  * Page View Modal Component
@@ -72,9 +73,11 @@ class PageViewModal extends HTMLElement {
                              <div class="flex items-center gap-3">
                                  <h3 class="text-xl font-semibold text-gray-900">${this.pageData.title || 'N/A'}</h3>
                                  <ui-badge color="secondary">${this.pageData.category || 'N/A'}</ui-badge>
-                                 <ui-badge color="${this.pageData.is_active ? 'success' : 'error'}">
-                                     ${this.pageData.is_active ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
-                                 </ui-badge>
+                                 <ui-tooltip content="${this.pageData.is_active ? 'Active' : 'Inactive'}" position="top">
+                                     <ui-badge color="${this.pageData.is_active ? 'success' : 'error'}">
+                                         ${this.pageData.is_active ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
+                                     </ui-badge>
+                                 </ui-tooltip>
                              </div>
                          </div>
 

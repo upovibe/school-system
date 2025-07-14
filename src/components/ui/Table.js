@@ -669,7 +669,10 @@ class Table extends HTMLElement {
             this.sortDirection = 'asc';
         }
 
-        this.data.sort((a, b) => {
+        // Sort the data that's currently being displayed
+        const dataToSort = (this.searchable && this.filteredData.length > 0) ? this.filteredData : this.data;
+        
+        dataToSort.sort((a, b) => {
             const aVal = a[column];
             const bVal = b[column];
             
@@ -991,6 +994,19 @@ class Table extends HTMLElement {
             });
         }
         
+        // Apply current sort to filtered data if sorting is active
+        if (this.sortColumn && this.sortable) {
+            this.filteredData.sort((a, b) => {
+                const aVal = a[this.sortColumn];
+                const bVal = b[this.sortColumn];
+                
+                if (aVal === bVal) return 0;
+                
+                const comparison = aVal < bVal ? -1 : 1;
+                return this.sortDirection === 'asc' ? comparison : -comparison;
+            });
+        }
+        
         // Reset to first page when filtering
         this.currentPage = 1;
         
@@ -1287,11 +1303,15 @@ class Table extends HTMLElement {
                         <thead>
                             <tr>
                                 ${this.selectable ? `<th><input type="checkbox" class="upo-table-checkbox" data-select-all ${this.areAllVisibleRowsSelected() ? 'checked' : ''}></th>` : ''}
-                                ${this.columns.map(col => `
-                                    <th data-column="${col.key}" ${this.sortable ? 'tabindex="0" role="button"' : ''}>
-                                        ${col.label || col.key}
-                                    </th>
-                                `).join('')}
+                                ${this.columns.map(col => {
+                                    const isSorted = this.sortColumn === col.key;
+                                    const sortClass = isSorted ? (this.sortDirection === 'asc' ? 'upo-sort-asc' : 'upo-sort-desc') : '';
+                                    return `
+                                        <th data-column="${col.key}" ${this.sortable ? 'tabindex="0" role="button"' : ''} class="${sortClass}">
+                                            ${col.label || col.key}
+                                        </th>
+                                    `;
+                                }).join('')}
                                 ${this.action ? '<th class="upo-table-action-column">Actions</th>' : ''}
                             </tr>
                         </thead>

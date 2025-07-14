@@ -64,19 +64,18 @@ class PageViewModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">View Page Details</div>
                 
-                <div class="p-6 space-y-6">
+                <div>
                     ${this.pageData ? `
                         <!-- Page Title -->
                         <div class="border-b pb-4">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Page Information</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Title</label>
                                     <p class="text-gray-900 font-medium">${this.pageData.title || 'N/A'}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Slug</label>
-                                    <p class="text-gray-900 font-mono text-sm">${this.pageData.slug || 'N/A'}</p>
+                                    <label class="block text-sm font-medium text-gray-700">Category</label>
+                                    <p class="text-gray-900">${this.pageData.category || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
@@ -85,10 +84,6 @@ class PageViewModal extends HTMLElement {
                         <div class="border-b pb-4">
                             <h4 class="text-md font-semibold text-gray-800 mb-3">Details</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Category</label>
-                                    <p class="text-gray-900">${this.pageData.category || 'N/A'}</p>
-                                </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Status</label>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${this.pageData.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
@@ -99,11 +94,28 @@ class PageViewModal extends HTMLElement {
                                     <label class="block text-sm font-medium text-gray-700">Sort Order</label>
                                     <p class="text-gray-900">${this.pageData.sort_order || 0}</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Banner Image</label>
-                                    <p class="text-gray-900">${this.pageData.banner_image || 'No banner image'}</p>
-                                </div>
                             </div>
+                        </div>
+
+                        <!-- Banner Image Preview -->
+                        <div class="border-b pb-4">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">Banner Image</h4>
+                            ${this.pageData.banner_image ? `
+                                <div class="space-y-2">
+                                    <img src="${this.pageData.banner_image}" 
+                                         alt="Banner Image" 
+                                         class="w-full h-32 object-cover rounded-lg border border-gray-200"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div class="hidden text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                        <p class="text-gray-500 text-sm">Image failed to load</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 break-all">${this.pageData.banner_image}</p>
+                                </div>
+                            ` : `
+                                <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p class="text-gray-500">No banner image set</p>
+                                </div>
+                            `}
                         </div>
 
                         <!-- SEO Information -->
@@ -132,21 +144,6 @@ class PageViewModal extends HTMLElement {
                                 ` : `
                                     <p class="text-gray-500 italic">No content available</p>
                                 `}
-                            </div>
-                </div>
-                
-                        <!-- Timestamps -->
-                        <div class="border-t pt-4">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3">Timestamps</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Created At</label>
-                                    <p class="text-gray-900 text-sm">${this.pageData.created_at ? new Date(this.pageData.created_at).toLocaleString() : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Updated At</label>
-                                    <p class="text-gray-900 text-sm">${this.pageData.updated_at ? new Date(this.pageData.updated_at).toLocaleString() : 'N/A'}</p>
-                                </div>
                             </div>
                         </div>
                     ` : `

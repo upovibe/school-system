@@ -353,7 +353,7 @@ class Textarea extends HTMLElement {
 
     updateTextareaValue() {
         const textarea = this.shadowRoot.querySelector('textarea');
-        if (textarea && textarea.value !== this.value) {
+        if (textarea) {
             textarea.value = this.value;
         }
     }

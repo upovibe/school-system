@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/PageSettingsModal.js';
+import '@/components/layout/adminLayout/PageUpdateModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -18,6 +19,8 @@ class PageSettingsPage extends App {
         this.pages = null;
         this.loading = false;
         this.showAddModal = false;
+        this.showUpdateModal = false;
+        this.updatePageData = null;
     }
 
     connectedCallback() {
@@ -81,12 +84,20 @@ class PageSettingsPage extends App {
                 
             case 'table-edit':
                 console.log('Edit page:', detail.row);
-                Toast.show({
-                    title: 'Edit Page',
-                    message: `Editing: ${detail.row.title}`,
-                    variant: 'info',
-                    duration: 2000
-                });
+                // Find the original page data from the pages array
+                const originalPage = this.get('pages').find(page => page.id === detail.row.id);
+                if (originalPage) {
+                    console.log('🔧 Original page data for update:', originalPage);
+                    this.set('updatePageData', originalPage);
+                    this.set('showUpdateModal', true);
+                } else {
+                    Toast.show({
+                        title: 'Error',
+                        message: 'Could not find page data for updating',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                }
                 break;
                 
             case 'table-delete':
@@ -116,6 +127,7 @@ class PageSettingsPage extends App {
         const pages = this.get('pages');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
         
         // Prepare table data and columns for pages
         const tableData = pages ? pages.map(page => ({
@@ -180,14 +192,23 @@ class PageSettingsPage extends App {
                 `}
             </div>
             
-            <!-- Page Settings Modal -->
+            <!-- Add Page Modal -->
             <page-settings-modal ${showAddModal ? 'open' : ''}></page-settings-modal>
+            
+            <!-- Update Page Modal -->
+            <page-update-modal ${showUpdateModal ? 'open' : ''}></page-update-modal>
         `;
     }
 
     // Close the add modal
     closeAddModal() {
         this.set('showAddModal', false);
+    }
+
+    // Close the update modal
+    closeUpdateModal() {
+        this.set('showUpdateModal', false);
+        this.set('updatePageData', null);
     }
 
     // Override connectedCallback to add event listeners after render
@@ -206,11 +227,29 @@ class PageSettingsPage extends App {
         // Add modal event listeners
         this.addEventListener('modal-closed', () => {
             this.closeAddModal();
+            this.closeUpdateModal();
         });
         
         this.addEventListener('page-saved', () => {
             this.closeAddModal();
             this.loadData();
+        });
+        
+        this.addEventListener('page-updated', () => {
+            this.closeUpdateModal();
+            this.loadData();
+        });
+        
+        // Listen for modal opened event to pass data
+        this.addEventListener('modal-opened', (event) => {
+            const modal = event.target;
+            if (modal.tagName === 'PAGE-UPDATE-MODAL') {
+                const updatePageData = this.get('updatePageData');
+                if (updatePageData) {
+                    console.log('🔧 Passing data to update modal:', updatePageData);
+                    modal.setPageData(updatePageData);
+                }
+            }
         });
     }
 }

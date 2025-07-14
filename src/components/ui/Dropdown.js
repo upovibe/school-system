@@ -494,7 +494,6 @@ class Dropdown extends HTMLElement {
     }
 
     closeDropdown() {
-        console.log('closeDropdown called');
         this.isOpen = false;
         this.container.classList.remove('open');
         this.focusedIndex = -1;

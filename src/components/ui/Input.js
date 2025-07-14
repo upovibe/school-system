@@ -459,6 +459,50 @@ class Input extends HTMLElement {
     }
     
     // Connected callback - called when element is added to DOM
+    static get observedAttributes() {
+        return ['value', 'placeholder', 'type', 'disabled', 'readonly', 'prefix', 'suffix', 'leading-icon', 'trailing-icon', 'floating-label', 'status'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue !== newValue) {
+            switch (name) {
+                case 'value':
+                    if (this.input) {
+                        this.input.value = newValue || '';
+                    }
+                    break;
+                case 'placeholder':
+                    if (this.input) {
+                        this.input.placeholder = newValue || '';
+                    }
+                    break;
+                case 'type':
+                    if (this.input) {
+                        this.input.type = newValue || 'text';
+                    }
+                    break;
+                case 'disabled':
+                    if (this.input) {
+                        if (newValue !== null) {
+                            this.input.disabled = true;
+                        } else {
+                            this.input.disabled = false;
+                        }
+                    }
+                    break;
+                case 'readonly':
+                    if (this.input) {
+                        if (newValue !== null) {
+                            this.input.readOnly = true;
+                        } else {
+                            this.input.readOnly = false;
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
     connectedCallback() {
         // Prevent double processing
         if (this.initialized) return;
@@ -498,9 +542,9 @@ class Input extends HTMLElement {
             }
         });
         
-        // Remove all attributes from the wrapper to avoid duplication
+        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value'
         attributes.forEach(attr => {
-            this.removeAttribute(attr);
+            if (attr !== 'value') this.removeAttribute(attr);
         });
         
         // Setup input type-specific functionality
@@ -789,7 +833,30 @@ class Input extends HTMLElement {
     
     // Set the value of the input
     set value(val) {
-        this.input.value = val;
+        if (this.input) {
+            this.input.value = val;
+            // Trigger input event to ensure any listeners are notified
+            this.input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    // Public method to set value with proper initialization check
+    setValue(val) {
+        if (this.input && this.initialized) {
+            this.input.value = val;
+            this.setAttribute('value', val);
+            // Trigger input event to ensure any listeners are notified
+            this.input.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+            // If input doesn't exist yet or not initialized, try again after a short delay
+            setTimeout(() => {
+                if (this.input && this.initialized) {
+                    this.input.value = val;
+                    this.setAttribute('value', val);
+                    this.input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, 100);
+        }
     }
     
     // Focus method

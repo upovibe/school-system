@@ -155,7 +155,11 @@ class RadioGroup extends HTMLElement {
         this.updateLayout();
         this.updateDisabledState();
         this.setupEventListeners();
-        this.updateSelectedValue();
+        
+        // Wait for child radio options to be created before setting the selected value
+        setTimeout(() => {
+            this.updateSelectedValue();
+        }, 0);
     }
 
     disconnectedCallback() {

@@ -75,6 +75,9 @@ class PageUpdateModal extends HTMLElement {
             
             // Get dropdown value separately
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
+            
+            // Get radio group value separately
+            const statusRadioGroup = this.querySelector('ui-radio-group[name="status"]');
 
             const pageData = {
                 title: formData.get('title'),
@@ -84,7 +87,7 @@ class PageUpdateModal extends HTMLElement {
                 meta_description: formData.get('meta-description'),
                 meta_keywords: formData.get('meta-keywords'),
                 banner_image: formData.get('banner-image'),
-                is_active: formData.get('status') === 'active',
+                is_active: statusRadioGroup ? statusRadioGroup.value === 'active' : false,
                 sort_order: parseInt(formData.get('sort-order')) || 0
             };
 
@@ -224,26 +227,14 @@ class PageUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <div class="flex space-x-4">
-                                <label class="flex items-center">
-                                    <input 
-                                        type="radio" 
-                                        name="status" 
-                                        value="active" 
-                                        ${this.pageData?.is_active ? 'checked' : ''}
-                                        class="mr-2">
-                                    Active
-                                </label>
-                                <label class="flex items-center">
-                                    <input 
-                                        type="radio" 
-                                        name="status" 
-                                        value="inactive" 
-                                        ${!this.pageData?.is_active ? 'checked' : ''}
-                                        class="mr-2">
-                                    Inactive
-                                </label>
-                            </div>
+                            <ui-radio-group 
+                                name="status"
+                                value="${this.pageData?.is_active ? 'active' : 'inactive'}"
+                                layout="horizontal"
+                                class="w-full">
+                                <ui-radio-option value="active" label="Active"></ui-radio-option>
+                                <ui-radio-option value="inactive" label="Inactive"></ui-radio-option>
+                            </ui-radio-group>
                         </div>
                         
                         <div>

@@ -362,9 +362,39 @@ class Modal extends HTMLElement {
                 }
 
                 .modal-body {
-                    padding: 1.5rem;
+                    padding: 1rem;
                     overflow-y: auto;
-                    max-height: calc(100vh - 120px);
+                    max-height: calc(100vh - 135px);
+                }
+
+                /* Custom scrollbar styles */
+                .modal-body::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                .modal-body::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                .modal-body::-webkit-scrollbar-thumb {
+                    background: #d1d5db;
+                    border-radius: 2px;
+                    transition: background 0.2s ease;
+                }
+
+                .modal-body::-webkit-scrollbar-thumb:hover {
+                    background: #9ca3af;
+                }
+
+                /* Remove scrollbar buttons/arrows */
+                .modal-body::-webkit-scrollbar-button {
+                    display: none;
+                }
+
+                /* Firefox scrollbar styles */
+                .modal-body {
+                    scrollbar-width: thin;
+                    scrollbar-color: #d1d5db transparent;
                 }
 
                 .modal-footer {

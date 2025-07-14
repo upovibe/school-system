@@ -4,9 +4,11 @@ import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/PageSettingsModal.js';
 import '@/components/layout/adminLayout/PageUpdateModal.js';
 import '@/components/layout/adminLayout/PageViewModal.js';
+import '@/components/layout/adminLayout/PageDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -24,6 +26,7 @@ class PageSettingsPage extends App {
         this.showViewModal = false;
         this.updatePageData = null;
         this.viewPageData = null;
+        this.deletePageData = null;
     }
 
     connectedCallback() {
@@ -43,6 +46,22 @@ class PageSettingsPage extends App {
             this.closeAddModal();
             this.closeUpdateModal();
             this.closeViewModal();
+        });
+        
+        // Listen for dialog events
+        this.addEventListener('dialog-opened', (event) => {
+            const dialog = event.target;
+            if (dialog.tagName === 'PAGE-DELETE-DIALOG') {
+                const deletePageData = this.get('deletePageData');
+                if (deletePageData) {
+                    dialog.setPageData(deletePageData);
+                }
+            }
+        });
+        
+        this.addEventListener('page-deleted', () => {
+            this.closeDeleteDialog();
+            this.loadData();
         });
         
         this.addEventListener('page-saved', () => {
@@ -140,12 +159,18 @@ class PageSettingsPage extends App {
                 break;
                 
             case 'table-delete':
-                Toast.show({
-                    title: 'Delete Page',
-                    message: `Deleting: ${detail.row.title}`,
-                    variant: 'warning',
-                    duration: 2000
-                });
+                // Find the original page data from the pages array
+                const deletePage = this.get('pages').find(page => page.id === detail.row.id);
+                if (deletePage) {
+                    // Close other modals first
+                    this.set('showAddModal', false);
+                    this.set('showUpdateModal', false);
+                    this.set('showViewModal', false);
+                    this.set('deletePageData', deletePage);
+                    this.set('showDeleteDialog', true);
+                } else {
+                    console.error('❌ Could not find page data for deleting:', detail.row);
+                }
                 break;
                 
             case 'table-add':
@@ -167,6 +192,7 @@ class PageSettingsPage extends App {
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
+        const showDeleteDialog = this.get('showDeleteDialog');
         
         // Prepare table data and columns for pages
         const tableData = pages ? pages.map(page => ({
@@ -239,6 +265,9 @@ class PageSettingsPage extends App {
             
             <!-- View Page Modal -->
             <page-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></page-view-modal>
+            
+            <!-- Delete Page Dialog -->
+            <page-delete-dialog ${showDeleteDialog ? 'open' : ''}></page-delete-dialog>
         `;
     }
 
@@ -257,6 +286,12 @@ class PageSettingsPage extends App {
     closeViewModal() {
         this.set('showViewModal', false);
         this.set('viewPageData', null);
+    }
+
+    // Close the delete dialog
+    closeDeleteDialog() {
+        this.set('showDeleteDialog', false);
+        this.set('deletePageData', null);
     }
 
 

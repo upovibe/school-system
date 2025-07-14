@@ -283,17 +283,15 @@ class Dialog extends HTMLElement {
     }
 
     open() {
+        if (this.isOpen) return;
         this.isOpen = true;
         this.setAttribute('open', '');
-        this.shadowRoot.querySelector('.dialog-overlay').classList.add('open');
-        this.dispatchEvent(new CustomEvent('dialog-open', { bubbles: true }));
     }
 
     close() {
+        if (!this.isOpen) return;
         this.isOpen = false;
         this.removeAttribute('open');
-        this.shadowRoot.querySelector('.dialog-overlay').classList.remove('open');
-        this.dispatchEvent(new CustomEvent('dialog-close', { bubbles: true }));
     }
 
     static get observedAttributes() {
@@ -302,10 +300,15 @@ class Dialog extends HTMLElement {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open') {
-            if (this.hasAttribute('open')) {
-                this.open();
-            } else {
-                this.close();
+            const shouldBeOpen = this.hasAttribute('open');
+            if (shouldBeOpen && !this.isOpen) {
+                this.isOpen = true;
+                this.shadowRoot.querySelector('.dialog-overlay').classList.add('open');
+                this.dispatchEvent(new CustomEvent('dialog-open', { bubbles: true }));
+            } else if (!shouldBeOpen && this.isOpen) {
+                this.isOpen = false;
+                this.shadowRoot.querySelector('.dialog-overlay').classList.remove('open');
+                this.dispatchEvent(new CustomEvent('dialog-close', { bubbles: true }));
             }
         } else if (name === 'title' || name === 'position') {
             this.render();

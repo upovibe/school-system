@@ -52,6 +52,8 @@ class PageDeleteDialog extends HTMLElement {
     // Set page data for deletion
     setPageData(pageData) {
         this.pageData = pageData;
+        // Re-render to update the content with new data
+        this.render();
     }
 
     // Handle delete confirmation
@@ -94,6 +96,8 @@ class PageDeleteDialog extends HTMLElement {
     }
 
     render() {
+        const pageTitle = this.pageData?.title || 'Unknown';
+        
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -102,7 +106,7 @@ class PageDeleteDialog extends HTMLElement {
                 variant="danger">
                 <div slot="content">
                     <p class="text-gray-700 mb-4">
-                        Are you sure you want to delete the page "<strong>${this.pageData?.title || 'Unknown'}</strong>"?
+                        Are you sure you want to delete the page "<strong>${pageTitle}</strong>"?
                     </p>
                     <p class="text-sm text-gray-500">
                         This action cannot be undone. The page and all its content will be permanently removed.

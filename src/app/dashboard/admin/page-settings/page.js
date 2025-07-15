@@ -41,16 +41,7 @@ class PageSettingsPage extends App {
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
         
-        // Listen for dialog events
-        this.addEventListener('dialog-opened', (event) => {
-            const dialog = event.target;
-            if (dialog.tagName === 'PAGE-DELETE-DIALOG') {
-                const deletePageData = this.get('deletePageData');
-                if (deletePageData) {
-                    dialog.setPageData(deletePageData);
-                }
-            }
-        });
+
         
         // Listen for success events to refresh data
         this.addEventListener('page-deleted', () => {
@@ -153,7 +144,7 @@ class PageSettingsPage extends App {
                 if (viewModal) {
                     viewModal.setPageData(viewPage);
                 }
-            }, 100);
+            }, 0);
         }
     }
 
@@ -165,14 +156,12 @@ class PageSettingsPage extends App {
             this.closeAllModals();
             this.set('updatePageData', editPage);
             this.set('showUpdateModal', true);
-            
-            // Ensure modal is open and data is set
             setTimeout(() => {
                 const updateModal = this.querySelector('page-update-modal');
                 if (updateModal) {
                     updateModal.setPageData(editPage);
                 }
-            }, 100);
+            }, 0);
         }
     }
 
@@ -184,6 +173,12 @@ class PageSettingsPage extends App {
             this.closeAllModals();
             this.set('deletePageData', deletePage);
             this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('page-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setPageData(deletePage);
+                }
+            }, 0);
         }
     }
 

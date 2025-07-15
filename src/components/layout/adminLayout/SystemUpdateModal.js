@@ -150,7 +150,9 @@ class SystemUpdateModal extends HTMLElement {
                         name="setting_value"
                         placeholder="Enter text value"
                         rows="4"
-                        class="w-full">${currentValue}</ui-textarea>
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-textarea>
                 `;
             
             case 'select':
@@ -160,7 +162,9 @@ class SystemUpdateModal extends HTMLElement {
                         name="setting_value"
                         placeholder="Enter select options (one per line or comma separated)"
                         rows="3"
-                        class="w-full">${currentValue}</ui-textarea>
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-textarea>
                 `;
             
             default:
@@ -349,7 +353,9 @@ class SystemUpdateModal extends HTMLElement {
                             name="description"
                             placeholder="Briefly describe this setting"
                             rows="2"
-                            class="w-full">${this.settingData?.description || ''}</ui-textarea>
+                            value="${this.settingData?.description || ''}"
+                            class="w-full">
+                        </ui-textarea>
                     </div>
                     
                     <div>

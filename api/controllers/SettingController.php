@@ -3,20 +3,18 @@
 
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
-require_once __DIR__ . '/../core/ImageUpload.php';
+require_once __DIR__ . '/../core/UploadCore.php';
 require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 
 class SettingController {
     private $pdo;
     private $settingModel;
-    private $imageUpload;
     private $userLogModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->settingModel = new SettingModel($pdo);
-        $this->imageUpload = new \Core\ImageUpload('uploads', 5242880); // 5MB max
         $this->userLogModel = new UserLogModel($pdo);
     }
 
@@ -463,7 +461,7 @@ class SettingController {
                     'setting_key' => $data['key'],
                     'category' => $category,
                     'type' => $type,
-                    'image_uploaded' => $uploadResult['uploaded']
+                    'image_uploaded' => $uploadResult['success']
                 ]);
                 
                 http_response_code(200);
@@ -491,7 +489,7 @@ class SettingController {
     }
 
     /**
-     * Upload setting image (logo, favicon, etc.) (admin only)
+     * Upload image for a setting (admin only)
      */
     public function uploadImage() {
         try {
@@ -499,6 +497,11 @@ class SettingController {
             RoleMiddleware::requireAdmin($this->pdo);
             
             $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Handle multipart form data if present
+            if (empty($data) && !empty($_POST)) {
+                $data = $_POST;
+            }
             
             // Validate required fields
             if (empty($data['setting_key'])) {
@@ -520,31 +523,21 @@ class SettingController {
                 return;
             }
             
-            // Upload image with setting key as source
-            $result = $this->imageUpload->uploadSingle($_FILES['image'], 'settings', $data['setting_key']);
+            // Handle image upload
+            $uploadResult = $this->handleImageUpload($data['setting_key'], $data['category'] ?? 'general');
             
-            if ($result['success']) {
-                // Update setting with image path
-                $this->settingModel->setValue($data['setting_key'], $result['data']['path'], 'image', $data['category'] ?? 'branding');
-                
-                // Log the action
-                $this->logAction('setting_image_uploaded', "Uploaded image for setting: {$data['setting_key']}", [
-                    'setting_key' => $data['setting_key'],
-                    'category' => $data['category'] ?? 'branding',
-                    'image_path' => $result['data']['path']
-                ]);
-                
+            if ($uploadResult['success']) {
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
                     'message' => 'Image uploaded successfully',
-                    'data' => $result['data']
+                    'data' => $uploadResult['data']
                 ]);
             } else {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $uploadResult['message']
                 ]);
             }
         } catch (Exception $e) {
@@ -557,7 +550,7 @@ class SettingController {
     }
 
     /**
-     * Delete setting image (admin only)
+     * Delete image for a setting (admin only)
      */
     public function deleteImage() {
         try {
@@ -565,6 +558,11 @@ class SettingController {
             RoleMiddleware::requireAdmin($this->pdo);
             
             $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Handle multipart form data if present
+            if (empty($data) && !empty($_POST)) {
+                $data = $_POST;
+            }
             
             // Validate required fields
             if (empty($data['setting_key'])) {
@@ -576,7 +574,7 @@ class SettingController {
                 return;
             }
             
-            // Get current setting value
+            // Get setting
             $setting = $this->settingModel->findByKey($data['setting_key']);
             if (!$setting) {
                 http_response_code(404);
@@ -587,7 +585,8 @@ class SettingController {
                 return;
             }
             
-            $imagePath = $setting['setting_value'];
+            // Get image path from setting value
+            $imagePath = $setting['setting_value'] ?? null;
             if (!$imagePath) {
                 http_response_code(404);
                 echo json_encode([
@@ -597,20 +596,17 @@ class SettingController {
                 return;
             }
             
-            // Extract filename from path
-            $filename = basename($imagePath);
+            // Delete file
+            $deleteResult = deleteFile($imagePath);
             
-            // Delete image
-            $result = $this->imageUpload->deleteImage($filename, 'settings');
-            
-            if ($result['success']) {
+            if ($deleteResult['success']) {
                 // Update setting to remove image reference
-                $this->settingModel->setValue($data['setting_key'], null, 'image', $setting['category']);
+                SettingModel::setValue($data['setting_key'], null, 'image', $setting['category'] ?? 'general');
                 
                 // Log the action
                 $this->logAction('setting_image_deleted', "Deleted image for setting: {$data['setting_key']}", [
                     'setting_key' => $data['setting_key'],
-                    'category' => $setting['category']
+                    'category' => $setting['category'] ?? 'general'
                 ]);
                 
                 http_response_code(200);
@@ -622,7 +618,7 @@ class SettingController {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $deleteResult['message']
                 ]);
             }
         } catch (Exception $e) {
@@ -673,7 +669,7 @@ class SettingController {
     }
 
     /**
-     * Handle image upload automatically
+     * Handle image upload for settings
      * @param string $settingKey Setting key
      * @param string $category Setting category
      * @return array Upload result
@@ -681,30 +677,57 @@ class SettingController {
     private function handleImageUpload($settingKey, $category = 'general') {
         // Check if image file was uploaded
         if (!isset($_FILES['image']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
-            return ['uploaded' => false, 'message' => 'No image uploaded'];
+            return ['success' => false, 'message' => 'No image uploaded'];
         }
         
         try {
-            // Upload image with setting key as source
-            $result = $this->imageUpload->uploadSingle($_FILES['image'], 'settings', $settingKey);
+            // Delete old image if exists
+            $existingSetting = $this->settingModel->findByKey($settingKey);
+            if ($existingSetting && $existingSetting['setting_value']) {
+                deleteFile($existingSetting['setting_value']);
+            }
             
-            if ($result['success']) {
+            // Upload image
+            $uploadResult = uploadImage($_FILES['image'], [
+                'upload_path' => 'uploads/settings/',
+                'max_size' => 5242880, // 5MB
+                'create_thumbnails' => true,
+                'thumbnail_sizes' => [
+                    'small' => [150, 150],
+                    'medium' => [300, 300],
+                    'large' => [600, 600]
+                ]
+            ]);
+            
+            if ($uploadResult['success']) {
                 // Update setting with image path
-                $this->settingModel->setValue($settingKey, $result['data']['path'], 'image', $category);
+                SettingModel::setValue($settingKey, $uploadResult['filepath'], 'image', $category);
+                
+                // Log the action
+                $this->logAction('setting_image_uploaded', "Uploaded image for setting: {$settingKey}", [
+                    'setting_key' => $settingKey,
+                    'category' => $category,
+                    'image_path' => $uploadResult['filepath']
+                ]);
+                
                 return [
-                    'uploaded' => true,
+                    'success' => true,
                     'message' => 'Image uploaded successfully',
-                    'data' => $result['data']
+                    'data' => [
+                        'filepath' => $uploadResult['filepath'],
+                        'url' => $uploadResult['url'],
+                        'thumbnails' => $uploadResult['thumbnails'] ?? null
+                    ]
                 ];
             } else {
                 return [
-                    'uploaded' => false,
-                    'message' => $result['message']
+                    'success' => false,
+                    'message' => $uploadResult['message']
                 ];
             }
         } catch (Exception $e) {
             return [
-                'uploaded' => false,
+                'success' => false,
                 'message' => 'Error uploading image: ' . $e->getMessage()
             ];
         }
@@ -718,7 +741,45 @@ class SettingController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            $stats = $this->imageUpload->getStats();
+            // Get upload directory stats
+            $uploadDir = 'uploads/';
+            $stats = [];
+            
+            if (is_dir($uploadDir)) {
+                $stats['total_files'] = 0;
+                $stats['total_size'] = 0;
+                $stats['directories'] = [];
+                
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($uploadDir, RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+                
+                foreach ($iterator as $file) {
+                    if ($file->isFile()) {
+                        $stats['total_files']++;
+                        $stats['total_size'] += $file->getSize();
+                        
+                        $relativePath = str_replace($uploadDir, '', $file->getPathname());
+                        $directory = dirname($relativePath);
+                        
+                        if (!isset($stats['directories'][$directory])) {
+                            $stats['directories'][$directory] = [
+                                'files' => 0,
+                                'size' => 0
+                            ];
+                        }
+                        
+                        $stats['directories'][$directory]['files']++;
+                        $stats['directories'][$directory]['size'] += $file->getSize();
+                    }
+                }
+                
+                $stats['total_size_formatted'] = $this->formatFileSize($stats['total_size']);
+                
+                foreach ($stats['directories'] as $dir => &$dirStats) {
+                    $dirStats['size_formatted'] = $this->formatFileSize($dirStats['size']);
+                }
+            }
             
             http_response_code(200);
             echo json_encode([
@@ -733,6 +794,20 @@ class SettingController {
                 'message' => 'Error retrieving upload statistics: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Format file size
+     */
+    private function formatFileSize($bytes) {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        
+        $bytes /= pow(1024, $pow);
+        
+        return round($bytes, 2) . ' ' . $units[$pow];
     }
 }
 ?> 

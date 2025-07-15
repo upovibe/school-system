@@ -3,20 +3,18 @@
 
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
-require_once __DIR__ . '/../core/ImageUpload.php';
+require_once __DIR__ . '/../utils/page_uploads.php';
 require_once __DIR__ . '/../models/PageModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 
 class PageController {
     private $pdo;
     private $pageModel;
-    private $imageUpload;
     private $userLogModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->pageModel = new PageModel($pdo);
-        $this->imageUpload = new \Core\ImageUpload('uploads', 5242880); // 5MB max
         $this->userLogModel = new UserLogModel($pdo);
     }
 
@@ -53,11 +51,12 @@ class PageController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            // Handle multipart form data if present
-            if (empty($data) && !empty($_POST)) {
+            // Handle multipart form data first (for file uploads)
+            if (!empty($_POST)) {
                 $data = $_POST;
+            } else {
+                // Fall back to JSON if no form data
+                $data = json_decode(file_get_contents('php://input'), true);
             }
             
             // Validate required fields
@@ -81,26 +80,19 @@ class PageController {
                 return;
             }
             
+            // Create page first to get the ID
+            $pageId = $this->pageModel->create($data);
+            
             // Handle banner upload if present
             $bannerPath = null;
             if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'temp');
-                if ($result['success']) {
-                    $bannerPath = $result['data']['path'];
+                $uploadResult = uploadPageBanner($_FILES['banner']);
+                
+                if ($uploadResult['success']) {
+                    $bannerPath = $uploadResult['filepath'];
+                    // Update page with banner path
+                    $this->pageModel->update($pageId, ['banner_image' => $bannerPath]);
                 }
-            }
-            
-            // Add banner path to data if uploaded
-            if ($bannerPath) {
-                $data['banner_image'] = $bannerPath;
-            }
-            
-            $pageId = $this->pageModel->create($data);
-            
-            // Update banner source if uploaded
-            if ($bannerPath) {
-                $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $pageId);
-                $this->pageModel->update($pageId, ['banner_image' => $bannerPath]);
             }
             
             // Log the action
@@ -116,7 +108,9 @@ class PageController {
                 'success' => true,
                 'data' => [
                     'id' => $pageId,
-                    'banner_image' => $bannerPath
+                    'banner_image' => $bannerPath,
+                    'banner_url' => $bannerPath ? getPageBannerInfo($bannerPath)['url'] : null,
+                    'thumbnails' => $bannerPath ? getPageBannerInfo($bannerPath)['thumbnails'] : null
                 ],
                 'message' => 'Page created successfully'
             ]);
@@ -227,12 +221,23 @@ class PageController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Debug logging
+            error_log("API Debug: Request method = " . $_SERVER['REQUEST_METHOD']);
+            error_log("API Debug: Content-Type = " . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
+            error_log("API Debug: POST data count = " . count($_POST));
+            error_log("API Debug: FILES data count = " . count($_FILES));
             
-            // Handle multipart form data if present
-            if (empty($data) && !empty($_POST)) {
+            // Handle multipart form data first (for file uploads)
+            if (!empty($_POST)) {
                 $data = $_POST;
+                error_log("API Debug: Using POST data");
+            } else {
+                // Fall back to JSON if no form data
+                $data = json_decode(file_get_contents('php://input'), true);
+                error_log("API Debug: Using JSON data");
             }
+            
+            error_log("API Debug: Data received = " . json_encode($data));
             
             // Check if page exists
             $existingPage = $this->pageModel->findById($id);
@@ -261,10 +266,23 @@ class PageController {
             // Handle banner upload if present
             $bannerPath = null;
             if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $id);
-                if ($result['success']) {
-                    $bannerPath = $result['data']['path'];
+                error_log("API Debug: Banner file detected");
+                // Delete old banner if exists
+                if ($existingPage['banner_image']) {
+                    deletePageBanner($existingPage['banner_image']);
+                }
+                
+                $uploadResult = uploadPageBanner($_FILES['banner']);
+                error_log("API Debug: Upload result = " . json_encode($uploadResult));
+                
+                if ($uploadResult['success']) {
+                    $bannerPath = $uploadResult['filepath'];
                     $data['banner_image'] = $bannerPath;
+                }
+            } else {
+                error_log("API Debug: No banner file or upload error");
+                if (isset($_FILES['banner'])) {
+                    error_log("API Debug: Banner upload error = " . $_FILES['banner']['error']);
                 }
             }
             
@@ -284,7 +302,9 @@ class PageController {
                     'success' => true,
                     'message' => 'Page updated successfully',
                     'data' => [
-                        'banner_image' => $bannerPath
+                        'banner_image' => $bannerPath,
+                        'banner_url' => $bannerPath ? getPageBannerInfo($bannerPath)['url'] : null,
+                        'thumbnails' => $bannerPath ? getPageBannerInfo($bannerPath)['thumbnails'] : null
                     ]
                 ]);
             } else {
@@ -295,6 +315,7 @@ class PageController {
                 ]);
             }
         } catch (Exception $e) {
+            error_log("API Error: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
@@ -325,6 +346,11 @@ class PageController {
             // Store page info before deletion for logging
             $pageTitle = $existingPage['title'];
             $pageSlug = $existingPage['slug'];
+            
+            // Delete banner image if exists
+            if ($existingPage['banner_image']) {
+                deletePageBanner($existingPage['banner_image']);
+            }
             
             $result = $this->pageModel->delete($id);
             
@@ -452,32 +478,41 @@ class PageController {
                 return;
             }
             
-            // Upload image with page ID as source
-            $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $id);
+            // Delete old banner if exists
+            if ($existingPage['banner_image']) {
+                deletePageBanner($existingPage['banner_image']);
+            }
             
-            if ($result['success']) {
+            // Upload banner
+            $uploadResult = uploadPageBanner($_FILES['banner']);
+            
+            if ($uploadResult['success']) {
                 // Update page with banner path
-                $this->pageModel->update($id, ['banner_image' => $result['data']['path']]);
+                $this->pageModel->update($id, ['banner_image' => $uploadResult['filepath']]);
                 
                 // Log the action
                 $this->logAction('page_banner_uploaded', "Uploaded banner for page: {$existingPage['title']}", [
                     'page_id' => $id,
                     'slug' => $existingPage['slug'],
                     'title' => $existingPage['title'],
-                    'banner_path' => $result['data']['path']
+                    'banner_path' => $uploadResult['filepath']
                 ]);
                 
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
                     'message' => 'Banner uploaded successfully',
-                    'data' => $result['data']
+                    'data' => [
+                        'filepath' => $uploadResult['filepath'],
+                        'url' => $uploadResult['url'],
+                        'thumbnails' => $uploadResult['thumbnails'] ?? null
+                    ]
                 ]);
             } else {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $uploadResult['message']
                 ]);
             }
         } catch (Exception $e) {
@@ -528,43 +563,6 @@ class PageController {
     }
 
     /**
-     * Handle banner upload automatically
-     * @param int $pageId Page ID
-     * @return array Upload result
-     */
-    private function handleBannerUpload($pageId) {
-        // Check if banner file was uploaded
-        if (!isset($_FILES['banner']) || $_FILES['banner']['error'] === UPLOAD_ERR_NO_FILE) {
-            return ['uploaded' => false, 'message' => 'No banner uploaded'];
-        }
-        
-        try {
-            // Upload image with page ID as source
-            $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $pageId);
-            
-            if ($result['success']) {
-                // Update page with banner path
-                $this->pageModel->update($pageId, ['banner_image' => $result['data']['path']]);
-                return [
-                    'uploaded' => true,
-                    'message' => 'Banner uploaded successfully',
-                    'data' => $result['data']
-                ];
-            } else {
-                return [
-                    'uploaded' => false,
-                    'message' => $result['message']
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'uploaded' => false,
-                'message' => 'Error uploading banner: ' . $e->getMessage()
-            ];
-        }
-    }
-
-    /**
      * Delete page banner image (admin only)
      */
     public function deleteBanner($id) {
@@ -583,7 +581,7 @@ class PageController {
                 return;
             }
             
-            // Get banner filename from page data
+            // Get banner path from page data
             $bannerPath = $existingPage['banner_image'] ?? null;
             if (!$bannerPath) {
                 http_response_code(404);
@@ -594,13 +592,10 @@ class PageController {
                 return;
             }
             
-            // Extract filename from path
-            $filename = basename($bannerPath);
+            // Delete banner
+            $deleteResult = deletePageBanner($bannerPath);
             
-            // Delete image
-            $result = $this->imageUpload->deleteImage($filename, 'pages');
-            
-            if ($result['success']) {
+            if ($deleteResult['success']) {
                 // Update page to remove banner reference
                 $this->pageModel->update($id, ['banner_image' => null]);
                 
@@ -620,7 +615,7 @@ class PageController {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $deleteResult['message']
                 ]);
             }
         } catch (Exception $e) {

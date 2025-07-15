@@ -43,7 +43,15 @@ const api = {
      * @returns {Promise<axios.AxiosResponse<any>>}
      */
     post: (endpoint, data) => {
-        return apiClient.post(endpoint, data);
+        // Handle FormData for multipart requests
+        const isFormData = data instanceof FormData;
+        const config = isFormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        
+        return apiClient.post(endpoint, data, config);
     },
 
     /**
@@ -53,7 +61,15 @@ const api = {
      * @returns {Promise<axios.AxiosResponse<any>>}
      */
     put: (endpoint, data) => {
-        return apiClient.put(endpoint, data);
+        // Handle FormData for multipart requests
+        const isFormData = data instanceof FormData;
+        const config = isFormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        
+        return apiClient.put(endpoint, data, config);
     },
 
     /**
@@ -84,8 +100,28 @@ const api = {
 
         return {
             get: (endpoint, params = {}) => authedApiClient.get(endpoint, { params }),
-            post: (endpoint, data) => authedApiClient.post(endpoint, data),
-            put: (endpoint, data) => authedApiClient.put(endpoint, data),
+            post: (endpoint, data) => {
+                // Handle FormData for multipart requests
+                const isFormData = data instanceof FormData;
+                const config = isFormData ? {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    }
+                } : {};
+                
+                return authedApiClient.post(endpoint, data, config);
+            },
+            put: (endpoint, data) => {
+                // Handle FormData for multipart requests
+                const isFormData = data instanceof FormData;
+                const config = isFormData ? {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    }
+                } : {};
+                
+                return authedApiClient.put(endpoint, data, config);
+            },
             delete: (endpoint) => authedApiClient.delete(endpoint),
         };
     },

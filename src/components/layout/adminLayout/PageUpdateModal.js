@@ -110,29 +110,22 @@ class PageUpdateModal extends HTMLElement {
                 return;
             }
 
-            // Update the page first
-            const response = await api.withToken(token).put(`/pages/${this.pageData.id}`, pageData);
+            // Prepare form data for multipart request
+            const formData = new FormData();
             
-            // Handle banner upload if file is selected
-            let bannerUploadResult = null;
+            // Add all form fields
+            Object.keys(pageData).forEach(key => {
+                formData.append(key, pageData[key]);
+            });
+            
+            // Add banner file if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
                 const file = bannerFileUpload.getFiles()[0];
-                const formData = new FormData();
                 formData.append('banner', file);
-                
-                try {
-                    const uploadResponse = await api.withToken(token).post(`/pages/${this.pageData.id}/upload-banner`, formData);
-                    bannerUploadResult = uploadResponse.data;
-                } catch (uploadError) {
-                    console.error('❌ Error uploading banner:', uploadError);
-                    Toast.show({
-                        title: 'Warning',
-                        message: 'Page updated but banner upload failed: ' + (uploadError.response?.data?.message || 'Upload error'),
-                        variant: 'warning',
-                        duration: 3000
-                    });
-                }
             }
+
+            // Update the page with multipart data
+            const response = await api.withToken(token).put(`/pages/${this.pageData.id}`, formData);
             
             Toast.show({
                 title: 'Success',
@@ -141,18 +134,11 @@ class PageUpdateModal extends HTMLElement {
                 duration: 3000
             });
 
-            // Construct the updated page data from form data and existing page data
+            // Construct the updated page data from response
             const updatedPage = {
                 ...this.pageData, // Keep existing fields like id, created_at
-                title: pageData.title,
-                slug: pageData.slug,
-                category: pageData.category,
-                content: pageData.content,
-                meta_description: pageData.meta_description,
-                meta_keywords: pageData.meta_keywords,
-                banner_image: bannerUploadResult ? bannerUploadResult.data.path : this.pageData.banner_image,
-                is_active: pageData.is_active,
-                sort_order: pageData.sort_order,
+                ...pageData,
+                banner_image: response.data.data?.banner_image || this.pageData.banner_image,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
             };
 
@@ -261,13 +247,9 @@ class PageUpdateModal extends HTMLElement {
                                 accept="image/*"
                                 max-size="5242880"
                                 max-files="1"
+                                value="${this.pageData?.banner_image || ''}"
                                 class="w-full">
                             </ui-file-upload>
-                            ${this.pageData?.banner_image ? `
-                                <div class="mt-2 text-sm text-gray-600">
-                                    Current banner: ${this.pageData.banner_image}
-                                </div>
-                            ` : ''}
                         </div>
                         
                         <div>

@@ -7,9 +7,11 @@
 // Import the upload core
 require_once __DIR__ . '/../core/UploadCore.php';
 
-// Page upload configuration
-$PAGE_UPLOAD_CONFIG = [
-    'banner' => [
+/**
+ * Upload page banner
+ */
+function uploadPageBanner($file) {
+    $config = [
         'upload_path' => 'uploads/pages/',
         'max_size' => 5242880, // 5MB
         'create_thumbnails' => true,
@@ -18,15 +20,8 @@ $PAGE_UPLOAD_CONFIG = [
             'medium' => [300, 300],
             'large' => [600, 600]
         ]
-    ]
-];
-
-/**
- * Upload page banner
- */
-function uploadPageBanner($file) {
-    global $PAGE_UPLOAD_CONFIG;
-    return uploadImage($file, $PAGE_UPLOAD_CONFIG['banner']);
+    ];
+    return uploadImage($file, $config);
 }
 
 /**

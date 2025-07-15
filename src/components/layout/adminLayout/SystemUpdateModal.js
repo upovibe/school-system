@@ -5,6 +5,7 @@ import '@/components/ui/Textarea.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/ui/RadioGroup.js';
 import '@/components/ui/Switch.js';
+import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
 /**
@@ -62,21 +63,151 @@ class SystemUpdateModal extends HTMLElement {
         this.render();
     }
 
+    // Render the appropriate input component based on setting type
+    renderValueInput() {
+        const settingType = this.settingData?.setting_type || 'text';
+        const currentValue = this.settingData?.setting_value || '';
+
+        switch (settingType) {
+            case 'text':
+                return `
+                    <ui-input 
+                        name="setting_value"
+                        type="text" 
+                        placeholder="Enter text value"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-input>
+                `;
+            
+            case 'number':
+                return `
+                    <ui-input 
+                        name="setting_value"
+                        type="number" 
+                        placeholder="Enter numeric value"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-input>
+                `;
+            
+            case 'boolean':
+                return `
+                    <ui-radio-group 
+                        name="setting_value"
+                        value="${currentValue === '1' || currentValue === 'true' ? 'true' : 'false'}"
+                        layout="horizontal"
+                        class="w-full">
+                        <ui-radio-option value="true" label="True"></ui-radio-option>
+                        <ui-radio-option value="false" label="False"></ui-radio-option>
+                    </ui-radio-group>
+                `;
+            
+            case 'color':
+                return `
+                    <ui-input 
+                        name="setting_value"
+                        type="color" 
+                        value="${currentValue || '#000000'}"
+                        class="w-full">
+                    </ui-input>
+                `;
+            
+            case 'file':
+                return `
+                    <ui-file-upload 
+                        name="setting_value"
+                        accept="*/*"
+                        max-size="10485760"
+                        max-files="1"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-file-upload>
+                `;
+            
+            case 'image':
+                return `
+                    <ui-file-upload 
+                        name="setting_value"
+                        accept="image/*"
+                        max-size="5242880"
+                        max-files="1"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-file-upload>
+                `;
+            
+            case 'textarea':
+                return `
+                    <ui-textarea 
+                        name="setting_value"
+                        placeholder="Enter text value"
+                        rows="4"
+                        class="w-full">${currentValue}</ui-textarea>
+                `;
+            
+            case 'select':
+                // For select type, we'll use a textarea to allow multiple options
+                return `
+                    <ui-textarea 
+                        name="setting_value"
+                        placeholder="Enter select options (one per line or comma separated)"
+                        rows="3"
+                        class="w-full">${currentValue}</ui-textarea>
+                `;
+            
+            default:
+                return `
+                    <ui-input 
+                        name="setting_value"
+                        type="text" 
+                        placeholder="Enter value"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-input>
+                `;
+        }
+    }
+
     // Update the setting
     async updateSetting() {
         try {
             // Get values from custom UI components
             const keyInput = this.querySelector('ui-input[name="setting_key"]');
-            const valueInput = this.querySelector('ui-textarea[name="setting_value"]');
             const typeDropdown = this.querySelector('ui-dropdown[data-field="setting_type"]');
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const descriptionTextarea = this.querySelector('ui-textarea[name="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
+            // Get value based on the type
+            let valueInput;
+            const settingType = typeDropdown ? typeDropdown.value : 'text';
+            
+            switch (settingType) {
+                case 'boolean':
+                    const radioGroup = this.querySelector('ui-radio-group[name="setting_value"]');
+                    valueInput = radioGroup ? radioGroup.value : 'false';
+                    break;
+                case 'textarea':
+                case 'select':
+                    const textarea = this.querySelector('ui-textarea[name="setting_value"]');
+                    valueInput = textarea ? textarea.value : '';
+                    break;
+                case 'file':
+                case 'image':
+                    const fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
+                    valueInput = fileUpload ? fileUpload.value : '';
+                    break;
+                default:
+                    const input = this.querySelector('ui-input[name="setting_value"]');
+                    valueInput = input ? input.value : '';
+                    break;
+            }
+
             const settingData = {
                 setting_key: keyInput ? keyInput.value : '',
-                setting_value: valueInput ? valueInput.value : '',
-                setting_type: typeDropdown ? typeDropdown.value : 'text',
+                setting_value: valueInput,
+                setting_type: settingType,
                 category: categoryDropdown ? categoryDropdown.value : 'general',
                 description: descriptionTextarea ? descriptionTextarea.value : '',
                 is_active: statusSwitch ? statusSwitch.checked : true
@@ -181,11 +312,7 @@ class SystemUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Setting Value</label>
-                        <ui-textarea 
-                            name="setting_value"
-                            placeholder="Enter setting value"
-                            rows="3"
-                            class="w-full">${this.settingData?.setting_value || ''}</ui-textarea>
+                        ${this.renderValueInput()}
                     </div>
                     
                     <div>

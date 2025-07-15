@@ -24,30 +24,22 @@ class MultipartFormParser {
         }
         
         if (!$boundary) {
-            error_log("API Debug: No boundary found in Content-Type");
             return ['data' => [], 'files' => []];
         }
         
-        error_log("API Debug: Parsing with boundary: " . $boundary);
-        
         // Split by boundary
         $parts = explode('--' . $boundary, $rawData);
-        error_log("API Debug: Found " . count($parts) . " parts");
         
         foreach ($parts as $index => $part) {
             if (empty($part) || $part === '--') continue;
-            
-            error_log("API Debug: Processing part " . $index . " with length " . strlen($part));
             
             // Parse each part
             $parsedPart = self::parsePart($part);
             
             if ($parsedPart['isFile']) {
                 $files[$parsedPart['fieldName']] = $parsedPart['fileData'];
-                error_log("API Debug: Found file: " . $parsedPart['fieldName'] . " -> " . $parsedPart['fileData']['name']);
             } else {
                 $data[$parsedPart['fieldName']] = $parsedPart['value'];
-                error_log("API Debug: Found field: " . $parsedPart['fieldName'] . " -> " . substr($parsedPart['value'], 0, 50));
             }
         }
         

@@ -4,7 +4,7 @@
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../utils/page_uploads.php';
-require_once __DIR__ . '/../utils/MultipartFormParser.php';
+require_once __DIR__ . '/../core/MultipartFormParser.php';
 require_once __DIR__ . '/../models/PageModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 
@@ -225,43 +225,26 @@ class PageController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            // Debug logging
-            error_log("API Debug: Request method = " . $_SERVER['REQUEST_METHOD']);
-            error_log("API Debug: Content-Type = " . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
-            error_log("API Debug: POST data count = " . count($_POST));
-            error_log("API Debug: FILES data count = " . count($_FILES));
-            
             // Handle PUT/PATCH requests with multipart/form-data
             if (in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'PATCH']) && 
                 strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === 0) {
                 
-                error_log("API Debug: Processing " . $_SERVER['REQUEST_METHOD'] . " multipart request");
-                
                 // Get the raw request body
                 $rawData = file_get_contents('php://input');
-                error_log("API Debug: Raw data length: " . strlen($rawData));
                 
                 // Parse multipart data and populate $_POST and $_FILES
-                $parsed = MultipartFormParser::processRequest($rawData, $_SERVER['CONTENT_TYPE']);
-                error_log("API Debug: Parsed data: " . json_encode($parsed['data']));
-                error_log("API Debug: Parsed files: " . json_encode(array_keys($parsed['files'])));
+                MultipartFormParser::processRequest($rawData, $_SERVER['CONTENT_TYPE']);
                 
                 $data = $_POST;
             } else {
                 // Handle multipart form data first (for file uploads)
                 if (!empty($_POST)) {
                     $data = $_POST;
-                    error_log("API Debug: Using POST data");
                 } else {
                     // Fall back to JSON if no form data
                     $data = json_decode(file_get_contents('php://input'), true);
-                    error_log("API Debug: Using JSON data");
                 }
             }
-            
-            error_log("API Debug: Data received = " . json_encode($data));
-            error_log("API Debug: Data keys = " . json_encode(array_keys($data)));
-            error_log("API Debug: Data values = " . json_encode(array_values($data)));
             
             // Check if page exists
             $existingPage = $this->pageModel->findById($id);
@@ -290,23 +273,16 @@ class PageController {
             // Handle banner upload if present
             $bannerPath = null;
             if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-                error_log("API Debug: Banner file detected");
                 // Delete old banner if exists
                 if ($existingPage['banner_image']) {
                     deletePageBanner($existingPage['banner_image']);
                 }
                 
                 $uploadResult = uploadPageBanner($_FILES['banner']);
-                error_log("API Debug: Upload result = " . json_encode($uploadResult));
                 
                 if ($uploadResult['success']) {
                     $bannerPath = $uploadResult['filepath'];
                     $data['banner_image'] = $bannerPath;
-                }
-            } else {
-                error_log("API Debug: No banner file or upload error");
-                if (isset($_FILES['banner'])) {
-                    error_log("API Debug: Banner upload error = " . $_FILES['banner']['error']);
                 }
             }
             
@@ -342,7 +318,6 @@ class PageController {
                 ]);
             }
         } catch (Exception $e) {
-            error_log("API Error: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,

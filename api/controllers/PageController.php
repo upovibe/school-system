@@ -288,14 +288,18 @@ class PageController {
                 return;
             }
             
+            // Store page info before deletion for logging
+            $pageTitle = $existingPage['title'];
+            $pageSlug = $existingPage['slug'];
+            
             $result = $this->pageModel->delete($id);
             
             if ($result) {
                 // Log the action
-                $this->logAction('page_deleted', "Deleted page: {$existingPage['title']}", [
+                $this->logAction('page_deleted', "Deleted page: {$pageTitle}", [
                     'page_id' => $id,
-                    'slug' => $existingPage['slug'],
-                    'title' => $existingPage['title']
+                    'slug' => $pageSlug,
+                    'title' => $pageTitle
                 ]);
                 
                 http_response_code(200);

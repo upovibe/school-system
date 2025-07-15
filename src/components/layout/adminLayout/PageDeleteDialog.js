@@ -52,46 +52,82 @@ class PageDeleteDialog extends HTMLElement {
     // Set page data for deletion
     setPageData(pageData) {
         this.pageData = pageData;
-        // Re-render to update the content with new data
-        this.render();
+        // Update the dialog content immediately
+        this.updateDialogContent();
+    }
+
+    // Update dialog content without full re-render
+    updateDialogContent() {
+        const contentSlot = this.querySelector('[slot="content"]');
+        if (contentSlot && this.pageData) {
+            const pageTitle = this.pageData.title || 'Unknown';
+            contentSlot.innerHTML = `
+                <p class="text-gray-700 mb-4">
+                    Are you sure you want to delete the page "<strong>${pageTitle}</strong>"?
+                </p>
+                <p class="text-sm text-gray-500">
+                    This action cannot be undone. The page and all its content will be permanently removed.
+                </p>
+            `;
+        }
     }
 
     // Handle delete confirmation
     async confirmDelete() {
-        if (this.pageData) {
-            try {
-                // Get the auth token
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    console.error('❌ No authentication token found');
-                    return;
-                }
+        if (!this.pageData) {
+            console.error('❌ No page data available for deletion');
+            Toast.show({
+                title: 'Error',
+                message: 'No page data available for deletion',
+                variant: 'error',
+                duration: 3000
+            });
+            return;
+        }
 
-                // Delete the page
-                await api.withToken(token).delete(`/pages/${this.pageData.id}`);
-                
+        try {
+            // Get the auth token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('❌ No authentication token found');
                 Toast.show({
-                    title: 'Success',
-                    message: 'Page deleted successfully',
-                    variant: 'success',
-                    duration: 3000
-                });
-
-                // Close dialog and dispatch event
-                this.close();
-                this.dispatchEvent(new CustomEvent('page-deleted', {
-                    detail: { pageId: this.pageData.id }
-                }));
-
-            } catch (error) {
-                console.error('❌ Error deleting page:', error);
-                Toast.show({
-                    title: 'Error',
-                    message: error.response?.data?.message || 'Failed to delete page',
+                    title: 'Authentication Error',
+                    message: 'Please log in to delete pages',
                     variant: 'error',
                     duration: 3000
                 });
+                return;
             }
+
+            // Store page ID before deletion
+            const pageId = this.pageData.id;
+
+            // Delete the page
+            await api.withToken(token).delete(`/pages/${pageId}`);
+            
+            Toast.show({
+                title: 'Success',
+                message: 'Page deleted successfully',
+                variant: 'success',
+                duration: 3000
+            });
+
+            // Close dialog and dispatch event
+            this.close();
+            this.dispatchEvent(new CustomEvent('page-deleted', {
+                detail: { pageId: pageId },
+                bubbles: true,
+                composed: true
+            }));
+
+        } catch (error) {
+            console.error('❌ Error deleting page:', error);
+            Toast.show({
+                title: 'Error',
+                message: error.response?.data?.message || 'Failed to delete page',
+                variant: 'error',
+                duration: 3000
+            });
         }
     }
 

@@ -44,8 +44,16 @@ class PageSettingsPage extends App {
 
         
         // Listen for success events to refresh data
-        this.addEventListener('page-deleted', () => {
-            this.loadData();
+        this.addEventListener('page-deleted', (event) => {
+            // Remove the deleted page from the current data
+            const deletedPageId = event.detail.pageId;
+            const currentPages = this.get('pages') || [];
+            const updatedPages = currentPages.filter(page => page.id !== deletedPageId);
+            this.set('pages', updatedPages);
+            this.updateTableData();
+            
+            // Close the delete dialog
+            this.set('showDeleteDialog', false);
         });
         
         this.addEventListener('page-saved', (event) => {

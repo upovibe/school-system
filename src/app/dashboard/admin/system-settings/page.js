@@ -6,7 +6,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 // import '@/components/layout/adminLayout/SystemSettingsModal.js';
-// import '@/components/layout/adminLayout/SystemUpdateModal.js';
+import '@/components/layout/adminLayout/SystemUpdateModal.js';
 // import '@/components/layout/adminLayout/SystemViewModal.js';
 // import '@/components/layout/adminLayout/SystemDeleteDialog.js';
 import api from '@/services/api.js';
@@ -128,6 +128,12 @@ class SystemSettingsPage extends App {
             this.closeAllModals();
             this.set('updateSettingData', editSetting);
             this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('system-update-modal');
+                if (updateModal) {
+                    updateModal.setSettingData(editSetting);
+                }
+            }, 0);
         }
     }
 
@@ -228,11 +234,11 @@ class SystemSettingsPage extends App {
                 `}
             </div>
             
-            <!-- Modals and Dialogs (placeholders) -->
-            // <system-settings-modal ${showAddModal ? 'open' : ''}></system-settings-modal>
-            // <system-update-modal ${showUpdateModal ? 'open' : ''}></system-update-modal>
-            // <system-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></system-view-modal>
-            // <system-delete-dialog ${showDeleteDialog ? 'open' : ''}></system-delete-dialog>
+            <!-- Modals and Dialogs -->
+            <!-- <system-settings-modal ${showAddModal ? 'open' : ''}></system-settings-modal> -->
+            <system-update-modal ${showUpdateModal ? 'open' : ''}></system-update-modal>
+            <!-- <system-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></system-view-modal> -->
+            <!-- <system-delete-dialog ${showDeleteDialog ? 'open' : ''}></system-delete-dialog> -->
         `;
     }
 }

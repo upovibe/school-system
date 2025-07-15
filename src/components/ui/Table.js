@@ -761,12 +761,27 @@ class Table extends HTMLElement {
     /**
      * Refresh table data
      */
-    refresh() {
+    resetTable() {
         // Reset search and filters
         this.searchQuery = '';
         this.filterValue = '';
         this.filteredData = [...this.data];
         this.currentPage = 1;
+        this.sortColumn = null;
+        this.sortDirection = 'asc';
+        this.selectedRows.clear();
+        
+        // Clear the search input
+        const searchInput = this.querySelector('.upo-table-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
+        // Clear the filter dropdown
+        const filterSelect = this.querySelector('.upo-table-filter-select');
+        if (filterSelect) {
+            filterSelect.value = '';
+        }
         
         // Re-render the table
         this.render();
@@ -1364,6 +1379,23 @@ class Table extends HTMLElement {
     }
 
     /**
+     * Handle refresh button click
+     * @param {Event} event - The click event
+     */
+    handleRefreshClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('Refresh button clicked!'); // Debug log
+        console.log('this:', this); // Debug log
+        console.log('this.refresh:', this.refresh); // Debug log
+        if (typeof this.refresh === 'function') {
+            this.refresh();
+        } else {
+            console.error('this.refresh is not a function!');
+        }
+    }
+
+    /**
      * Handle checkbox change events
      * @param {Event} event - The change event
      */
@@ -1463,7 +1495,7 @@ class Table extends HTMLElement {
         // Refresh button (icon only) - only if refresh is enabled
         if (this.refresh) {
             tableHTML += `
-                <button class="upo-table-refresh" onclick="this.closest('ui-table').refresh()" aria-label="Refresh table">
+                <button class="upo-table-refresh" aria-label="Refresh table">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
                     </svg>
@@ -1759,8 +1791,14 @@ class Table extends HTMLElement {
         if (this.refresh) {
             const refreshButton = this.querySelector('.upo-table-refresh');
             if (refreshButton) {
-                refreshButton.addEventListener('click', () => {
-                    this.refresh();
+                // Remove any existing event listeners
+                refreshButton.onclick = null;
+                
+                // Add new event listener using arrow function to preserve 'this' context
+                refreshButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.resetTable();
                 });
             }
         }

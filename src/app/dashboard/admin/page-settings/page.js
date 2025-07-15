@@ -39,7 +39,6 @@ class PageSettingsPage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
-        this.addEventListener('table-refresh', this.onRefresh.bind(this));
         
 
         

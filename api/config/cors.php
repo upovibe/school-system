@@ -46,5 +46,4 @@ return [
     
     // Default origin if request origin is not in allowed list
     'default_origin' => $clientUrl
-];
-?> 
+]; 

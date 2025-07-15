@@ -183,8 +183,13 @@ class SystemUpdateModal extends HTMLElement {
     // Update the setting
     async updateSetting() {
         try {
+            // Small delay to ensure components are initialized
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Get values from custom UI components
-            const keyInput = this.querySelector('ui-input[name="setting_key"]');
+            const allInputs = this.querySelectorAll('ui-input');
+            const keyInput = allInputs[0]; // First ui-input is the setting key
+            const settingValueInput = allInputs[1]; // Second ui-input is the setting value
             const typeDropdown = this.querySelector('ui-dropdown[data-field="setting_type"]');
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const descriptionTextarea = this.querySelector('ui-textarea[name="description"]');
@@ -214,13 +219,34 @@ class SystemUpdateModal extends HTMLElement {
                     valueInput = colorInput ? colorInput.value : '#000000';
                     break;
                 default:
-                    const input = this.querySelector('ui-input[name="setting_value"]');
-                    valueInput = input ? input.value : '';
+                    // For text and number types, use the settingValueInput directly
+                    valueInput = settingValueInput ? settingValueInput.value : '';
                     break;
             }
 
+            // Fallback: Try to get value from the input element directly if component isn't initialized
+            let settingKey = '';
+            if (keyInput) {
+                settingKey = keyInput.value || keyInput.getAttribute('value') || '';
+            } else {
+                // Try to find the actual input element inside the component
+                const actualInput = this.querySelector('ui-input[name="setting_key"] input');
+                if (actualInput) {
+                    settingKey = actualInput.value || '';
+                } else {
+                    // Try to get from the setting data directly
+                    settingKey = this.settingData?.setting_key || '';
+                }
+            }
+            
+            // Fallback for setting value if not found
+            if (!valueInput && (settingType === 'text' || settingType === 'number')) {
+                // Try to get from the setting data directly
+                valueInput = this.settingData?.setting_value || '';
+            }
+
             const settingData = {
-                setting_key: keyInput ? keyInput.value : '',
+                setting_key: settingKey,
                 setting_value: valueInput,
                 setting_type: settingType,
                 category: categoryDropdown ? categoryDropdown.value : 'general',

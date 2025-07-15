@@ -104,14 +104,17 @@ class PageController {
                 'banner_uploaded' => !empty($bannerPath)
             ]);
             
+            // Get banner info safely
+            $bannerInfo = $bannerPath ? getPageBannerInfo($bannerPath) : null;
+            
             http_response_code(201);
             echo json_encode([
                 'success' => true,
                 'data' => [
                     'id' => $pageId,
                     'banner_image' => $bannerPath,
-                    'banner_url' => $bannerPath ? (getPageBannerInfo($bannerPath)['url'] ?? null) : null,
-                    'thumbnails' => $bannerPath ? (getPageBannerInfo($bannerPath)['thumbnails'] ?? []) : []
+                    'banner_url' => $bannerInfo ? ($bannerInfo['url'] ?? null) : null,
+                    'thumbnails' => $bannerInfo ? ($bannerInfo['thumbnails'] ?? []) : []
                 ],
                 'message' => 'Page created successfully'
             ]);
@@ -318,14 +321,17 @@ class PageController {
                     'banner_uploaded' => !empty($bannerPath)
                 ]);
                 
+                // Get banner info safely
+                $bannerInfo = $bannerPath ? getPageBannerInfo($bannerPath) : null;
+                
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
                     'message' => 'Page updated successfully',
                     'data' => [
                         'banner_image' => $bannerPath,
-                        'banner_url' => $bannerPath ? (getPageBannerInfo($bannerPath)['url'] ?? null) : null,
-                        'thumbnails' => $bannerPath ? (getPageBannerInfo($bannerPath)['thumbnails'] ?? []) : []
+                        'banner_url' => $bannerInfo ? ($bannerInfo['url'] ?? null) : null,
+                        'thumbnails' => $bannerInfo ? ($bannerInfo['thumbnails'] ?? []) : []
                     ]
                 ]);
             } else {

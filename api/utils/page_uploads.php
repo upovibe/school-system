@@ -43,7 +43,7 @@ function getPageBannerInfo($bannerPath) {
     if (!$bannerPath) {
         return [
             'url' => null,
-            'thumbnails' => null
+            'thumbnails' => []
         ];
     }
     
@@ -51,9 +51,13 @@ function getPageBannerInfo($bannerPath) {
     if (!$fileInfo) {
         return [
             'url' => null,
-            'thumbnails' => null
+            'thumbnails' => []
         ];
     }
     
-    return $fileInfo;
+    // Ensure we return the expected structure
+    return [
+        'url' => $fileInfo ? ($fileInfo['url'] ?? null) : null,
+        'thumbnails' => $fileInfo ? ($fileInfo['thumbnails'] ?? []) : []
+    ];
 } 

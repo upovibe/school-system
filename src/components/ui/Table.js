@@ -762,6 +762,16 @@ class Table extends HTMLElement {
      * Refresh table data
      */
     refresh() {
+        // Reset search and filters
+        this.searchQuery = '';
+        this.filterValue = '';
+        this.filteredData = [...this.data];
+        this.currentPage = 1;
+        
+        // Re-render the table
+        this.render();
+        
+        // Dispatch refresh event
         this.dispatchEvent(new CustomEvent('table-refresh', {
             detail: { timestamp: Date.now() },
             bubbles: true
@@ -1020,12 +1030,93 @@ class Table extends HTMLElement {
     }
 
     /**
+     * Filter data without triggering a full re-render
+     * Used to preserve input focus during search
+     * @param {string} query - The search query
+     * @param {string} filterValue - The filter value
+     */
+    filterDataWithoutRender(query, filterValue = '') {
+        this.searchQuery = query.toLowerCase().trim();
+        this.filterValue = filterValue;
+        
+        if (!this.searchQuery && !this.filterValue) {
+            this.filteredData = [...this.data];
+        } else {
+            this.filteredData = this.data.filter(row => {
+                let matchesSearch = true;
+                let matchesFilter = true;
+                
+                // Check search query
+                if (this.searchQuery) {
+                    matchesSearch = this.columns.some(col => {
+                        const value = row[col.key];
+                        if (value === null || value === undefined) return false;
+                        return String(value).toLowerCase().includes(this.searchQuery);
+                    });
+                }
+                
+                // Check filter value (if filterable is enabled, filter by the first column)
+                if (this.filterValue && this.filterable) {
+                    const firstColumn = this.columns[0];
+                    if (firstColumn) {
+                        const value = row[firstColumn.key];
+                        matchesFilter = String(value) === this.filterValue;
+                    }
+                }
+                
+                return matchesSearch && matchesFilter;
+            });
+        }
+        
+        // Apply current sort to filtered data if sorting is active
+        if (this.sortColumn && this.sortable) {
+            this.filteredData.sort((a, b) => {
+                const aVal = a[this.sortColumn];
+                const bVal = b[this.sortColumn];
+                
+                if (aVal === bVal) return 0;
+                
+                const comparison = aVal < bVal ? -1 : 1;
+                return this.sortDirection === 'asc' ? comparison : -comparison;
+            });
+        }
+        
+        // Reset to first page when filtering
+        this.currentPage = 1;
+        
+        // Dispatch event without re-rendering
+        this.dispatchEvent(new CustomEvent('table-search', {
+            detail: { query: this.searchQuery, filterValue: this.filterValue, results: this.filteredData.length },
+            bubbles: true
+        }));
+    }
+
+    /**
      * Handle search input changes
      * @param {Event} event - The input event
      */
     handleSearchInput(event) {
         const query = event.target.value;
-        this.filterData(query, this.filterValue);
+        this.searchQuery = query;
+        
+        // Store the current cursor position and selection
+        const input = event.target;
+        const cursorPosition = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+        
+        // Update filtered data without full re-render
+        this.filterDataWithoutRender(query, this.filterValue);
+        
+        // Update only the table body and pagination
+        this.updateTableBodyOnly();
+        
+        // Restore cursor position and selection after a brief delay
+        setTimeout(() => {
+            if (input && document.contains(input)) {
+                input.setSelectionRange(cursorPosition, selectionEnd);
+                input.focus();
+            }
+        }, 0);
     }
 
     /**
@@ -1107,6 +1198,127 @@ class Table extends HTMLElement {
         const start = (this.currentPage - 1) * this.pageSize;
         const end = start + this.pageSize;
         return dataToUse.slice(start, end);
+    }
+
+    /**
+     * Update only the table body without re-rendering the entire table
+     * This prevents search input from losing focus
+     */
+    updateTableBodyOnly() {
+        const tbody = this.querySelector('tbody');
+        if (!tbody) return;
+
+        const visibleData = this.getVisibleData();
+        const dataToUse = (this.searchable || this.filterable) ? this.filteredData : this.data;
+        
+        // Update the count display in the header
+        const countElement = this.querySelector('.upo-table-count');
+        if (countElement) {
+            const totalCount = this.data.length;
+            const filteredCount = dataToUse.length;
+            countElement.textContent = `(${(this.searchable && this.searchQuery) || (this.filterable && this.filterValue) ? filteredCount : totalCount})`;
+        }
+
+        // Update table body
+        tbody.innerHTML = visibleData.map((row, index) => {
+            const isSelected = this.selectedRows.has(row);
+            
+            return `
+                <tr class="${isSelected ? 'selected' : ''}" data-row-index="${index}">
+                    ${this.selectable ? `
+                        <td class="upo-table-checkbox-column">
+                            <input type="checkbox" class="upo-table-checkbox" data-row-index="${index}" ${isSelected ? 'checked' : ''}>
+                        </td>
+                    ` : ''}
+                    ${this.columns.map(col => {
+                        const value = row[col.key];
+                        if (col.html) {
+                            return `<td class="upo-table-cell">${value || ''}</td>`;
+                        } else {
+                            return `<td class="upo-table-cell">${this.escapeHtml(value || '')}</td>`;
+                        }
+                    }).join('')}
+                    ${this.action ? `
+                        <td class="upo-table-action-column">
+                            <div class="upo-table-action-buttons">
+                                <button class="upo-table-action-button view" onclick="this.closest('ui-table').viewRow(${index})" aria-label="View item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                                <button class="upo-table-action-button edit" onclick="this.closest('ui-table').editRow(${index})" aria-label="Edit item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                                <button class="upo-table-action-button delete" onclick="this.closest('ui-table').deleteRow(${index})" aria-label="Delete item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3,6 5,6 21,6"></polyline>
+                                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    ` : ''}
+                </tr>
+            `;
+        }).join('');
+
+        // Re-add event listeners for the new rows
+        if (this.selectable || this.clickable) {
+            tbody.querySelectorAll('tr').forEach(tr => {
+                tr.addEventListener('click', this.handleRowClick.bind(this));
+            });
+        }
+
+        if (this.selectable) {
+            tbody.querySelectorAll('.upo-table-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', this.handleCheckboxChange.bind(this));
+            });
+        }
+
+        // Update pagination if needed
+        if (this.pagination) {
+            this.updatePaginationOnly();
+        }
+    }
+
+    /**
+     * Update only the pagination without re-rendering the entire table
+     */
+    updatePaginationOnly() {
+        const paginationElement = this.querySelector('.upo-table-pagination');
+        if (!paginationElement) return;
+
+        const dataToUse = (this.searchable || this.filterable) ? this.filteredData : this.data;
+        const maxPage = Math.ceil(dataToUse.length / this.pageSize);
+        const startItem = (this.currentPage - 1) * this.pageSize + 1;
+        const endItem = Math.min(this.currentPage * this.pageSize, dataToUse.length);
+
+        // Update pagination info
+        const infoElement = paginationElement.querySelector('.upo-table-pagination-info');
+        if (infoElement) {
+            infoElement.textContent = `Showing ${startItem} to ${endItem} of ${dataToUse.length} results${(this.searchable && this.searchQuery) || (this.filterable && this.filterValue) ? ` (filtered from ${this.data.length} total)` : ''}`;
+        }
+
+        // Update pagination controls
+        const controlsElement = paginationElement.querySelector('.upo-table-pagination-controls');
+        if (controlsElement) {
+            // This is a simplified update - in a real implementation you might want to
+            // update the pagination buttons more carefully to preserve their event listeners
+            // For now, we'll just update the disabled states
+            const prevButton = controlsElement.querySelector('button:first-child');
+            const nextButton = controlsElement.querySelector('button:last-child');
+            
+            if (prevButton) {
+                prevButton.disabled = this.currentPage === 1;
+            }
+            if (nextButton) {
+                nextButton.disabled = this.currentPage === maxPage;
+            }
+        }
     }
 
     /**
@@ -1503,6 +1715,11 @@ class Table extends HTMLElement {
         if (this.searchable) {
             const searchInput = this.querySelector('.upo-table-search-input');
             if (searchInput) {
+                // Set the current search value
+                if (this.searchQuery) {
+                    searchInput.value = this.searchQuery;
+                }
+                
                 searchInput.addEventListener('input', this.handleSearchInput.bind(this));
                 searchInput.addEventListener('keydown', this.handleSearchKeydown.bind(this));
             }
@@ -1510,6 +1727,7 @@ class Table extends HTMLElement {
             const clearButton = this.querySelector('.upo-table-search-clear');
             if (clearButton) {
                 clearButton.addEventListener('click', () => {
+                    this.searchQuery = '';
                     this.querySelector('.upo-table-search-input').value = '';
                     this.filterData('', this.filterValue);
                 });
@@ -1533,6 +1751,16 @@ class Table extends HTMLElement {
                     if (e.key === 'Enter') {
                         e.target.blur(); // Trigger change event
                     }
+                });
+            }
+        }
+
+        // Add refresh button event listener
+        if (this.refresh) {
+            const refreshButton = this.querySelector('.upo-table-refresh');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', () => {
+                    this.refresh();
                 });
             }
         }

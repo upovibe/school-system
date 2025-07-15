@@ -51,7 +51,30 @@ class SettingController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle both JSON and multipart form data
+            $data = [];
+            if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+                // Handle multipart form data
+                $data = $_POST;
+                
+                // Handle file upload if present
+                if (isset($_FILES['setting_value']) && $_FILES['setting_value']['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $uploadResult = $this->handleFileUpload($_FILES['setting_value'], $data['category'] ?? 'general');
+                    if ($uploadResult['success']) {
+                        $data['setting_value'] = $uploadResult['filepath'];
+                    } else {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $uploadResult['message']
+                        ]);
+                        return;
+                    }
+                }
+            } else {
+                // Handle JSON data
+                $data = json_decode(file_get_contents('php://input'), true);
+            }
             
             // Validate required fields
             if (empty($data['setting_key'])) {
@@ -185,7 +208,30 @@ class SettingController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle both JSON and multipart form data
+            $data = [];
+            if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+                // Handle multipart form data
+                $data = $_POST;
+                
+                // Handle file upload if present
+                if (isset($_FILES['setting_value']) && $_FILES['setting_value']['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $uploadResult = $this->handleFileUpload($_FILES['setting_value'], $data['category'] ?? 'general');
+                    if ($uploadResult['success']) {
+                        $data['setting_value'] = $uploadResult['filepath'];
+                    } else {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $uploadResult['message']
+                        ]);
+                        return;
+                    }
+                }
+            } else {
+                // Handle JSON data
+                $data = json_decode(file_get_contents('php://input'), true);
+            }
             
             // Check if setting exists
             $existingSetting = $this->settingModel->findById($id);
@@ -208,6 +254,13 @@ class SettingController {
                         'message' => 'Setting with this key already exists'
                     ]);
                     return;
+                }
+            }
+            
+            // Delete old file if new file is uploaded and setting type is file/image
+            if (isset($_FILES['setting_value']) && in_array($existingSetting['setting_type'], ['file', 'image'])) {
+                if ($existingSetting['setting_value']) {
+                    deleteSettingFile($existingSetting['setting_value']);
                 }
             }
             
@@ -259,6 +312,11 @@ class SettingController {
                     'message' => 'Setting not found'
                 ]);
                 return;
+            }
+            
+            // Delete associated file if setting type is file/image
+            if (in_array($existingSetting['setting_type'], ['file', 'image']) && $existingSetting['setting_value']) {
+                deleteSettingFile($existingSetting['setting_value']);
             }
             
             $result = $this->settingModel->delete($id);
@@ -784,6 +842,38 @@ class SettingController {
                 'success' => false,
                 'message' => 'Error retrieving upload statistics: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Handle file upload for settings
+     * @param array $file Uploaded file array
+     * @param string $category Setting category
+     * @return array Upload result
+     */
+    private function handleFileUpload($file, $category = 'general') {
+        try {
+            // Upload file using the existing upload function
+            $uploadResult = uploadSettingFile($file);
+            
+            if ($uploadResult['success']) {
+                return [
+                    'success' => true,
+                    'filepath' => $uploadResult['filepath'],
+                    'url' => $uploadResult['url'],
+                    'thumbnails' => $uploadResult['thumbnails'] ?? null
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $uploadResult['message']
+                ];
+            }
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error uploading file: ' . $e->getMessage()
+            ];
         }
     }
 

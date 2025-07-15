@@ -197,6 +197,7 @@ class SystemUpdateModal extends HTMLElement {
 
             // Get value based on the type
             let valueInput;
+            let fileUpload = null; // Declare fileUpload variable
             const settingType = typeDropdown ? typeDropdown.value : 'text';
             
             switch (settingType) {
@@ -211,7 +212,7 @@ class SystemUpdateModal extends HTMLElement {
                     break;
                 case 'file':
                 case 'image':
-                    const fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
+                    fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
                     valueInput = fileUpload ? fileUpload.value : '';
                     break;
                 case 'color':
@@ -277,8 +278,27 @@ class SystemUpdateModal extends HTMLElement {
                 return;
             }
 
-            // Update the setting
-            const response = await api.withToken(token).put(`/settings/${this.settingData.id}`, settingData);
+            // Handle file upload for file/image types
+            let response;
+            if ((settingType === 'file' || settingType === 'image') && fileUpload && fileUpload.getFiles().length > 0) {
+                // Prepare form data for multipart request
+                const formData = new FormData();
+                
+                // Add all form fields
+                Object.keys(settingData).forEach(key => {
+                    formData.append(key, settingData[key]);
+                });
+                
+                // Add file if selected
+                const file = fileUpload.getFiles()[0];
+                formData.append('setting_value', file);
+                
+                // Update the setting with multipart data
+                response = await api.withToken(token).put(`/settings/${this.settingData.id}`, formData);
+            } else {
+                // Update the setting with JSON data
+                response = await api.withToken(token).put(`/settings/${this.settingData.id}`, settingData);
+            }
             
             Toast.show({
                 title: 'Success',

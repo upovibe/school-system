@@ -5,6 +5,7 @@ import '@/components/ui/Textarea.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/ui/RadioGroup.js';
 import '@/components/ui/Wysiwyg.js';
+import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
 /**
@@ -61,15 +62,13 @@ class PageSettingsModal extends HTMLElement {
             const titleInput = allInputs[0]; // First input
             const slugInput = allInputs[1]; // Second input
             const metaKeywordsInput = allInputs[2]; // Third input
-            const bannerImageInput = allInputs[3]; // Fourth input
-            const sortOrderInput = allInputs[4]; // Fifth input
+            const sortOrderInput = allInputs[3]; // Fourth input (banner input removed)
             
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const metaDescriptionTextarea = this.querySelector('ui-textarea[data-field="meta-description"]');
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
-
-
+            const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const pageData = {
                 title: titleInput ? titleInput.value : '',
@@ -78,7 +77,6 @@ class PageSettingsModal extends HTMLElement {
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
                 meta_keywords: metaKeywordsInput ? metaKeywordsInput.value : '',
-                banner_image: bannerImageInput ? bannerImageInput.value : '',
                 is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
                 sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
@@ -106,8 +104,29 @@ class PageSettingsModal extends HTMLElement {
                 return;
             }
 
-            // Save the page
+            // Save the page first
             const response = await api.withToken(token).post('/pages', pageData);
+            
+            // Handle banner upload if file is selected
+            let bannerUploadResult = null;
+            if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
+                const file = bannerFileUpload.getFiles()[0];
+                const formData = new FormData();
+                formData.append('banner', file);
+                
+                try {
+                    const uploadResponse = await api.withToken(token).post(`/pages/${response.data.id}/upload-banner`, formData);
+                    bannerUploadResult = uploadResponse.data;
+                } catch (uploadError) {
+                    console.error('❌ Error uploading banner:', uploadError);
+                    Toast.show({
+                        title: 'Warning',
+                        message: 'Page created but banner upload failed: ' + (uploadError.response?.data?.message || 'Upload error'),
+                        variant: 'warning',
+                        duration: 3000
+                    });
+                }
+            }
             
             Toast.show({
                 title: 'Success',
@@ -125,7 +144,7 @@ class PageSettingsModal extends HTMLElement {
                 content: pageData.content,
                 meta_description: pageData.meta_description,
                 meta_keywords: pageData.meta_keywords,
-                banner_image: pageData.banner_image,
+                banner_image: bannerUploadResult ? bannerUploadResult.data.path : null,
                 is_active: pageData.is_active,
                 sort_order: pageData.sort_order,
                 created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
@@ -225,13 +244,14 @@ class PageSettingsModal extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image URL</label>
-                            <ui-input 
-                                data-field="banner-image"
-                                type="text" 
-                                placeholder="Enter banner image URL"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                            <ui-file-upload 
+                                data-field="banner"
+                                accept="image/*"
+                                max-size="5242880"
+                                max-files="1"
                                 class="w-full">
-                            </ui-input>
+                            </ui-file-upload>
                         </div>
                         
                         <div>

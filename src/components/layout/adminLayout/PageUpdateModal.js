@@ -5,6 +5,7 @@ import '@/components/ui/Textarea.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/ui/RadioGroup.js';
 import '@/components/ui/Wysiwyg.js';
+import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
 /**
@@ -61,8 +62,6 @@ class PageUpdateModal extends HTMLElement {
         this.removeAttribute('open');
     }
 
-
-
     // Update the page
     async updatePage() {
         try {
@@ -74,8 +73,8 @@ class PageUpdateModal extends HTMLElement {
             const statusRadioGroup = this.querySelector('ui-radio-group[name="status"]');
             const metaDescriptionTextarea = this.querySelector('ui-textarea[name="meta-description"]');
             const metaKeywordsInput = this.querySelectorAll('ui-input')[2];
-            const bannerImageInput = this.querySelectorAll('ui-input')[3];
-            const sortOrderInput = this.querySelectorAll('ui-input')[4];
+            const sortOrderInput = this.querySelectorAll('ui-input')[3];
+            const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const pageData = {
                 title: titleInput ? titleInput.value : '',
@@ -84,7 +83,6 @@ class PageUpdateModal extends HTMLElement {
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
                 meta_keywords: metaKeywordsInput ? metaKeywordsInput.value : '',
-                banner_image: bannerImageInput ? bannerImageInput.value : '',
                 is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
                 sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
@@ -112,8 +110,29 @@ class PageUpdateModal extends HTMLElement {
                 return;
             }
 
-            // Update the page
+            // Update the page first
             const response = await api.withToken(token).put(`/pages/${this.pageData.id}`, pageData);
+            
+            // Handle banner upload if file is selected
+            let bannerUploadResult = null;
+            if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
+                const file = bannerFileUpload.getFiles()[0];
+                const formData = new FormData();
+                formData.append('banner', file);
+                
+                try {
+                    const uploadResponse = await api.withToken(token).post(`/pages/${this.pageData.id}/upload-banner`, formData);
+                    bannerUploadResult = uploadResponse.data;
+                } catch (uploadError) {
+                    console.error('❌ Error uploading banner:', uploadError);
+                    Toast.show({
+                        title: 'Warning',
+                        message: 'Page updated but banner upload failed: ' + (uploadError.response?.data?.message || 'Upload error'),
+                        variant: 'warning',
+                        duration: 3000
+                    });
+                }
+            }
             
             Toast.show({
                 title: 'Success',
@@ -131,7 +150,7 @@ class PageUpdateModal extends HTMLElement {
                 content: pageData.content,
                 meta_description: pageData.meta_description,
                 meta_keywords: pageData.meta_keywords,
-                banner_image: pageData.banner_image,
+                banner_image: bannerUploadResult ? bannerUploadResult.data.path : this.pageData.banner_image,
                 is_active: pageData.is_active,
                 sort_order: pageData.sort_order,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -236,14 +255,19 @@ class PageUpdateModal extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image URL</label>
-                            <ui-input 
-                                name="banner-image"
-                                type="text" 
-                                placeholder="Enter banner image URL"
-                                value="${this.pageData?.banner_image || ''}"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                            <ui-file-upload 
+                                data-field="banner"
+                                accept="image/*"
+                                max-size="5242880"
+                                max-files="1"
                                 class="w-full">
-                            </ui-input>
+                            </ui-file-upload>
+                            ${this.pageData?.banner_image ? `
+                                <div class="mt-2 text-sm text-gray-600">
+                                    Current banner: ${this.pageData.banner_image}
+                                </div>
+                            ` : ''}
                         </div>
                         
                         <div>

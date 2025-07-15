@@ -45,8 +45,8 @@ return [
         'max_body_size' => '10MB',
         'allowed_content_types' => [
             'application/json',
-            'application/x-www-form-urlencoded'
+            'application/x-www-form-urlencoded',
+            'multipart/form-data'
         ]
     ]
-];
-?> 
+]; 

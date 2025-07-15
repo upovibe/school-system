@@ -3,7 +3,7 @@
 
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
-require_once __DIR__ . '/../core/UploadCore.php';
+require_once __DIR__ . '/../utils/settings_uploads.php';
 require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 
@@ -684,24 +684,15 @@ class SettingController {
             // Delete old image if exists
             $existingSetting = $this->settingModel->findByKey($settingKey);
             if ($existingSetting && $existingSetting['setting_value']) {
-                deleteFile($existingSetting['setting_value']);
+                deleteSettingFile($existingSetting['setting_value']);
             }
             
             // Upload image
-            $uploadResult = uploadImage($_FILES['image'], [
-                'upload_path' => 'uploads/settings/',
-                'max_size' => 5242880, // 5MB
-                'create_thumbnails' => true,
-                'thumbnail_sizes' => [
-                    'small' => [150, 150],
-                    'medium' => [300, 300],
-                    'large' => [600, 600]
-                ]
-            ]);
+            $uploadResult = uploadSettingFile($_FILES['image']);
             
             if ($uploadResult['success']) {
                 // Update setting with image path
-                SettingModel::setValue($settingKey, $uploadResult['filepath'], 'image', $category);
+                $this->settingModel->setValue($settingKey, $uploadResult['filepath'], 'image', $category);
                 
                 // Log the action
                 $this->logAction('setting_image_uploaded', "Uploaded image for setting: {$settingKey}", [
@@ -810,4 +801,4 @@ class SettingController {
         return round($bytes, 2) . ' ' . $units[$pow];
     }
 }
-?> 
+?>

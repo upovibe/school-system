@@ -43,7 +43,6 @@ Router::get('/pages/slug/{slug}', 'PageController@showBySlug');
 Router::get('/pages/{id}', 'PageController@show');
 Router::put('/pages/{id}', 'PageController@update');
 Router::delete('/pages/{id}', 'PageController@destroy');
-Router::post('/pages/{id}/toggle', 'PageController@toggleActive');
 
 // Settings Management Routes (admin only for create/update/delete, public for view)
 Router::get('/settings', 'SettingController@index');
@@ -55,6 +54,8 @@ Router::get('/settings/map', 'SettingController@getMapSettings');
 Router::get('/settings/all', 'SettingController@getAllAsArray');
 Router::get('/settings/upload-stats', 'SettingController@getUploadStats');
 Router::post('/settings/set-value', 'SettingController@setValue');
+Router::post('/settings/upload-image', 'SettingController@uploadImage');
+Router::post('/settings/delete-image', 'SettingController@deleteImage');
 Router::get('/settings/key/{key}', 'SettingController@showByKey');
 Router::get('/settings/category/{category}', 'SettingController@getByCategory');
 Router::get('/settings/{id}', 'SettingController@show');

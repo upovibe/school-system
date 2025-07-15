@@ -56,6 +56,27 @@ class PageViewModal extends HTMLElement {
         this.render();
     }
 
+    // Helper method to get proper image URL
+    getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        
+        // If it's a relative path without /, construct the URL
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
+    }
+
     render() {
         this.innerHTML = `
             <ui-modal 
@@ -80,17 +101,30 @@ class PageViewModal extends HTMLElement {
                         <div class="border-b pb-4">
                             ${this.pageData.banner_image ? `
                                 <div class="space-y-2">
-                                    <img src="${this.pageData.banner_image}" 
-                                         alt="Banner Image" 
-                                         class="w-full h-32 object-cover rounded-lg border border-gray-200"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <div class="hidden text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                                        <p class="text-gray-500 text-sm">Image failed to load</p>
+                                    <div class="relative">
+                                        <img src="${this.getImageUrl(this.pageData.banner_image)}" 
+                                             alt="Banner Image" 
+                                             class="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <div class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="text-center">
+                                                <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
+                                                <p class="text-gray-500 text-sm">Image failed to load</p>
+                                                <p class="text-xs text-gray-400 mt-1">${this.pageData.banner_image}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 break-all">${this.pageData.banner_image}</p>
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span class="break-all">${this.pageData.banner_image}</span>
+                                        <button onclick="window.open('${this.getImageUrl(this.pageData.banner_image)}', '_blank')" 
+                                                class="text-blue-500 hover:text-blue-700">
+                                            <i class="fas fa-external-link-alt mr-1"></i>Open
+                                        </button>
+                                    </div>
                                 </div>
                             ` : `
                                 <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                    <i class="fas fa-image text-gray-400 text-3xl mb-2"></i>
                                     <p class="text-gray-500">No banner image set</p>
                                 </div>
                             `}

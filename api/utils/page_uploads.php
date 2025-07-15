@@ -40,5 +40,20 @@ function deletePageBanner($bannerPath) {
  * Get banner info
  */
 function getPageBannerInfo($bannerPath) {
-    return getFileInfo($bannerPath);
+    if (!$bannerPath) {
+        return [
+            'url' => null,
+            'thumbnails' => null
+        ];
+    }
+    
+    $fileInfo = getFileInfo($bannerPath);
+    if (!$fileInfo) {
+        return [
+            'url' => null,
+            'thumbnails' => null
+        ];
+    }
+    
+    return $fileInfo;
 } 

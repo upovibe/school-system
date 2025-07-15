@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../utils/page_uploads.php';
+require_once __DIR__ . '/../utils/MultipartFormParser.php';
 require_once __DIR__ . '/../models/PageModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 
@@ -109,8 +110,8 @@ class PageController {
                 'data' => [
                     'id' => $pageId,
                     'banner_image' => $bannerPath,
-                    'banner_url' => $bannerPath ? getPageBannerInfo($bannerPath)['url'] : null,
-                    'thumbnails' => $bannerPath ? getPageBannerInfo($bannerPath)['thumbnails'] : null
+                    'banner_url' => $bannerPath ? (getPageBannerInfo($bannerPath)['url'] ?? null) : null,
+                    'thumbnails' => $bannerPath ? (getPageBannerInfo($bannerPath)['thumbnails'] ?? []) : []
                 ],
                 'message' => 'Page created successfully'
             ]);
@@ -227,17 +228,37 @@ class PageController {
             error_log("API Debug: POST data count = " . count($_POST));
             error_log("API Debug: FILES data count = " . count($_FILES));
             
-            // Handle multipart form data first (for file uploads)
-            if (!empty($_POST)) {
+            // Handle PUT/PATCH requests with multipart/form-data
+            if (in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'PATCH']) && 
+                strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === 0) {
+                
+                error_log("API Debug: Processing " . $_SERVER['REQUEST_METHOD'] . " multipart request");
+                
+                // Get the raw request body
+                $rawData = file_get_contents('php://input');
+                error_log("API Debug: Raw data length: " . strlen($rawData));
+                
+                // Parse multipart data and populate $_POST and $_FILES
+                $parsed = MultipartFormParser::processRequest($rawData, $_SERVER['CONTENT_TYPE']);
+                error_log("API Debug: Parsed data: " . json_encode($parsed['data']));
+                error_log("API Debug: Parsed files: " . json_encode(array_keys($parsed['files'])));
+                
                 $data = $_POST;
-                error_log("API Debug: Using POST data");
             } else {
-                // Fall back to JSON if no form data
-                $data = json_decode(file_get_contents('php://input'), true);
-                error_log("API Debug: Using JSON data");
+                // Handle multipart form data first (for file uploads)
+                if (!empty($_POST)) {
+                    $data = $_POST;
+                    error_log("API Debug: Using POST data");
+                } else {
+                    // Fall back to JSON if no form data
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    error_log("API Debug: Using JSON data");
+                }
             }
             
             error_log("API Debug: Data received = " . json_encode($data));
+            error_log("API Debug: Data keys = " . json_encode(array_keys($data)));
+            error_log("API Debug: Data values = " . json_encode(array_values($data)));
             
             // Check if page exists
             $existingPage = $this->pageModel->findById($id);
@@ -303,8 +324,8 @@ class PageController {
                     'message' => 'Page updated successfully',
                     'data' => [
                         'banner_image' => $bannerPath,
-                        'banner_url' => $bannerPath ? getPageBannerInfo($bannerPath)['url'] : null,
-                        'thumbnails' => $bannerPath ? getPageBannerInfo($bannerPath)['thumbnails'] : null
+                        'banner_url' => $bannerPath ? (getPageBannerInfo($bannerPath)['url'] ?? null) : null,
+                        'thumbnails' => $bannerPath ? (getPageBannerInfo($bannerPath)['thumbnails'] ?? []) : []
                     ]
                 ]);
             } else {

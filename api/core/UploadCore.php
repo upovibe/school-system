@@ -247,7 +247,16 @@ class UploadCore {
      */
     private static function validateFile($file, $config) {
         // Check if file was uploaded
-        if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        if (!isset($file['tmp_name'])) {
+            return [
+                'success' => false,
+                'message' => 'No file uploaded or invalid upload'
+            ];
+        }
+        
+        // For manually created temporary files (from multipart parsing), skip is_uploaded_file check
+        $isValidUpload = is_uploaded_file($file['tmp_name']) || file_exists($file['tmp_name']);
+        if (!$isValidUpload) {
             return [
                 'success' => false,
                 'message' => 'No file uploaded or invalid upload'
@@ -354,7 +363,14 @@ class UploadCore {
     private static function handleImageUpload($file, $filename, $uploadDir, $config) {
         $filepath = $uploadDir . $filename;
         
-        if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        // Use copy for manually created files, move_uploaded_file for regular uploads
+        if (is_uploaded_file($file['tmp_name'])) {
+            $uploadSuccess = move_uploaded_file($file['tmp_name'], $filepath);
+        } else {
+            $uploadSuccess = copy($file['tmp_name'], $filepath);
+        }
+        
+        if (!$uploadSuccess) {
             return [
                 'success' => false,
                 'message' => 'Failed to move uploaded file'

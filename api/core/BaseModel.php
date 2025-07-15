@@ -145,15 +145,26 @@ class BaseModel {
                 $data['updated_at'] = date('Y-m-d H:i:s');
             }
 
-
+            // Filter out empty keys and null values
+            $filteredData = [];
+            foreach ($data as $key => $value) {
+                if (!empty($key) && $key !== '' && $value !== null) {
+                    $filteredData[$key] = $value;
+                }
+            }
 
             // Build SET clause with placeholders
             $setParts = [];
             $params = [];
             
-            foreach ($data as $key => $value) {
+            foreach ($filteredData as $key => $value) {
                 $setParts[] = "$key = ?";
                 $params[] = $value;
+            }
+            
+            if (empty($setParts)) {
+                // No valid fields to update
+                return true;
             }
             
             $setClause = implode(', ', $setParts);
@@ -162,13 +173,11 @@ class BaseModel {
             $tableName = $this->getTableName();
             $sql = "UPDATE {$tableName} SET $setClause WHERE id = ?";
             
-
-            
             $stmt = $this->pdo->prepare($sql);
             $result = $stmt->execute($params);
             
             if ($result) {
-                $this->attributes = array_merge($this->attributes, $data);
+                $this->attributes = array_merge($this->attributes, $filteredData);
             }
             
             return $result;

@@ -45,12 +45,15 @@ class FileUpload extends HTMLElement {
         .file-upload {
           border: 2px dashed #d1d5db;
           border-radius: 0.5rem;
-          padding: 2rem;
+          padding: 1rem;
           text-align: center;
           background: #f9fafb;
           transition: all 0.2s ease;
           cursor: pointer;
           position: relative;
+          min-height: 120px;
+          max-height: 200px;
+          overflow: hidden;
         }
 
         .file-upload:hover:not(.disabled) {

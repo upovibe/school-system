@@ -162,15 +162,6 @@ class SystemUpdateModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Setting Value</label>
-                        <ui-textarea 
-                            name="setting_value"
-                            placeholder="Enter setting value"
-                            rows="3"
-                            class="w-full">${this.settingData?.setting_value || ''}</ui-textarea>
-                    </div>
-                    
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Setting Type</label>
                         <ui-dropdown 
                             data-field="setting_type"
@@ -186,6 +177,15 @@ class SystemUpdateModal extends HTMLElement {
                             <ui-option value="select">Select</ui-option>
                             <ui-option value="image">Image</ui-option>
                         </ui-dropdown>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Setting Value</label>
+                        <ui-textarea 
+                            name="setting_value"
+                            placeholder="Enter setting value"
+                            rows="3"
+                            class="w-full">${this.settingData?.setting_value || ''}</ui-textarea>
                     </div>
                     
                     <div>

@@ -61,6 +61,16 @@ class SystemUpdateModal extends HTMLElement {
         this.settingData = settingData;
         // Re-render the modal with the new data
         this.render();
+        
+        // Set the file upload value after render (like PageUpdateModal)
+        setTimeout(() => {
+            if (settingData.setting_type === 'file' || settingData.setting_type === 'image') {
+                const fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
+                if (fileUpload && settingData.setting_value) {
+                    fileUpload.setValue(settingData.setting_value);
+                }
+            }
+        }, 0);
     }
 
     // Render the appropriate input component based on setting type
@@ -105,12 +115,11 @@ class SystemUpdateModal extends HTMLElement {
             
             case 'color':
                 return `
-                    <ui-input 
+                    <input 
                         name="setting_value"
                         type="color" 
                         value="${currentValue || '#000000'}"
-                        class="w-full">
-                    </ui-input>
+                        class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 `;
             
             case 'file':
@@ -120,7 +129,6 @@ class SystemUpdateModal extends HTMLElement {
                         accept="*/*"
                         max-size="10485760"
                         max-files="1"
-                        value="${currentValue}"
                         class="w-full">
                     </ui-file-upload>
                 `;
@@ -132,7 +140,6 @@ class SystemUpdateModal extends HTMLElement {
                         accept="image/*"
                         max-size="5242880"
                         max-files="1"
-                        value="${currentValue}"
                         class="w-full">
                     </ui-file-upload>
                 `;
@@ -197,6 +204,10 @@ class SystemUpdateModal extends HTMLElement {
                 case 'image':
                     const fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
                     valueInput = fileUpload ? fileUpload.value : '';
+                    break;
+                case 'color':
+                    const colorInput = this.querySelector('input[name="setting_value"]');
+                    valueInput = colorInput ? colorInput.value : '#000000';
                     break;
                 default:
                     const input = this.querySelector('ui-input[name="setting_value"]');

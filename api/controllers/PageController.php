@@ -270,9 +270,18 @@ class PageController {
                 }
             }
             
-            // Handle banner upload if present
+            // Handle banner operations
             $bannerPath = null;
-            if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
+            
+            // Check if banner should be deleted (banner_image set to null)
+            if (isset($data['banner_image']) && $data['banner_image'] === null) {
+                if ($existingPage['banner_image']) {
+                    deletePageBanner($existingPage['banner_image']);
+                }
+                $data['banner_image'] = null;
+            }
+            // Check if new banner file is uploaded
+            elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
                 // Delete old banner if exists
                 if ($existingPage['banner_image']) {
                     deletePageBanner($existingPage['banner_image']);
@@ -408,125 +417,6 @@ class PageController {
     }
 
     /**
-     * Toggle page active status (admin only)
-     */
-    public function toggleActive($id) {
-        try {
-            // Require admin authentication
-            RoleMiddleware::requireAdmin($this->pdo);
-            
-            $result = $this->pageModel->toggleActive($id);
-            
-            if ($result) {
-                // Get page info for logging
-                $page = $this->pageModel->findById($id);
-                $newStatus = $page['is_active'] ? 'activated' : 'deactivated';
-                
-                // Log the action
-                $this->logAction('page_status_toggled', "{$newStatus} page: {$page['title']}", [
-                    'page_id' => $id,
-                    'slug' => $page['slug'],
-                    'title' => $page['title'],
-                    'new_status' => $page['is_active']
-                ]);
-                
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Page status toggled successfully'
-                ]);
-            } else {
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Error toggling page status'
-                ]);
-            }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error toggling page status: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Upload page banner image (admin only)
-     */
-    public function uploadBanner($id) {
-        try {
-            // Require admin authentication
-            RoleMiddleware::requireAdmin($this->pdo);
-            
-            // Check if page exists
-            $existingPage = $this->pageModel->findById($id);
-            if (!$existingPage) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Page not found'
-                ]);
-                return;
-            }
-            
-            // Check if file was uploaded
-            if (!isset($_FILES['banner']) || $_FILES['banner']['error'] === UPLOAD_ERR_NO_FILE) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No file uploaded'
-                ]);
-                return;
-            }
-            
-            // Delete old banner if exists
-            if ($existingPage['banner_image']) {
-                deletePageBanner($existingPage['banner_image']);
-            }
-            
-            // Upload banner
-            $uploadResult = uploadPageBanner($_FILES['banner']);
-            
-            if ($uploadResult['success']) {
-                // Update page with banner path
-                $this->pageModel->update($id, ['banner_image' => $uploadResult['filepath']]);
-                
-                // Log the action
-                $this->logAction('page_banner_uploaded', "Uploaded banner for page: {$existingPage['title']}", [
-                    'page_id' => $id,
-                    'slug' => $existingPage['slug'],
-                    'title' => $existingPage['title'],
-                    'banner_path' => $uploadResult['filepath']
-                ]);
-                
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Banner uploaded successfully',
-                    'data' => [
-                        'filepath' => $uploadResult['filepath'],
-                        'url' => $uploadResult['url'],
-                        'thumbnails' => $uploadResult['thumbnails'] ?? null
-                    ]
-                ]);
-            } else {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => $uploadResult['message']
-                ]);
-            }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error uploading banner: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Log user action
      * @param string $action Action name
      * @param string $description Action description
@@ -564,69 +454,6 @@ class PageController {
         return null;
     }
 
-    /**
-     * Delete page banner image (admin only)
-     */
-    public function deleteBanner($id) {
-        try {
-            // Require admin authentication
-            RoleMiddleware::requireAdmin($this->pdo);
-            
-            // Check if page exists
-            $existingPage = $this->pageModel->findById($id);
-            if (!$existingPage) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Page not found'
-                ]);
-                return;
-            }
-            
-            // Get banner path from page data
-            $bannerPath = $existingPage['banner_image'] ?? null;
-            if (!$bannerPath) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No banner image found'
-                ]);
-                return;
-            }
-            
-            // Delete banner
-            $deleteResult = deletePageBanner($bannerPath);
-            
-            if ($deleteResult['success']) {
-                // Update page to remove banner reference
-                $this->pageModel->update($id, ['banner_image' => null]);
-                
-                // Log the action
-                $this->logAction('page_banner_deleted', "Deleted banner for page: {$existingPage['title']}", [
-                    'page_id' => $id,
-                    'slug' => $existingPage['slug'],
-                    'title' => $existingPage['title']
-                ]);
-                
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Banner deleted successfully'
-                ]);
-            } else {
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'message' => $deleteResult['message']
-                ]);
-            }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error deleting banner: ' . $e->getMessage()
-            ]);
-        }
-    }
+
 }
 ?> 

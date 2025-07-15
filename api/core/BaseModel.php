@@ -16,7 +16,7 @@ class BaseModel {
     }
 
     protected function getTableName() {
-        return static::$table;
+        return (string)(static::$table ?: $this->table);
     }
 
     // Dynamic property handling

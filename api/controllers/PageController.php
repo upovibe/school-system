@@ -55,6 +55,11 @@ class PageController {
             
             $data = json_decode(file_get_contents('php://input'), true);
             
+            // Handle multipart form data if present
+            if (empty($data) && !empty($_POST)) {
+                $data = $_POST;
+            }
+            
             // Validate required fields
             if (empty($data['slug']) || empty($data['title'])) {
                 http_response_code(400);
@@ -76,17 +81,34 @@ class PageController {
                 return;
             }
             
+            // Handle banner upload if present
+            $bannerPath = null;
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'temp');
+                if ($result['success']) {
+                    $bannerPath = $result['data']['path'];
+                }
+            }
+            
+            // Add banner path to data if uploaded
+            if ($bannerPath) {
+                $data['banner_image'] = $bannerPath;
+            }
+            
             $pageId = $this->pageModel->create($data);
             
-            // Handle banner upload if present
-            $uploadResult = $this->handleBannerUpload($pageId);
+            // Update banner source if uploaded
+            if ($bannerPath) {
+                $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $pageId);
+                $this->pageModel->update($pageId, ['banner_image' => $bannerPath]);
+            }
             
             // Log the action
             $this->logAction('page_created', "Created page: {$data['title']}", [
                 'page_id' => $pageId,
                 'slug' => $data['slug'],
                 'title' => $data['title'],
-                'banner_uploaded' => $uploadResult['uploaded']
+                'banner_uploaded' => !empty($bannerPath)
             ]);
             
             http_response_code(201);
@@ -94,7 +116,7 @@ class PageController {
                 'success' => true,
                 'data' => [
                     'id' => $pageId,
-                    'banner_upload' => $uploadResult
+                    'banner_image' => $bannerPath
                 ],
                 'message' => 'Page created successfully'
             ]);
@@ -207,6 +229,11 @@ class PageController {
             
             $data = json_decode(file_get_contents('php://input'), true);
             
+            // Handle multipart form data if present
+            if (empty($data) && !empty($_POST)) {
+                $data = $_POST;
+            }
+            
             // Check if page exists
             $existingPage = $this->pageModel->findById($id);
             if (!$existingPage) {
@@ -231,10 +258,17 @@ class PageController {
                 }
             }
             
-            $result = $this->pageModel->update($id, $data);
-            
             // Handle banner upload if present
-            $uploadResult = $this->handleBannerUpload($id);
+            $bannerPath = null;
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $result = $this->imageUpload->uploadSingle($_FILES['banner'], 'pages', 'page_' . $id);
+                if ($result['success']) {
+                    $bannerPath = $result['data']['path'];
+                    $data['banner_image'] = $bannerPath;
+                }
+            }
+            
+            $result = $this->pageModel->update($id, $data);
             
             if ($result) {
                 // Log the action
@@ -242,7 +276,7 @@ class PageController {
                     'page_id' => $id,
                     'slug' => $data['slug'] ?? $existingPage['slug'],
                     'title' => $data['title'] ?? $existingPage['title'],
-                    'banner_uploaded' => $uploadResult['uploaded']
+                    'banner_uploaded' => !empty($bannerPath)
                 ]);
                 
                 http_response_code(200);
@@ -250,7 +284,7 @@ class PageController {
                     'success' => true,
                     'message' => 'Page updated successfully',
                     'data' => [
-                        'banner_upload' => $uploadResult
+                        'banner_image' => $bannerPath
                     ]
                 ]);
             } else {

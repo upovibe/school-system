@@ -217,6 +217,13 @@ class ImageUpload
             return $result;
         }
 
+        // Check if GD extension is available for image processing
+        if (!extension_loaded('gd')) {
+            // GD not available - skip thumbnail creation but don't fail upload
+            error_log("GD extension not available - skipping thumbnail creation for: " . $filename);
+            return $result;
+        }
+
         try {
             $imageInfo = getimagesize($filepath);
             if (!$imageInfo) {
@@ -252,6 +259,12 @@ class ImageUpload
      */
     private function createThumbnail($sourcePath, $destPath, $type, $maxWidth, $maxHeight)
     {
+        // Check if GD extension is available
+        if (!extension_loaded('gd')) {
+            error_log("GD extension not available - cannot create thumbnail");
+            return;
+        }
+
         switch ($type) {
             case IMAGETYPE_JPEG:
                 $source = imagecreatefromjpeg($sourcePath);
@@ -267,6 +280,11 @@ class ImageUpload
                 break;
             default:
                 return;
+        }
+
+        if (!$source) {
+            error_log("Failed to create image resource from: " . $sourcePath);
+            return;
         }
 
         $sourceWidth = imagesx($source);

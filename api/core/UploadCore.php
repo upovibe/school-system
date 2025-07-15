@@ -227,12 +227,16 @@ class UploadCore {
             imagecopyresampled($targetImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $sourceWidth, $sourceHeight);
 
             // Save image
-            $result = self::saveImage($targetImage, $targetPath, $imageInfo[2], $quality);
+            $saveResult = self::saveImage($targetImage, $targetPath, $imageInfo[2], $quality);
 
             imagedestroy($sourceImage);
             imagedestroy($targetImage);
 
-            return $result;
+            if ($saveResult) {
+                return ['success' => true, 'path' => $targetPath];
+            } else {
+                return ['success' => false, 'message' => 'Failed to save resized image.'];
+            }
 
         } catch (Exception $e) {
             return [

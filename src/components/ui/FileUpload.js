@@ -13,13 +13,17 @@ class FileUpload extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['multiple', 'accept', 'max-size', 'max-files', 'disabled', 'status'];
+    return ['multiple', 'accept', 'max-size', 'max-files', 'disabled', 'status', 'value'];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
-      this.render();
-      this.setupEventListeners();
+      if (name === 'value' && newValue) {
+        this.setValue(newValue);
+      } else {
+        this.render();
+        this.setupEventListeners();
+      }
     }
   }
 
@@ -402,16 +406,25 @@ class FileUpload extends HTMLElement {
       const fileItem = document.createElement('div');
       fileItem.className = 'file-item';
       
+      // Check if this is an existing file
+      const isExisting = file.isExisting;
+      
       fileItem.innerHTML = `
         <div class="file-icon">
-          <svg fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
-          </svg>
+          ${isExisting ? `
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+            </svg>
+          ` : `
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+            </svg>
+          `}
         </div>
         
         <div class="file-info">
           <div class="file-name">${file.name}</div>
-          <div class="file-size">${this.formatFileSize(file.size)}</div>
+          <div class="file-size">${isExisting ? 'Existing file' : this.formatFileSize(file.size)}</div>
           ${this.uploadProgress[file.name] > 0 ? `
             <div class="progress-bar">
               <div class="progress-fill" style="width: ${this.uploadProgress[file.name]}%"></div>
@@ -491,6 +504,29 @@ class FileUpload extends HTMLElement {
     this.files = [];
     this.uploadProgress = {};
     this.updateFileList();
+  }
+
+  // Set existing file from URL/path
+  setValue(filePath) {
+    if (filePath) {
+      // Create a file-like object for display
+      const fileName = filePath.split('/').pop() || filePath;
+      const existingFile = {
+        name: fileName,
+        size: 0, // We don't know the size
+        type: 'image/*',
+        path: filePath,
+        isExisting: true // Flag to identify existing files
+      };
+      
+      this.files = [existingFile];
+      this.updateFileList();
+    }
+  }
+
+  // Get the value (file path)
+  getValue() {
+    return this.files.length > 0 ? this.files[0].path || this.files[0].name : '';
   }
 }
 

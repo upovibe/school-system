@@ -52,6 +52,14 @@ class PageUpdateModal extends HTMLElement {
         this.pageData = pageData;
         // Re-render the modal with the new data
         this.render();
+        
+        // Set the banner value in the file upload component after render
+        setTimeout(() => {
+            const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
+            if (bannerFileUpload && pageData.banner_image) {
+                bannerFileUpload.setValue(pageData.banner_image);
+            }
+        }, 0);
     }
 
     open() {

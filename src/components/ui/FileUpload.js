@@ -93,9 +93,9 @@ class FileUpload extends HTMLElement {
         }
 
         .upload-icon {
-          width: 3rem;
-          height: 3rem;
-          margin: 0 auto 1rem;
+          width: 2rem;
+          height: 2rem;
+          margin: 0 auto 0.5rem;
           color: #6b7280;
         }
 
@@ -105,16 +105,16 @@ class FileUpload extends HTMLElement {
         }
 
         .upload-text {
-          margin-bottom: 0.5rem;
-          font-size: 1.125rem;
+          margin-bottom: 0.25rem;
+          font-size: 0.875rem;
           font-weight: 500;
           color: #374151;
         }
 
         .upload-hint {
-          font-size: 0.875rem;
+          font-size: 0.75rem;
           color: #6b7280;
-          margin-bottom: 1rem;
+          margin-bottom: 0.5rem;
         }
 
         .file-input {
@@ -130,24 +130,29 @@ class FileUpload extends HTMLElement {
         }
 
         .file-list {
-          margin-top: 1rem;
+          margin-top: 0.5rem;
           text-align: left;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.5rem;
+          gap: 0.25rem;
+          max-height: 100px;
+          overflow-y: auto;
         }
 
         .file-item {
           display: flex;
-          align-items: center;
+          flex-direction: column;
+          position: relative;
           padding: 0.5rem;
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 0.375rem;
+          border-radius: 0.25rem;
           transition: all 0.2s ease;
-          min-width: 200px;
-          max-width: 300px;
+          width: 60px;
+          height: 60px;
           flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
         }
 
         .file-item:hover {
@@ -158,15 +163,17 @@ class FileUpload extends HTMLElement {
         .file-icon {
           width: 1.5rem;
           height: 1.5rem;
-          margin-right: 0.5rem;
           color: #6b7280;
           flex-shrink: 0;
+          margin-bottom: 0.25rem;
         }
 
         .file-info {
           flex: 1;
           min-width: 0;
           overflow: hidden;
+          text-align: center;
+          width: 100%;
         }
 
         .file-name {
@@ -176,35 +183,37 @@ class FileUpload extends HTMLElement {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.875rem;
+          font-size: 0.625rem;
+          max-width: 100%;
         }
 
         .file-size {
-          font-size: 0.75rem;
+          font-size: 0.5rem;
           color: #6b7280;
         }
 
         .file-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          position: relative;
+          position: absolute;
+          top: 0.125rem;
+          right: 0.125rem;
           z-index: 10;
-          flex-shrink: 0;
         }
 
         .remove-btn {
-          background: none;
+          background: rgba(255, 255, 255, 0.9);
           border: none;
           color: #ef4444;
           cursor: pointer;
           padding: 0.125rem;
-          border-radius: 0.25rem;
+          border-radius: 50%;
           transition: all 0.2s ease;
           position: relative;
           z-index: 10;
           display: flex;
           align-items: center;
+          justify-content: center;
+          width: 1.25rem;
+          height: 1.25rem;
           justify-content: center;
         }
 
@@ -413,6 +422,14 @@ class FileUpload extends HTMLElement {
       const isExisting = file.isExisting;
       
       fileItem.innerHTML = `
+        <div class="file-actions">
+          <button class="remove-btn" data-index="${index}">
+            <svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+        
         <div class="file-icon">
           ${isExisting ? `
             <svg fill="currentColor" viewBox="0 0 20 20">
@@ -433,14 +450,6 @@ class FileUpload extends HTMLElement {
               <div class="progress-fill" style="width: ${this.uploadProgress[file.name]}%"></div>
             </div>
           ` : ''}
-        </div>
-        
-        <div class="file-actions">
-          <button class="remove-btn" data-index="${index}">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-            </svg>
-          </button>
         </div>
       `;
 

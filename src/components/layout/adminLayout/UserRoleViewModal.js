@@ -1,5 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
 
 /**
  * User Role View Modal Component
@@ -28,6 +29,11 @@ class UserRoleViewModal extends HTMLElement {
     }
 
     setupEventListeners() {
+        // Listen for confirm button click (Close)
+        this.addEventListener('confirm', () => {
+            this.close();
+        });
+        
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
@@ -73,93 +79,70 @@ class UserRoleViewModal extends HTMLElement {
     }
 
     render() {
-        if (!this.roleData) {
-            this.innerHTML = `
-                <ui-modal 
-                    title="View User Role"
-                    size="md"
-                    ${this.hasAttribute('open') ? 'open' : ''}>
-                    
-                    <div class="text-center py-8 text-gray-500">
-                        <p>No role data available</p>
-                    </div>
-
-                    <div slot="footer" class="flex justify-end space-x-3">
-                        <ui-button 
-                            variant="secondary"
-                            onclick="this.closest('user-role-view-modal').close()">
-                            Close
-                        </ui-button>
-                    </div>
-                </ui-modal>
-            `;
-            return;
-        }
-
         this.innerHTML = `
             <ui-modal 
-                title="View User Role"
-                size="md"
-                ${this.hasAttribute('open') ? 'open' : ''}>
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                size="lg"
+                close-button="true">
+                <div slot="title">View User Role Details</div>
                 
-                <div class="space-y-6">
-                    <!-- Role ID -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Role ID
-                        </label>
-                        <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                            ${this.roleData.id || 'N/A'}
-                        </p>
-                    </div>
+                <div>
+                    ${this.roleData ? `
+                        <!-- Role Header -->
+                        <div class="flex items-center gap-3 border-b pb-4">
+                            <h3 class="text-xl font-semibold text-gray-900">${this.roleData.name || 'N/A'}</h3>
+                            <ui-badge color="secondary"><i class="fas fa-user-tag mr-1"></i>Role ID: ${this.roleData.id || 'N/A'}</ui-badge>
+                        </div>
 
-                    <!-- Role Name -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Role Name
-                        </label>
-                        <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                            ${this.roleData.name || 'N/A'}
-                        </p>
-                    </div>
+                        <!-- Role Information -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Role Information</h4>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-user-tag mr-1"></i>Role Name
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.roleData.name || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-align-left mr-1"></i>Description
+                                    </label>
+                                    <p class="text-gray-900 text-sm leading-relaxed">${this.roleData.description || 'No description provided'}</p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                        </label>
-                        <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md min-h-[60px]">
-                            ${this.roleData.description || 'No description provided'}
-                        </p>
-                    </div>
-
-                    <!-- Created Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Created Date
-                        </label>
-                        <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                            ${this.formatDate(this.roleData.created_at)}
-                        </p>
-                    </div>
-
-                    <!-- Updated Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Last Updated
-                        </label>
-                        <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                            ${this.formatDate(this.roleData.updated_at)}
-                        </p>
-                    </div>
-                </div>
-
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button 
-                        variant="secondary"
-                        onclick="this.closest('user-role-view-modal').close()">
-                        Close
-                    </ui-button>
+                        <!-- Timestamps -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-clock text-orange-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-plus mr-1"></i>Created
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.roleData.created_at)}</span>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-edit mr-1"></i>Updated
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.roleData.updated_at)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">No role data available</p>
+                        </div>
+                    `}
                 </div>
             </ui-modal>
         `;

@@ -152,14 +152,6 @@ class UserRoleUpdateModal extends HTMLElement {
                     <div class="text-center py-8 text-gray-500">
                         <p>No role data available</p>
                     </div>
-
-                    <div slot="footer" class="flex justify-end space-x-3">
-                        <ui-button 
-                            variant="secondary"
-                            onclick="this.closest('user-role-update-modal').close()">
-                            Cancel
-                        </ui-button>
-                    </div>
                 </ui-modal>
             `;
             return;
@@ -203,19 +195,6 @@ class UserRoleUpdateModal extends HTMLElement {
                         </ui-textarea>
                     </div>
                 </form>
-
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button 
-                        variant="secondary"
-                        onclick="this.closest('user-role-update-modal').close()">
-                        Cancel
-                    </ui-button>
-                    <ui-button 
-                        variant="primary"
-                        onclick="this.closest('user-role-update-modal').updateRole()">
-                        Update Role
-                    </ui-button>
-                </div>
             </ui-modal>
         `;
     }

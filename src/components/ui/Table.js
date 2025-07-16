@@ -150,11 +150,18 @@ class Table extends HTMLElement {
                     border-bottom: 1px solid #e5e7eb;
                     color: #111827;
                     white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 200px;
                 }
                 
                 .upo-table-compact th,
                 .upo-table-compact td {
                     padding: 0.5rem;
+                }
+                
+                .upo-table-compact td {
+                    max-width: 150px;
                 }
                 
                 .upo-table-striped tbody tr:nth-child(even) {
@@ -230,6 +237,8 @@ class Table extends HTMLElement {
                     background-color: #ffffff;
                     z-index: 10;
                     border-left: 2px solid #e5e7eb;
+                    max-width: 120px;
+                    width: 120px;
                 }
                 
                 .upo-table-action-buttons {

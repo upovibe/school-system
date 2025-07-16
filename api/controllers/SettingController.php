@@ -98,6 +98,11 @@ class SettingController {
                 return;
             }
             
+            // Sanitize is_active to be a boolean integer
+            if (isset($data['is_active'])) {
+                $data['is_active'] = filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            }
+            
             $settingId = $this->settingModel->create($data);
             
             // Log the action

@@ -73,15 +73,15 @@ class PageUpdateModal extends HTMLElement {
     // Update the page
     async updatePage() {
         try {
-            // Get values from custom UI components
-            const titleInput = this.querySelector('ui-input');
-            const slugInput = this.querySelectorAll('ui-input')[1];
+            // Get values from custom UI components using data-field attributes
+            const titleInput = this.querySelector('ui-input[data-field="title"]');
+            const slugInput = this.querySelector('ui-input[data-field="slug"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
-            const statusRadioGroup = this.querySelector('ui-radio-group[name="status"]');
-            const metaDescriptionTextarea = this.querySelector('ui-textarea[name="meta-description"]');
-            const metaKeywordsInput = this.querySelectorAll('ui-input')[2];
-            const sortOrderInput = this.querySelectorAll('ui-input')[3];
+            const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
+            const metaDescriptionTextarea = this.querySelector('ui-textarea[data-field="meta-description"]');
+            const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
+            const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const pageData = {
@@ -91,7 +91,7 @@ class PageUpdateModal extends HTMLElement {
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
                 meta_keywords: metaKeywordsInput ? metaKeywordsInput.value : '',
-                is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
+                is_active: statusRadioGroup ? (statusRadioGroup.getValue() === 'active' ? 1 : 0) : 0,
                 sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
 
@@ -180,6 +180,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
                             <ui-input 
+                                data-field="title"
                                 name="title"
                                 type="text" 
                                 placeholder="Enter page title"
@@ -191,6 +192,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Slug</label>
                             <ui-input 
+                                data-field="slug"
                                 name="slug"
                                 type="text" 
                                 placeholder="Enter page slug"
@@ -229,6 +231,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
                             <ui-textarea 
+                                data-field="meta-description"
                                 name="meta-description"
                                 placeholder="Enter meta description for SEO"
                                 value="${this.pageData?.meta_description || ''}"
@@ -240,6 +243,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
                             <ui-input 
+                                data-field="meta-keywords"
                                 name="meta-keywords"
                                 type="text" 
                                 placeholder="Enter meta keywords (comma separated)"
@@ -263,6 +267,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                             <ui-radio-group 
+                                data-field="status"
                                 name="status"
                                 value="${this.pageData?.is_active ? 'active' : 'inactive'}"
                                 layout="horizontal"
@@ -275,6 +280,7 @@ class PageUpdateModal extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                             <ui-input 
+                                data-field="sort-order"
                                 name="sort-order"
                                 type="number" 
                                 placeholder="Enter sort order" 

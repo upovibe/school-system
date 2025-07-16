@@ -77,6 +77,13 @@ class UsersPage extends App {
             }
         });
         
+        // Listen for modal closed events
+        this.addEventListener('modal-closed', (event) => {
+            console.log('🎯 modal-closed event received');
+            // Close all modals when any modal is closed
+            this.closeAllModals();
+        });
+        
         this.addEventListener('user-updated', (event) => {
             console.log('🎯 user-updated event received:', event.detail);
             // Update the existing user in the data

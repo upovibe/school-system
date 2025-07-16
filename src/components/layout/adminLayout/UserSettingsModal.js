@@ -58,6 +58,12 @@ class UserSettingsModal extends HTMLElement {
     close() {
         this.removeAttribute('open');
         this.resetForm();
+        
+        // Dispatch event to notify parent component
+        this.dispatchEvent(new CustomEvent('modal-closed', {
+            bubbles: true,
+            composed: true
+        }));
     }
 
     // Reset form to initial state

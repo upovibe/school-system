@@ -320,13 +320,13 @@ class ProfileContent extends App {
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                                     ${isEditing ? `
-                                        <input 
+                                        <ui-input 
                                             type="text" 
                                             value="${this.editForm.name}"
                                             onchange="this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.editForm.name = this.value"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Enter your full name"
-                                        />
+                                            size="md"
+                                        ></ui-input>
                                     ` : `
                                         <div class="text-gray-900 font-medium text-lg">${user.name || 'Not provided'}</div>
                                     `}
@@ -336,13 +336,13 @@ class ProfileContent extends App {
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                                     ${isEditing ? `
-                                        <input 
+                                        <ui-input 
                                             type="email" 
                                             value="${this.editForm.email}"
                                             onchange="this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.editForm.email = this.value"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Enter your email"
-                                        />
+                                            size="md"
+                                        ></ui-input>
                                     ` : `
                                         <div class="text-gray-900 font-medium">${user.email || 'Not provided'}</div>
                                     `}
@@ -351,26 +351,66 @@ class ProfileContent extends App {
                                 <!-- Role -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                                    <div class="text-gray-900 font-medium capitalize">${user.role || 'Not assigned'}</div>
+                                    <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-user-tag text-blue-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-900 font-semibold capitalize">${user.role || 'Not assigned'}</div>
+                                            <div class="text-xs text-gray-500">User role in the system</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Status -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                    <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        user.status === 'active' ? 'bg-green-100 text-green-800' : 
-                                        user.status === 'inactive' ? 'bg-red-100 text-red-800' : 
-                                        'bg-gray-100 text-gray-800'
-                                    }">
-                                        ${user.status || 'Unknown'}
+                                    <div class="flex items-center space-x-3 p-3 ${
+                                        user.status === 'active' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' : 
+                                        user.status === 'inactive' ? 'bg-gradient-to-r from-red-50 to-pink-50 border border-red-200' : 
+                                        'bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200'
+                                    } rounded-lg">
+                                        <div class="flex-shrink-0 w-8 h-8 ${
+                                            user.status === 'active' ? 'bg-green-100' : 
+                                            user.status === 'inactive' ? 'bg-red-100' : 
+                                            'bg-gray-100'
+                                        } rounded-lg flex items-center justify-center">
+                                            <i class="fas ${
+                                                user.status === 'active' ? 'fa-check-circle text-green-600' : 
+                                                user.status === 'inactive' ? 'fa-times-circle text-red-600' : 
+                                                'fa-question-circle text-gray-600'
+                                            } text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                user.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                                user.status === 'inactive' ? 'bg-red-100 text-red-800' : 
+                                                'bg-gray-100 text-gray-800'
+                                            }">
+                                                ${user.status || 'Unknown'}
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1">Account status</div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Created Date -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Member Since</label>
-                                    <div class="text-gray-900 font-medium">
-                                        ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                                    <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-calendar-alt text-purple-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-900 font-semibold">
+                                                ${user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
+                                                    year: 'numeric', 
+                                                    month: 'long', 
+                                                    day: 'numeric' 
+                                                }) : 'Unknown'}
+                                            </div>
+                                            <div class="text-xs text-gray-500">Account creation date</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

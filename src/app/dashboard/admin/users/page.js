@@ -93,6 +93,14 @@ class UsersPage extends App {
             }
         });
         
+        // Listen for modal closed events
+        this.addEventListener('modal-closed', (event) => {
+            // Close the add modal when it's closed
+            if (event.target.tagName === 'USER-SETTINGS-MODAL') {
+                this.set('showAddModal', false);
+            }
+        });
+        
         // Listen for modal opened event to pass data
         this.addEventListener('modal-opened', (event) => {
             const modal = event.target;

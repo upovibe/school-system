@@ -70,18 +70,9 @@ class UsersPage extends App {
                 const currentUsers = this.get('users') || [];
                 this.set('users', [...currentUsers, newUser]);
                 this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
             } else {
                 this.loadData();
             }
-        });
-        
-        // Listen for modal closed events
-        this.addEventListener('modal-closed', (event) => {
-            console.log('🎯 modal-closed event received');
-            // Close all modals when any modal is closed
-            this.closeAllModals();
         });
         
         this.addEventListener('user-updated', (event) => {

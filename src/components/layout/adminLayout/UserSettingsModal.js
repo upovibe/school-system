@@ -159,12 +159,18 @@ class UserSettingsModal extends HTMLElement {
                 
                 const toastVariant = response.data.email_sent ? 'success' : 'warning';
                 
-                Toast.show({
-                    title: response.data.email_sent ? 'Success' : 'Warning',
-                    message: message,
-                    variant: toastVariant,
-                    duration: 5000
-                });
+                // Close modal first, then show toast
+                this.close();
+                
+                // Show toast with a small delay to ensure modal is closed
+                setTimeout(() => {
+                    Toast.show({
+                        title: response.data.email_sent ? 'Success' : 'Warning',
+                        message: message,
+                        variant: toastVariant,
+                        duration: 5000
+                    });
+                }, 100);
 
                 // Construct the new user data from response
                 const newUser = {
@@ -178,8 +184,7 @@ class UserSettingsModal extends HTMLElement {
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 };
 
-                // Close modal and dispatch event
-                this.close();
+                // Dispatch event with the new user data
                 this.dispatchEvent(new CustomEvent('user-saved', {
                     detail: { user: newUser },
                     bubbles: true,

@@ -333,9 +333,23 @@ class UserController {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // Validate required fields
-            if (!isset($data['current_password']) || !isset($data['new_password'])) {
+            if (!isset($data['current_password']) || !isset($data['new_password']) || !isset($data['confirm_password'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Current password and new password are required'], JSON_PRETTY_PRINT);
+                echo json_encode(['error' => 'Current password, new password, and confirm password are required'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Check if new password and confirm password match
+            if ($data['new_password'] !== $data['confirm_password']) {
+                http_response_code(400);
+                echo json_encode(['error' => 'New password and confirm password do not match'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Validate new password length
+            if (strlen($data['new_password']) < 8) {
+                http_response_code(400);
+                echo json_encode(['error' => 'New password must be at least 8 characters long'], JSON_PRETTY_PRINT);
                 return;
             }
             

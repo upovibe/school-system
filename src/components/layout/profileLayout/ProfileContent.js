@@ -5,6 +5,7 @@ import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Dialog.js';
+import '@/components/ui/ProfileImageUploader.js';
 import '@/components/layout/authLayout/PasswordChangeDialog.js';
 
 /**
@@ -22,8 +23,7 @@ class ProfileContent extends App {
         this.isSaving = false;
         this.editForm = {
             name: '',
-            email: '',
-            username: ''
+            email: ''
         };
     }
 
@@ -51,8 +51,7 @@ class ProfileContent extends App {
             this.userData = response.data;
             this.editForm = {
                 name: this.userData.name || '',
-                email: this.userData.email || '',
-                username: this.userData.username || ''
+                email: this.userData.email || ''
             };
             
             this.set('userData', this.userData);
@@ -95,6 +94,36 @@ class ProfileContent extends App {
                 this.showChangePasswordDialog();
             }
         });
+
+        // Listen for profile image upload events
+        this.addEventListener('preview', (e) => {
+            if (e.target.tagName === 'UI-PROFILE-IMAGE-UPLOADER') {
+                // Show preview notification
+                Toast.show({
+                    title: 'Image Selected',
+                    message: 'Click the check icon to confirm upload',
+                    variant: 'info',
+                    duration: 3000
+                });
+            }
+        });
+
+        this.addEventListener('change', (e) => {
+            if (e.target.tagName === 'UI-PROFILE-IMAGE-UPLOADER') {
+                this.handleProfileImageUpload(e.detail);
+            }
+        });
+
+        this.addEventListener('error', (e) => {
+            if (e.target.tagName === 'UI-PROFILE-IMAGE-UPLOADER') {
+                Toast.show({
+                    title: 'Upload Error',
+                    message: e.detail.message,
+                    variant: 'error',
+                    duration: 5000
+                });
+            }
+        });
     }
 
     toggleEditMode() {
@@ -105,8 +134,7 @@ class ProfileContent extends App {
         // Reset form to original values
         this.editForm = {
             name: this.userData.name || '',
-            email: this.userData.email || '',
-            username: this.userData.username || ''
+            email: this.userData.email || ''
         };
         this.set('isEditing', false);
     }
@@ -154,6 +182,83 @@ class ProfileContent extends App {
         document.body.appendChild(dialog);
     }
 
+    async handleProfileImageUpload(detail) {
+        try {
+            const { file } = detail;
+            
+            // Show upload progress
+            const uploader = this.querySelector('ui-profile-image-uploader');
+            if (uploader) {
+                uploader.setUploadProgress(10);
+            }
+
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('profile_image', file);
+            formData.append('user_id', this.userData.id);
+
+            const token = localStorage.getItem('token');
+            
+            // Upload the image
+            const response = await fetch('/api/users/upload-profile-image', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload image');
+            }
+
+            const result = await response.json();
+            
+            // Update progress
+            if (uploader) {
+                uploader.setUploadProgress(100);
+            }
+
+            // Update user data with new image URL
+            this.userData.profile_image = result.image_url;
+            this.set('userData', this.userData);
+
+            // Update local storage
+            const updatedUserData = { ...JSON.parse(localStorage.getItem('userData') || '{}'), profile_image: result.image_url };
+            localStorage.setItem('userData', JSON.stringify(updatedUserData));
+
+            Toast.show({
+                title: 'Success',
+                message: 'Profile image updated successfully',
+                variant: 'success',
+                duration: 3000
+            });
+
+            // Reset progress after a delay
+            setTimeout(() => {
+                if (uploader) {
+                    uploader.setUploadProgress(0);
+                }
+            }, 1000);
+
+        } catch (error) {
+            console.error('Error uploading profile image:', error);
+            
+            // Reset progress
+            const uploader = this.querySelector('ui-profile-image-uploader');
+            if (uploader) {
+                uploader.setUploadProgress(0);
+            }
+
+            Toast.show({
+                title: 'Upload Error',
+                message: 'Failed to upload profile image. Please try again.',
+                variant: 'error',
+                duration: 5000
+            });
+        }
+    }
+
     render() {
         if (this.get('isLoading')) {
             return `
@@ -196,15 +301,21 @@ class ProfileContent extends App {
                         ` : ''}
                     </div>
 
-                    <div class="flex items-start space-x-6 mb-8">
-                        <div class="flex-shrink-0">
-                            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-3xl text-gray-400"></i>
-                            </div>
+                    <div class="flex items-start space-x-8 mb-8">
+                        <!-- Profile Picture (Left) -->
+                        <div class="flex-shrink-0 w-2/6" style="aspect-ratio: 1; min-width: 8rem;">
+                            <ui-profile-image-uploader 
+                                src="${user.profile_image || ''}" 
+                                name="${user.name || 'User'}" 
+                                size="lg"
+                                accept="image/*"
+                                max-size="5"
+                            ></ui-profile-image-uploader>
                         </div>
                         
-                        <div class="flex-1">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Information Fields (Right) -->
+                        <div class="flex-1 border border-gray-200 rounded-lg p-6 w-full">
+                            <div class="space-y-6">
                                 <!-- Name -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -217,7 +328,7 @@ class ProfileContent extends App {
                                             placeholder="Enter your full name"
                                         />
                                     ` : `
-                                        <div class="text-gray-900 font-medium">${user.name || 'Not provided'}</div>
+                                        <div class="text-gray-900 font-medium text-lg">${user.name || 'Not provided'}</div>
                                     `}
                                 </div>
 
@@ -234,22 +345,6 @@ class ProfileContent extends App {
                                         />
                                     ` : `
                                         <div class="text-gray-900 font-medium">${user.email || 'Not provided'}</div>
-                                    `}
-                                </div>
-
-                                <!-- Username -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                                    ${isEditing ? `
-                                        <input 
-                                            type="text" 
-                                            value="${this.editForm.username}"
-                                            onchange="this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.editForm.username = this.value"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder="Enter your username"
-                                        />
-                                    ` : `
-                                        <div class="text-gray-900 font-medium">${user.username || 'Not provided'}</div>
                                     `}
                                 </div>
 
@@ -323,22 +418,7 @@ class ProfileContent extends App {
                     </div>
                 </div>
 
-                <!-- Account Information -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">User ID</label>
-                            <div class="text-sm text-gray-900 font-mono">${user.id}</div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Last Updated</label>
-                            <div class="text-sm text-gray-900">
-                                ${user.updated_at ? new Date(user.updated_at).toLocaleString() : 'Unknown'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         `;
     }

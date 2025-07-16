@@ -92,7 +92,6 @@ class UserViewModal extends HTMLElement {
                         <!-- User Header -->
                         <div class="flex items-center gap-3 border-b pb-4">
                             <h3 class="text-xl font-semibold text-gray-900">${this.userData.name || 'N/A'}</h3>
-                            <ui-badge color="secondary"><i class="fas fa-user mr-1"></i>User ID: ${this.userData.id || 'N/A'}</ui-badge>
                             <ui-badge color="${this.userData.status === 'active' ? 'success' : 'error'}">
                                 <i class="fas fa-${this.userData.status === 'active' ? 'check' : 'times'} mr-1"></i>
                                 ${this.userData.status === 'active' ? 'Active' : 'Inactive'}
@@ -122,17 +121,7 @@ class UserViewModal extends HTMLElement {
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-user-tag mr-1"></i>Role
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.userData.role_name || 'N/A'}</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-toggle-on mr-1"></i>Status
-                                    </label>
-                                    <p class="text-gray-900 text-sm">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${this.userData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                            ${this.userData.status === 'active' ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </p>
+                                    <p class="text-gray-900 text-sm">${this.userData.role || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>

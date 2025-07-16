@@ -56,14 +56,13 @@ class UserSettingsModal extends HTMLElement {
     }
 
     close() {
+        // Close the inner ui-modal element
+        const modal = this.querySelector('ui-modal');
+        if (modal) {
+            modal.removeAttribute('open');
+        }
         this.removeAttribute('open');
         this.resetForm();
-        
-        // Dispatch event to notify parent component
-        this.dispatchEvent(new CustomEvent('modal-closed', {
-            bubbles: true,
-            composed: true
-        }));
     }
 
     // Reset form to initial state
@@ -158,19 +157,6 @@ class UserSettingsModal extends HTMLElement {
                     : 'User created successfully. Email could not be sent. Please check email configuration.';
                 
                 const toastVariant = response.data.email_sent ? 'success' : 'warning';
-                
-                // Close modal first, then show toast
-                this.close();
-                
-                // Show toast with a small delay to ensure modal is closed
-                setTimeout(() => {
-                    Toast.show({
-                        title: response.data.email_sent ? 'Success' : 'Warning',
-                        message: message,
-                        variant: toastVariant,
-                        duration: 5000
-                    });
-                }, 100);
 
                 // Construct the new user data from response
                 const newUser = {
@@ -184,12 +170,25 @@ class UserSettingsModal extends HTMLElement {
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 };
 
-                // Dispatch event with the new user data
+                // Dispatch event with the new user data BEFORE closing modal
                 this.dispatchEvent(new CustomEvent('user-saved', {
                     detail: { user: newUser },
                     bubbles: true,
                     composed: true
                 }));
+
+                // Close modal after dispatching event
+                this.close();
+                
+                // Show toast with a small delay to ensure modal is closed
+                setTimeout(() => {
+                    Toast.show({
+                        title: response.data.email_sent ? 'Success' : 'Warning',
+                        message: message,
+                        variant: toastVariant,
+                        duration: 5000
+                    });
+                }, 100);
             } else {
                 throw new Error(response.data.message || 'Failed to create user');
             }

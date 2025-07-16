@@ -68,6 +68,8 @@ class UsersPage extends App {
                 const currentUsers = this.get('users') || [];
                 this.set('users', [...currentUsers, newUser]);
                 this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
             } else {
                 this.loadData();
             }
@@ -90,13 +92,7 @@ class UsersPage extends App {
             }
         });
         
-        // Listen for modal closed events
-        this.addEventListener('modal-closed', (event) => {
-            // Close the add modal when it's closed
-            if (event.target.tagName === 'USER-SETTINGS-MODAL') {
-                this.set('showAddModal', false);
-            }
-        });
+
         
         // Listen for modal opened event to pass data
         this.addEventListener('modal-opened', (event) => {
@@ -199,6 +195,11 @@ class UsersPage extends App {
     }
 
     onAdd(event) {
+        // Prevent opening if modal is already open
+        if (this.get('showAddModal')) {
+            return;
+        }
+        
         this.closeAllModals();
         this.set('showAddModal', true);
     }

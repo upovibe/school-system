@@ -82,6 +82,17 @@ class SystemViewModal extends HTMLElement {
         const settingType = this.settingData?.setting_type || 'text';
         const currentValue = this.settingData?.setting_value || '';
 
+        // Helper function to check if a file is an image based on extension
+        const isImageFile = (filename) => {
+            if (!filename) return false;
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+            const lowerFilename = filename.toLowerCase();
+            return imageExtensions.some(ext => lowerFilename.endsWith(ext));
+        };
+
+        // Determine if we should treat this as an image even if setting_type is 'file'
+        const shouldDisplayAsImage = settingType === 'image' || (settingType === 'file' && isImageFile(currentValue));
+
         switch (settingType) {
             case 'boolean':
                 const boolValue = currentValue === '1' || currentValue === 'true' || currentValue === true;
@@ -102,44 +113,61 @@ class SystemViewModal extends HTMLElement {
                     </div>
                 `;
             
-            case 'file':
             case 'image':
+            case 'file':
                 if (currentValue) {
-                    const isImage = settingType === 'image';
-                    return `
-                        <div class="space-y-2">
-                            ${isImage ? `
+                    if (shouldDisplayAsImage) {
+                        // Display as image
+                        const imageUrl = this.getImageUrl(currentValue);
+                        return `
+                            <div class="space-y-3">
                                 <div class="relative">
-                                    <img src="${this.getImageUrl(currentValue)}" 
-                                         alt="Setting Value" 
-                                         class="w-full h-48 object-cover rounded-lg border border-gray-200"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <div class="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                    <img src="${imageUrl}" 
+                                         alt="Setting Image" 
+                                         class="w-fullobject-contain rounded-lg border border-gray-200 bg-gray-50"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="text-center">
                                             <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
                                             <p class="text-gray-500 text-sm">Image not found</p>
                                         </div>
                                     </div>
                                 </div>
-                            ` : `
-                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                    <i class="fas fa-file text-gray-400 text-2xl mb-2"></i>
-                                    <p class="text-gray-500 text-sm">File uploaded</p>
+                                <div class="flex justify-end">
+                                    <button onclick="window.open('${imageUrl}', '_blank')" 
+                                            class="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
+                                        <i class="fas fa-external-link-alt mr-1"></i>Open in new tab
+                                    </button>
                                 </div>
-                            `}
-                            <div class="flex justify-end">
-                                <button onclick="window.open('${this.getImageUrl(currentValue)}', '_blank')" 
-                                        class="text-blue-500 hover:text-blue-700 text-xs">
-                                    <i class="fas fa-external-link-alt mr-1"></i>Open
-                                </button>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Display as file
+                        return `
+                            <div class="space-y-3">
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fas fa-file text-gray-400 text-2xl"></i>
+                                        <div>
+                                            <p class="text-gray-900 text-sm font-medium">File uploaded</p>
+                                            <p class="text-gray-500 text-xs">${currentValue}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button onclick="window.open('${this.getImageUrl(currentValue)}', '_blank')" 
+                                            class="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
+                                        <i class="fas fa-external-link-alt mr-1"></i>Download file
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
                 } else {
                     return `
-                        <div class="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <i class="fas fa-file text-gray-400 text-2xl mb-2"></i>
-                            <p class="text-gray-500 text-sm">No file uploaded</p>
+                        <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                            <i class="fas fa-${shouldDisplayAsImage ? 'image' : 'file'} text-gray-400 text-2xl mb-2"></i>
+                            <p class="text-gray-500 text-sm">No ${shouldDisplayAsImage ? 'image' : 'file'} uploaded</p>
                         </div>
                     `;
                 }

@@ -264,6 +264,11 @@ class SettingController {
                     return;
                 }
             }
+
+            // Sanitize is_active to be a boolean integer
+            if (isset($data['is_active'])) {
+                $data['is_active'] = filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            }
             
             // Delete old file if new file is uploaded and setting type is file/image
             if (isset($_FILES['setting_value']) && in_array($existingSetting['setting_type'], ['file', 'image'])) {

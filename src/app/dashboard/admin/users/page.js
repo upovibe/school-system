@@ -5,8 +5,8 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
-import '@/components/layout/adminLayout/UserSettingsModal.js';
-import '@/components/layout/adminLayout/UserUpdateModal.js';
+import '@/components/layout/adminLayout/UserAddDialog.js';
+import '@/components/layout/adminLayout/UserEditDialog.js';
 import '@/components/layout/adminLayout/UserViewModal.js';
 import '@/components/layout/adminLayout/UserDeleteDialog.js';
 import api from '@/services/api.js';
@@ -30,10 +30,10 @@ class UsersPage extends App {
         this.users = null;
         this.loading = false;
         this.showAddModal = false;
-        this.showUpdateModal = false;
+        this.showEditDialog = false;
         this.showViewModal = false;
         this.showDeleteDialog = false;
-        this.updateUserData = null;
+        this.editUserData = null;
         this.viewUserData = null;
         this.deleteUserData = null;
     }
@@ -87,7 +87,7 @@ class UsersPage extends App {
                 this.set('users', updatedUsers);
                 this.updateTableData();
                 // Close the update modal
-                this.set('showUpdateModal', false);
+                this.set('showEditDialog', false);
             } else {
                 this.loadData();
             }
@@ -96,10 +96,10 @@ class UsersPage extends App {
         // Listen for modal opened event to pass data
         this.addEventListener('modal-opened', (event) => {
             const modal = event.target;
-            if (modal.tagName === 'USER-UPDATE-MODAL') {
-                const updateUserData = this.get('updateUserData');
-                if (updateUserData) {
-                    modal.setUserData(updateUserData);
+            if (modal.tagName === 'USER-EDIT-DIALOG') {
+                const editUserData = this.get('editUserData');
+                if (editUserData) {
+                    modal.setUserData(editUserData);
                 }
             } else if (modal.tagName === 'USER-VIEW-MODAL') {
                 const viewUserData = this.get('viewUserData');
@@ -166,12 +166,12 @@ class UsersPage extends App {
         const editUser = this.get('users').find(user => user.id === detail.row.id);
         if (editUser) {
             this.closeAllModals();
-            this.set('updateUserData', editUser);
-            this.set('showUpdateModal', true);
+            this.set('editUserData', editUser);
+            this.set('showEditDialog', true);
             setTimeout(() => {
-                const updateModal = this.querySelector('user-update-modal');
-                if (updateModal) {
-                    updateModal.setUserData(editUser);
+                const editDialog = this.querySelector('user-edit-dialog');
+                if (editDialog) {
+                    editDialog.setUserData(editUser);
                 }
             }, 0);
         }
@@ -229,10 +229,10 @@ class UsersPage extends App {
     // Close all modals and dialogs
     closeAllModals() {
         this.set('showAddModal', false);
-        this.set('showUpdateModal', false);
+        this.set('showEditDialog', false);
         this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
-        this.set('updateUserData', null);
+        this.set('editUserData', null);
         this.set('viewUserData', null);
         this.set('deleteUserData', null);
     }
@@ -241,7 +241,7 @@ class UsersPage extends App {
         const users = this.get('users');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
-        const showUpdateModal = this.get('showUpdateModal');
+        const showEditDialog = this.get('showEditDialog');
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
@@ -306,8 +306,8 @@ class UsersPage extends App {
             </div>
             
             <!-- Modals and Dialogs -->
-            <user-settings-modal ${showAddModal ? 'open' : ''}></user-settings-modal>
-            <user-update-modal ${showUpdateModal ? 'open' : ''}></user-update-modal>
+            <user-add-dialog ${showAddModal ? 'open' : ''}></user-add-dialog>
+            <user-edit-dialog ${showEditDialog ? 'open' : ''}></user-edit-dialog>
             <user-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></user-view-modal>
             <user-delete-dialog ${showDeleteDialog ? 'open' : ''}></user-delete-dialog>
         `;

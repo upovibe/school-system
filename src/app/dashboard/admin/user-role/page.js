@@ -35,15 +35,9 @@ class UserRolePage extends App {
         super.connectedCallback();
         document.title = 'User Role Settings | School System';
         this.loadData();
-        
-        // Add event listeners for table events
-        this.addEventListener('table-view', this.onView.bind(this));
-        this.addEventListener('table-edit', this.onEdit.bind(this));
-        this.addEventListener('table-delete', this.onDelete.bind(this));
-        this.addEventListener('table-add', this.onAdd.bind(this));
-        
-
-        
+        // Remove global event listeners for table actions
+        // Instead, attach them directly to the ui-table after render
+        // (see afterRender below)
         // Listen for success events to refresh data
         this.addEventListener('user-role-deleted', (event) => {
             // Remove the deleted user role from the current data
@@ -103,6 +97,19 @@ class UserRolePage extends App {
                 }
             }
         });
+    }
+
+    afterRender() {
+        // Attach table action listeners directly to the ui-table
+        setTimeout(() => {
+            const table = this.querySelector('ui-table');
+            if (table) {
+                table.addEventListener('table-view', this.onView.bind(this));
+                table.addEventListener('table-edit', this.onEdit.bind(this));
+                table.addEventListener('table-delete', this.onDelete.bind(this));
+                table.addEventListener('table-add', this.onAdd.bind(this));
+            }
+        }, 0);
     }
 
     async loadData() {
@@ -260,6 +267,8 @@ class UserRolePage extends App {
             { key: 'updated', label: 'Updated' }
         ];
         
+        // At the end of render, call afterRender
+        setTimeout(() => this.afterRender(), 0);
         return `
             <div class="bg-white rounded-lg shadow-lg p-8 m-4">
                 ${loading ? `

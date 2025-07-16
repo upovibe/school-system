@@ -103,11 +103,12 @@ class UserUpdateModal extends HTMLElement {
             const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
             const statusSelect = this.querySelector('ui-dropdown[data-field="status"]');
             
+            // Try to get values from the input elements, fallback to userData if elements not found
             const userData = {
-                name: nameInput ? nameInput.value : '',
-                email: emailInput ? emailInput.value : '',
-                role_id: roleSelect ? roleSelect.value : '',
-                status: statusSelect ? statusSelect.value : 'active'
+                name: nameInput ? nameInput.value : (this.userData?.name || ''),
+                email: emailInput ? emailInput.value : (this.userData?.email || ''),
+                role_id: roleSelect ? roleSelect.value : (this.userData?.role_id || ''),
+                status: statusSelect ? statusSelect.value : (this.userData?.status || 'active')
             };
 
             // Validate required fields
@@ -156,7 +157,7 @@ class UserUpdateModal extends HTMLElement {
             // Update user
             const response = await api.withToken(token).put(`/users/${this.userData.id}`, userData);
             
-            if (response.data.success) {
+            if (response.data.message) {
                 Toast.show({
                     title: 'Success',
                     message: 'User updated successfully',

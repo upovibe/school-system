@@ -542,9 +542,9 @@ class Input extends HTMLElement {
             }
         });
         
-        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value' and 'type'
+        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value', 'type', and 'data-field'
         attributes.forEach(attr => {
-            if (attr !== 'value' && attr !== 'type') this.removeAttribute(attr);
+            if (attr !== 'value' && attr !== 'type' && attr !== 'data-field') this.removeAttribute(attr);
         });
         
         // Setup input type-specific functionality

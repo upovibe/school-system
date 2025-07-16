@@ -281,8 +281,11 @@ class UserUpdateModal extends HTMLElement {
                                     User will continue to use their existing password
                                 </li>
                                 <li class="flex items-start">
-                                    <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
-                                    No email notification will be sent for this update
+                                    <i class="fas fa-envelope text-green-500 text-xs mt-1 mr-2"></i>Email notification will be sent to the user about any changes made
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-shield-alt text-green-500 text-xs mt-1 mr-2"></i>
+                                    User will be notified of specific changes for security awareness
                                 </li>
                             </ul>
                         </div>

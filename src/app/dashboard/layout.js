@@ -165,18 +165,7 @@ class DashboardLayout extends App {
             ]
         };
         
-        // Add profile link to all roles
-        const baseItems = (roleItems[userRole] || []).map(item => ({ ...item, active: path === item.href }));
-        
-        // Add profile link at the end for all roles
-        baseItems.push({
-            label: 'Profile',
-            icon: 'fas fa-user',
-            href: '/dashboard/profile',
-            active: path === '/dashboard/profile'
-        });
-        
-        return baseItems;
+        return (roleItems[userRole] || []).map(item => ({ ...item, active: path === item.href }));
     }
 
     getPageTitle() {
@@ -337,13 +326,8 @@ class DashboardLayout extends App {
                                         </div>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <ui-dropdown-menu-item>
-                                            <a href="/profile" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                            <a href="/dashboard/profile" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
                                                 <i class="fas fa-user w-4 h-4 mr-3"></i> Profile
-                                            </a>
-                                        </ui-dropdown-menu-item>
-                                        <ui-dropdown-menu-item>
-                                            <a href="/settings" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
-                                                <i class="fas fa-cog w-4 h-4 mr-3"></i> Settings
                                             </a>
                                         </ui-dropdown-menu-item>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>

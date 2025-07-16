@@ -144,17 +144,25 @@ class UserSettingsModal extends HTMLElement {
             // Save user
             const response = await api.withToken(token).post('/users', userData);
             
-            if (response.data.success) {
+            // Check if user was created successfully (API returns 201 status and has id)
+            if (response.status === 201 || response.data.id) {
+                // Show appropriate message based on email status
+                const message = response.data.email_sent 
+                    ? 'User created successfully. Password will be sent via email.'
+                    : 'User created successfully. Email could not be sent. Please check email configuration.';
+                
+                const toastVariant = response.data.email_sent ? 'success' : 'warning';
+                
                 Toast.show({
-                    title: 'Success',
-                    message: 'User created successfully. Password will be sent via email.',
-                    variant: 'success',
-                    duration: 3000
+                    title: response.data.email_sent ? 'Success' : 'Warning',
+                    message: message,
+                    variant: toastVariant,
+                    duration: 5000
                 });
 
                 // Construct the new user data from response
                 const newUser = {
-                    id: response.data.data?.id || response.data.id,
+                    id: response.data.id,
                     name: userData.name,
                     email: userData.email,
                     role_id: userData.role_id,

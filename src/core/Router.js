@@ -188,6 +188,8 @@ class Router {
         // Smart pattern detection - try most likely patterns first
         const pathSegments = path.split('/').filter(Boolean);
         const possiblePaths = [];
+        const attemptedPaths = [];
+        const errors = [];
         
         // If root path, try these
         if (path === '/') {
@@ -219,8 +221,9 @@ class Router {
             );
         }
         
-        // Try each pattern (now optimized for fewer failures)
+        // Try each pattern and collect detailed error information
         for (const componentPath of possiblePaths) {
+            attemptedPaths.push(componentPath);
             try {
                 const module = await import(`@/${componentPath}`);
                 
@@ -235,11 +238,18 @@ class Router {
                 
                 return module.default;
             } catch (error) {
-                // Continue to next pattern (404s are now minimized)
+                errors.push({
+                    path: componentPath,
+                    error: error.message,
+                    stack: error.stack
+                });
+                // Continue to next pattern
                 continue;
             }
         }
         
+        // If we get here, no component was found - render detailed error
+        this.renderComponentError(path, attemptedPaths, errors);
         return null;
     }
     
@@ -440,6 +450,70 @@ class Router {
             </div>
         `;
     }
+    
+    // Render a detailed error message for a failed component load
+    renderComponentError(path, attemptedPaths, errors) {
+        // Log detailed error information to console
+        console.group(`🔍 Component Load Error for: ${path}`);
+        console.log('Attempted paths:');
+        attemptedPaths.forEach((path, index) => {
+            console.log(`  ${index + 1}. ${path}`);
+        });
+        console.log('Errors:');
+        errors.forEach((error, index) => {
+            console.error(`  ${index + 1}. ${error.path}:`, error.error);
+            if (error.stack) {
+                console.log('     Stack:', error.stack);
+            }
+        });
+        console.groupEnd();
+        
+        // Show user-friendly error message
+        this.outlet.innerHTML = `
+            <div class="flex items-center justify-center min-h-screen bg-gray-50">
+                <div class="text-center max-w-2xl mx-auto px-4">
+                    <h1 class="text-6xl font-bold text-red-600 mb-4">⚠️</h1>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Component Not Found</h2>
+                    <p class="text-lg text-gray-600 mb-6">The page component for <code class="bg-gray-200 px-2 py-1 rounded">${path}</code> could not be loaded.</p>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
+                        <h3 class="font-semibold text-yellow-800 mb-2">What was tried:</h3>
+                        <ul class="text-sm text-yellow-700 space-y-1">
+                            ${attemptedPaths.map(p => `<li>• ${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-left">
+                        <h3 class="font-semibold text-red-800 mb-2">Errors encountered:</h3>
+                        <ul class="text-sm text-red-700 space-y-1">
+                            ${errors.map(err => `<li>• ${err.path}: ${err.error}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+                        <h3 class="font-semibold text-blue-800 mb-2">How to fix:</h3>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• Check if the component file exists in the correct location</li>
+                            <li>• Verify the component exports a default class</li>
+                            <li>• Ensure the file path matches the URL structure</li>
+                            <li>• Check browser console for detailed error information</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="router.navigate('/')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            Go Home
+                        </button>
+                        <button onclick="location.reload()" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+
     
     // Get current route info
     getCurrentRoute() {

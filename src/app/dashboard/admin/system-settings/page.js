@@ -7,7 +7,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/SystemSettingsModal.js';
 import '@/components/layout/adminLayout/SystemUpdateModal.js';
-// import '@/components/layout/adminLayout/SystemViewModal.js';
+import '@/components/layout/adminLayout/SystemViewModal.js';
 import '@/components/layout/adminLayout/SystemDeleteDialog.js';
 import api from '@/services/api.js';
 
@@ -124,6 +124,12 @@ class SystemSettingsPage extends App {
             this.closeAllModals();
             this.set('viewSettingData', viewSetting);
             this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('system-view-modal');
+                if (viewModal) {
+                    viewModal.setSettingData(viewSetting);
+                }
+            }, 0);
         }
     }
 
@@ -249,7 +255,7 @@ class SystemSettingsPage extends App {
             <!-- Modals and Dialogs -->
             <system-settings-modal ${showAddModal ? 'open' : ''}></system-settings-modal>
             <system-update-modal ${showUpdateModal ? 'open' : ''}></system-update-modal>
-            <!-- <system-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></system-view-modal> -->
+            <system-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></system-view-modal>
             <system-delete-dialog ${showDeleteDialog ? 'open' : ''}></system-delete-dialog>
         `;
     }

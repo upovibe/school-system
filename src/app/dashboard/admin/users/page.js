@@ -63,7 +63,6 @@ class UsersPage extends App {
         });
         
         this.addEventListener('user-saved', (event) => {
-            console.log('🎯 user-saved event received', event.detail);
             // Add the new user to the existing data
             const newUser = event.detail.user;
             if (newUser) {
@@ -72,7 +71,6 @@ class UsersPage extends App {
                 this.updateTableData();
                 // Close the add modal
                 this.set('showAddModal', false);
-                console.log('🎯 showAddModal set to false');
             } else {
                 this.loadData();
             }
@@ -196,10 +194,8 @@ class UsersPage extends App {
     }
 
     onAdd(event) {
-        console.log('🎯 onAdd called');
         this.closeAllModals();
         this.set('showAddModal', true);
-        console.log('🎯 showAddModal set to true');
     }
 
     onRefresh(event) {
@@ -232,7 +228,6 @@ class UsersPage extends App {
 
     // Close all modals and dialogs
     closeAllModals() {
-        console.log('🎯 closeAllModals called');
         this.set('showAddModal', false);
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
@@ -240,7 +235,6 @@ class UsersPage extends App {
         this.set('updateUserData', null);
         this.set('viewUserData', null);
         this.set('deleteUserData', null);
-        console.log('🎯 All modals closed');
     }
 
     render() {

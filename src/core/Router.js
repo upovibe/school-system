@@ -210,6 +210,16 @@ class Router {
                 `app/${first}/[slug]/page.js`,         // Second most common
                 `app/${first}/[${second}]/page.js`     // Generic dynamic
             );
+            
+            // Try deeper nested dynamic routes
+            if (pathSegments.length >= 4) {
+                const [first, second, third] = pathSegments;
+                possiblePaths.push(
+                    `app/${first}/${second}/${third}/[id]/page.js`,  // app/dashboard/admin/users/[id]/page.js
+                    `app/${first}/${second}/[id]/page.js`,           // app/dashboard/admin/[id]/page.js
+                    `app/${first}/[id]/page.js`                      // app/dashboard/[id]/page.js
+                );
+            }
         }
         // For single-segment paths, try static patterns first
         else {

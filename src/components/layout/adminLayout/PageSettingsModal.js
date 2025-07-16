@@ -57,12 +57,11 @@ class PageSettingsModal extends HTMLElement {
     // Save the new page
     async savePage() {
         try {
-            // Get form data using the new UI components - query by order since some components might not be fully initialized
-            const allInputs = this.querySelectorAll('ui-input');
-            const titleInput = allInputs[0]; // First input
-            const slugInput = allInputs[1]; // Second input
-            const metaKeywordsInput = allInputs[2]; // Third input
-            const sortOrderInput = allInputs[3]; // Fourth input (banner input removed)
+            // Get form data using the data-field attributes for reliable selection
+            const titleInput = this.querySelector('ui-input[data-field="title"]');
+            const slugInput = this.querySelector('ui-input[data-field="slug"]');
+            const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
+            const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
             
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
@@ -80,6 +79,8 @@ class PageSettingsModal extends HTMLElement {
                 is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 0,
                 sort_order: sortOrderInput ? parseInt(sortOrderInput.value) || 0 : 0
             };
+
+            console.log('Page data being sent:', pageData); // Debug log
 
             // Validate required fields
             if (!pageData.title || !pageData.slug) {
@@ -118,6 +119,11 @@ class PageSettingsModal extends HTMLElement {
                 formData.append('banner', file);
             }
 
+            console.log('FormData entries:'); // Debug log
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+
             // Create the page with multipart data
             const response = await api.withToken(token).post('/pages', formData);
             
@@ -154,6 +160,7 @@ class PageSettingsModal extends HTMLElement {
 
         } catch (error) {
             console.error('❌ Error saving page:', error);
+            console.error('Error response:', error.response?.data); // Debug log
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create page',

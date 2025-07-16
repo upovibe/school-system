@@ -80,7 +80,7 @@ class UserSettingsModal extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/roles');
-            this.roles = response.data;
+            this.roles = response.data.data || [];
             this.render();
         } catch (error) {
             console.error('❌ Error loading roles:', error);
@@ -95,7 +95,7 @@ class UserSettingsModal extends HTMLElement {
             const emailInput = allInputs[1]; // Second input (email)
             const passwordInput = allInputs[2]; // Third input (password)
             
-            const roleSelect = this.querySelector('ui-dropdown');
+            const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
             const statusSwitch = this.querySelector('ui-switch');
 
             const userData = {
@@ -205,11 +205,6 @@ class UserSettingsModal extends HTMLElement {
     }
 
     render() {
-        const roleOptions = this.roles.map(role => ({
-            value: role.id,
-            label: role.name
-        }));
-
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -229,10 +224,11 @@ class UserSettingsModal extends HTMLElement {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
                         <ui-dropdown 
+                            data-field="role_id"
                             placeholder="Select role"
                             class="w-full">
-                            ${roleOptions.map(option => `
-                                <ui-option value="${option.value}">${option.label}</ui-option>
+                            ${(this.roles || []).map(role => `
+                                <ui-option value="${role.id}">${role.name}</ui-option>
                             `).join('')}
                         </ui-dropdown>
                     </div>

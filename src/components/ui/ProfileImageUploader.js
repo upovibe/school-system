@@ -185,6 +185,16 @@ class ProfileImageUploader extends HTMLElement {
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 }
                 
+                /* Mobile styles for confirm button */
+                @media (max-width: 768px) {
+                    .upo-profile-image-confirm-button {
+                        bottom: -0.5rem;
+                        right: -0.5rem;
+                        width: 3rem;
+                        height: 3rem;
+                    }
+                }
+                
                 .upo-profile-image-confirm-button:hover {
                     background: #059669;
                     transform: scale(1.1);
@@ -363,7 +373,9 @@ class ProfileImageUploader extends HTMLElement {
         this.confirmButton.className = 'upo-profile-image-confirm-button';
         this.confirmButton.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         `;
         this.confirmButton.setAttribute('data-visible', 'false');
@@ -599,8 +611,10 @@ class ProfileImageUploader extends HTMLElement {
             // Reset to normal state
             this.confirmButton.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+                    <path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             `;
             this.confirmButton.disabled = false;
             this.confirmButton.classList.remove('loading');
@@ -664,7 +678,9 @@ class ProfileImageUploader extends HTMLElement {
         // Reset button to normal state
         this.confirmButton.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         `;
     }

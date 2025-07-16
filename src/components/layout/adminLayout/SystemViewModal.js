@@ -112,12 +112,12 @@ class SystemViewModal extends HTMLElement {
                                 <div class="relative">
                                     <img src="${this.getImageUrl(currentValue)}" 
                                          alt="Setting Value" 
-                                         class="w-full h-32 object-cover rounded-lg border border-gray-200"
+                                         class="w-full h-48 object-cover rounded-lg border border-gray-200"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="text-center">
-                                            <i class="fas fa-file text-gray-400 text-2xl mb-2"></i>
-                                            <p class="text-gray-500 text-sm">File failed to load</p>
+                                            <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
+                                            <p class="text-gray-500 text-sm">Image not found</p>
                                         </div>
                                     </div>
                                 </div>
@@ -127,10 +127,9 @@ class SystemViewModal extends HTMLElement {
                                     <p class="text-gray-500 text-sm">File uploaded</p>
                                 </div>
                             `}
-                            <div class="flex items-center justify-between text-xs text-gray-500">
-                                <span class="break-all">${currentValue}</span>
+                            <div class="flex justify-end">
                                 <button onclick="window.open('${this.getImageUrl(currentValue)}', '_blank')" 
-                                        class="text-blue-500 hover:text-blue-700">
+                                        class="text-blue-500 hover:text-blue-700 text-xs">
                                     <i class="fas fa-external-link-alt mr-1"></i>Open
                                 </button>
                             </div>

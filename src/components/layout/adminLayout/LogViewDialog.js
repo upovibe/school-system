@@ -1,18 +1,18 @@
-import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 
 /**
- * Log View Modal Component
+ * Log View Dialog Component
  * 
- * A modal component for viewing detailed log information
+ * A dialog component for viewing detailed log information
  * 
  * Attributes:
- * - open: boolean - controls modal visibility
+ * - open: boolean - controls dialog visibility
  * 
  * Events:
- * - modal-closed: Fired when modal is closed
+ * - dialog-closed: Fired when dialog is closed
  */
-class LogViewModal extends HTMLElement {
+class LogViewDialog extends HTMLElement {
     constructor() {
         super();
         this.logData = null;
@@ -28,8 +28,8 @@ class LogViewModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for cancel button click
-        this.addEventListener('cancel', () => {
+        // Listen for close button click
+        this.addEventListener('close', () => {
             this.close();
         });
     }
@@ -37,21 +37,34 @@ class LogViewModal extends HTMLElement {
     // Set log data for viewing
     setLogData(logData) {
         this.logData = logData;
-        // Re-render the modal with the new data
+        // Re-render the dialog with the new data
         this.render();
     }
 
     open() {
         this.setAttribute('open', '');
+        
+        // Call the underlying dialog's open method
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.open();
+        }
     }
 
     close() {
         this.removeAttribute('open');
+        
+        // Call the underlying dialog's close method
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.close();
+        }
     }
 
     render() {
         if (!this.logData) {
-            return '';
+            this.innerHTML = '';
+            return;
         }
 
         const formatDate = (dateString) => {
@@ -77,14 +90,12 @@ class LogViewModal extends HTMLElement {
 
         const additionalData = formatMetadata(this.logData.metadata || this.logData.additional_data);
 
-        return `
-            <ui-modal 
+        const dialogHTML = `
+            <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="center" 
-                close-button="true"
-                size="lg">
-                <div slot="title">Log Details</div>
-                <div class="space-y-6">
+                size="lg"
+                title="Log Details">
+                <div slot="content" class="space-y-6">
                     <!-- Basic Information -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -158,10 +169,12 @@ class LogViewModal extends HTMLElement {
                         </div>
                     ` : ''}
                 </div>
-            </ui-modal>
+            </ui-dialog>
         `;
+        
+        this.innerHTML = dialogHTML;
     }
 }
 
-customElements.define('log-view-modal', LogViewModal);
-export default LogViewModal; 
+customElements.define('log-view-dialog', LogViewDialog);
+export default LogViewDialog; 

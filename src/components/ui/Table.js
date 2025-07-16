@@ -1395,10 +1395,19 @@ class Table extends HTMLElement {
      * @param {Event} event - The click event
      */
     handleRowClick(event) {
+        console.log('🔍 Table handleRowClick called');
+        console.log('🔍 Clickable attribute:', this.clickable);
+        console.log('🔍 Event target:', event.target);
+        
         const tr = event.target.closest('tr');
-        if (!tr) return;
+        if (!tr) {
+            console.log('🔍 No tr element found');
+            return;
+        }
 
         const rowIndex = parseInt(tr.dataset.rowIndex);
+        console.log('🔍 Row index:', rowIndex);
+        
         if (!isNaN(rowIndex)) {
             // Handle selection if selectable
             if (this.selectable) {
@@ -1407,13 +1416,17 @@ class Table extends HTMLElement {
             
             // Handle row click if clickable
             if (this.clickable) {
+                console.log('🔍 Clickable is true, dispatching event');
                 const row = this.getVisibleData()[rowIndex];
                 if (row) {
+                    console.log('🔍 Row data:', row);
                     this.dispatchEvent(new CustomEvent('table-row-click', {
                         detail: { row, rowIndex, event },
                         bubbles: true
                     }));
                 }
+            } else {
+                console.log('🔍 Clickable is false');
             }
         }
     }

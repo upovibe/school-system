@@ -5,7 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
-import '@/components/layout/adminLayout/LogViewModal.js';
+import '@/components/layout/adminLayout/LogViewDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -18,7 +18,7 @@ class SystemReportPage extends App {
         super();
         this.logs = null;
         this.loading = false;
-        this.showViewModal = false;
+        this.showViewDialog = false;
         this.viewLogData = null;
     }
 
@@ -28,16 +28,16 @@ class SystemReportPage extends App {
         this.loadData();
         
         // Add event listeners for table events
-        this.addEventListener('table-view', this.onView.bind(this));
+        this.addEventListener('table-row-click', this.onRowClick.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
         
-        // Listen for modal opened event to pass data
-        this.addEventListener('modal-opened', (event) => {
-            const modal = event.target;
-            if (modal.tagName === 'LOG-VIEW-MODAL') {
+        // Listen for dialog opened event to pass data
+        this.addEventListener('dialog-opened', (event) => {
+            const dialog = event.target;
+            if (dialog.tagName === 'LOG-VIEW-DIALOG') {
                 const viewLogData = this.get('viewLogData');
                 if (viewLogData) {
-                    modal.setLogData(viewLogData);
+                    dialog.setLogData(viewLogData);
                 }
             }
         });
@@ -79,19 +79,44 @@ class SystemReportPage extends App {
     }
 
     // Action handlers
-    onView(event) {
+    onRowClick(event) {
+        console.log('🔍 Row click event received:', event);
+        console.log('🔍 Event detail:', event.detail);
+        
         const { detail } = event;
         const viewLog = this.get('logs').find(log => log.id === detail.row.id);
+        
+        console.log('🔍 Found log:', viewLog);
+        
         if (viewLog) {
-            this.closeAllModals();
+            console.log('🔍 Closing all dialogs...');
+            this.closeAllDialogs();
+            
+            console.log('🔍 Setting view log data...');
             this.set('viewLogData', viewLog);
-            this.set('showViewModal', true);
+            
+            console.log('🔍 Setting show view dialog to true...');
+            this.set('showViewDialog', true);
+            
+            console.log('🔍 Current showViewDialog state:', this.get('showViewDialog'));
+            
             setTimeout(() => {
-                const viewModal = this.querySelector('log-view-modal');
-                if (viewModal) {
-                    viewModal.setLogData(viewLog);
+                console.log('🔍 Looking for log-view-dialog element...');
+                const viewDialog = this.querySelector('log-view-dialog');
+                console.log('🔍 Found dialog element:', viewDialog);
+                
+                if (viewDialog) {
+                    console.log('🔍 Setting log data to dialog...');
+                    viewDialog.setLogData(viewLog);
+                    console.log('🔍 Opening dialog...');
+                    viewDialog.open();
+                    console.log('🔍 Dialog should now be open');
+                } else {
+                    console.log('❌ Dialog element not found!');
                 }
             }, 0);
+        } else {
+            console.log('❌ Log not found for ID:', detail.row.id);
         }
     }
 
@@ -111,13 +136,13 @@ class SystemReportPage extends App {
             const response = await api.withToken(token).get(`/logs/${logId}`);
             const logData = response.data.data;
             
-            this.closeAllModals();
+            this.closeAllDialogs();
             this.set('viewLogData', logData);
-            this.set('showViewModal', true);
+            this.set('showViewDialog', true);
             setTimeout(() => {
-                const viewModal = this.querySelector('log-view-modal');
-                if (viewModal) {
-                    viewModal.setLogData(logData);
+                const viewDialog = this.querySelector('log-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setLogData(logData);
                 }
             }, 0);
             
@@ -160,16 +185,16 @@ class SystemReportPage extends App {
         }
     }
 
-    // Close all modals and dialogs
-    closeAllModals() {
-        this.set('showViewModal', false);
+    // Close all dialogs
+    closeAllDialogs() {
+        this.set('showViewDialog', false);
         this.set('viewLogData', null);
     }
 
     render() {
         const logs = this.get('logs');
         const loading = this.get('loading');
-        const showViewModal = this.get('showViewModal');
+        const showViewDialog = this.get('showViewDialog');
         
         // Prepare table data and columns for logs
         const tableData = logs ? logs.map((log, index) => ({
@@ -214,12 +239,12 @@ class SystemReportPage extends App {
                                 search-placeholder="Search logs..."
                                 pagination
                                 page-size="15"
-                                action
                                 refresh
                                 print
                                 export
                                 bordered
                                 striped
+                                clickable
                                 class="w-full">
                             </ui-table>
                         ` : `
@@ -231,8 +256,8 @@ class SystemReportPage extends App {
                 `}
             </div>
             
-            <!-- View Log Modal -->
-            <log-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></log-view-modal>
+            <!-- View Log Dialog -->
+            <log-view-dialog id="view-dialog" ${showViewDialog ? 'open' : ''}></log-view-dialog>
         `;
     }
 }

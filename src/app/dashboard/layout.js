@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Dialog.js';
+import '@/components/layout/authLayout/PasswordChangeDialog.js';
 
 /**
  * Dashboard Layout Component
@@ -347,19 +348,12 @@ class DashboardLayout extends App {
 
                     <!-- Page Content -->
                     <main class="flex-1 p-6 bg-transparent container mx-auto">
-                        ${this.get('requiresPasswordChange') ? 
-                            `<ui-dialog open title="Password Change Required">
-                                <div slot="content">
-                                    <div class="text-center">
-                                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
-                                            <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
-                                        </div>
-                                        <p class="text-sm text-gray-500">You haven't changed password</p>
-                                    </div>
-                                </div>
-                            </ui-dialog>` : 
-                            this.pageContent
-                        }
+                        ${(() => {
+                            const requiresPasswordChange = this.get('requiresPasswordChange');
+                            return requiresPasswordChange ? 
+                                `<auth-password-change-dialog></auth-password-change-dialog>` : 
+                                this.pageContent;
+                        })()}
                     </main>
                 </div>
             </div>

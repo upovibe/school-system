@@ -80,10 +80,8 @@ class UserSettingsModal extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/roles');
-            if (response.data.success) {
-                this.roles = response.data.data;
-                this.render();
-            }
+            this.roles = response.data;
+            this.render();
         } catch (error) {
             console.error('❌ Error loading roles:', error);
         }
@@ -91,12 +89,14 @@ class UserSettingsModal extends HTMLElement {
 
     async saveUser() {
         try {
-            // Get form data using the UI components
-            const nameInput = this.querySelector('ui-input[data-field="name"]');
-            const emailInput = this.querySelector('ui-input[data-field="email"]');
-            const passwordInput = this.querySelector('ui-input[data-field="password"]');
-            const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
-            const statusSwitch = this.querySelector('ui-switch[data-field="status"]');
+            // Get form data using the UI components - query by order since some components might not be fully initialized
+            const allInputs = this.querySelectorAll('ui-input');
+            const nameInput = allInputs[0]; // First input (name)
+            const emailInput = allInputs[1]; // Second input (email)
+            const passwordInput = allInputs[2]; // Third input (password)
+            
+            const roleSelect = this.querySelector('ui-dropdown');
+            const statusSwitch = this.querySelector('ui-switch');
 
             const userData = {
                 name: nameInput ? nameInput.value : '',
@@ -220,7 +220,6 @@ class UserSettingsModal extends HTMLElement {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                         <ui-input 
-                            data-field="name"
                             type="text" 
                             placeholder="Enter user name"
                             class="w-full">
@@ -228,29 +227,8 @@ class UserSettingsModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <ui-input 
-                            data-field="email"
-                            type="email" 
-                            placeholder="Enter user email"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                        <ui-input 
-                            data-field="password"
-                            type="password" 
-                            placeholder="Enter password"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
                         <ui-dropdown 
-                            data-field="role_id"
                             placeholder="Select role"
                             class="w-full">
                             ${roleOptions.map(option => `
@@ -260,9 +238,26 @@ class UserSettingsModal extends HTMLElement {
                     </div>
                     
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <ui-input 
+                            type="email" 
+                            placeholder="Enter user email"
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                        <ui-input 
+                            type="password" 
+                            placeholder="Enter password"
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <ui-switch 
-                            data-field="status"
                             checked="true"
                             class="w-full">
                         </ui-switch>

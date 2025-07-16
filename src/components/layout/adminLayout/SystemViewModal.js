@@ -114,7 +114,7 @@ class SystemViewModal extends HTMLElement {
                                          alt="Setting Value" 
                                          class="w-full h-48 object-cover rounded-lg border border-gray-200"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <div class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="text-center">
                                             <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
                                             <p class="text-gray-500 text-sm">Image not found</p>

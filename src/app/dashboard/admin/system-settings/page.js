@@ -202,8 +202,9 @@ class SystemSettingsPage extends App {
         if (!settings) return;
 
         // Prepare table data
-        const tableData = settings.map(setting => ({
-            id: setting.id,
+        const tableData = settings.map((setting, index) => ({
+            id: setting.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
             setting_key: setting.setting_key,
             setting_value: setting.setting_value.length > 50 ? setting.setting_value.substring(0, 50) + '...' : setting.setting_value,
             setting_type: setting.setting_type,
@@ -238,8 +239,9 @@ class SystemSettingsPage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
-        const tableData = settings ? settings.map(setting => ({
-            id: setting.id,
+        const tableData = settings ? settings.map((setting, index) => ({
+            id: setting.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
             setting_key: setting.setting_key,
             setting_value: setting.setting_value.length > 50 ? setting.setting_value.substring(0, 50) + '...' : setting.setting_value,
             setting_type: setting.setting_type,
@@ -249,7 +251,8 @@ class SystemSettingsPage extends App {
         })) : [];
 
         const tableColumns = [
-            { key: 'id', label: 'ID' },
+            // { key: 'id', label: 'ID' }, // Hidden but kept for reference
+            { key: 'index', label: 'No.' },
             { key: 'setting_key', label: 'Key' },
             { key: 'setting_value', label: 'Value' },
             { key: 'setting_type', label: 'Type' },

@@ -205,8 +205,9 @@ class PageSettingsPage extends App {
         if (!pages) return;
 
         // Prepare table data
-        const tableData = pages.map(page => ({
-            id: page.id,
+        const tableData = pages.map((page, index) => ({
+            id: page.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
             title: page.title,
             slug: page.slug,
             category: page.category,
@@ -244,8 +245,9 @@ class PageSettingsPage extends App {
         const showDeleteDialog = this.get('showDeleteDialog');
         
         // Prepare table data and columns for pages
-        const tableData = pages ? pages.map(page => ({
-            id: page.id,
+        const tableData = pages ? pages.map((page, index) => ({
+            id: page.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
             title: page.title,
             slug: page.slug,
             category: page.category,
@@ -257,7 +259,8 @@ class PageSettingsPage extends App {
         })) : [];
 
         const tableColumns = [
-            { key: 'id', label: 'ID', html: false },
+            // { key: 'id', label: 'ID', html: false }, // Hidden but kept for reference
+            { key: 'index', label: 'No.', html: false },
             { key: 'title', label: 'Title' },
             { key: 'slug', label: 'Slug', html: false },
             { key: 'category', label: 'Category' },

@@ -1,9 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Textarea.js';
-
-import '@/components/ui/Switch.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -73,9 +71,7 @@ class UserUpdateModal extends HTMLElement {
             id: userData.id,
             name: userData.name || '',
             email: userData.email || '',
-            password: '', // Don't pre-fill password
-            role_id: userData.role_id || '',
-            status: userData.status || 'active'
+            role_id: userData.role_id || ''
         };
         this.render();
     }
@@ -103,21 +99,13 @@ class UserUpdateModal extends HTMLElement {
             // Get values from custom UI components directly
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const emailInput = this.querySelector('ui-input[data-field="email"]');
-            const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
-            const statusSwitch = this.querySelector('ui-switch[data-field="status"]');
             
             const userData = {
                 name: nameInput ? nameInput.value : '',
                 email: emailInput ? emailInput.value : '',
-                role_id: roleSelect ? roleSelect.value : '',
-                status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
+                role_id: roleSelect ? roleSelect.value : ''
             };
-
-            // Only include password if it's provided
-            if (passwordInput && passwordInput.value.trim()) {
-                userData.password = passwordInput.value;
-            }
 
             // Validate required fields
             if (!userData.name.trim()) {
@@ -224,21 +212,6 @@ class UserUpdateModal extends HTMLElement {
                 ${this.hasAttribute('open') ? 'open' : ''}>
                 
                 <form class="space-y-6">
-                    <!-- Name -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Name *
-                        </label>
-                        <ui-input 
-                            data-field="name"
-                            type="text" 
-                            placeholder="Enter user name"
-                            value="${this.userData.name}"
-                            required
-                            class="w-full">
-                        </ui-input>
-                    </div>
-
                     <!-- Role -->
                     <div>
                         <label for="role_id" class="block text-sm font-medium text-gray-700 mb-2">
@@ -255,6 +228,21 @@ class UserUpdateModal extends HTMLElement {
                         </ui-dropdown>
                     </div>
 
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Name *
+                        </label>
+                        <ui-input 
+                            data-field="name"
+                            type="text" 
+                            placeholder="Enter user name"
+                            value="${this.userData.name}"
+                            required
+                            class="w-full">
+                        </ui-input>
+                    </div>
+
                     <!-- Email -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -269,32 +257,37 @@ class UserUpdateModal extends HTMLElement {
                             class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Password (Optional) -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                            Password (Leave blank to keep current)
-                        </label>
-                        <ui-input 
-                            data-field="password"
-                            type="password" 
-                            placeholder="Enter new password"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-
-                    <!-- Status -->
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                            Status
-                        </label>
-                        <ui-switch 
-                            data-field="status"
-                            checked="${this.userData.status === 'active'}"
-                            class="w-full">
-                        </ui-switch>
-                    </div>
                 </form>
+                
+                <!-- Information Notice -->
+                <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-green-400 text-lg"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="text-sm font-medium text-green-800 mb-2">Update Information</h4>
+                            <ul class="text-sm text-green-700 space-y-1">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
+                                    User's login credentials will remain unchanged
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
+                                    Only name, email, and role will be updated
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
+                                    User will continue to use their existing password
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
+                                    No email notification will be sent for this update
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

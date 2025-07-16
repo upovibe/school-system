@@ -199,9 +199,31 @@ class UserController {
                 }
             }
             
+            // Track what changes were made
+            $changes = [];
+            $oldEmail = $existingUser['email'];
+            
+            if (isset($data['name']) && $data['name'] !== $existingUser['name']) {
+                $changes[] = 'Name changed from "' . $existingUser['name'] . '" to "' . $data['name'] . '"';
+            }
+            
+            if (isset($data['email']) && $data['email'] !== $existingUser['email']) {
+                $changes[] = 'Email address changed from "' . $existingUser['email'] . '" to "' . $data['email'] . '"';
+            }
+            
+            if (isset($data['role_id']) && $data['role_id'] != $existingUser['role_id']) {
+                // Get role names for comparison
+                $oldRole = $this->roleModel->findById($existingUser['role_id']);
+                $newRole = $this->roleModel->findById($data['role_id']);
+                $oldRoleName = $oldRole ? $oldRole['name'] : 'Unknown';
+                $newRoleName = $newRole ? $newRole['name'] : 'Unknown';
+                $changes[] = 'Role changed from "' . $oldRoleName . '" to "' . $newRoleName . '"';
+            }
+            
             // Hash password if provided
             if (isset($data['password'])) {
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+                $changes[] = 'Password was updated';
             }
             
             $result = $this->userModel->update($id, $data);
@@ -210,7 +232,39 @@ class UserController {
                 // Log user update
                 $this->logModel->logAction($id, 'user_updated', 'User updated', $data);
                 
-                echo json_encode(['message' => 'User updated successfully'], JSON_PRETTY_PRINT);
+                // Send email notification if there were changes
+                if (!empty($changes)) {
+                    try {
+                        require_once __DIR__ . '/../core/EmailService.php';
+                        $emailService = new EmailService();
+                        
+                        // Determine which email to send to (old or new)
+                        $notificationEmail = isset($data['email']) ? $data['email'] : $existingUser['email'];
+                        
+                        // Send account update notification
+                        $emailSent = $emailService->sendAccountUpdateEmail(
+                            $notificationEmail,
+                            $data['name'] ?? $existingUser['name'],
+                            $changes,
+                            $existingUser['email'] // Include old email for reference
+                        );
+                        
+                        if ($emailSent) {
+                            error_log("Account update notification sent successfully to: " . $notificationEmail);
+                        } else {
+                            error_log("Failed to send account update notification to: " . $notificationEmail);
+                        }
+                    } catch (Exception $emailError) {
+                        error_log("Email error: " . $emailError->getMessage());
+                        // Don't fail the update if email fails
+                    }
+                }
+                
+                echo json_encode([
+                    'message' => 'User updated successfully',
+                    'changes_made' => $changes,
+                    'notification_sent' => !empty($changes)
+                ], JSON_PRETTY_PRINT);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to update user'], JSON_PRETTY_PRINT);

@@ -1,9 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Textarea.js';
-
-import '@/components/ui/Switch.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -24,9 +22,7 @@ class UserSettingsModal extends HTMLElement {
         this.userData = {
             name: '',
             email: '',
-            password: '',
-            role_id: '',
-            status: 'active'
+            role_id: ''
         };
         this.roles = [];
     }
@@ -69,9 +65,7 @@ class UserSettingsModal extends HTMLElement {
         this.userData = {
             name: '',
             email: '',
-            password: '',
-            role_id: '',
-            status: 'active'
+            role_id: ''
         };
         this.render();
     }
@@ -91,21 +85,17 @@ class UserSettingsModal extends HTMLElement {
 
     async saveUser() {
         try {
-            // Get form data using the UI components - query by order since some components might not be fully initialized
+            // Get form data using the UI components
             const allInputs = this.querySelectorAll('ui-input');
             const nameInput = allInputs[0]; // First input (name)
             const emailInput = allInputs[1]; // Second input (email)
-            const passwordInput = allInputs[2]; // Third input (password)
             
             const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
-            const statusSwitch = this.querySelector('ui-switch');
 
             const userData = {
                 name: nameInput ? nameInput.value : '',
                 email: emailInput ? emailInput.value : '',
-                password: passwordInput ? passwordInput.value : '',
-                role_id: roleSelect ? roleSelect.value : '',
-                status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
+                role_id: roleSelect ? roleSelect.value : ''
             };
 
             // Validate required fields
@@ -123,16 +113,6 @@ class UserSettingsModal extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Email is required',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!userData.password.trim()) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Password is required',
                     variant: 'error',
                     duration: 3000
                 });
@@ -167,7 +147,7 @@ class UserSettingsModal extends HTMLElement {
             if (response.data.success) {
                 Toast.show({
                     title: 'Success',
-                    message: 'User created successfully',
+                    message: 'User created successfully. Password will be sent via email.',
                     variant: 'success',
                     duration: 3000
                 });
@@ -179,7 +159,7 @@ class UserSettingsModal extends HTMLElement {
                     email: userData.email,
                     role_id: userData.role_id,
                     role_name: this.roles.find(r => r.id == userData.role_id)?.name || 'N/A',
-                    status: userData.status,
+                    status: 'active',
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 };
@@ -214,14 +194,6 @@ class UserSettingsModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Add New User</div>
                 <form id="user-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                        <ui-input 
-                            type="text" 
-                            placeholder="Enter user name"
-                            class="w-full">
-                        </ui-input>
-                    </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
@@ -236,6 +208,15 @@ class UserSettingsModal extends HTMLElement {
                     </div>
                     
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <ui-input 
+                            type="text" 
+                            placeholder="Enter user name"
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                         <ui-input 
                             type="email" 
@@ -243,24 +224,37 @@ class UserSettingsModal extends HTMLElement {
                             class="w-full">
                         </ui-input>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                        <ui-input 
-                            type="password" 
-                            placeholder="Enter password"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <ui-switch 
-                            checked="true"
-                            class="w-full">
-                        </ui-switch>
-                    </div>
                 </form>
+                
+                <!-- Information Notice -->
+                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400 text-lg"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="text-sm font-medium text-blue-800 mb-2">What happens next?</h4>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
+                                    A secure password will be auto-generated and sent to the user's email
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
+                                    The user will receive a welcome email with login credentials
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
+                                    User must change their password on first login within 24 hours
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
+                                    Account will be active immediately after creation
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

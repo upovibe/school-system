@@ -43,6 +43,12 @@ return [
         'subject' => 'Welcome to School System - Your Account Details',
         'template' => 'user-created',
         'variables' => ['userName', 'userEmail', 'initialPassword', 'loginUrl']
+    ],
+    
+    'account-update' => [
+        'subject' => 'Your Account Has Been Updated - School System',
+        'template' => 'account-update',
+        'variables' => ['userName', 'changes', 'oldEmail']
     ]
 ];
 ?> 

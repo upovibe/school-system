@@ -37,6 +37,12 @@ return [
         'subject' => 'Account Locked - School System',
         'template' => 'account-locked',
         'variables' => ['userName', 'unlockUrl']
+    ],
+    
+    'user-created' => [
+        'subject' => 'Welcome to School System - Your Account Details',
+        'template' => 'user-created',
+        'variables' => ['userName', 'userEmail', 'initialPassword', 'loginUrl']
     ]
 ];
 ?> 

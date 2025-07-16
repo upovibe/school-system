@@ -64,7 +64,7 @@ class LoginPage extends App {
                 password: password
             });
 
-            const { user } = response.data;
+            const { user, requires_password_change } = response.data;
             
             // Map role_id to role name (temporary solution)
             const roleMap = {
@@ -85,6 +85,22 @@ class LoginPage extends App {
                 role: roleName
             }));
             localStorage.setItem('token', user.token);
+
+            // Check if user needs to change password
+            if (requires_password_change) {
+                Toast.show({
+                    title: 'Password Change Required',
+                    message: 'You must change your password on first login',
+                    variant: 'warning',
+                    duration: 5000
+                });
+                
+                // Redirect to password change page
+                setTimeout(() => {
+                    window.location.href = '/auth/change-password';
+                }, 2000);
+                return;
+            }
 
             Toast.show({
                 title: 'Login Successful',

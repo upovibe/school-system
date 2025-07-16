@@ -21,6 +21,7 @@ Router::put('/users/{id}', 'UserController@update');
 Router::delete('/users/{id}', 'UserController@destroy');
 Router::get('/users/{id}/profile', 'UserController@profile');
 Router::put('/users/{id}/profile', 'UserController@updateProfile');
+Router::post('/users/{id}/change-password', 'UserController@changePassword');
 
 // Role management routes (admin only)
 // Note: Controllers will use RoleMiddleware::requireAdmin($pdo);

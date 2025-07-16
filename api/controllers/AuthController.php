@@ -80,13 +80,18 @@ class AuthController {
             // Log login action
             $this->logModel->logAction($user['id'], 'login', 'User logged in successfully');
             
+            // Check if user needs to change password
+            $requiresPasswordChange = !$user['password_changed'];
+            
             // Return user data with token
             unset($user['password']);
             $user['token'] = $token;
+            $user['requires_password_change'] = $requiresPasswordChange;
             
             echo json_encode([
                 'message' => 'Login successful',
-                'user' => $user
+                'user' => $user,
+                'requires_password_change' => $requiresPasswordChange
             ], JSON_PRETTY_PRINT);
             
         } catch (Exception $e) {

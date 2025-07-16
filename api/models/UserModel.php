@@ -12,6 +12,7 @@ class UserModel extends BaseModel {
         'name',
         'email', 
         'password',
+        'password_changed',
         'phone',
         'role_id',
         'gender',

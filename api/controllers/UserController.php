@@ -64,6 +64,9 @@ class UserController {
                 return;
             }
             
+            // Store the original password for email
+            $originalPassword = $data['password'];
+            
             // Hash password
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
             
@@ -82,10 +85,38 @@ class UserController {
             // Log user creation
             $this->logModel->logAction($id, 'user_created', 'New user created', $data);
             
+            // Send welcome email with credentials
+            try {
+                require_once __DIR__ . '/../core/EmailService.php';
+                $emailService = new EmailService();
+                
+                // Get login URL from environment or use default
+                $loginUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:8000/auth/login';
+                
+                // Send the welcome email
+                $emailSent = $emailService->sendUserCreatedEmail(
+                    $data['email'],
+                    $data['name'],
+                    $data['email'],
+                    $originalPassword,
+                    $loginUrl
+                );
+                
+                if ($emailSent) {
+                    error_log("Welcome email sent successfully to: " . $data['email']);
+                } else {
+                    error_log("Failed to send welcome email to: " . $data['email']);
+                }
+            } catch (Exception $emailError) {
+                error_log("Email error: " . $emailError->getMessage());
+                // Don't fail the user creation if email fails
+            }
+            
             http_response_code(201);
             echo json_encode([
                 'id' => $id, 
-                'message' => 'User created successfully'
+                'message' => 'User created successfully. Welcome email sent.',
+                'email_sent' => true
             ], JSON_PRETTY_PRINT);
         } catch (Exception $e) {
             http_response_code(500);
@@ -263,6 +294,63 @@ class UserController {
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to update profile'], JSON_PRETTY_PRINT);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
+        }
+    }
+
+    public function changePassword($id) {
+        try {
+            ob_clean();
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (!isset($data['current_password']) || !isset($data['new_password'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Current password and new password are required'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Check if user exists
+            $user = $this->userModel->findById($id);
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['error' => 'User not found'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Verify current password
+            if (!password_verify($data['current_password'], $user['password'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Current password is incorrect'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Hash new password
+            $newPasswordHash = password_hash($data['new_password'], PASSWORD_DEFAULT);
+            
+            // Update password and mark as changed
+            $updateData = [
+                'password' => $newPasswordHash,
+                'password_changed' => true
+            ];
+            
+            $result = $this->userModel->update($id, $updateData);
+            
+            if ($result) {
+                // Log password change
+                $this->logModel->logAction($id, 'password_changed', 'Password changed by user', ['user_id' => $id]);
+                
+                echo json_encode([
+                    'message' => 'Password changed successfully',
+                    'password_changed' => true
+                ], JSON_PRETTY_PRINT);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to change password'], JSON_PRETTY_PRINT);
             }
         } catch (Exception $e) {
             http_response_code(500);

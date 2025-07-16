@@ -291,7 +291,7 @@ class PageSettingsPage extends App {
                                 searchable
                                 search-placeholder="Search pages..."
                                 pagination
-                                page-size="5"
+                                page-size="10"
                                 action
                                 addable
                                 refresh

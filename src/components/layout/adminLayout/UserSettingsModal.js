@@ -56,11 +56,6 @@ class UserSettingsModal extends HTMLElement {
     }
 
     close() {
-        // Close the inner ui-modal element
-        const modal = this.querySelector('ui-modal');
-        if (modal) {
-            modal.removeAttribute('open');
-        }
         this.removeAttribute('open');
         this.resetForm();
     }

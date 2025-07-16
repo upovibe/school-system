@@ -322,6 +322,37 @@ class Table extends HTMLElement {
                     overflow-x: auto;
                     max-height: 400px;
                     overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .upo-table-scroll-container::-webkit-scrollbar {
+                    width: 8px;
+                    height: 8px;
+                }
+
+                .upo-table-scroll-container::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                .upo-table-scroll-container::-webkit-scrollbar-thumb {
+                    background: linear-gradient(45deg, #00c6ff, #0072ff);
+                    border-radius: 10px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 0 10px rgba(0, 198, 255, 0.7);
+                }
+
+                .upo-table-scroll-container::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(45deg, #00eaff, #008cff);
+                    box-shadow: 0 0 15px rgba(0, 234, 255, 1);
+                }
+
+                .upo-table-scroll-container::-webkit-scrollbar-button {
+                    display: none;
+                }
+
+                .upo-table-scroll-container {
+                    scrollbar-width: thin;
+                    scrollbar-color: #00c6ff transparent;
                 }
                 
                 .upo-table-header {

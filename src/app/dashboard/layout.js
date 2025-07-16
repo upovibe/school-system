@@ -252,8 +252,7 @@ class DashboardLayout extends App {
                     flex-grow: 1;
                     display: flex;
                     flex-direction: column;
-                    overflow-y: auto;
-                    height: 100vh;
+                    min-height: 0;
                 }
             </style>
 
@@ -294,9 +293,9 @@ class DashboardLayout extends App {
                 </aside>
 
                 <!-- Main Content -->
-                <div class="flex-1 flex flex-col xl:ml-64">
+                <div class="flex-1 flex flex-col xl:ml-64 overflow-hidden">
                     <!-- Header -->
-                    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50">
+                    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 flex-shrink-0">
                         <div class="flex items-center justify-between p-4">
                             <div class="flex items-center gap-4">
                                 <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
@@ -343,7 +342,7 @@ class DashboardLayout extends App {
                     </header>
 
                     <!-- Page Content -->
-                    <main class="flex-1 p-6 bg-transparent container mx-auto">
+                    <main class="flex-1 p-6 bg-transparent container mx-auto overflow-y-auto">
                         ${(() => {
                             const requiresPasswordChange = this.get('requiresPasswordChange');
                             return requiresPasswordChange ? 

@@ -1,9 +1,10 @@
 import App from '@/core/App.js';
-import '@/components/ui/Table.js';
+import '@/components/ui/Card.js';
 import '@/components/ui/Button.js';
-import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/UserSettingsModal.js';
 import '@/components/layout/adminLayout/UserUpdateModal.js';
 import '@/components/layout/adminLayout/UserViewModal.js';
@@ -26,7 +27,7 @@ import api from '@/services/api.js';
 class UsersPage extends App {
     constructor() {
         super();
-        this.users = [];
+        this.users = null;
         this.loading = false;
         this.showAddModal = false;
         this.showUpdateModal = false;
@@ -62,6 +63,7 @@ class UsersPage extends App {
         });
         
         this.addEventListener('user-saved', (event) => {
+            console.log('🎯 user-saved event received', event.detail);
             // Add the new user to the existing data
             const newUser = event.detail.user;
             if (newUser) {
@@ -70,6 +72,7 @@ class UsersPage extends App {
                 this.updateTableData();
                 // Close the add modal
                 this.set('showAddModal', false);
+                console.log('🎯 showAddModal set to false');
             } else {
                 this.loadData();
             }
@@ -91,8 +94,6 @@ class UsersPage extends App {
                 this.loadData();
             }
         });
-        
-
         
         // Listen for modal opened event to pass data
         this.addEventListener('modal-opened', (event) => {
@@ -195,13 +196,10 @@ class UsersPage extends App {
     }
 
     onAdd(event) {
-        // Prevent opening if modal is already open
-        if (this.get('showAddModal')) {
-            return;
-        }
-        
+        console.log('🎯 onAdd called');
         this.closeAllModals();
         this.set('showAddModal', true);
+        console.log('🎯 showAddModal set to true');
     }
 
     onRefresh(event) {
@@ -234,6 +232,7 @@ class UsersPage extends App {
 
     // Close all modals and dialogs
     closeAllModals() {
+        console.log('🎯 closeAllModals called');
         this.set('showAddModal', false);
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
@@ -241,6 +240,7 @@ class UsersPage extends App {
         this.set('updateUserData', null);
         this.set('viewUserData', null);
         this.set('deleteUserData', null);
+        console.log('🎯 All modals closed');
     }
 
     render() {
@@ -309,7 +309,6 @@ class UsersPage extends App {
                         `}
                     </div>
                 `}
-
             </div>
             
             <!-- Modals and Dialogs -->
@@ -317,7 +316,6 @@ class UsersPage extends App {
             <user-update-modal ${showUpdateModal ? 'open' : ''}></user-update-modal>
             <user-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></user-view-modal>
             <user-delete-dialog ${showDeleteDialog ? 'open' : ''}></user-delete-dialog>
-            </div>
         `;
     }
 }

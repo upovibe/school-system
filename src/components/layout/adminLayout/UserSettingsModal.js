@@ -76,10 +76,17 @@ class UserSettingsModal extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/roles');
-            this.roles = response.data.data || [];
+            // Handle both response formats (direct array or wrapped in data)
+            this.roles = response.data.data || response.data || [];
             this.render();
         } catch (error) {
             console.error('❌ Error loading roles:', error);
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to load roles',
+                variant: 'error',
+                duration: 3000
+            });
         }
     }
 
@@ -159,31 +166,27 @@ class UserSettingsModal extends HTMLElement {
                     name: userData.name,
                     email: userData.email,
                     role_id: userData.role_id,
-                    role_name: this.roles.find(r => r.id == userData.role_id)?.name || 'N/A',
+                    role: this.roles.find(r => r.id == userData.role_id)?.name || 'N/A',
                     status: 'active',
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 };
 
-                // Dispatch event with the new user data BEFORE closing modal
+                // Close modal and dispatch event
+                this.close();
                 this.dispatchEvent(new CustomEvent('user-saved', {
                     detail: { user: newUser },
                     bubbles: true,
                     composed: true
                 }));
 
-                // Close modal after dispatching event
-                this.close();
-                
-                // Show toast with a small delay to ensure modal is closed
-                setTimeout(() => {
-                    Toast.show({
-                        title: response.data.email_sent ? 'Success' : 'Warning',
-                        message: message,
-                        variant: toastVariant,
-                        duration: 5000
-                    });
-                }, 100);
+                // Show toast
+                Toast.show({
+                    title: response.data.email_sent ? 'Success' : 'Warning',
+                    message: message,
+                    variant: toastVariant,
+                    duration: 5000
+                });
             } else {
                 throw new Error(response.data.message || 'Failed to create user');
             }

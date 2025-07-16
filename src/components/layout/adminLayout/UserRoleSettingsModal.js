@@ -67,16 +67,15 @@ class UserRoleSettingsModal extends HTMLElement {
 
     async saveRole() {
         try {
-            // Get form data
-            const form = this.querySelector('form');
-            if (!form) {
-                throw new Error('Form not found');
-            }
+            // Get form data using the UI components - query by order since some components might not be fully initialized
+            const allInputs = this.querySelectorAll('ui-input');
+            const nameInput = allInputs[0]; // First input
+            
+            const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
 
-            const formData = new FormData(form);
             const roleData = {
-                name: formData.get('name') || '',
-                description: formData.get('description') || ''
+                name: nameInput ? nameInput.value : '',
+                description: descriptionTextarea ? descriptionTextarea.value : ''
             };
 
             // Validate required fields
@@ -113,12 +112,22 @@ class UserRoleSettingsModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Dispatch event with the new role data
-                this.dispatchEvent(new CustomEvent('user-role-saved', {
-                    detail: { userRole: response.data.data }
-                }));
+                // Construct the new role data from response
+                const newRole = {
+                    id: response.data.data?.id || response.data.id,
+                    name: roleData.name,
+                    description: roleData.description,
+                    created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                };
 
+                // Close modal and dispatch event
                 this.close();
+                this.dispatchEvent(new CustomEvent('user-role-saved', {
+                    detail: { userRole: newRole },
+                    bubbles: true,
+                    composed: true
+                }));
             } else {
                 throw new Error(response.data.message || 'Failed to create user role');
             }
@@ -137,55 +146,31 @@ class UserRoleSettingsModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal 
-                title="Add New User Role"
-                size="md"
-                ${this.hasAttribute('open') ? 'open' : ''}>
-                
-                <form class="space-y-6">
-                    <!-- Role Name -->
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Add New User Role</div>
+                <form id="role-form" class="space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Role Name *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
                         <ui-input 
-                            id="name"
-                            name="name"
+                            data-field="name"
                             type="text" 
                             placeholder="Enter role name"
-                            value="${this.roleData.name}"
-                            required
                             class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Description -->
+                    
                     <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <ui-textarea 
-                            id="description"
-                            name="description"
+                            data-field="description"
                             placeholder="Enter role description"
                             rows="3"
-                            value="${this.roleData.description}"
                             class="w-full">
                         </ui-textarea>
                     </div>
                 </form>
-
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button 
-                        variant="secondary"
-                        onclick="this.closest('user-role-settings-modal').close()">
-                        Cancel
-                    </ui-button>
-                    <ui-button 
-                        variant="primary"
-                        onclick="this.closest('user-role-settings-modal').saveRole()">
-                        Save Role
-                    </ui-button>
-                </div>
             </ui-modal>
         `;
     }

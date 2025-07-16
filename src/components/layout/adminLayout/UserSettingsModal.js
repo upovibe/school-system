@@ -40,6 +40,13 @@ class UserSettingsModal extends HTMLElement {
         this.setupEventListeners();
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null && oldValue === null) {
+            // Modal is being opened
+            this.loadRoles();
+        }
+    }
+
     setupEventListeners() {
         // Listen for confirm button click (Save)
         this.addEventListener('confirm', () => {
@@ -49,11 +56,6 @@ class UserSettingsModal extends HTMLElement {
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
-        });
-
-        // Listen for modal open event to load roles
-        this.addEventListener('modal-open', () => {
-            this.loadRoles();
         });
     }
 

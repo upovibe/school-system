@@ -45,6 +45,20 @@ class SystemUpdateModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+
+        // Listen for setting type dropdown change
+        this.addEventListener('change', (event) => {
+            if (event.target.matches('ui-dropdown[data-field="setting_type"]')) {
+                // Store current value before changing type
+                const currentValueInput = this.querySelector('[data-value-input] input, [data-value-input] ui-input, [data-value-input] ui-textarea, [data-value-input] ui-radio-group');
+                if (currentValueInput) {
+                    this.settingData.setting_value = currentValueInput.value || currentValueInput.getAttribute('value') || '';
+                }
+                
+                this.settingData.setting_type = event.target.value;
+                this.updateValueInput();
+            }
+        });
     }
 
     open() {
@@ -71,6 +85,14 @@ class SystemUpdateModal extends HTMLElement {
                 }
             }
         }, 0);
+    }
+
+    // Update the value input based on selected type
+    updateValueInput() {
+        const valueInputContainer = this.querySelector('[data-value-input]');
+        if (valueInputContainer) {
+            valueInputContainer.innerHTML = this.renderValueInput();
+        }
     }
 
     // Render the appropriate input component based on setting type
@@ -373,7 +395,9 @@ class SystemUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Setting Value</label>
-                        ${this.renderValueInput()}
+                        <div data-value-input>
+                            ${this.renderValueInput()}
+                        </div>
                     </div>
                     
                     <div>

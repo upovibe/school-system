@@ -266,7 +266,7 @@ class PageSettingsPage extends App {
             { key: 'category', label: 'Category' },
             { key: 'status', label: 'Status' },
             { key: 'sort_order', label: 'Sort Order', html: false },
-            { key: 'created', label: 'Created' },
+            // { key: 'created', label: 'Created' },
             { key: 'updated', label: 'Updated' }
         ];
         

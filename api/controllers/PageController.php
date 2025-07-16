@@ -57,7 +57,7 @@ class PageController {
                 $data = $_POST;
             } else {
                 // Fall back to JSON if no form data
-                $data = json_decode(file_get_contents('php://input'), true);
+            $data = json_decode(file_get_contents('php://input'), true);
             }
             
             // Validate required fields
@@ -242,7 +242,7 @@ class PageController {
                     $data = $_POST;
                 } else {
                     // Fall back to JSON if no form data
-                    $data = json_decode(file_get_contents('php://input'), true);
+            $data = json_decode(file_get_contents('php://input'), true);
                 }
             }
             

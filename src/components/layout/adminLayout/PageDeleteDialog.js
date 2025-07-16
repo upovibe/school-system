@@ -85,49 +85,49 @@ class PageDeleteDialog extends HTMLElement {
             return;
         }
 
-        try {
-            // Get the auth token
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('❌ No authentication token found');
+            try {
+                // Get the auth token
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('❌ No authentication token found');
                 Toast.show({
                     title: 'Authentication Error',
                     message: 'Please log in to delete pages',
                     variant: 'error',
                     duration: 3000
                 });
-                return;
-            }
+                    return;
+                }
 
             // Store page ID before deletion
             const pageId = this.pageData.id;
 
-            // Delete the page
+                // Delete the page
             await api.withToken(token).delete(`/pages/${pageId}`);
-            
-            Toast.show({
-                title: 'Success',
-                message: 'Page deleted successfully',
-                variant: 'success',
-                duration: 3000
-            });
+                
+                Toast.show({
+                    title: 'Success',
+                    message: 'Page deleted successfully',
+                    variant: 'success',
+                    duration: 3000
+                });
 
-            // Close dialog and dispatch event
-            this.close();
-            this.dispatchEvent(new CustomEvent('page-deleted', {
+                // Close dialog and dispatch event
+                this.close();
+                this.dispatchEvent(new CustomEvent('page-deleted', {
                 detail: { pageId: pageId },
                 bubbles: true,
                 composed: true
-            }));
+                }));
 
-        } catch (error) {
-            console.error('❌ Error deleting page:', error);
-            Toast.show({
-                title: 'Error',
-                message: error.response?.data?.message || 'Failed to delete page',
-                variant: 'error',
-                duration: 3000
-            });
+            } catch (error) {
+                console.error('❌ Error deleting page:', error);
+                Toast.show({
+                    title: 'Error',
+                    message: error.response?.data?.message || 'Failed to delete page',
+                    variant: 'error',
+                    duration: 3000
+                });
         }
     }
 

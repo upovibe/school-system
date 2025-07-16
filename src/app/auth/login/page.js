@@ -88,6 +88,9 @@ class LoginPage extends App {
 
             // Check if user needs to change password
             if (requires_password_change) {
+                // Set flag in localStorage
+                localStorage.setItem('requiresPasswordChange', 'true');
+                
                 Toast.show({
                     title: 'Password Change Required',
                     message: 'You must change your password on first login',
@@ -101,6 +104,9 @@ class LoginPage extends App {
                 }, 2000);
                 return;
             }
+
+            // Clear the flag if user doesn't need to change password
+            localStorage.removeItem('requiresPasswordChange');
 
             Toast.show({
                 title: 'Login Successful',

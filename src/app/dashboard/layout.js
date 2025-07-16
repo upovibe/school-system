@@ -24,6 +24,7 @@ class DashboardLayout extends App {
         document.title = 'Dashboard | School System';
         this.loadUserData();
         this.setupEventListeners();
+        this.checkPasswordChangeRequirement();
         
         this.unsubscribe = store.subscribe((newState) => {
             this.set('isAuthenticated', newState.isAuthenticated);
@@ -39,6 +40,17 @@ class DashboardLayout extends App {
     loadUserData() {
         const userData = localStorage.getItem('userData');
         this.currentUser = userData ? JSON.parse(userData) : null;
+        
+        // Check if user needs to change password
+        const requiresPasswordChange = localStorage.getItem('requiresPasswordChange') === 'true';
+        this.set('requiresPasswordChange', requiresPasswordChange);
+    }
+
+    checkPasswordChangeRequirement() {
+        const requiresPasswordChange = localStorage.getItem('requiresPasswordChange') === 'true';
+        if (this.get('requiresPasswordChange') !== requiresPasswordChange) {
+            this.set('requiresPasswordChange', requiresPasswordChange);
+        }
     }
 
     setupEventListeners() {
@@ -334,7 +346,10 @@ class DashboardLayout extends App {
 
                     <!-- Page Content -->
                     <main class="flex-1 p-6 bg-transparent container mx-auto">
-                        ${this.pageContent}
+                        ${this.get('requiresPasswordChange') ? 
+                            '<div class="text-center text-gray-600 text-lg">You haven\'t changed password</div>' : 
+                            this.pageContent
+                        }
                     </main>
                 </div>
             </div>

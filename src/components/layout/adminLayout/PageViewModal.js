@@ -2,6 +2,14 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
 
+// Load Quill CSS for content preview
+if (!document.querySelector('link[href*="quill"]')) {
+    const link = document.createElement('link');
+    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+}
+
 /**
  * Page View Modal Component
  * 
@@ -155,8 +163,8 @@ class PageViewModal extends HTMLElement {
                             <h4 class="text-md font-semibold text-gray-800 mb-3">Content Preview</h4>
                             <div class="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
                                 ${this.pageData.content ? `
-                                    <div class="prose prose-sm max-w-none">
-                                        ${this.pageData.content.substring(0, 300)}${this.pageData.content.length > 300 ? '...' : ''}
+                                    <div class="content-preview">
+                                        ${this.pageData.content}
                                     </div>
                                 ` : `
                                     <p class="text-gray-500 italic">No content available</p>

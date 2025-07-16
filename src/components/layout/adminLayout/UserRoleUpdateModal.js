@@ -74,16 +74,16 @@ class UserRoleUpdateModal extends HTMLElement {
 
     async updateRole() {
         try {
-            // Get form data
-            const form = this.querySelector('form');
-            if (!form) {
-                throw new Error('Form not found');
-            }
-
-            const formData = new FormData(form);
+            // Wait a bit for custom elements to be fully initialized
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Get values from custom UI components directly
+            const nameInput = this.querySelector('ui-input');
+            const descriptionTextarea = this.querySelector('ui-textarea[name="description"]');
+            
             const roleData = {
-                name: formData.get('name') || '',
-                description: formData.get('description') || ''
+                name: nameInput ? nameInput.value : '',
+                description: descriptionTextarea ? descriptionTextarea.value : ''
             };
 
             // Validate required fields

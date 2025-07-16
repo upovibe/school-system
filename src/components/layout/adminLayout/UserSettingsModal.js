@@ -38,7 +38,6 @@ class UserSettingsModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadRoles();
     }
 
     setupEventListeners() {
@@ -51,10 +50,11 @@ class UserSettingsModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
-    }
 
-    open() {
-        this.setAttribute('open', '');
+        // Listen for modal open event to load roles
+        this.addEventListener('modal-open', () => {
+            this.loadRoles();
+        });
     }
 
     close() {

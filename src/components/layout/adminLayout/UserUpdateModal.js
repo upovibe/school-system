@@ -33,7 +33,6 @@ class UserUpdateModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadRoles();
     }
 
     setupEventListeners() {
@@ -46,10 +45,11 @@ class UserUpdateModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
-    }
 
-    open() {
-        this.setAttribute('open', '');
+        // Listen for modal open event to load roles
+        this.addEventListener('modal-open', () => {
+            this.loadRoles();
+        });
     }
 
     close() {
@@ -237,6 +237,22 @@ class UserUpdateModal extends HTMLElement {
                         </ui-input>
                     </div>
 
+                    <!-- Role -->
+                    <div>
+                        <label for="role_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Role *
+                        </label>
+                        <ui-dropdown 
+                            data-field="role_id"
+                            placeholder="Select role"
+                            value="${this.userData.role_id}"
+                            class="w-full">
+                            ${roleOptions.map(option => `
+                                <ui-option value="${option.value}">${option.label}</ui-option>
+                            `).join('')}
+                        </ui-dropdown>
+                    </div>
+
                     <!-- Email -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -263,22 +279,6 @@ class UserUpdateModal extends HTMLElement {
                             placeholder="Enter new password"
                             class="w-full">
                         </ui-input>
-                    </div>
-
-                    <!-- Role -->
-                    <div>
-                        <label for="role_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Role *
-                        </label>
-                        <ui-dropdown 
-                            data-field="role_id"
-                            placeholder="Select role"
-                            value="${this.userData.role_id}"
-                            class="w-full">
-                            ${roleOptions.map(option => `
-                                <ui-option value="${option.value}">${option.label}</ui-option>
-                            `).join('')}
-                        </ui-dropdown>
                     </div>
 
                     <!-- Status -->

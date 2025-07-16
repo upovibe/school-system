@@ -122,7 +122,9 @@ class UserRoleUpdateModal extends HTMLElement {
 
                 // Dispatch event with the updated role data
                 this.dispatchEvent(new CustomEvent('user-role-updated', {
-                    detail: { userRole: response.data.data }
+                    detail: { userRole: response.data.data },
+                    bubbles: true,
+                    composed: true
                 }));
 
                 this.close();

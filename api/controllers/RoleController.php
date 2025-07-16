@@ -66,16 +66,16 @@ class RoleController {
             if ($id) {
                 // Get the created role data
                 $createdRole = $this->roleModel->findById($id);
-                
-                // Log role creation
-                $this->logModel->logAction(null, 'role_created', 'New role created', $data);
-                
-                http_response_code(201);
-                echo json_encode([
+            
+            // Log role creation
+            $this->logModel->logAction(null, 'role_created', 'New role created', $data);
+            
+            http_response_code(201);
+            echo json_encode([
                     'success' => true,
                     'data' => $createdRole,
-                    'message' => 'Role created successfully'
-                ], JSON_PRETTY_PRINT);
+                'message' => 'Role created successfully'
+            ], JSON_PRETTY_PRINT);
             } else {
                 http_response_code(500);
                 echo json_encode([

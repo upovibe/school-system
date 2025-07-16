@@ -130,7 +130,7 @@ class UsersPage extends App {
             // Load users data
             const usersResponse = await api.withToken(token).get('/users');
             
-            this.set('users', usersResponse.data.data);
+            this.set('users', usersResponse.data);
             this.set('loading', false);
             
         } catch (error) {
@@ -215,7 +215,7 @@ class UsersPage extends App {
             index: index + 1, // Add index number for display
             name: user.name,
             email: user.email,
-            role: user.role_name || 'N/A',
+            role: user.role || 'N/A',
             status: user.status,
             created: new Date(user.created_at).toLocaleString(),
             updated: new Date(user.updated_at).toLocaleString(),
@@ -252,7 +252,7 @@ class UsersPage extends App {
             index: index + 1, // Add index number for display
             name: user.name,
             email: user.email,
-            role: user.role_name || 'N/A',
+            role: user.role || 'N/A',
             status: user.status,
             created: new Date(user.created_at).toLocaleString(),
             updated: new Date(user.updated_at).toLocaleString(),
@@ -282,42 +282,37 @@ class UsersPage extends App {
                     <div class="mb-8">
                         ${users && users.length > 0 ? `
                             <ui-table 
+                                title="Users"
                                 data='${JSON.stringify(tableData)}'
                                 columns='${JSON.stringify(tableColumns)}'
-                                search="true"
-                                pagination="true"
-                                refresh="true"
-                                add="true"
-                                view="true"
-                                edit="true"
-                                delete="true"
+                                sortable
+                                searchable
+                                search-placeholder="Search users..."
+                                pagination
+                                page-size="10"
+                                action
+                                addable
+                                refresh
+                                print
+                                bordered
+                                striped
                                 class="w-full">
                             </ui-table>
                         ` : `
-                            <!-- Empty State -->
-                            <div class="text-center py-12">
-                                <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-                                <p class="text-gray-500 mb-6">Get started by creating your first user.</p>
-                                <ui-button 
-                                    variant="primary"
-                                    onclick="this.closest('users-page').onAdd()">
-                                    <i class="fas fa-plus mr-2"></i>Add User
-                                </ui-button>
+                            <div class="text-center py-8 text-gray-500">
+                                <p>No users found in database</p>
                             </div>
                         `}
                     </div>
                 `}
 
-                <!-- Modals and Dialogs -->
-                ${showAddModal ? '<user-settings-modal open></user-settings-modal>' : ''}
-                ${showUpdateModal ? '<user-update-modal open></user-update-modal>' : ''}
-                ${showViewModal ? '<user-view-modal open></user-view-modal>' : ''}
-                ${showDeleteDialog ? '<user-delete-dialog open></user-delete-dialog>' : ''}
+            </div>
+            
+            <!-- Modals and Dialogs -->
+            <user-settings-modal ${showAddModal ? 'open' : ''}></user-settings-modal>
+            <user-update-modal ${showUpdateModal ? 'open' : ''}></user-update-modal>
+            <user-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></user-view-modal>
+            <user-delete-dialog ${showDeleteDialog ? 'open' : ''}></user-delete-dialog>
             </div>
         `;
     }

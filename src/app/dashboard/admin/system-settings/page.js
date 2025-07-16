@@ -50,19 +50,41 @@ class SystemSettingsPage extends App {
             const currentSettings = this.get('settings') || [];
             const updatedSettings = currentSettings.filter(setting => setting.id !== deletedSettingId);
             this.set('settings', updatedSettings);
+            this.updateTableData();
             
             // Close the delete dialog
             this.set('showDeleteDialog', false);
         });
         
         this.addEventListener('setting-saved', (event) => {
-            this.loadData();
-            this.set('showAddModal', false);
+            // Add the new setting to the existing data
+            const newSetting = event.detail.setting;
+            if (newSetting) {
+                const currentSettings = this.get('settings') || [];
+                this.set('settings', [...currentSettings, newSetting]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
         });
         
         this.addEventListener('setting-updated', (event) => {
-            this.loadData();
-            this.set('showUpdateModal', false);
+            // Update the existing setting in the data
+            const updatedSetting = event.detail.setting;
+            if (updatedSetting) {
+                const currentSettings = this.get('settings') || [];
+                const updatedSettings = currentSettings.map(setting => 
+                    setting.id === updatedSetting.id ? updatedSetting : setting
+                );
+                this.set('settings', updatedSettings);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
+            } else {
+                this.loadData();
+            }
         });
         
         // Listen for modal opened event to pass data
@@ -172,6 +194,29 @@ class SystemSettingsPage extends App {
 
     onRefresh(event) {
         this.loadData();
+    }
+
+    // Update table data without full page reload
+    updateTableData() {
+        const settings = this.get('settings');
+        if (!settings) return;
+
+        // Prepare table data
+        const tableData = settings.map(setting => ({
+            id: setting.id,
+            setting_key: setting.setting_key,
+            setting_value: setting.setting_value.length > 50 ? setting.setting_value.substring(0, 50) + '...' : setting.setting_value,
+            setting_type: setting.setting_type,
+            category: setting.category,
+            status: setting.is_active ? 'Active' : 'Inactive',
+            updated: new Date(setting.updated_at).toLocaleString(),
+        }));
+
+        // Find the table component and update its data
+        const tableComponent = this.querySelector('ui-table');
+        if (tableComponent) {
+            tableComponent.setAttribute('data', JSON.stringify(tableData));
+        }
     }
 
     // Close all modals and dialogs

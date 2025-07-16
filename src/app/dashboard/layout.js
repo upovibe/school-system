@@ -57,7 +57,7 @@ class DashboardLayout extends App {
     setupEventListeners() {
         // Handle sidebar toggle
         this.addEventListener('click', (e) => {
-            if (e.target.matches('[data-sidebar-toggle]')) {
+            if (e.target.matches('[data-sidebar-toggle]') || e.target.closest('[data-sidebar-toggle]')) {
                 e.preventDefault();
                 e.stopPropagation();
                 this.toggleSidebar();
@@ -367,18 +367,18 @@ class DashboardLayout extends App {
                     <!-- Sidebar -->
                     <aside 
                         data-sidebar
-                        class="fixed inset-y-0 left-0 z-50 w-64 bg-white text-gray-900 transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
+                        class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-blue-700 text-white transform -translate-x-full xl:translate-x-0 xl:static transition-all duration-300 rounded-none xl:rounded-2xl ease-in-out shadow-lg overflow-hidden"
                     >
                         <!-- Sidebar Header -->
-                        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between h-16 px-4 border-b border-blue-500">
                             <div class="flex items-center space-x-3">
                                 <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                                <span class="text-lg font-semibold text-gray-900">School System</span>
+                                <span class="text-lg font-semibold text-white">School System</span>
                             </div>
                             <button 
                                 type="button"
                                 data-sidebar-toggle
-                                class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                class="xl:hidden size-8 rounded-md text-blue-200 hover:text-white hover:bg-blue-500"
                             >
                                 <i class="fas fa-times text-lg"></i>
                             </button>
@@ -391,8 +391,8 @@ class DashboardLayout extends App {
                                     href="${item.href}"
                                     class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline relative ${
                                         item.active 
-                                            ? 'bg-blue-600 text-white' 
-                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                            ? 'bg-white text-blue-700' 
+                                            : 'text-blue-100 hover:bg-blue-500 hover:text-white'
                                     }"
                                     title="${this.sidebarCollapsed ? item.label : ''}"
                                 >
@@ -408,10 +408,10 @@ class DashboardLayout extends App {
                         </nav>
 
                         <!-- Sidebar Footer -->
-                        <div class="p-4 border-t border-gray-200">
+                        <div class="p-4 border-t border-blue-500">
                             <button 
                                 data-action="logout"
-                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors relative"
+                                class="group flex items-center w-full px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-500 hover:text-white rounded-md transition-colors relative"
                                 title="${this.sidebarCollapsed ? 'Logout' : ''}"
                             >
                                 <i class="fas fa-sign-out-alt w-5 h-5 transition-all duration-300 ${this.sidebarCollapsed ? 'mr-0' : 'mr-3'}"></i>
@@ -455,22 +455,23 @@ class DashboardLayout extends App {
                                     <!-- User Menu Dropdown -->
                                     <ui-dropdown-menu>
                                         <ui-dropdown-menu-trigger>
-                                            <div class="flex items-center space-x-3 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                                            <div class="flex items-center p-1 rounded-full hover:bg-gray-100 transition-colors">
                                                 <ui-avatar 
                                                     src="${this.currentUser?.profile_image || ''}" 
                                                     alt="${userName}" 
                                                     name="${userName}" 
                                                     size="md"
                                                 ></ui-avatar>
-                                                <div class="hidden md:block text-left">
-                                                    <p class="text-sm font-medium text-gray-700">${userName}</p>
-                                                    <p class="text-xs text-gray-500">${userEmail}</p>
-                                                </div>
                                             </div>
                                         </ui-dropdown-menu-trigger>
                                         
                                         <ui-dropdown-menu-content>
                                             <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
+                                            <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
+                                            <div class="px-3 py-2">
+                                                <p class="text-sm font-medium text-gray-700">${userName}</p>
+                                                <p class="text-xs text-gray-500">${userEmail}</p>
+                                            </div>
                                             <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                             <ui-dropdown-menu-item>
                                                 <a href="/profile" data-action="navigate" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
@@ -498,7 +499,7 @@ class DashboardLayout extends App {
                         </header>
 
                         <!-- Page Content Area -->
-                        <main class="flex-1 overflow-y-auto p-6 bg-transparent container mx-auto">
+                        <main class="flex-1 p-6 bg-transparent container mx-auto">
                             ${this.pageContent}
                         </main>
                     </div>

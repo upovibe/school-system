@@ -119,6 +119,7 @@ class DashboardLayout extends App {
         const roleItems = {
             admin: [
                 { label: 'Admin Dashboard', icon: 'fas fa-shield-alt', href: '/dashboard/admin' },
+                {label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role'},
                 { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
                 { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
                 { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },

@@ -263,9 +263,9 @@ class SystemSettingsPage extends App {
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->
                     <div class="space-y-4">
-                        <ui-skeleton class="h-8 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-8 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-8 w-full"></ui-skeleton>
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
                     </div>
                 ` : `
                     <!-- Settings Table Section -->

@@ -71,7 +71,8 @@ class UserUpdateModal extends HTMLElement {
             id: userData.id,
             name: userData.name || '',
             email: userData.email || '',
-            role_id: userData.role_id || ''
+            role_id: userData.role_id || '',
+            status: userData.status || 'active'
         };
         this.render();
     }
@@ -100,11 +101,13 @@ class UserUpdateModal extends HTMLElement {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const emailInput = this.querySelector('ui-input[data-field="email"]');
             const roleSelect = this.querySelector('ui-dropdown[data-field="role_id"]');
+            const statusSelect = this.querySelector('ui-dropdown[data-field="status"]');
             
             const userData = {
                 name: nameInput ? nameInput.value : '',
                 email: emailInput ? emailInput.value : '',
-                role_id: roleSelect ? roleSelect.value : ''
+                role_id: roleSelect ? roleSelect.value : '',
+                status: statusSelect ? statusSelect.value : 'active'
             };
 
             // Validate required fields
@@ -257,6 +260,21 @@ class UserUpdateModal extends HTMLElement {
                             class="w-full">
                         </ui-input>
                     </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                            Account Status *
+                        </label>
+                        <ui-dropdown 
+                            data-field="status"
+                            placeholder="Select status"
+                            value="${this.userData.status}"
+                            class="w-full">
+                            <ui-option value="active">Active</ui-option>
+                            <ui-option value="inactive">Inactive</ui-option>
+                        </ui-dropdown>
+                    </div>
                 </form>
                 
                 <!-- Information Notice -->
@@ -274,11 +292,15 @@ class UserUpdateModal extends HTMLElement {
                                 </li>
                                 <li class="flex items-start">
                                     <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
-                                    Only name, email, and role will be updated
+                                    Name, email, role, and account status will be updated
                                 </li>
                                 <li class="flex items-start">
                                     <i class="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
                                     User will continue to use their existing password
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-user-check text-green-500 text-xs mt-1 mr-2"></i>
+                                    <strong>Active users can log in, inactive users cannot</strong>
                                 </li>
                                 <li class="flex items-start">
                                     <i class="fas fa-envelope text-green-500 text-xs mt-1 mr-2"></i>Email notification will be sent to the user about any changes made

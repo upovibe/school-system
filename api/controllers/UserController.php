@@ -220,6 +220,11 @@ class UserController {
                 $changes[] = 'Role changed from "' . $oldRoleName . '" to "' . $newRoleName . '"';
             }
             
+            if (isset($data['status']) && $data['status'] !== $existingUser['status']) {
+                $statusChange = $data['status'] === 'active' ? 'activated' : 'deactivated';
+                $changes[] = 'Account was ' . $statusChange;
+            }
+            
             // Hash password if provided
             if (isset($data['password'])) {
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);

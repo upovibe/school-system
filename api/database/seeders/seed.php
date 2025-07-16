@@ -44,6 +44,7 @@ class Seed {
             'email' => 'admin@school.com',
             'phone' => '+1234567890',
             'password' => password_hash('admin123', PASSWORD_DEFAULT),
+            'password_changed' => true,
             'role_id' => $adminRole['id'],
             'status' => 'active',
             'created_at' => date('Y-m-d H:i:s'),
@@ -51,8 +52,8 @@ class Seed {
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
         $stmt->execute([
@@ -60,6 +61,7 @@ class Seed {
             $adminUser['email'],
             $adminUser['phone'],
             $adminUser['password'],
+            $adminUser['password_changed'],
             $adminUser['role_id'],
             $adminUser['status'],
             $adminUser['created_at'],

@@ -135,6 +135,7 @@
                     <li>If you did not request these changes, please contact support immediately</li>
                     <li>Your login credentials remain secure</li>
                     <li>You can continue to access your account with your existing password</li>
+                    <li>If your account was deactivated, you will not be able to log in until it's reactivated</li>
                 </ul>
             </div>
 

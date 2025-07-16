@@ -213,7 +213,6 @@ class UserRolePage extends App {
             index: index + 1, // Add index number for display
             name: role.name,
             description: role.description,
-            status: role.is_active ? 'Active' : 'Inactive',
             created: role.created_at,
             updated: role.updated_at,
         }));
@@ -250,7 +249,6 @@ class UserRolePage extends App {
             index: index + 1, // Add index number for display
             name: role.name,
             description: role.description,
-            status: role.is_active ? 'Active' : 'Inactive',
             created: role.created_at,
             updated: role.updated_at,
         })) : [];
@@ -259,7 +257,7 @@ class UserRolePage extends App {
             { key: 'index', label: 'No.', html: false },
             { key: 'name', label: 'Name' },
             { key: 'description', label: 'Description', html: false },
-            { key: 'status', label: 'Status' },
+            { key: 'created', label: 'Created' },
             { key: 'updated', label: 'Updated' }
         ];
         

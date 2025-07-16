@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Tabs.js';
 import '@/components/layout/profileLayout/ProfileContent.js';
 import '@/components/layout/profileLayout/ActivityContent.js';
+import '@/components/layout/profileLayout/PasswordContent.js';
 
 /**
  * User Profile Page Component (/dashboard/profile)
@@ -34,6 +35,9 @@ class ProfilePage extends App {
                         <ui-tab value="profile">
                             <i class="fas fa-user mr-2"></i>Profile
                         </ui-tab>
+                        <ui-tab value="password">
+                            <i class="fas fa-key mr-2"></i>Password
+                        </ui-tab>
                         <ui-tab value="activity">
                             <i class="fas fa-chart-line mr-2"></i>Activity
                         </ui-tab>
@@ -41,6 +45,10 @@ class ProfilePage extends App {
                     
                     <ui-tab-panel value="profile">
                         <profile-content></profile-content>
+                    </ui-tab-panel>
+                    
+                    <ui-tab-panel value="password">
+                        <password-content></password-content>
                     </ui-tab-panel>
                     
                     <ui-tab-panel value="activity">

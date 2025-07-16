@@ -18,13 +18,8 @@ class ProfileContent extends App {
     constructor() {
         super();
         this.userData = null;
-        this.isEditing = false;
         this.isLoading = true;
         this.isSaving = false;
-        this.editForm = {
-            name: '',
-            email: ''
-        };
     }
 
     connectedCallback() {
@@ -49,11 +44,6 @@ class ProfileContent extends App {
             const response = await api.withToken(token).get(`/users/${userId}/profile`);
             
             this.userData = response.data;
-            this.editForm = {
-                name: this.userData.name || '',
-                email: this.userData.email || ''
-            };
-            
             this.set('userData', this.userData);
             this.set('isLoading', false);
         } catch (error) {
@@ -73,26 +63,10 @@ class ProfileContent extends App {
             const editButton = e.target.closest('[data-action="edit-profile"]');
             if (editButton) {
                 e.preventDefault();
-                this.toggleEditMode();
+                this.showEditProfileDialog();
             }
 
-            const saveButton = e.target.closest('[data-action="save-profile"]');
-            if (saveButton) {
-                e.preventDefault();
-                this.saveProfile();
-            }
 
-            const cancelButton = e.target.closest('[data-action="cancel-edit"]');
-            if (cancelButton) {
-                e.preventDefault();
-                this.cancelEdit();
-            }
-
-            const changePasswordButton = e.target.closest('[data-action="change-password"]');
-            if (changePasswordButton) {
-                e.preventDefault();
-                this.showChangePasswordDialog();
-            }
         });
 
         // Listen for profile image upload events
@@ -126,35 +100,126 @@ class ProfileContent extends App {
         });
     }
 
-    toggleEditMode() {
-        this.set('isEditing', !this.get('isEditing'));
+    showEditProfileDialog() {
+        // Create and show edit profile dialog
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('title', 'Edit Profile');
+        dialog.setAttribute('open', '');
+        dialog.setAttribute('no-footer', '');
+        
+        // Create form content
+        const formContent = document.createElement('div');
+        formContent.setAttribute('slot', 'content');
+        formContent.className = 'space-y-4';
+        formContent.innerHTML = `
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <ui-input 
+                    type="text" 
+                    value="${this.userData.name || ''}"
+                    placeholder="Enter your full name"
+                    size="md"
+                    id="edit-name"
+                ></ui-input>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <ui-input 
+                    type="email" 
+                    value="${this.userData.email || ''}"
+                    placeholder="Enter your email"
+                    size="md"
+                    id="edit-email"
+                ></ui-input>
+            </div>
+        `;
+        
+        // Create custom footer with buttons
+        const footerContent = document.createElement('div');
+        footerContent.setAttribute('slot', 'footer');
+        footerContent.innerHTML = `
+            <div class="flex justify-end space-x-3">
+                <button
+                    type="button"
+                    id="cancel-btn"
+                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    id="save-btn"
+                    data-submit-button
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                    Save Changes
+                </button>
+            </div>
+        `;
+        
+        // Add content to dialog
+        dialog.appendChild(formContent);
+        dialog.appendChild(footerContent);
+        
+        // Add dialog to body
+        document.body.appendChild(dialog);
+        
+        // Set up event listeners after dialog is in DOM
+        setTimeout(() => {
+            const saveBtn = dialog.querySelector('#save-btn');
+            const cancelBtn = dialog.querySelector('#cancel-btn');
+            
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => this.saveProfileFromDialog(dialog));
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    dialog.remove();
+                });
+            }
+            
+            // Listen for dialog close event
+            dialog.addEventListener('dialog-close', () => {
+                dialog.remove();
+            });
+        }, 100);
     }
 
-    cancelEdit() {
-        // Reset form to original values
-        this.editForm = {
-            name: this.userData.name || '',
-            email: this.userData.email || ''
-        };
-        this.set('isEditing', false);
-    }
-
-    async saveProfile() {
+    async saveProfileFromDialog(dialog) {
         try {
+            const nameInput = dialog.querySelector('#edit-name');
+            const emailInput = dialog.querySelector('#edit-email');
+            const saveBtn = dialog.querySelector('#save-btn');
+            
+            const updatedData = {
+                name: nameInput.value,
+                email: emailInput.value
+            };
+            
+            // Update button state
             this.set('isSaving', true);
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveBtn.classList.remove('hover:bg-blue-700');
+            }
             
             const userId = this.userData.id;
             const token = localStorage.getItem('token');
             
-            const response = await api.withToken(token).put(`/users/${userId}/profile`, this.editForm);
+            const response = await api.withToken(token).put(`/users/${userId}/profile`, updatedData);
             
             // Update local storage with new data
-            const updatedUserData = { ...this.userData, ...this.editForm };
+            const updatedUserData = { ...this.userData, ...updatedData };
             localStorage.setItem('userData', JSON.stringify(updatedUserData));
             
             this.userData = updatedUserData;
             this.set('userData', this.userData);
-            this.set('isEditing', false);
+            
+            // Close dialog
+            dialog.remove();
             
             Toast.show({
                 title: 'Success',
@@ -176,11 +241,9 @@ class ProfileContent extends App {
         }
     }
 
-    showChangePasswordDialog() {
-        // Create and show password change dialog
-        const dialog = document.createElement('auth-password-change-dialog');
-        document.body.appendChild(dialog);
-    }
+
+
+
 
     async handleProfileImageUpload(detail) {
         try {
@@ -269,7 +332,6 @@ class ProfileContent extends App {
         }
 
         const user = this.get('userData');
-        const isEditing = this.get('isEditing');
         const isSaving = this.get('isSaving');
 
         if (!user) {
@@ -291,14 +353,13 @@ class ProfileContent extends App {
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
-                        ${!isEditing ? `
-                            <button 
-                                data-action="edit-profile"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                            >
-                                <i class="fas fa-edit mr-2"></i>Edit Profile
-                            </button>
-                        ` : ''}
+                        <ui-button 
+                            data-action="edit-profile"
+                            variant="primary"
+                            size="md"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </ui-button>
                     </div>
 
                     <div class="flex items-start space-x-8 mb-8">
@@ -319,33 +380,29 @@ class ProfileContent extends App {
                                 <!-- Name -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                    ${isEditing ? `
-                                        <ui-input 
-                                            type="text" 
-                                            value="${this.editForm.name}"
-                                            onchange="this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.editForm.name = this.value"
-                                            placeholder="Enter your full name"
-                                            size="md"
-                                        ></ui-input>
-                                    ` : `
-                                        <div class="text-gray-900 font-medium text-lg">${user.name || 'Not provided'}</div>
-                                    `}
+                                    <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-user text-amber-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-900 font-semibold text-lg">${user.name || 'Not provided'}</div>
+                                            <div class="text-xs text-gray-500">Your display name</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Email -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                    ${isEditing ? `
-                                        <ui-input 
-                                            type="email" 
-                                            value="${this.editForm.email}"
-                                            onchange="this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.editForm.email = this.value"
-                                            placeholder="Enter your email"
-                                            size="md"
-                                        ></ui-input>
-                                    ` : `
-                                        <div class="text-gray-900 font-medium">${user.email || 'Not provided'}</div>
-                                    `}
+                                    <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-envelope text-teal-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-900 font-semibold">${user.email || 'Not provided'}</div>
+                                            <div class="text-xs text-gray-500">Your email address</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Role -->
@@ -417,46 +474,10 @@ class ProfileContent extends App {
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    ${isEditing ? `
-                        <div class="flex space-x-3 pt-4 border-t border-gray-200">
-                            <button 
-                                data-action="save-profile"
-                                disabled="${isSaving}"
-                                class="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                            >
-                                ${isSaving ? '<i class="fas fa-spinner fa-spin mr-2"></i>' : '<i class="fas fa-save mr-2"></i>'}
-                                ${isSaving ? 'Saving...' : 'Save Changes'}
-                            </button>
-                            <button 
-                                data-action="cancel-edit"
-                                disabled="${isSaving}"
-                                class="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    ` : ''}
+
                 </div>
 
-                <!-- Security Section -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Security</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-900">Password</h3>
-                                <p class="text-sm text-gray-500">Change your account password</p>
-                            </div>
-                            <button 
-                                data-action="change-password"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                            >
-                                Change Password
-                            </button>
-                        </div>
-                    </div>
-                </div>
+
 
 
             </div>

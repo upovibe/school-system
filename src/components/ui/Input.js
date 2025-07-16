@@ -542,9 +542,9 @@ class Input extends HTMLElement {
             }
         });
         
-        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value'
+        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value' and 'type'
         attributes.forEach(attr => {
-            if (attr !== 'value') this.removeAttribute(attr);
+            if (attr !== 'value' && attr !== 'type') this.removeAttribute(attr);
         });
         
         // Setup input type-specific functionality
@@ -582,9 +582,13 @@ class Input extends HTMLElement {
         return this._status || '';
     }
     
+    get type() {
+        return this.getAttribute('type') || 'text';
+    }
+    
     // Setup input type and additional features
     setupInputType() {
-        const inputType = this.input.getAttribute('type') || 'text';
+        const inputType = this.type;
         
         switch (inputType) {
             case 'search':

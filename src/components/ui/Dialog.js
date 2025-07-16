@@ -8,6 +8,7 @@
  * - title: string - sets the header title
  * - position: string (default: "center") - dialog position: "top", "bottom", "left", "right", "center"
  * - variant: string (default: "default") - button variant: "default", "danger" for delete confirmations
+ * - no-footer: boolean - hides default footer buttons when custom footer is provided
  * 
  * Usage:
  * <ui-dialog open title="My Dialog" position="top">
@@ -31,6 +32,7 @@ class Dialog extends HTMLElement {
         const title = this.getAttribute('title') || 'Dialog';
         const position = this.getAttribute('position') || 'center';
         const variant = this.getAttribute('variant') || 'default';
+        const noFooter = this.hasAttribute('no-footer');
         
         this.shadowRoot.innerHTML = `
             <style>
@@ -237,10 +239,12 @@ class Dialog extends HTMLElement {
                     
                     <div class="dialog-footer">
                         <slot name="footer">
-                            <button class="secondary" id="cancel-btn">Cancel</button>
-                            <button class="${variant === 'danger' ? 'danger' : 'primary'}" id="confirm-btn">
-                                ${variant === 'danger' ? 'Delete' : 'Confirm'}
-                            </button>
+                            ${noFooter ? '' : `
+                                <button class="secondary" id="cancel-btn">Cancel</button>
+                                <button class="${variant === 'danger' ? 'danger' : 'primary'}" id="confirm-btn">
+                                    ${variant === 'danger' ? 'Delete' : 'Confirm'}
+                                </button>
+                            `}
                         </slot>
                     </div>
                 </div>
@@ -253,8 +257,6 @@ class Dialog extends HTMLElement {
         const closeBtn = this.shadowRoot.getElementById('close-dialog');
         const cancelBtn = this.shadowRoot.getElementById('cancel-btn');
         const confirmBtn = this.shadowRoot.getElementById('confirm-btn');
-
-
 
         // Overlay click
         if (overlay) {
@@ -330,7 +332,7 @@ class Dialog extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open', 'title', 'position', 'variant'];
+        return ['open', 'title', 'position', 'variant', 'no-footer'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -345,7 +347,7 @@ class Dialog extends HTMLElement {
                 this.shadowRoot.querySelector('.dialog-overlay').classList.remove('open');
                 this.dispatchEvent(new CustomEvent('dialog-close', { bubbles: true }));
             }
-        } else if (name === 'title' || name === 'position' || name === 'variant') {
+        } else if (name === 'title' || name === 'position' || name === 'variant' || name === 'no-footer') {
             this.render();
             this.setupEventListeners();
         }

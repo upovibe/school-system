@@ -120,7 +120,7 @@ class UserRoleDeleteDialog extends HTMLElement {
 
     render() {
         if (!this.roleData) {
-            return `
+            this.innerHTML = `
                 <ui-dialog 
                     title="Delete User Role"
                     ${this.hasAttribute('open') ? 'open' : ''}>
@@ -138,9 +138,10 @@ class UserRoleDeleteDialog extends HTMLElement {
                     </div>
                 </ui-dialog>
             `;
+            return;
         }
 
-        return `
+        this.innerHTML = `
             <ui-dialog 
                 title="Delete User Role"
                 ${this.hasAttribute('open') ? 'open' : ''}>

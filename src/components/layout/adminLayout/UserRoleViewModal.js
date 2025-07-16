@@ -74,7 +74,7 @@ class UserRoleViewModal extends HTMLElement {
 
     render() {
         if (!this.roleData) {
-            return `
+            this.innerHTML = `
                 <ui-modal 
                     title="View User Role"
                     size="md"
@@ -93,9 +93,10 @@ class UserRoleViewModal extends HTMLElement {
                     </div>
                 </ui-modal>
             `;
+            return;
         }
 
-        return `
+        this.innerHTML = `
             <ui-modal 
                 title="View User Role"
                 size="md"

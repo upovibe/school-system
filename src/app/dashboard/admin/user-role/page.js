@@ -14,7 +14,7 @@ import '@/components/layout/adminLayout/UserRoleDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
- * User Role Page
+ * User Role Settings Page
  * 
  * Displays user roles data using Table component
  */
@@ -42,8 +42,6 @@ class UserRolePage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
-        
-
         
         // Listen for success events to refresh data
         this.addEventListener('user-role-deleted', (event) => {
@@ -110,7 +108,6 @@ class UserRolePage extends App {
         try {
             this.set('loading', true);
             
-            // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
@@ -162,7 +159,6 @@ class UserRolePage extends App {
         const { detail } = event;
         const editUserRole = this.get('userRoles').find(role => role.id === detail.row.id);
         if (editUserRole) {
-            // Close any open modals first
             this.closeAllModals();
             this.set('updateUserRoleData', editUserRole);
             this.set('showUpdateModal', true);
@@ -179,7 +175,6 @@ class UserRolePage extends App {
         const { detail } = event;
         const deleteUserRole = this.get('userRoles').find(role => role.id === detail.row.id);
         if (deleteUserRole) {
-            // Close any open modals first
             this.closeAllModals();
             this.set('deleteUserRoleData', deleteUserRole);
             this.set('showDeleteDialog', true);
@@ -193,7 +188,6 @@ class UserRolePage extends App {
     }
 
     onAdd(event) {
-        // Close any open modals first
         this.closeAllModals();
         this.set('showAddModal', true);
     }
@@ -213,8 +207,8 @@ class UserRolePage extends App {
             index: index + 1, // Add index number for display
             name: role.name,
             description: role.description,
-            created: role.created_at,
-            updated: role.updated_at,
+            created: new Date(role.created_at).toLocaleString(),
+            updated: new Date(role.updated_at).toLocaleString(),
         }));
 
         // Find the table component and update its data
@@ -243,20 +237,19 @@ class UserRolePage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
-        // Prepare table data and columns for user roles
         const tableData = userRoles ? userRoles.map((role, index) => ({
             id: role.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             name: role.name,
             description: role.description,
-            created: role.created_at,
-            updated: role.updated_at,
+            created: new Date(role.created_at).toLocaleString(),
+            updated: new Date(role.updated_at).toLocaleString(),
         })) : [];
 
         const tableColumns = [
-            { key: 'index', label: 'No.', html: false },
+            { key: 'index', label: 'No.' },
             { key: 'name', label: 'Name' },
-            { key: 'description', label: 'Description', html: false },
+            { key: 'description', label: 'Description' },
             { key: 'created', label: 'Created' },
             { key: 'updated', label: 'Updated' }
         ];
@@ -275,14 +268,14 @@ class UserRolePage extends App {
                     <div class="mb-8">
                         ${userRoles && userRoles.length > 0 ? `
                             <ui-table 
-                                title="User Roles Database"
+                                title="User Roles"
                                 data='${JSON.stringify(tableData)}'
                                 columns='${JSON.stringify(tableColumns)}'
                                 sortable
                                 searchable
                                 search-placeholder="Search user roles..."
                                 pagination
-                                page-size="5"
+                                page-size="10"
                                 action
                                 addable
                                 refresh
@@ -300,21 +293,13 @@ class UserRolePage extends App {
                 `}
             </div>
             
-            <!-- Add User Role Modal -->
+            <!-- Modals and Dialogs -->
             <user-role-settings-modal ${showAddModal ? 'open' : ''}></user-role-settings-modal>
-            
-            <!-- Update User Role Modal -->
             <user-role-update-modal ${showUpdateModal ? 'open' : ''}></user-role-update-modal>
-            
-            <!-- View User Role Modal -->
             <user-role-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></user-role-view-modal>
-            
-            <!-- Delete User Role Dialog -->
             <user-role-delete-dialog ${showDeleteDialog ? 'open' : ''}></user-role-delete-dialog>
         `;
     }
-
-
 }
 
 customElements.define('app-user-role-page', UserRolePage);

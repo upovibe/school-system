@@ -143,7 +143,7 @@ class UserRoleUpdateModal extends HTMLElement {
 
     render() {
         if (!this.roleData) {
-            return `
+            this.innerHTML = `
                 <ui-modal 
                     title="Edit User Role"
                     size="md"
@@ -162,9 +162,10 @@ class UserRoleUpdateModal extends HTMLElement {
                     </div>
                 </ui-modal>
             `;
+            return;
         }
 
-        return `
+        this.innerHTML = `
             <ui-modal 
                 title="Edit User Role"
                 size="md"

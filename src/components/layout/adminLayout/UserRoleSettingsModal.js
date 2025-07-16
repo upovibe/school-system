@@ -135,7 +135,7 @@ class UserRoleSettingsModal extends HTMLElement {
     }
 
     render() {
-        return `
+        this.innerHTML = `
             <ui-modal 
                 title="Add New User Role"
                 size="md"

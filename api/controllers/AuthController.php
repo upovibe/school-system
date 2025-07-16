@@ -56,6 +56,18 @@ class AuthController {
                 return;
             }
             
+            // Check if user needs to change password (first login within 24 hours)
+            $requiresPasswordChange = !$user['password_changed'];
+            $accountAge = time() - strtotime($user['created_at']);
+            $isWithin24Hours = $accountAge <= 86400; // 24 hours in seconds
+            
+            // If user hasn't changed password and account is older than 24 hours, deny access
+            if ($requiresPasswordChange && !$isWithin24Hours) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Account activation expired. Please contact administrator for a new password.'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
             // Verify password
             if (!password_verify($data['password'], $user['password'])) {
                 http_response_code(401);

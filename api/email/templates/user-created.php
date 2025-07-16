@@ -90,6 +90,7 @@
         <div class="warning">
             <h4>⚠️ Important Security Notice</h4>
             <p>For your security, you <strong>must change your password</strong> on your first login. The system will automatically prompt you to set a new password.</p>
+            <p><strong>Note:</strong> This login link is valid for 24 hours. If you don't log in within this time, please contact the administrator for a new password.</p>
         </div>
         
         <p>You can now log in to your account using the credentials above:</p>

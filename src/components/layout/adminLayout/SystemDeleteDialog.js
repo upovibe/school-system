@@ -1,53 +1,163 @@
-import App from '@/core/App.js';
-import api from '@/services/api.js';
 import '@/components/ui/Dialog.js';
-import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
+import api from '@/services/api.js';
 
-class SystemDeleteDialog extends App {
+/**
+ * System Delete Dialog Component
+ * 
+ * A dialog component for confirming system setting deletions in the admin panel
+ * 
+ * Attributes:
+ * - open: boolean - controls dialog visibility
+ * 
+ * Events:
+ * - setting-deleted: Fired when a setting is successfully deleted
+ * - dialog-closed: Fired when dialog is closed
+ */
+class SystemDeleteDialog extends HTMLElement {
     constructor() {
         super();
-        this.state = {
-            setting: null,
-        };
+        this.settingData = null;
     }
 
-    setSettingData(data) {
-        this.setState({ setting: data });
+    static get observedAttributes() {
+        return ['open'];
     }
 
-    async handleDelete() {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await api.withToken(token).delete(`/settings/${this.state.setting.id}`);
-            if (response.data.success) {
-                Toast.show({ title: 'Success', message: 'Setting deleted successfully.', variant: 'success' });
-                this.dispatchEvent(new CustomEvent('setting-deleted', { bubbles: true, composed: true }));
-                this.close();
-            } else {
-                Toast.show({ title: 'Error', message: response.data.message, variant: 'error' });
-            }
-        } catch (error) {
-            Toast.show({ title: 'Error', message: error.message, variant: 'error' });
-        }
+    connectedCallback() {
+        this.render();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Listen for dialog confirm/cancel events
+        this.addEventListener('confirm', () => {
+            this.confirmDelete();
+        });
+
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+    }
+
+    open() {
+        this.setAttribute('open', '');
     }
 
     close() {
-        this.closest('ui-dialog').close();
+        this.removeAttribute('open');
+        this.settingData = null;
+    }
+
+    // Set setting data for deletion
+    setSettingData(settingData) {
+        this.settingData = settingData;
+        // Update the dialog content immediately
+        this.updateDialogContent();
+    }
+
+    // Update dialog content without full re-render
+    updateDialogContent() {
+        const contentSlot = this.querySelector('[slot="content"]');
+        if (contentSlot && this.settingData) {
+            const settingKey = this.settingData.setting_key || 'Unknown';
+            const settingValue = this.settingData.setting_value || '';
+            const truncatedValue = settingValue.length > 50 ? settingValue.substring(0, 50) + '...' : settingValue;
+            
+            contentSlot.innerHTML = `
+                <p class="text-gray-700 mb-4">
+                    Are you sure you want to delete the setting "<strong>${settingKey}</strong>"?
+                </p>
+                <p class="text-sm text-gray-500 mb-2">
+                    <strong>Current Value:</strong> ${truncatedValue}
+                </p>
+                <p class="text-sm text-gray-500">
+                    This action cannot be undone. The setting will be permanently removed.
+                </p>
+            `;
+        }
+    }
+
+    // Handle delete confirmation
+    async confirmDelete() {
+        if (!this.settingData) {
+            console.error('❌ No setting data available for deletion');
+            Toast.show({
+                title: 'Error',
+                message: 'No setting data available for deletion',
+                variant: 'error',
+                duration: 3000
+            });
+            return;
+        }
+
+        try {
+            // Get the auth token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('❌ No authentication token found');
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to delete settings',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Store setting ID before deletion
+            const settingId = this.settingData.id;
+
+            // Delete the setting
+            await api.withToken(token).delete(`/settings/${settingId}`);
+            
+            Toast.show({
+                title: 'Success',
+                message: 'Setting deleted successfully',
+                variant: 'success',
+                duration: 3000
+            });
+
+            // Close dialog and dispatch event
+            this.close();
+            this.dispatchEvent(new CustomEvent('setting-deleted', {
+                detail: { settingId: settingId },
+                bubbles: true,
+                composed: true
+            }));
+
+        } catch (error) {
+            console.error('❌ Error deleting setting:', error);
+            Toast.show({
+                title: 'Error',
+                message: error.response?.data?.message || 'Failed to delete setting',
+                variant: 'error',
+                duration: 3000
+            });
+        }
     }
 
     render() {
-        const { setting } = this.state;
-        if (!setting) {
-            return `<ui-dialog title="Delete Setting"><p>Loading...</p></ui-dialog>`;
-        }
-
-        return `
-            <ui-dialog title="Delete Setting">
-                <p>Are you sure you want to delete the setting with key <strong>${setting.setting_key}</strong>?</p>
-                <div class="flex justify-end space-x-2 mt-4">
-                    <ui-button variant="ghost" @click="${this.close}">Cancel</ui-button>
-                    <ui-button variant="danger" @click="${this.handleDelete}">Delete</ui-button>
+        const settingKey = this.settingData?.setting_key || 'Unknown';
+        const settingValue = this.settingData?.setting_value || '';
+        const truncatedValue = settingValue.length > 50 ? settingValue.substring(0, 50) + '...' : settingValue;
+        
+        this.innerHTML = `
+            <ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Confirm Delete" 
+                position="center"
+                variant="danger">
+                <div slot="content">
+                    <p class="text-gray-700 mb-4">
+                        Are you sure you want to delete the setting "<strong>${settingKey}</strong>"?
+                    </p>
+                    <p class="text-sm text-gray-500 mb-2">
+                        <strong>Current Value:</strong> ${truncatedValue}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        This action cannot be undone. The setting will be permanently removed.
+                    </p>
                 </div>
             </ui-dialog>
         `;
@@ -55,3 +165,4 @@ class SystemDeleteDialog extends App {
 }
 
 customElements.define('system-delete-dialog', SystemDeleteDialog);
+export default SystemDeleteDialog;

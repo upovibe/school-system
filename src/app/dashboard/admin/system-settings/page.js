@@ -8,7 +8,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/SystemSettingsModal.js';
 import '@/components/layout/adminLayout/SystemUpdateModal.js';
 // import '@/components/layout/adminLayout/SystemViewModal.js';
-// import '@/components/layout/adminLayout/SystemDeleteDialog.js';
+import '@/components/layout/adminLayout/SystemDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -45,7 +45,13 @@ class SystemSettingsPage extends App {
         
         // Listen for success events to refresh data
         this.addEventListener('setting-deleted', (event) => {
-            this.loadData();
+            // Remove the deleted setting from the current data
+            const deletedSettingId = event.detail.settingId;
+            const currentSettings = this.get('settings') || [];
+            const updatedSettings = currentSettings.filter(setting => setting.id !== deletedSettingId);
+            this.set('settings', updatedSettings);
+            
+            // Close the delete dialog
             this.set('showDeleteDialog', false);
         });
         
@@ -144,6 +150,12 @@ class SystemSettingsPage extends App {
             this.closeAllModals();
             this.set('deleteSettingData', deleteSetting);
             this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('system-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setSettingData(deleteSetting);
+                }
+            }, 0);
         }
     }
 
@@ -238,7 +250,7 @@ class SystemSettingsPage extends App {
             <system-settings-modal ${showAddModal ? 'open' : ''}></system-settings-modal>
             <system-update-modal ${showUpdateModal ? 'open' : ''}></system-update-modal>
             <!-- <system-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></system-view-modal> -->
-            <!-- <system-delete-dialog ${showDeleteDialog ? 'open' : ''}></system-delete-dialog> -->
+            <system-delete-dialog ${showDeleteDialog ? 'open' : ''}></system-delete-dialog>
         `;
     }
 }

@@ -107,14 +107,18 @@ class PageViewModal extends HTMLElement {
 
                         <!-- Banner Image Preview -->
                         <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-image text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Banner Image</h4>
+                            </div>
                             ${this.pageData.banner_image ? `
-                                <div class="space-y-2">
-                                    <div class="relative">
+                                <div class="space-y-3">
+                                    <div class="relative w-full h-72">
                                         <img src="${this.getImageUrl(this.pageData.banner_image)}" 
                                              alt="Banner Image" 
-                                             class="w-full h-48 object-cover rounded-lg border border-gray-200"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                        <div class="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                             class="w-full h-full object-cover rounded-lg border border-gray-200"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
                                             <div class="text-center">
                                                 <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
                                                 <p class="text-gray-500 text-sm">Image not found</p>
@@ -123,15 +127,18 @@ class PageViewModal extends HTMLElement {
                                     </div>
                                     <div class="flex justify-end">
                                         <button onclick="window.open('${this.getImageUrl(this.pageData.banner_image)}', '_blank')" 
-                                                class="text-blue-500 hover:text-blue-700 text-xs">
-                                            <i class="fas fa-external-link-alt mr-1"></i>Open
+                                                class="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
+                                            <i class="fas fa-external-link-alt mr-1"></i>Open in new tab
                                         </button>
                                     </div>
                                 </div>
                             ` : `
-                                <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                                    <i class="fas fa-image text-gray-400 text-3xl mb-2"></i>
-                                    <p class="text-gray-500">No banner image set</p>
+                                <div class="w-full h-72 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <i class="fas fa-image text-gray-400 text-4xl mb-3"></i>
+                                        <p class="text-gray-500 text-sm font-medium">No banner image set</p>
+                                        <p class="text-gray-400 text-xs mt-1">Upload a banner image to enhance your page</p>
+                                    </div>
                                 </div>
                             `}
                         </div>

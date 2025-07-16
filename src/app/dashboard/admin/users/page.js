@@ -50,7 +50,6 @@ class UsersPage extends App {
         
         // Listen for success events to refresh data
         this.addEventListener('user-deleted', (event) => {
-            console.log('🎯 user-deleted event received:', event.detail);
             // Remove the deleted user from the current data
             const deletedUserId = event.detail.userId;
             const currentUsers = this.get('users') || [];
@@ -63,7 +62,6 @@ class UsersPage extends App {
         });
         
         this.addEventListener('user-saved', (event) => {
-            console.log('🎯 user-saved event received:', event.detail);
             // Add the new user to the existing data
             const newUser = event.detail.user;
             if (newUser) {
@@ -76,7 +74,6 @@ class UsersPage extends App {
         });
         
         this.addEventListener('user-updated', (event) => {
-            console.log('🎯 user-updated event received:', event.detail);
             // Update the existing user in the data
             const updatedUser = event.detail.user;
             if (updatedUser) {

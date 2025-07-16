@@ -89,7 +89,7 @@ class UserDeleteDialog extends HTMLElement {
             // Delete user
             const response = await api.withToken(token).delete(`/users/${this.userData.id}`);
             
-            if (response.data.success) {
+            if (response.data.message) {
                 Toast.show({
                     title: 'Success',
                     message: 'User deleted successfully',

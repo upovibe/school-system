@@ -292,12 +292,12 @@ class UserController {
                 return;
             }
             
+            // Log user deletion BEFORE deleting the user
+            UserLogModel::logAction($id, 'user_deleted', 'User deleted', ['user_id' => $id]);
+            
             $result = $this->userModel->delete($id);
             
             if ($result) {
-                // Log user deletion
-                $this->logModel->logAction($id, 'user_deleted', 'User deleted', ['user_id' => $id]);
-                
                 echo json_encode(['message' => 'User deleted successfully'], JSON_PRETTY_PRINT);
             } else {
                 http_response_code(500);

@@ -137,7 +137,7 @@ class DashboardLayout extends App {
                 { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
                 { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
                 { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },
-                { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/reports' }
+                { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/system-report' }
             ],
             teacher: [
                 { label: 'Teacher Dashboard', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/teacher/dashboard' },

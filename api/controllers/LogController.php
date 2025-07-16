@@ -66,7 +66,9 @@ class LogController {
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             echo json_encode([
-                'logs' => $logs,
+                'success' => true,
+                'message' => 'Logs retrieved successfully',
+                'data' => $logs,
                 'pagination' => [
                     'page' => (int)$page,
                     'limit' => (int)$limit,
@@ -77,7 +79,11 @@ class LogController {
             
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to retrieve logs',
+                'error' => $e->getMessage()
+            ], JSON_PRETTY_PRINT);
         }
     }
 
@@ -96,14 +102,25 @@ class LogController {
             
             if (!$log) {
                 http_response_code(404);
-                echo json_encode(['error' => 'Log not found'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Log not found'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
-            echo json_encode($log, JSON_PRETTY_PRINT);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Log retrieved successfully',
+                'data' => $log
+            ], JSON_PRETTY_PRINT);
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to retrieve log',
+                'error' => $e->getMessage()
+            ], JSON_PRETTY_PRINT);
         }
     }
 }

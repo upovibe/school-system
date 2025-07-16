@@ -164,7 +164,19 @@ class DashboardLayout extends App {
                 { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' }
             ]
         };
-        return (roleItems[userRole] || []).map(item => ({ ...item, active: path === item.href }));
+        
+        // Add profile link to all roles
+        const baseItems = (roleItems[userRole] || []).map(item => ({ ...item, active: path === item.href }));
+        
+        // Add profile link at the end for all roles
+        baseItems.push({
+            label: 'Profile',
+            icon: 'fas fa-user',
+            href: '/dashboard/profile',
+            active: path === '/dashboard/profile'
+        });
+        
+        return baseItems;
     }
 
     getPageTitle() {
@@ -178,7 +190,7 @@ class DashboardLayout extends App {
             'system-settings': 'System Settings', 'users': 'User Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
-            'messages': 'Messages'
+            'messages': 'Messages', 'user-role': 'User Roles'
         };
         return titles[lastSegment] || 'Dashboard';
     }

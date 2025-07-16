@@ -18,10 +18,19 @@ class RoleController {
             ob_clean();
             
             $roles = $this->roleModel->withUsersCount();
-            echo json_encode($roles, JSON_PRETTY_PRINT);
+            
+            // Return standard API response format
+            echo json_encode([
+                'success' => true,
+                'data' => $roles,
+                'message' => 'Roles retrieved successfully'
+            ], JSON_PRETTY_PRINT);
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JSON_PRETTY_PRINT);
         }
     }
 
@@ -34,7 +43,10 @@ class RoleController {
             // Validate required fields
             if (!isset($data['name'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Role name is required'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Role name is required'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
@@ -42,20 +54,35 @@ class RoleController {
             $existingRole = $this->roleModel->findByName($data['name']);
             if ($existingRole) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Role name already exists'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Role name already exists'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
             $id = $this->roleModel->create($data);
             
-            // Log role creation
-            $this->logModel->logAction(null, 'role_created', 'New role created', $data);
-            
-            http_response_code(201);
-            echo json_encode([
-                'id' => $id, 
-                'message' => 'Role created successfully'
-            ], JSON_PRETTY_PRINT);
+            if ($id) {
+                // Get the created role data
+                $createdRole = $this->roleModel->findById($id);
+                
+                // Log role creation
+                $this->logModel->logAction(null, 'role_created', 'New role created', $data);
+                
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $createdRole,
+                    'message' => 'Role created successfully'
+                ], JSON_PRETTY_PRINT);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to create role'
+                ], JSON_PRETTY_PRINT);
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
@@ -69,11 +96,18 @@ class RoleController {
             $role = $this->roleModel->findById($id);
             if (!$role) {
                 http_response_code(404);
-                echo json_encode(['error' => 'Role not found'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Role not found'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
-            echo json_encode($role, JSON_PRETTY_PRINT);
+            echo json_encode([
+                'success' => true,
+                'data' => $role,
+                'message' => 'Role retrieved successfully'
+            ], JSON_PRETTY_PRINT);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
@@ -90,7 +124,10 @@ class RoleController {
             $existingRole = $this->roleModel->findById($id);
             if (!$existingRole) {
                 http_response_code(404);
-                echo json_encode(['error' => 'Role not found'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Role not found'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
@@ -99,7 +136,10 @@ class RoleController {
                 $nameExists = $this->roleModel->findByName($data['name']);
                 if ($nameExists) {
                     http_response_code(400);
-                    echo json_encode(['error' => 'Role name already exists'], JSON_PRETTY_PRINT);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Role name already exists'
+                    ], JSON_PRETTY_PRINT);
                     return;
                 }
             }
@@ -107,13 +147,23 @@ class RoleController {
             $result = $this->roleModel->update($id, $data);
             
             if ($result) {
+                // Get the updated role data
+                $updatedRole = $this->roleModel->findById($id);
+                
                 // Log role update
                 $this->logModel->logAction(null, 'role_updated', 'Role updated', $data);
                 
-                echo json_encode(['message' => 'Role updated successfully'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $updatedRole,
+                    'message' => 'Role updated successfully'
+                ], JSON_PRETTY_PRINT);
             } else {
                 http_response_code(500);
-                echo json_encode(['error' => 'Failed to update role'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to update role'
+                ], JSON_PRETTY_PRINT);
             }
         } catch (Exception $e) {
             http_response_code(500);
@@ -129,7 +179,10 @@ class RoleController {
             $role = $this->roleModel->findById($id);
             if (!$role) {
                 http_response_code(404);
-                echo json_encode(['error' => 'Role not found'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Role not found'
+                ], JSON_PRETTY_PRINT);
                 return;
             }
             
@@ -149,10 +202,16 @@ class RoleController {
                 // Log role deletion
                 $this->logModel->logAction(null, 'role_deleted', 'Role deleted', ['role_id' => $id]);
                 
-                echo json_encode(['message' => 'Role deleted successfully'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Role deleted successfully'
+                ], JSON_PRETTY_PRINT);
             } else {
                 http_response_code(500);
-                echo json_encode(['error' => 'Failed to delete role'], JSON_PRETTY_PRINT);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to delete role'
+                ], JSON_PRETTY_PRINT);
             }
         } catch (Exception $e) {
             http_response_code(500);

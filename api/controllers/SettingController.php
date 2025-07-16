@@ -6,6 +6,7 @@ require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../utils/settings_uploads.php';
 require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../core/MultipartFormParser.php';
 
 class SettingController {
     private $pdo;
@@ -207,10 +208,17 @@ class SettingController {
         try {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
+
+            // Handle multipart/form-data for PUT requests
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'multipart/form-data') !== false && $_SERVER['REQUEST_METHOD'] === 'PUT') {
+                $rawData = file_get_contents('php://input');
+                MultipartFormParser::processRequest($rawData, $contentType);
+            }
             
             // Handle both JSON and multipart form data
             $data = [];
-            if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+            if (strpos($contentType, 'multipart/form-data') !== false) {
                 // Handle multipart form data
                 $data = $_POST;
                 
@@ -263,7 +271,9 @@ class SettingController {
                     deleteSettingFile($existingSetting['setting_value']);
                 }
             }
-            
+
+            // Debug: Log data before update
+            error_log('DATA BEFORE UPDATE: ' . print_r($data, true));
             $result = $this->settingModel->update($id, $data);
             
             if ($result) {

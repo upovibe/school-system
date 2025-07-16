@@ -82,20 +82,15 @@ class ProfileContent extends App {
             }
         });
 
-        this.addEventListener('change', (e) => {
+        this.addEventListener('upload-success', (e) => {
             if (e.target.tagName === 'UI-PROFILE-IMAGE-UPLOADER') {
-                this.handleProfileImageUpload(e.detail);
+                this.handleUploadSuccess(e.detail);
             }
         });
 
-        this.addEventListener('error', (e) => {
+        this.addEventListener('upload-error', (e) => {
             if (e.target.tagName === 'UI-PROFILE-IMAGE-UPLOADER') {
-                Toast.show({
-                    title: 'Upload Error',
-                    message: e.detail.message,
-                    variant: 'error',
-                    duration: 5000
-                });
+                this.handleUploadError(e.detail);
             }
         });
     }
@@ -245,81 +240,55 @@ class ProfileContent extends App {
 
 
 
-    async handleProfileImageUpload(detail) {
-        try {
-            const { file } = detail;
-            
-            // Show upload progress
-            const uploader = this.querySelector('ui-profile-image-uploader');
-            if (uploader) {
-                uploader.setUploadProgress(10);
-            }
-
-            // Create FormData for file upload
-            const formData = new FormData();
-            formData.append('profile_image', file);
-            formData.append('user_id', this.userData.id);
-
-            const token = localStorage.getItem('token');
-            
-            // Upload the image
-            const response = await fetch('/api/users/upload-profile-image', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to upload image');
-            }
-
-            const result = await response.json();
-            
-            // Update progress
-            if (uploader) {
-                uploader.setUploadProgress(100);
-            }
-
-            // Update user data with new image URL
-            this.userData.profile_image = result.image_url;
-            this.set('userData', this.userData);
-
-            // Update local storage
-            const updatedUserData = { ...JSON.parse(localStorage.getItem('userData') || '{}'), profile_image: result.image_url };
-            localStorage.setItem('userData', JSON.stringify(updatedUserData));
-
-            Toast.show({
-                title: 'Success',
-                message: 'Profile image updated successfully',
-                variant: 'success',
-                duration: 3000
-            });
-
-            // Reset progress after a delay
-            setTimeout(() => {
-                if (uploader) {
-                    uploader.setUploadProgress(0);
-                }
-            }, 1000);
-
-        } catch (error) {
-            console.error('Error uploading profile image:', error);
-            
-            // Reset progress
-            const uploader = this.querySelector('ui-profile-image-uploader');
-            if (uploader) {
-                uploader.setUploadProgress(0);
-            }
-
-            Toast.show({
-                title: 'Upload Error',
-                message: 'Failed to upload profile image. Please try again.',
-                variant: 'error',
-                duration: 5000
-            });
+    // Helper method to get proper image URL (same as PageViewModal)
+    getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
         }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        
+        // If it's a relative path without /, construct the URL with /api/ prefix
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
+    }
+
+    handleUploadSuccess(detail) {
+        console.log('Upload success:', detail);
+        
+        // Update user data with new image URL
+        this.userData.profile_image = detail.result.image_url;
+        this.set('userData', this.userData);
+
+        // Update local storage
+        const updatedUserData = { ...JSON.parse(localStorage.getItem('userData') || '{}'), profile_image: detail.result.image_url };
+        localStorage.setItem('userData', JSON.stringify(updatedUserData));
+
+        Toast.show({
+            title: 'Success',
+            message: 'Profile image updated successfully',
+            variant: 'success',
+            duration: 3000
+        });
+    }
+
+    handleUploadError(detail) {
+        console.error('Upload error:', detail);
+        
+        Toast.show({
+            title: 'Upload Error',
+            message: detail.error || 'Failed to upload profile image. Please try again.',
+            variant: 'error',
+            duration: 5000
+        });
     }
 
     render() {
@@ -366,7 +335,7 @@ class ProfileContent extends App {
                         <!-- Profile Picture (Left) -->
                         <div class="flex-shrink-0 w-2/6" style="aspect-ratio: 1; min-width: 8rem;">
                             <ui-profile-image-uploader 
-                                src="${user.profile_image || ''}" 
+                                src="${this.getImageUrl(user.profile_image) || ''}" 
                                 name="${user.name || 'User'}" 
                                 size="lg"
                                 accept="image/*"

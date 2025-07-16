@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/RoleModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../utils/profile_uploads.php';
 
 class UserController {
     private $userModel;
@@ -522,6 +523,71 @@ class UserController {
                 error_log("Email error: " . $emailError->getMessage());
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to send welcome email'], JSON_PRETTY_PRINT);
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
+        }
+    }
+
+    public function uploadProfileImage($id) {
+        try {
+            ob_clean();
+            
+            // Check if user exists
+            $user = $this->userModel->findById($id);
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['error' => 'User not found'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Check if file was uploaded
+            if (!isset($_FILES['profile_image']) || $_FILES['profile_image']['error'] === UPLOAD_ERR_NO_FILE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No profile image file provided'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Handle file upload
+            $uploadResult = uploadProfileImage($_FILES['profile_image']);
+            
+            if (!$uploadResult['success']) {
+                http_response_code(400);
+                echo json_encode(['error' => $uploadResult['message']], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Delete old profile image if it exists
+            if (!empty($user['profile_image']) && file_exists($user['profile_image'])) {
+                deleteProfileImage($user['profile_image']);
+            }
+            
+            // Update user with new profile image path
+            $updateData = [
+                'profile_image' => $uploadResult['filepath']
+            ];
+            
+            $result = $this->userModel->update($id, $updateData);
+            
+            if ($result) {
+                // Log profile image update
+                $this->logModel->logAction($id, 'profile_image_updated', 'Profile image updated', [
+                    'user_id' => $id,
+                    'old_image' => $user['profile_image'] ?? null,
+                    'new_image' => $uploadResult['filepath']
+                ]);
+                
+                echo json_encode([
+                    'message' => 'Profile image uploaded successfully',
+                    'image_url' => $uploadResult['filepath'],
+                    'thumbnails' => $uploadResult['thumbnails'] ?? [],
+                    'filepath' => $uploadResult['filepath']
+                ], JSON_PRETTY_PRINT);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to update profile image'], JSON_PRETTY_PRINT);
             }
             
         } catch (Exception $e) {

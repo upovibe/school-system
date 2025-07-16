@@ -205,6 +205,39 @@ class ProfileImageUploader extends HTMLElement {
                     height: 1.25rem;
                 }
                 
+                .upo-profile-image-confirm-button.loading {
+                    background: #3b82f6;
+                    animation: pulse 2s infinite;
+                }
+                
+                .upo-profile-image-confirm-button.success {
+                    background: #10b981;
+                    animation: bounce 0.6s ease-in-out;
+                }
+                
+                .upo-profile-image-confirm-button.error {
+                    background: #ef4444;
+                    animation: shake 0.5s ease-in-out;
+                }
+                
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.7; }
+                }
+                
+                @keyframes bounce {
+                    0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+                    40%, 43% { transform: translate3d(0,-8px,0); }
+                    70% { transform: translate3d(0,-4px,0); }
+                    90% { transform: translate3d(0,-2px,0); }
+                }
+                
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+                    20%, 40%, 60%, 80% { transform: translateX(2px); }
+                }
+                
                 .upo-profile-image-preview-lg .upo-profile-image-upload-icon {
                     width: 2rem;
                     height: 2rem;
@@ -414,7 +447,7 @@ class ProfileImageUploader extends HTMLElement {
         this.confirmButton.addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.pendingFile && !this.confirmButton.disabled) {
-                this.confirmUpload();
+                this.uploadFile();
             }
         });
     }
@@ -480,17 +513,181 @@ class ProfileImageUploader extends HTMLElement {
 
     confirmUpload() {
         if (this.pendingFile) {
+            // Show loading state
+            this.setLoadingState(true);
+            
             // Dispatch change event for actual upload
             this.dispatchEvent(new CustomEvent('change', {
                 detail: { file: this.pendingFile, preview: this.currentImage }
             }));
+        }
+    }
 
-            // Hide confirm button
+    // Method to be called from parent component to handle upload
+    async uploadFile() {
+        if (!this.pendingFile) {
+            return;
+        }
+
+        try {
+            this.setLoadingState(true);
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('profile_image', this.pendingFile);
+            
+            // Get user ID from parent component or localStorage
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const userId = userData.id;
+            const token = localStorage.getItem('token');
+            
+            if (!userId || !token) {
+                throw new Error('User not authenticated');
+            }
+            
+            // Upload the file
+            const response = await fetch(`/api/users/${userId}/upload-profile-image`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
+            }
+            
+            const result = await response.json();
+            
+            // Show success state
+            this.setSuccessState();
+            
+            // Update the image source with proper URL construction
+            const imageUrl = this.constructImageUrl(result.image_url);
+            this.setImage(imageUrl);
+            
+            // Dispatch success event
+            this.dispatchEvent(new CustomEvent('upload-success', {
+                detail: { result, file: this.pendingFile }
+            }));
+            
+        } catch (error) {
+            this.setErrorState();
+            
+            // Dispatch error event
+            this.dispatchEvent(new CustomEvent('upload-error', {
+                detail: { error: error.message }
+            }));
+        }
+    }
+
+    setLoadingState(isLoading) {
+        if (isLoading) {
+            // Show spinning icon
+            this.confirmButton.innerHTML = `
+                <svg class="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="32" stroke-dashoffset="32">
+                        <animate attributeName="stroke-dashoffset" dur="1s" values="32;0;32" repeatCount="indefinite"/>
+                    </path>
+                </svg>
+            `;
+            this.confirmButton.disabled = true;
+            this.confirmButton.classList.add('loading');
+        } else {
+            // Reset to normal state
+            this.confirmButton.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            `;
+            this.confirmButton.disabled = false;
+            this.confirmButton.classList.remove('loading');
+        }
+    }
+
+    setSuccessState() {
+        // First, reset loading state
+        this.setLoadingState(false);
+        
+        // Show success icon briefly
+        this.confirmButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+            </svg>
+        `;
+        this.confirmButton.classList.add('success');
+        
+        // Hide button after success
+        setTimeout(() => {
             this.showConfirmButton = false;
             this.confirmButton.setAttribute('data-visible', 'false');
             this.confirmButton.disabled = true;
+            this.confirmButton.classList.remove('success');
             this.pendingFile = null;
+        }, 1500);
+    }
+
+    setErrorState() {
+        // First, reset loading state
+        this.setLoadingState(false);
+        
+        // Show error icon briefly
+        this.confirmButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
+        this.confirmButton.classList.add('error');
+        
+        // Reset to normal state after error
+        setTimeout(() => {
+            this.confirmButton.classList.remove('error');
+            // Reset to initial state
+            this.resetUploaderState();
+        }, 2000);
+    }
+
+    resetUploaderState() {
+        // Reset all states
+        this.showConfirmButton = false;
+        this.confirmButton.setAttribute('data-visible', 'false');
+        this.confirmButton.disabled = true;
+        this.confirmButton.classList.remove('loading', 'success', 'error');
+        this.pendingFile = null;
+        this.currentImage = null;
+        
+        // Reset progress
+        this.setUploadProgress(0);
+        
+        // Reset button to normal state
+        this.confirmButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
+    }
+
+    // Helper method to construct proper image URL
+    constructImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
         }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        
+        // If it's a relative path without /, construct the URL with /api/ prefix
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
     }
 
     setImage(src) {

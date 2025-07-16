@@ -5,8 +5,10 @@ require_once __DIR__ . '/../models/UserLogModel.php';
 
 class LogController {
     private $logModel;
+    private $pdo;
 
     public function __construct($pdo) {
+        $this->pdo = $pdo;
         $this->logModel = new UserLogModel($pdo);
     }
 
@@ -15,8 +17,8 @@ class LogController {
             ob_clean();
             
             // Get query parameters
-            $page = $_GET['page'] ?? 1;
-            $limit = $_GET['limit'] ?? 50;
+            $page = (int)($_GET['page'] ?? 1);
+            $limit = (int)($_GET['limit'] ?? 50);
             $action = $_GET['action'] ?? null;
             $user_id = $_GET['user_id'] ?? null;
             
@@ -44,24 +46,24 @@ class LogController {
             
             $sql .= " ORDER BY ul.created_at DESC";
             
-            // Add pagination
+            // Add pagination - use direct values instead of parameters for LIMIT/OFFSET
             $offset = ($page - 1) * $limit;
-            $sql .= " LIMIT ? OFFSET ?";
-            $params[] = $limit;
-            $params[] = $offset;
+            $sql .= " LIMIT {$limit} OFFSET {$offset}";
             
-            $stmt = $this->logModel->pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Get total count for pagination
             $countSql = "SELECT COUNT(*) as total FROM user_logs ul";
+            $countParams = [];
+            
             if (!empty($whereConditions)) {
                 $countSql .= " WHERE " . implode(' AND ', $whereConditions);
+                $countParams = $params; // Use the same params without LIMIT/OFFSET
             }
             
-            $countStmt = $this->logModel->pdo->prepare($countSql);
-            $countParams = array_slice($params, 0, -2); // Remove limit and offset
+            $countStmt = $this->pdo->prepare($countSql);
             $countStmt->execute($countParams);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
@@ -70,8 +72,8 @@ class LogController {
                 'message' => 'Logs retrieved successfully',
                 'data' => $logs,
                 'pagination' => [
-                    'page' => (int)$page,
-                    'limit' => (int)$limit,
+                    'page' => $page,
+                    'limit' => $limit,
                     'total' => (int)$total,
                     'pages' => ceil($total / $limit)
                 ]
@@ -96,7 +98,7 @@ class LogController {
                     LEFT JOIN users u ON ul.user_id = u.id 
                     WHERE ul.id = ?";
             
-            $stmt = $this->logModel->pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$id]);
             $log = $stmt->fetch(PDO::FETCH_ASSOC);
             

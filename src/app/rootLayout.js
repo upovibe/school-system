@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import api from '@/services/api.js';
 import '@/components/layout/Header.js';
 import '@/components/layout/Footer.js';
 
@@ -14,6 +15,18 @@ import '@/components/layout/Footer.js';
  * - Layout configuration per page
  */
 class RootLayout extends App {
+    constructor() {
+        super();
+        // Make API service available on this instance
+        this.api = api;
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        // Make API service available globally
+        window.api = api;
+    }
+
     render() {
         return `
             <div class="flex flex-col min-h-screen bg-gray-50">

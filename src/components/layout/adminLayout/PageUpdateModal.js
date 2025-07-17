@@ -128,7 +128,9 @@ class PageUpdateModal extends HTMLElement {
             // Add banner files if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
                 const files = bannerFileUpload.getFiles();
-                files.forEach(file => {
+                // Filter out existing files (which are strings/paths) and only include new File objects
+                const newFiles = files.filter(file => file instanceof File);
+                newFiles.forEach(file => {
                     formData.append('banner[]', file, file.name);
                 });
             }

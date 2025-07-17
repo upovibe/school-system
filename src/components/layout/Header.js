@@ -243,9 +243,9 @@ class Header extends App {
         label: 'About',
         subLinks: [
           { href: '/public/about-us/history', label: 'Our History' },
-          { href: '/public/about-us/mission', label: 'Mission & Vision' },
-          { href: '/public/about-us/values', label: 'Our Values' },
-          { href: '/public/about-us/team', label: 'Our Team' }
+          { href: '/public/about-us/mission-vision', label: 'Mission & Vision' },
+          { href: '/public/about-us/values-aims', label: 'Our Values' },
+          { href: '/public/about-us/our-team', label: 'Our Team' }
         ]
       },
       { 

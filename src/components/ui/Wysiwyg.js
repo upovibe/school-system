@@ -156,7 +156,7 @@ class Wysiwyg extends HTMLElement {
                     [{ 'indent': '-1'}, { 'indent': '+1' }],
                     [{ 'align': [] }],
                     ['blockquote', 'code-block'],
-                    ['link', 'image'],
+                    ['link', 'image', 'video'],
                     ['clean']
                 ];
         }

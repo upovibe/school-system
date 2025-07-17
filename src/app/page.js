@@ -1,6 +1,5 @@
 import App from '@/core/App.js';
 import '@/components/ui/Box.js';
-import '@/components/ui/ImageCarousel.js';
 import '@/components/ui/Carousel.js';
 
 /**
@@ -20,36 +19,17 @@ class RootPage extends App {
             <div class="container mx-auto">
                 <h1 class="text-3xl font-bold text-gray-900 mb-8">Welcome to Our School</h1>
                 
-                <ui-image-carousel autoplay interval="4000" >
-                            <ui-image-carousel-item 
-                                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=500&fit=crop" 
-                                alt="School Campus"
-                                title="Excellence in Education"
-                                description="Providing quality education and fostering academic excellence"
-                                data-object-fit="cover">
-                            </ui-image-carousel-item>
-                            
-                            <ui-image-carousel-item 
-                                src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&h=500&fit=crop" 
-                                alt="Students Learning"
-                                title="Modern Learning Environment"
-                                description="State-of-the-art facilities for enhanced learning experiences">
-                            </ui-image-carousel-item>
-                            
-                            <ui-image-carousel-item 
-                                src="https://images.unsplash.com/photo-1523050854058-8df90110c9e1?w=1200&h=500&fit=crop" 
-                                alt="School Activities"
-                                title="Holistic Development"
-                                description="Nurturing students' academic, social, and personal growth">
-                            </ui-image-carousel-item>
-                            
-                            <ui-image-carousel-item 
-                                src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200&h=500&fit=crop" 
-                                alt="Library"
-                                title="Knowledge Hub"
-                                description="Extensive library resources and research facilities">
-                            </ui-image-carousel-item>
-                        </ui-image-carousel>
+                                <ui-carousel>
+                    <ui-carousel-item>
+                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 1</ui-card>
+                    </ui-carousel-item>
+                    <ui-carousel-item>
+                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 2</ui-card>
+                    </ui-carousel-item>
+                    <ui-carousel-item>
+                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 3</ui-card>
+                    </ui-carousel-item>
+                </ui-carousel>
                 
                 <div class="mt-8 text-center">
                     <p class="text-gray-600">Discover our commitment to academic excellence and student success</p>

@@ -25,11 +25,11 @@ class Carousel extends HTMLElement {
     constructor() {
         super();
         
-        // Create the carousel structure with left and right controls
+        // Create the carousel structure with navigation inside
         this.carouselContainer = document.createElement('div');
-        this.leftControls = document.createElement('div');
         this.contentContainer = document.createElement('div');
         this.carouselTrack = document.createElement('div');
+        this.leftControls = document.createElement('div');
         this.rightControls = document.createElement('div');
         
         // Flag to prevent double processing
@@ -41,11 +41,11 @@ class Carousel extends HTMLElement {
         this.autoplayInterval = null;
         this.isTransitioning = false;
         
-        // Build the structure: carouselContainer > [leftControls + contentContainer + rightControls]
+        // Build the structure: carouselContainer > contentContainer > [carouselTrack + leftControls + rightControls]
         this.contentContainer.appendChild(this.carouselTrack);
-        this.carouselContainer.appendChild(this.leftControls);
+        this.contentContainer.appendChild(this.leftControls);
+        this.contentContainer.appendChild(this.rightControls);
         this.carouselContainer.appendChild(this.contentContainer);
-        this.carouselContainer.appendChild(this.rightControls);
         this.appendChild(this.carouselContainer);
         
         // Add default styles via CSS
@@ -61,9 +61,6 @@ class Carousel extends HTMLElement {
                 .upo-carousel {
                     position: relative;
                     width: 100%;
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
                 }
                 
                 .upo-carousel.single-item {
@@ -98,17 +95,29 @@ class Carousel extends HTMLElement {
                     object-fit: cover;
                 }
                 
-                /* Navigation Controls - positioned on left and right */
+                /* Navigation Controls - positioned inside the carousel */
                 .upo-carousel-controls {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
                     pointer-events: none;
+                    z-index: 20;
+                }
+                
+                .upo-carousel-controls.left {
+                    left: 1rem;
+                }
+                
+                .upo-carousel-controls.right {
+                    right: 1rem;
                 }
                 
                 .upo-carousel-control {
-                    width: 2rem;
-                    height: 2rem;
+                    width: 2.5rem;
+                    height: 2.5rem;
                     border-radius: 50%;
                     background-color: rgba(255, 255, 255, 0.9);
                     border: none;
@@ -120,7 +129,12 @@ class Carousel extends HTMLElement {
                     color: #374151;
                     transition: all 0.2s ease-in-out;
                     pointer-events: auto;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                    opacity: 0;
+                }
+                
+                .upo-carousel-wrapper:hover .upo-carousel-control {
+                    opacity: 0.5;
                 }
                 
                 .upo-carousel-control:hover {
@@ -149,8 +163,8 @@ class Carousel extends HTMLElement {
                 }
                 
                 .upo-carousel-indicator {
-                    width: 0.5rem;
-                    height: 0.5rem;
+                    width: 0.375rem;
+                    height: 0.375rem;
                     border-radius: 50%;
                     background-color: rgba(255, 255, 255, 0.5);
                     border: none;
@@ -174,6 +188,14 @@ class Carousel extends HTMLElement {
                         width: 2rem;
                         height: 2rem;
                         font-size: 1rem;
+                    }
+                    
+                    .upo-carousel-controls.left {
+                        left: 0.5rem;
+                    }
+                    
+                    .upo-carousel-controls.right {
+                        right: 0.5rem;
                     }
                     
                     .upo-carousel-indicators {
@@ -222,10 +244,10 @@ class Carousel extends HTMLElement {
 
         // Set up the carousel container
         this.carouselContainer.className = 'upo-carousel';
-        this.leftControls.className = 'upo-carousel-controls';
+        this.leftControls.className = 'upo-carousel-controls left';
         this.contentContainer.className = 'upo-carousel-wrapper';
         this.carouselTrack.className = 'upo-carousel-track';
-        this.rightControls.className = 'upo-carousel-controls';
+        this.rightControls.className = 'upo-carousel-controls right';
         
         // Process child elements
         this.processChildren();

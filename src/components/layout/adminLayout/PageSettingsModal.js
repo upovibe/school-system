@@ -59,7 +59,6 @@ class PageSettingsModal extends HTMLElement {
         try {
             // Get form data using the data-field attributes for reliable selection
             const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const slugInput = this.querySelector('ui-input[data-field="slug"]');
             const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
             const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
             
@@ -71,7 +70,6 @@ class PageSettingsModal extends HTMLElement {
 
             const pageData = {
                 title: titleInput ? titleInput.value : '',
-                slug: slugInput ? slugInput.value : '',
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
@@ -83,10 +81,10 @@ class PageSettingsModal extends HTMLElement {
             console.log('Page data being sent:', pageData); // Debug log
 
             // Validate required fields
-            if (!pageData.title || !pageData.slug) {
+            if (!pageData.title) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please fill in all required fields',
+                    message: 'Please fill in the page title',
                     variant: 'error',
                     duration: 3000
                 });
@@ -142,7 +140,7 @@ class PageSettingsModal extends HTMLElement {
             const newPage = {
                 id: response.data.data?.id || response.data.id,
                 title: pageData.title,
-                slug: pageData.slug,
+                slug: response.data.data?.slug || '',
                 category: pageData.category,
                 content: pageData.content,
                 meta_description: pageData.meta_description,
@@ -192,15 +190,7 @@ class PageSettingsModal extends HTMLElement {
                             </ui-input>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Page Slug</label>
-                            <ui-input 
-                                data-field="slug"
-                                type="text" 
-                                placeholder="Enter page slug"
-                                class="w-full">
-                            </ui-input>
-                        </div>
+
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>

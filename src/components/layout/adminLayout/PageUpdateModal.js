@@ -76,7 +76,6 @@ class PageUpdateModal extends HTMLElement {
         try {
             // Get values from custom UI components using data-field attributes
             const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const slugInput = this.querySelector('ui-input[data-field="slug"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
@@ -87,7 +86,6 @@ class PageUpdateModal extends HTMLElement {
 
             const pageData = {
                 title: titleInput ? titleInput.value : '',
-                slug: slugInput ? slugInput.value : '',
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 meta_description: metaDescriptionTextarea ? metaDescriptionTextarea.value : '',
@@ -97,10 +95,10 @@ class PageUpdateModal extends HTMLElement {
             };
 
             // Validate required fields
-            if (!pageData.title || !pageData.slug) {
+            if (!pageData.title) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please fill in all required fields',
+                    message: 'Please fill in the page title',
                     variant: 'error',
                     duration: 3000
                 });
@@ -147,7 +145,7 @@ class PageUpdateModal extends HTMLElement {
 
             // Construct the updated page data from response
             const updatedPage = {
-                ...this.pageData, // Keep existing fields like id, created_at
+                ...this.pageData, // Keep existing fields like id, created_at, slug
                 ...pageData,
                 banner_image: response.data.data?.banner_image || this.pageData.banner_image,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -192,17 +190,7 @@ class PageUpdateModal extends HTMLElement {
                             </ui-input>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Page Slug</label>
-                            <ui-input 
-                                data-field="slug"
-                                name="slug"
-                                type="text" 
-                                placeholder="Enter page slug"
-                                value="${this.pageData?.slug || ''}"
-                                class="w-full">
-                            </ui-input>
-                        </div>
+
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>

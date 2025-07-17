@@ -30,7 +30,7 @@ class PageSettingsSeeder
                 'title' => 'Home',
                 'content' => '<h2>Welcome to Our School</h2><p>We are committed to providing quality education and fostering academic excellence.</p>',
                 'meta_description' => 'Learn about our school\'s history, mission, and commitment to education.',
-                'category' => 'home',
+                'category' => 'general',
                 'is_active' => 1,
                 'sort_order' => 1,
                 'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])

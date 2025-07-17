@@ -207,12 +207,39 @@ class Header extends App {
       return '';
     }
 
-    // Navigation links array
+    // Navigation links array with sub-links
     const navigationLinks = [
       { href: '/', label: 'Home' },
-      { href: '/about', label: 'About' },
-      { href: '/courses', label: 'Courses' },
-      { href: '/admissions', label: 'Admissions' },
+      { 
+        href: '/about', 
+        label: 'About',
+        subLinks: [
+          { href: '/about/history', label: 'Our History' },
+          { href: '/about/mission', label: 'Mission & Vision' },
+          { href: '/about/values', label: 'Our Values' },
+          { href: '/about/team', label: 'Our Team' }
+        ]
+      },
+      { 
+        href: '/courses', 
+        label: 'Courses',
+        subLinks: [
+          { href: '/courses/elementary', label: 'Elementary' },
+          { href: '/courses/middle-school', label: 'Middle School' },
+          { href: '/courses/high-school', label: 'High School' },
+          { href: '/courses/extracurricular', label: 'Extracurricular' }
+        ]
+      },
+      { 
+        href: '/admissions', 
+        label: 'Admissions',
+        subLinks: [
+          { href: '/admissions/requirements', label: 'Requirements' },
+          { href: '/admissions/process', label: 'Application Process' },
+          { href: '/admissions/fees', label: 'Tuition & Fees' },
+          { href: '/admissions/scholarships', label: 'Scholarships' }
+        ]
+      },
       { href: '/contact', label: 'Contact' }
     ];
 
@@ -227,11 +254,46 @@ class Header extends App {
 
     // Helper function to render navigation links
     const renderNavLinks = (isMobile = false) => {
-      return navigationLinks.map(link => `
-        <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${isMobile ? hoverDarkColor : themeColor}] font-medium transition-colors ${isMobile ? 'py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full' : ''}">
-          ${link.label}
-        </ui-link>
-      `).join('');
+      return navigationLinks.map(link => {
+        if (isMobile) {
+          // Mobile version - simple links
+          return `
+            <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+              ${link.label}
+            </ui-link>
+            ${link.subLinks ? `
+              <div class="ml-4 space-y-2">
+                ${link.subLinks.map(subLink => `
+                  <ui-link href="${subLink.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
+                    ${subLink.label}
+                  </ui-link>
+                `).join('')}
+              </div>
+            ` : ''}
+          `;
+        } else {
+          // Desktop version - with dropdown
+          return `
+            <div class="relative group">
+              <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${themeColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${themeColor}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
+                ${link.label}
+                ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
+              </ui-link>
+              ${link.subLinks ? `
+                <div class="absolute top-full left-0 mt-2 w-48 bg-[${secondaryColor}] border border-[${secondaryColor}] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
+                  <div class="py-2">
+                    ${link.subLinks.map(subLink => `
+                      <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${brandTextColor}] hover:text-[${themeColor}] hover:bg-[${hoverLightColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${themeColor}]">
+                        ${subLink.label}
+                      </ui-link>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+      }).join('');
     };
 
     // Helper function to render social icons

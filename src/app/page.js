@@ -16,7 +16,7 @@ class RootPage extends App {
 
     async fetchPageData() {
         try {
-            const response = await api.get('/pages/slug/about-us');
+            const response = await api.get('/pages/slug/home');
             if (response.data.success) {
                 this.set('pageData', response.data.data);
                 this.render();

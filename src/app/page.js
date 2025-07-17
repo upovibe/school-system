@@ -138,6 +138,8 @@ class RootPage extends App {
                                         <p class="text-gray-500">Banner image not found</p>
                                     </div>
                                 </div>
+                                <!-- Dark gradient overlay from bottom to top -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-lg"></div>
                             </div>
                         </div>
                         

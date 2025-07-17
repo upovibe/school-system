@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import PageLoader from '@/components/common/PageLoader.js';
+import store from '@/core/store.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -20,14 +21,33 @@ class RootPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Home | UPO UI';
-        this.fetchPageData();
+        this.loadPageData();
+    }
+
+    async loadPageData() {
+        // Check if data is already cached in global store
+        const globalState = store.getState();
+        if (globalState.homePageData) {
+            this.set('pageData', globalState.homePageData);
+            this.render();
+            return;
+        }
+
+        // If not cached, fetch from API
+        await this.fetchPageData();
     }
 
     async fetchPageData() {
         try {
             const response = await api.get('/pages/slug/home');
             if (response.data.success) {
-                this.set('pageData', response.data.data);
+                const pageData = response.data.data;
+                
+                // Cache the data in global store
+                store.setState({ homePageData: pageData });
+                
+                // Set local state and render
+                this.set('pageData', pageData);
                 this.render();
             }
         } catch (error) {
@@ -96,6 +116,15 @@ class RootPage extends App {
         
         // Return first 150 characters with ellipsis if longer
         return plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
+    }
+
+    // Method to refresh data (clear cache and fetch again)
+    async refreshData() {
+        // Clear the cache
+        store.setState({ homePageData: null });
+        
+        // Fetch fresh data
+        await this.fetchPageData();
     }
 
     render() {

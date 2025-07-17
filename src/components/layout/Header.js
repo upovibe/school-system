@@ -280,7 +280,7 @@ class Header extends App {
                 ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
               </ui-link>
               ${link.subLinks ? `
-                <div class="absolute top-full left-0 mt-2 w-48 bg-[${secondaryColor}] border border-[${secondaryColor}] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
+                <div class="absolute top-full left-0 mt-4 w-48 bg-[${secondaryColor}] border border-[${secondaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
                   <div class="py-2">
                     ${link.subLinks.map(subLink => `
                       <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${brandTextColor}] hover:text-[${themeColor}] hover:bg-[${hoverLightColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${themeColor}]">

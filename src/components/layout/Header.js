@@ -279,8 +279,6 @@
           subLinks: [
             { href: '/public/admissions/requirements', label: 'Requirements' },
             { href: '/public/admissions/process', label: 'Application Process' },
-            { href: '/public/admissions/fees', label: 'Tuition & Fees' },
-            { href: '/public/admissions/scholarships', label: 'Scholarships' }
           ]
         }
       ];

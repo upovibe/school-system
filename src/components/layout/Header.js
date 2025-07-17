@@ -207,6 +207,42 @@ class Header extends App {
       return '';
     }
 
+    // Navigation links array
+    const navigationLinks = [
+      { href: '/', label: 'Home' },
+      { href: '/about', label: 'About' },
+      { href: '/courses', label: 'Courses' },
+      { href: '/admissions', label: 'Admissions' },
+      { href: '/contact', label: 'Contact' }
+    ];
+
+    // Social icons array
+    const socialIcons = [
+      { key: 'facebook_url', icon: 'fab fa-facebook-f' },
+      { key: 'twitter_url', icon: 'fab fa-twitter' },
+      { key: 'instagram_url', icon: 'fab fa-instagram' },
+      { key: 'linkedin_url', icon: 'fab fa-linkedin-in' },
+      { key: 'youtube_url', icon: 'fab fa-youtube' }
+    ];
+
+    // Helper function to render navigation links
+    const renderNavLinks = (isMobile = false) => {
+      return navigationLinks.map(link => `
+        <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${isMobile ? hoverDarkColor : themeColor}] font-medium transition-colors ${isMobile ? 'py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full' : ''}">
+          ${link.label}
+        </ui-link>
+      `).join('');
+    };
+
+    // Helper function to render social icons
+    const renderSocialIcons = (isMobile = false) => {
+      return socialIcons.map(social => `
+        <a href="${this.get(social.key) || '#'}" class="text-[${brandTextColor}] hover:text-[${isMobile ? hoverDarkColor : themeColor}] transition-colors">
+          <i class="${social.icon} ${isMobile ? '' : 'text-sm lg:text-base'}"></i>
+        </a>
+      `).join('');
+    };
+
     return `
       <div class="relative">
         <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${themeColor}]">
@@ -248,40 +284,12 @@ class Header extends App {
           <div class="flex container mx-auto items-center justify-between p-3 lg:p-4 bg-[${secondaryColor}]">
             <!-- Navigation Links - Hidden on mobile -->
             <nav class="hidden lg:flex items-center space-x-6">
-              <ui-link href="/" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-                Home
-              </ui-link>
-              <ui-link href="/about" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-                About
-              </ui-link>
-              <ui-link href="/courses" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-                Courses
-              </ui-link>
-              <ui-link href="/admissions" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-                Admissions
-              </ui-link>
-              <ui-link href="/contact" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-                Contact
-              </ui-link>
+              ${renderNavLinks(false)}
             </nav>
 
             <!-- Social Icons -->
             <div class="flex items-center space-x-2 lg:space-x-4">
-              <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                <i class="fab fa-facebook-f text-sm lg:text-base"></i>
-              </a>
-              <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                <i class="fab fa-twitter text-sm lg:text-base"></i>
-              </a>
-              <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                <i class="fab fa-instagram text-sm lg:text-base"></i>
-              </a>
-              <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                <i class="fab fa-linkedin-in text-sm lg:text-base"></i>
-              </a>
-              <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                <i class="fab fa-youtube text-sm lg:text-base"></i>
-              </a>
+              ${renderSocialIcons(false)}
             </div>
           </div>
         </header>
@@ -325,41 +333,13 @@ class Header extends App {
 
             <!-- Mobile Navigation -->
             <nav class="flex flex-col items-center justify-center space-y-4 w-full">
-              <ui-link href="/" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-                Home
-              </ui-link>
-              <ui-link href="/about" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-                About
-              </ui-link>
-              <ui-link href="/courses" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-                Courses
-              </ui-link>
-              <ui-link href="/admissions" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-                Admissions
-              </ui-link>
-              <ui-link href="/contact" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-                Contact
-              </ui-link>
+              ${renderNavLinks(true)}
             </nav>
 
             <!-- Mobile Social Icons -->
             <div class="flex mx-auto mt-auto items-center justify-center space-x-6">
-                <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                  <i class="fab fa-facebook-f"></i>
-                </a>
-                <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                  <i class="fab fa-twitter"></i>
-                </a>
-                <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                  <i class="fab fa-instagram"></i>
-                </a>
-                <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                  <i class="fab fa-linkedin-in"></i>
-                </a>
-                <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-                  <i class="fab fa-youtube"></i>
-                </a>
-              </div>
+              ${renderSocialIcons(true)}
+            </div>
           </div>
         </div>
       </div>

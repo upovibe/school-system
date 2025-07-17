@@ -255,7 +255,7 @@ class UserRolePage extends App {
         ];
         
         return `
-            <div class="bg-white rounded-lg shadow-lg p-8 m-4">
+            <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->
                     <div class="space-y-4">

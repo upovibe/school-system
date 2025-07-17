@@ -12,6 +12,7 @@ class Header extends App {
     this.fetchContactInfo();
     this.fetchColorSettings();
     this.fetchSocialUrls();
+    this.setupMobileMenuEvents();
 
     // Subscribe to global state (e.g., for future auth UI)
     this.unsubscribe = store.subscribe((newState) => {
@@ -22,6 +23,64 @@ class Header extends App {
   disconnectedCallback() {
     if (this.unsubscribe) {
       this.unsubscribe();
+    }
+  }
+
+  setupMobileMenuEvents() {
+    this.addEventListener('click', (e) => {
+      const toggleButton = e.target.closest('[data-mobile-toggle]');
+      if (toggleButton) {
+        e.preventDefault();
+        this.toggleMobileMenu();
+      }
+
+      const overlay = e.target.closest('[data-mobile-overlay]');
+      if (overlay) {
+        e.preventDefault();
+        this.toggleMobileMenu();
+      }
+    });
+
+    // Close mobile menu on window resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        this.closeMobileMenu();
+      }
+    });
+  }
+
+  toggleMobileMenu() {
+    const mobileMenu = this.querySelector('[data-mobile-menu]');
+    const overlay = this.querySelector('[data-mobile-overlay]');
+    
+    if (mobileMenu && overlay) {
+      const isOpen = mobileMenu.classList.contains('translate-x-0');
+      
+      if (isOpen) {
+        // Close menu
+        mobileMenu.classList.remove('translate-x-0');
+        mobileMenu.classList.add('-translate-x-full');
+        overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+      } else {
+        // Open menu
+        mobileMenu.classList.remove('-translate-x-full');
+        mobileMenu.classList.add('translate-x-0');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100', 'pointer-events-auto');
+      }
+    }
+  }
+
+  closeMobileMenu() {
+    const mobileMenu = this.querySelector('[data-mobile-menu]');
+    const overlay = this.querySelector('[data-mobile-overlay]');
+    
+    if (mobileMenu && overlay) {
+      mobileMenu.classList.remove('translate-x-0');
+      mobileMenu.classList.add('-translate-x-full');
+      overlay.classList.remove('opacity-100', 'pointer-events-auto');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
     }
   }
 
@@ -149,77 +208,161 @@ class Header extends App {
     }
 
     return `
-      <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}]">
-        <!-- Top header -->
-        <div class="flex container mx-auto items-center justify-between p-5">     
+      <div class="relative">
+        <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}]">
+          <!-- Top header -->
+          <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     
 
-          <!-- Center: Logo + Brand Name -->
-          <ui-link href="/" class="flex items-center">
-            <img class="w-auto max-w-none" src="${this.get('logoUrl') || '/src/assets/logo.png'}" alt="UPO UI Logo" />
-          </ui-link>
+            <!-- Logo - Left side -->
+            <ui-link href="/" class="flex items-center">
+              <img class="w-40 lg:w-auto max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
+            </ui-link>
 
-          <!-- Left: Contact Information -->
-          <div class="flex flex-col text-sm text-[${secondaryColor}] space-y-1">
-            ${this.get('contactEmail') ? `
-              <div class="flex items-center space-x-2 hover:opacity-50">
-                <i class="fas fa-envelope"></i>
-                <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
-                  ${this.get('contactEmail')}
+            <!-- Contact Information - Hidden on mobile -->
+            <div class="hidden lg:flex flex-col text-sm text-[${secondaryColor}] space-y-1">
+              ${this.get('contactEmail') ? `
+                <div class="flex items-center space-x-2 hover:text-[${hoverDarkColor}]">
+                  <i class="fas fa-envelope"></i>
+                  <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
+                    ${this.get('contactEmail')}
+                  </a>
+                </div>
+              ` : ''}
+              ${this.get('contactPhone') ? `
+                <div class="flex items-center space-x-2 hover:text-[${hoverDarkColor}]">
+                  <i class="fas text-lg fa-phone"></i>
+                  <a href="tel:${this.get('contactPhone')}" class="transition-colors">
+                    ${this.get('contactPhone')}
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Mobile Menu Button - Right side -->
+            <button data-mobile-toggle class="lg:hidden text-[${secondaryColor}] size-8 rounded-md">
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
+
+          <!-- Bottom header -->
+          <div class="flex container mx-auto items-center justify-between p-3 lg:p-4 bg-[${secondaryColor}]">
+            <!-- Navigation Links - Hidden on mobile -->
+            <nav class="hidden lg:flex items-center space-x-6">
+              <ui-link href="/" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
+                Home
+              </ui-link>
+              <ui-link href="/about" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
+                About
+              </ui-link>
+              <ui-link href="/courses" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
+                Courses
+              </ui-link>
+              <ui-link href="/admissions" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
+                Admissions
+              </ui-link>
+              <ui-link href="/contact" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
+                Contact
+              </ui-link>
+            </nav>
+
+            <!-- Social Icons -->
+            <div class="flex items-center space-x-2 lg:space-x-4">
+              <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                <i class="fab fa-facebook-f text-sm lg:text-base"></i>
+              </a>
+              <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                <i class="fab fa-twitter text-sm lg:text-base"></i>
+              </a>
+              <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                <i class="fab fa-instagram text-sm lg:text-base"></i>
+              </a>
+              <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                <i class="fab fa-linkedin-in text-sm lg:text-base"></i>
+              </a>
+              <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                <i class="fab fa-youtube text-sm lg:text-base"></i>
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <!-- Mobile Overlay -->
+        <div data-mobile-overlay class="fixed inset-0 bg-black bg-opacity-50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
+
+        <!-- Mobile Menu -->
+        <div data-mobile-menu class="fixed inset-0 bg-[${secondaryColor}] z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">
+          <!-- Mobile Header -->
+          <div class="flex items-center justify-between p-4 border-b border-[${secondaryColor}]">
+            <img class="lg:w-auto w-40 max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
+            <button data-mobile-toggle class="text-[${brandTextColor}] size-8 rounded-md">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- Mobile Content -->
+          <div class="h-[calc(100vh-200px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full">
+            <!-- Mobile Contact Info -->
+            <div class="border-b border-[${brandTextColor}] pb-4 w-full">
+              <div class="flex flex-col items-center justify-center text-sm text-[${brandTextColor}] space-y-3">
+                ${this.get('contactEmail') ? `
+                  <div class="flex items-center space-x-3 hover:opacity-50">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
+                      ${this.get('contactEmail')}
+                    </a>
+                  </div>
+                ` : ''}
+                ${this.get('contactPhone') ? `
+                  <div class="flex items-center space-x-3 hover:opacity-50">
+                    <i class="fas fa-phone"></i>
+                    <a href="tel:${this.get('contactPhone')}" class="transition-colors">
+                      ${this.get('contactPhone')}
+                    </a>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <nav class="flex flex-col items-center justify-center space-y-4 w-full">
+              <ui-link href="/" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+                Home
+              </ui-link>
+              <ui-link href="/about" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+                About
+              </ui-link>
+              <ui-link href="/courses" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+                Courses
+              </ui-link>
+              <ui-link href="/admissions" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+                Admissions
+              </ui-link>
+              <ui-link href="/contact" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
+                Contact
+              </ui-link>
+            </nav>
+
+            <!-- Mobile Social Icons -->
+            <div class="flex mx-auto mt-auto items-center justify-center space-x-6">
+                <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                  <i class="fab fa-twitter"></i>
+                </a>
+                <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+                  <i class="fab fa-youtube"></i>
                 </a>
               </div>
-            ` : ''}
-            ${this.get('contactPhone') ? `
-              <div class="flex items-center space-x-2 hover:opacity-50">
-                <i class="fas fa-phone"></i>
-                <a href="tel:${this.get('contactPhone')}" class="transition-colors">
-                  ${this.get('contactPhone')}
-                </a>
-              </div>
-            ` : ''}
           </div>
         </div>
-
-        <!-- Bottom header -->
-        <div class="flex container mx-auto items-center justify-between p-4 bg-[${secondaryColor}]">
-          <!-- Navigation Links -->
-          <nav class="flex items-center space-x-6">
-            <ui-link href="/" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-              Home
-            </ui-link>
-            <ui-link href="/about" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-              About
-            </ui-link>
-            <ui-link href="/courses" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-              Courses
-            </ui-link>
-            <ui-link href="/admissions" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-              Admissions
-            </ui-link>
-            <ui-link href="/contact" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-colors">
-              Contact
-            </ui-link>
-          </nav>
-
-          <!-- Social Icons -->
-          <div class="flex items-center space-x-4">
-            <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-              <i class="fab fa-facebook-f"></i>
-            </a>
-            <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-              <i class="fab fa-twitter"></i>
-            </a>
-            <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-              <i class="fab fa-instagram"></i>
-            </a>
-            <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-              <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
-              <i class="fab fa-youtube"></i>
-            </a>
-          </div>
-        </div>
-      </header>
+      </div>
     `;
   }
 }

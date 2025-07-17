@@ -147,6 +147,12 @@ class PageSettingsSeeder
             ['setting_key' => 'secondary_color', 'setting_value' => '#10B981', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Secondary accent color'],
             ['setting_key' => 'background_color', 'setting_value' => '#F9FAFB', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Page background color'],
             ['setting_key' => 'font_family', 'setting_value' => 'Inter, sans-serif', 'setting_type' => 'text', 'category' => 'theme', 'description' => 'Primary font family'],
+            ['setting_key' => 'hover_light_color', 'setting_value' => 'rgba(0, 0, 0, 0.05)', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover overlay for light backgrounds'],
+            ['setting_key' => 'hover_dark_color', 'setting_value' => 'rgba(255, 255, 255, 0.1)', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover overlay for dark backgrounds'],
+            ['setting_key' => 'text_secondary_color', 'setting_value' => '#6e6e6e', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Secondary (muted) text color'],
+            ['setting_key' => 'success_color', 'setting_value' => '#28a745', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for success messages'],
+            ['setting_key' => 'error_color', 'setting_value' => '#dc3545', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for error messages'],
+            ['setting_key' => 'warning_color', 'setting_value' => '#ffc107', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for warning messages'],
 
             // Branding Settings
             ['setting_key' => 'school_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School name'],

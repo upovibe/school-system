@@ -33,7 +33,7 @@ class RootPage extends App {
 
         if (error) {
             return `
-                <div class="container mx-auto p-8">
+                <div class="container mx-auto flex items-center justify-center p-8">
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                         ${error}
                     </div>
@@ -43,8 +43,8 @@ class RootPage extends App {
 
         if (!pageData) {
             return `
-                <div class="container mx-auto p-8">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-8">Loading...</h1>
+                <div class="container flex items-center justify-center mx-auto p-8">
+                    <page-loader></page-loader>
                 </div>
             `;
         }

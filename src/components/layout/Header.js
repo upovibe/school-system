@@ -11,6 +11,7 @@ class Header extends App {
     this.fetchSchoolLogo();
     this.fetchContactInfo();
     this.fetchColorSettings();
+    this.fetchSocialUrls();
 
     // Subscribe to global state (e.g., for future auth UI)
     this.unsubscribe = store.subscribe((newState) => {
@@ -93,6 +94,42 @@ class Header extends App {
     }
   }
 
+  async fetchSocialUrls() {
+    try {
+      const socialSettings = [
+        'facebook_url',
+        'twitter_url',
+        'instagram_url',
+        'linkedin_url',
+        'youtube_url'
+      ];
+
+      const socialPromises = socialSettings.map(async (settingKey) => {
+        try {
+          const response = await api.get(`/settings/key/${settingKey}`);
+          if (response.data.success && response.data.data.setting_value) {
+            return { key: settingKey, value: response.data.data.setting_value };
+          }
+        } catch (error) {
+          console.error(`Error fetching ${settingKey}:`, error);
+        }
+        return null;
+      });
+
+      const socialResults = await Promise.all(socialPromises);
+      
+      // Set all social URL values to state
+      socialResults.forEach(result => {
+        if (result) {
+          this.set(result.key, result.value);
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching social URLs:', error);
+    }
+  }
+
   render() {
     // Get all colors from state
     const backgroundColor = this.get('background_color');
@@ -165,19 +202,19 @@ class Header extends App {
 
           <!-- Social Icons -->
           <div class="flex items-center space-x-4">
-            <a href="#" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+            <a href="${this.get('facebook_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
               <i class="fab fa-facebook-f"></i>
             </a>
-            <a href="#" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+            <a href="${this.get('twitter_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
               <i class="fab fa-twitter"></i>
             </a>
-            <a href="#" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+            <a href="${this.get('instagram_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
               <i class="fab fa-instagram"></i>
             </a>
-            <a href="#" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+            <a href="${this.get('linkedin_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
               <i class="fab fa-linkedin-in"></i>
             </a>
-            <a href="#" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
+            <a href="${this.get('youtube_url') || '#'}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] transition-colors">
               <i class="fab fa-youtube"></i>
             </a>
           </div>

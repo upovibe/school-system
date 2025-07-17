@@ -39,6 +39,13 @@ class Header extends App {
         e.preventDefault();
         this.toggleMobileMenu();
       }
+
+      // Handle mobile submenu toggles
+      const submenuToggle = e.target.closest('[data-mobile-submenu-toggle]');
+      if (submenuToggle) {
+        e.preventDefault();
+        this.toggleMobileSubmenu(submenuToggle);
+      }
     });
 
     // Close mobile menu on window resize
@@ -81,6 +88,27 @@ class Header extends App {
       mobileMenu.classList.add('-translate-x-full');
       overlay.classList.remove('opacity-100', 'pointer-events-auto');
       overlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+  }
+
+  toggleMobileSubmenu(toggleButton) {
+    const submenu = toggleButton.nextElementSibling;
+    const icon = toggleButton.querySelector('i');
+    
+    if (submenu && icon) {
+      const isOpen = submenu.classList.contains('max-h-96');
+      
+      if (isOpen) {
+        // Close submenu
+        submenu.classList.remove('max-h-96', 'opacity-100');
+        submenu.classList.add('max-h-0', 'opacity-0');
+        icon.classList.remove('rotate-180');
+      } else {
+        // Open submenu
+        submenu.classList.remove('max-h-0', 'opacity-0');
+        submenu.classList.add('max-h-96', 'opacity-100');
+        icon.classList.add('rotate-180');
+      }
     }
   }
 
@@ -256,20 +284,32 @@ class Header extends App {
     const renderNavLinks = (isMobile = false) => {
       return navigationLinks.map(link => {
         if (isMobile) {
-          // Mobile version - simple links
+          // Mobile version - with collapsible submenus
           return `
-            <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full">
-              ${link.label}
-            </ui-link>
-            ${link.subLinks ? `
-              <div class="ml-4 space-y-2">
-                ${link.subLinks.map(subLink => `
-                  <ui-link href="${subLink.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
-                    ${subLink.label}
-                  </ui-link>
-                `).join('')}
-              </div>
-            ` : ''}
+            <div class="w-full">
+              ${link.subLinks ? `
+                <!-- Parent link with submenu toggle -->
+                <button data-mobile-submenu-toggle class="w-full text-left text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] flex items-center justify-between">
+                  <span>${link.label}</span>
+                  <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                </button>
+                <!-- Collapsible submenu -->
+                <div class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out">
+                  <div class="ml-4 space-y-2 pt-2">
+                    ${link.subLinks.map(subLink => `
+                      <ui-link href="${subLink.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
+                        ${subLink.label}
+                      </ui-link>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : `
+                <!-- Simple link without submenu -->
+                <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full block">
+                  ${link.label}
+                </ui-link>
+              `}
+            </div>
           `;
         } else {
           // Desktop version - with dropdown

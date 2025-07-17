@@ -19,15 +19,15 @@ class RootPage extends App {
             <div class="container mx-auto">
                 <h1 class="text-3xl font-bold text-gray-900 mb-8">Welcome to Our School</h1>
                 
-                                <ui-carousel>
+                                <ui-carousel class="">
                     <ui-carousel-item>
-                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 1</ui-card>
+                        <ui-card class="w-full h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 1</ui-card>
                     </ui-carousel-item>
                     <ui-carousel-item>
-                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 2</ui-card>
+                        <ui-card class="w-full h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 2</ui-card>
                     </ui-carousel-item>
                     <ui-carousel-item>
-                        <ui-card class="w-96 h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 3</ui-card>
+                        <ui-card class="w-full h-64 flex items-center justify-center border border-gray-200 rounded-lg shadow-md" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; font-weight: bold; font-size: 1.2rem;">Slide 3</ui-card>
                     </ui-carousel-item>
                 </ui-carousel>
                 

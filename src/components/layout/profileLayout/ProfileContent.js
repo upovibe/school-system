@@ -6,6 +6,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/ProfileImageUploader.js';
+import '@/components/layout/skeletonLoaders/ProfileContentSkeleton.js';
 import '@/components/layout/authLayout/PasswordChangeDialog.js';
 
 /**
@@ -293,11 +294,7 @@ class ProfileContent extends App {
 
     render() {
         if (this.get('isLoading')) {
-            return `
-                <div class="flex items-center justify-center min-h-96">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-            `;
+            return `<profile-content-skeleton></profile-content-skeleton>`;
         }
 
         const user = this.get('userData');

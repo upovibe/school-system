@@ -113,6 +113,10 @@ class ImageCarousel extends HTMLElement {
                     object-fit: cover;
                     display: block;
                 }
+
+                .upo-image-carousel-item-image.contain {
+                    object-fit: contain;
+                }
                 
                 /* Navigation Controls - positioned on left and right */
                 .upo-image-carousel-control {
@@ -122,21 +126,26 @@ class ImageCarousel extends HTMLElement {
                     width: 3rem;
                     height: 3rem;
                     border-radius: 50%;
-                    background-color: rgba(255, 255, 255, 0.9);
+                    background-color: transparent;
                     border: none;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 1.2rem;
-                    color: #374151;
+                    color: white;
                     transition: all 0.2s ease-in-out;
                     z-index: 20;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                    opacity: 0;
+                }
+
+                .upo-image-carousel:hover .upo-image-carousel-control {
+                    opacity: 1;
                 }
                 
                 .upo-image-carousel-control:hover {
-                    background-color: rgba(255, 255, 255, 1);
+                    background-color: rgba(255, 255, 255, 0.2);
                     transform: translateY(-50%) scale(1.05);
                 }
                 
@@ -230,8 +239,8 @@ class ImageCarousel extends HTMLElement {
                 }
                 
                 .upo-image-carousel-indicator {
-                    width: 0.75rem;
-                    height: 0.75rem;
+                    width: 0.5rem;
+                    height: 0.5rem;
                     border-radius: 50%;
                     background-color: rgba(255, 255, 255, 0.5);
                     border: none;
@@ -241,7 +250,7 @@ class ImageCarousel extends HTMLElement {
                 
                 .upo-image-carousel-indicator.active {
                     background-color: rgba(255, 255, 255, 1);
-                    transform: scale(1.2);
+                    transform: scale(1.1);
                 }
                 
                 .upo-image-carousel-indicator:hover {
@@ -545,7 +554,7 @@ class ImageCarouselItem extends HTMLElement {
         super();
         
         // Create the item structure
-        this.imageElement = document.createElement('img');
+        this.imageElement = document.createElement('div');
         this.contentOverlay = document.createElement('div');
         this.titleElement = document.createElement('h3');
         this.descriptionElement = document.createElement('p');
@@ -576,7 +585,10 @@ class ImageCarouselItem extends HTMLElement {
                 .upo-image-carousel-item-image {
                     width: 100%;
                     height: 100%;
-                    object-fit: cover;
+                    background-size: contain;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    background-color: #f3f4f6;
                 }
                 
                 .upo-image-carousel-item-content {
@@ -628,7 +640,7 @@ class ImageCarouselItem extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['src', 'alt', 'title', 'description'];
+        return ['src', 'alt', 'title', 'description', 'data-object-fit'];
     }
 
     connectedCallback() {
@@ -655,11 +667,7 @@ class ImageCarouselItem extends HTMLElement {
 
     updateAttributes() {
         if (this.hasAttribute('src')) {
-            this.imageElement.src = this.getAttribute('src');
-        }
-        
-        if (this.hasAttribute('alt')) {
-            this.imageElement.alt = this.getAttribute('alt');
+            this.imageElement.style.backgroundImage = `url(${this.getAttribute('src')})`;
         }
         
         if (this.hasAttribute('title')) {
@@ -672,6 +680,13 @@ class ImageCarouselItem extends HTMLElement {
             this.descriptionElement.textContent = this.getAttribute('description');
         } else {
             this.descriptionElement.style.display = 'none';
+        }
+
+        // Default to contain so images fit at any size
+        if (this.getAttribute('data-object-fit') === 'cover') {
+            this.imageElement.style.backgroundSize = 'cover';
+        } else {
+            this.imageElement.style.backgroundSize = 'contain';
         }
     }
 

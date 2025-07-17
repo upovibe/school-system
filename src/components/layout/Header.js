@@ -245,7 +245,7 @@ class Header extends App {
 
     return `
       <div class="relative">
-        <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${themeColor}]">
+        <header class="bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${themeColor}]">
           <!-- Top header -->
           <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     
 

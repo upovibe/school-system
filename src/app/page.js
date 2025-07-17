@@ -2,6 +2,14 @@ import App from '@/core/App.js';
 import api from '@/services/api.js';
 import PageLoader from '@/components/common/PageLoader.js';
 
+// Load Quill CSS for content display
+if (!document.querySelector('link[href*="quill"]')) {
+    const link = document.createElement('link');
+    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+}
+
 /**
  * Root Page Component (/)
  * 
@@ -131,18 +139,6 @@ class RootPage extends App {
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Banner Content Overlay -->
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                                <div class="text-center text-white">
-                                    <h1 class="text-4xl md:text-6xl font-bold mb-4">${pageData.title || 'Welcome'}</h1>
-                                    ${pageData.content ? `
-                                        <p class="text-lg md:text-xl max-w-2xl mx-auto px-4">
-                                            ${this.getContentPreview(pageData.content)}
-                                        </p>
-                                    ` : ''}
-                                </div>
-                            </div>
                         </div>
                         
                         <!-- Additional Banner Images Grid -->
@@ -164,12 +160,6 @@ class RootPage extends App {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onclick="window.open('${this.getImageUrl(imagePath)}', '_blank')" 
-                                                        class="bg-white bg-opacity-90 text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
-                                                    <i class="fas fa-external-link-alt"></i>
-                                                </button>
-                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -178,51 +168,18 @@ class RootPage extends App {
                     </div>
                 ` : ''}
                 
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="mb-6">
-                        <h2 class="text-xl font-semibold mb-4">Page Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-medium text-gray-700">Title</h3>
-                                <p class="text-lg font-semibold text-gray-900">${pageData.title || 'N/A'}</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-medium text-gray-700">Slug</h3>
-                                <p class="text-lg font-semibold text-gray-900">${pageData.slug || 'N/A'}</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-medium text-gray-700">Status</h3>
-                                <p class="text-lg font-semibold text-gray-900">${pageData.status || 'N/A'}</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-medium text-gray-700">Created At</h3>
-                                <p class="text-lg font-semibold text-gray-900">${pageData.created_at || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
+                <div class="bg-white p-6 rounded-md">
                     ${pageData.content ? `
-                        <div class="mb-6">
-                            <h2 class="text-xl font-semibold mb-4">Content</h2>
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <div class="prose max-w-none">${pageData.content}</div>
+                        <div class="content-section">
+                            <div class="content-preview">
+                                ${pageData.content}
                             </div>
                         </div>
-                    ` : ''}
-                    
-                    ${pageData.banner_images && pageData.banner_images.length > 0 ? `
-                        <div class="mb-6">
-                            <h2 class="text-xl font-semibold mb-4">Banner Images (${pageData.banner_images.length})</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                ${pageData.banner_images.map((image, index) => `
-                                    <div class="bg-gray-50 rounded-lg p-4">
-                                        <img src="/api/${image}" alt="Banner ${index + 1}" class="w-full h-32 object-cover rounded mb-2">
-                                        <p class="text-sm text-gray-600">Banner ${index + 1}</p>
-                                    </div>
-                                `).join('')}
-                            </div>
+                    ` : `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500 italic">No content available</p>
                         </div>
-                    ` : ''}
+                    `}
                 </div>
                 
                 <div class="mt-8">

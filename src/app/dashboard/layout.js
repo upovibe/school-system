@@ -184,6 +184,24 @@ class DashboardLayout extends App {
         return titles[lastSegment] || 'Dashboard';
     }
 
+    // Helper method to get proper image URL (same as ProfileContent)
+    getImageUrl(imagePath) {
+        if (!imagePath) return '';
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        // If it's a relative path without /, construct the URL with /api/ prefix
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
+    }
+
     render() {
         if (!this.currentUser) {
             this.loadUserData();
@@ -313,7 +331,7 @@ class DashboardLayout extends App {
                                 <ui-dropdown-menu>
                                     <ui-dropdown-menu-trigger>
                                         <div class="flex items-center p-1 rounded-full hover:bg-gray-100 transition-colors">
-                                            <ui-avatar src="${this.currentUser?.profile_image || ''}" alt="${userName}" name="${userName}" size="md"></ui-avatar>
+                                            <ui-avatar src="${this.getImageUrl(this.currentUser?.profile_image || '')}" alt="${userName}" name="${userName}" size="md"></ui-avatar>
                                         </div>
                                     </ui-dropdown-menu-trigger>
                                     <ui-dropdown-menu-content>

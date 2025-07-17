@@ -387,42 +387,48 @@ class Router {
             
             if (customLayoutTagName && CustomLayoutClass) {
                 // Use the custom layout if it was found
-                this.outlet.innerHTML = `<${customLayoutTagName}></${customLayoutTagName}>`;
-                setTimeout(() => { // Wait for the element to be in the DOM
-                    const customLayoutElement = this.outlet.querySelector(customLayoutTagName);
-                    if (customLayoutElement && customLayoutElement.setPageContent) {
-                        customLayoutElement.setPageContent(pageContent);
-                    }
-                }, 0);
+                let customLayoutElement = this.outlet.querySelector(customLayoutTagName);
+                
+                if (!customLayoutElement) {
+                    // Only create new layout if it doesn't exist
+                    this.outlet.innerHTML = `<${customLayoutTagName}></${customLayoutTagName}>`;
+                    customLayoutElement = this.outlet.querySelector(customLayoutTagName);
+                }
+                
+                if (customLayoutElement && customLayoutElement.setPageContent) {
+                    customLayoutElement.setPageContent(pageContent);
+                }
             } else {
                 // Otherwise, use the default root layout
-                this.outlet.innerHTML = `<root-layout></root-layout>`;
-                setTimeout(() => { // Wait for the element to be in the DOM
-                    const layoutElement = this.outlet.querySelector('root-layout');
-                    if (layoutElement && layoutElement.setPageContent) {
-                        layoutElement.setPageContent(pageContent);
-                    }
-                }, 0);
+                let layoutElement = this.outlet.querySelector('root-layout');
+                
+                if (!layoutElement) {
+                    // Only create new layout if it doesn't exist
+                    this.outlet.innerHTML = `<root-layout></root-layout>`;
+                    layoutElement = this.outlet.querySelector('root-layout');
+                }
+                
+                if (layoutElement && layoutElement.setPageContent) {
+                    layoutElement.setPageContent(pageContent);
+                }
             }
 
-            // Pass route data to the page component after the layout is rendered
-             setTimeout(() => {
-                const componentElement = this.outlet.querySelector(tagName);
-                if (componentElement) {
-                    if (Object.keys(routeParams).length > 0) {
-                        componentElement.set('routeParams', routeParams);
-                    }
-                    if (Object.keys(queryParams).length > 0) {
-                        componentElement.set('queryParams', queryParams);
-                    }
-                    componentElement.set('routeInfo', {
-                        path,
-                        params: routeParams,
-                        query: queryParams,
-                        pattern: routeInfo?.pattern || path
-                    });
+            // Pass route data to the page component
+            const componentElement = this.outlet.querySelector(tagName);
+            if (componentElement) {
+                if (Object.keys(routeParams).length > 0) {
+                    componentElement.set('routeParams', routeParams);
                 }
-            }, 0);
+                if (Object.keys(queryParams).length > 0) {
+                    componentElement.set('queryParams', queryParams);
+                }
+                componentElement.set('routeInfo', {
+                    path,
+                    params: routeParams,
+                    query: queryParams,
+                    pattern: routeInfo?.pattern || path
+                });
+            }
 
         } catch (error) {
             console.error(`Failed to render route: ${path}`, error);

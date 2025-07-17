@@ -129,7 +129,8 @@ class PageUpdateModal extends HTMLElement {
             // Add banner file if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
                 const file = bannerFileUpload.getFiles()[0];
-                formData.append('banner_image', file);
+                formData.append('banner', file);
+                // formData.append('banner_image', file);
             }
 
             // Update the page with multipart data

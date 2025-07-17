@@ -191,10 +191,10 @@ class Header extends App {
 
   render() {
     // Get all colors from state
+    const themeColor = this.get('theme_color');
+    const secondaryColor = this.get('secondary_color');
     const backgroundColor = this.get('background_color');
     const brandTextColor = this.get('brand_text_color');
-    const secondaryColor = this.get('secondary_color');
-    const themeColor = this.get('theme_color');
     const hoverLightColor = this.get('hover_light_color');
     const hoverDarkColor = this.get('hover_dark_color');
     const textSecondaryColor = this.get('text_secondary_color');
@@ -209,7 +209,7 @@ class Header extends App {
 
     return `
       <div class="relative">
-        <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}]">
+        <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${themeColor}]">
           <!-- Top header -->
           <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     
 

@@ -33,7 +33,7 @@ class PageSettingsSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 1,
-                'banner_image' => 'uploads/pages/5_1752713285_687848450g'
+                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
             ],
             [
                 'slug' => 'mission-vision',
@@ -43,7 +43,7 @@ class PageSettingsSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 2,
-                'banner_image' => 'uploads/pages/Values_1752713298_6878485214266g'
+                'banner_image' => json_encode(['uploads/pages/Values_1752713298_6878485214266g'])
             ],
             [
                 'slug' => 'values-aims',
@@ -53,7 +53,7 @@ class PageSettingsSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 3,
-                'banner_image' => 'uploads/pages/Values_1752713314_6878486264g'
+                'banner_image' => json_encode(['uploads/pages/Values_1752713314_6878486264g'])
             ],
             [
                 'slug' => 'our-team',
@@ -63,7 +63,7 @@ class PageSettingsSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 4,
-                'banner_image' => 'uploads/pages/Values_1752713324_68784868g'
+                'banner_image' => json_encode(['uploads/pages/Values_1752713324_68784868g'])
             ],
             [
                 'slug' => 'contact',
@@ -73,7 +73,7 @@ class PageSettingsSeeder
                 'category' => 'contact',
                 'is_active' => 1,
                 'sort_order' => 5,
-                'banner_image' => 'uploads/pages/About_1752713456_687848c.jpg'
+                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848c.jpg'])
             ],
             [
                 'slug' => 'academic-programs',
@@ -83,7 +83,7 @@ class PageSettingsSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 6,
-                'banner_image' => 'uploads/pages/Curriculum_1752713333_687848757550f.jpg'
+                'banner_image' => json_encode(['uploads/pages/Curriculum_1752713333_687848757550f.jpg'])
             ],
             [
                 'slug' => 'admissions',
@@ -93,7 +93,7 @@ class PageSettingsSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 7,
-                'banner_image' => 'uploads/pages/About_1752713342_68784878pg'
+                'banner_image' => json_encode(['uploads/pages/About_1752713342_68784878pg'])
             ]
         ];
 

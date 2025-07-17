@@ -9,6 +9,7 @@ class BaseModel {
     protected static $fillable = [];
     protected static $hidden = [];
     protected static $timestamps = true;
+    protected static $casts = [];
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -76,6 +77,7 @@ class BaseModel {
                 $stmt->execute($values);
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
                 if ($result) {
+                    $result = $this->applyCasts($result);
                     $this->attributes = $result;
                 }
                 return $result;
@@ -90,7 +92,14 @@ class BaseModel {
         try {
             $tableName = $this->getTableName();
             $stmt = $this->pdo->query("SELECT * FROM {$tableName}");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
         } catch (PDOException $e) {
             throw new Exception('Error fetching all records: ' . $e->getMessage());
         }
@@ -103,6 +112,7 @@ class BaseModel {
             $stmt->execute([$id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($result) {
+                $result = $this->applyCasts($result);
                 $this->attributes = $result;
             }
             return $result;
@@ -119,18 +129,26 @@ class BaseModel {
                 $data['updated_at'] = date('Y-m-d H:i:s');
             }
 
-            $keys = implode(', ', array_keys($data));
-            $placeholders = ':' . implode(', :', array_keys($data));
+            // Apply JSON casting if defined
+            $processedData = $data;
+            foreach ($data as $key => $value) {
+                if (isset(static::$casts[$key]) && static::$casts[$key] === 'json' && is_array($value)) {
+                    $processedData[$key] = json_encode($value);
+                }
+            }
+
+            $keys = implode(', ', array_keys($processedData));
+            $placeholders = ':' . implode(', :', array_keys($processedData));
             $tableName = $this->getTableName();
             $stmt = $this->pdo->prepare("INSERT INTO {$tableName} ($keys) VALUES ($placeholders)");
-            foreach ($data as $key => $value) {
+            foreach ($processedData as $key => $value) {
                 $stmt->bindValue(':' . $key, $value);
             }
             $stmt->execute();
             $id = $this->pdo->lastInsertId();
             
             // Set the created record's attributes
-            $this->attributes = array_merge($data, ['id' => $id]);
+            $this->attributes = array_merge($processedData, ['id' => $id]);
             
             return $id;
         } catch (PDOException $e) {
@@ -149,7 +167,12 @@ class BaseModel {
             $filteredData = [];
             foreach ($data as $key => $value) {
                 if (!empty($key) && $key !== '' && $value !== null) {
-                    $filteredData[$key] = $value;
+                    // Apply JSON casting if defined
+                    if (isset(static::$casts[$key]) && static::$casts[$key] === 'json' && is_array($value)) {
+                        $filteredData[$key] = json_encode($value);
+                    } else {
+                        $filteredData[$key] = $value;
+                    }
                 }
             }
 
@@ -205,6 +228,33 @@ class BaseModel {
         } else {
             return $this->create($this->attributes);
         }
+    }
+
+    /**
+     * Apply casts to data when retrieving from database
+     */
+    protected function applyCasts($data) {
+        foreach (static::$casts as $field => $cast) {
+            if (isset($data[$field]) && $data[$field] !== null) {
+                switch ($cast) {
+                    case 'json':
+                        if (is_string($data[$field])) {
+                            $decoded = json_decode($data[$field], true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $data[$field] = $decoded;
+                            }
+                        }
+                        break;
+                    case 'boolean':
+                        $data[$field] = (bool) $data[$field];
+                        break;
+                    case 'datetime':
+                        // Keep as string for now, could be converted to DateTime object if needed
+                        break;
+                }
+            }
+        }
+        return $data;
     }
 
     // Get PDO instance (you'll need to implement this based on your connection setup)

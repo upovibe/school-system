@@ -116,7 +116,9 @@ class PageSettingsModal extends HTMLElement {
             // Add banner files if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
                 const files = bannerFileUpload.getFiles();
-                files.forEach(file => {
+                // Filter out existing files (which are not actual File objects)
+                const actualFiles = files.filter(file => file instanceof File);
+                actualFiles.forEach(file => {
                     formData.append('banner[]', file, file.name);
                 });
             }

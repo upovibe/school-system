@@ -71,7 +71,7 @@ class PageController {
             }
             
             // Check if slug already exists
-            $existingPage = $this->pageModel->findBySlug($data['slug']);
+            $existingPage = $this->pageModel->findBySlugInstance($data['slug']);
             if ($existingPage) {
                 http_response_code(400);
                 echo json_encode([
@@ -86,12 +86,48 @@ class PageController {
             
             // Handle banner upload if present
             $bannerPaths = [];
-            if (isset($_FILES['banner']) && !empty($_FILES['banner']['name'][0])) {
-                $bannerPaths = uploadPageBanners($_FILES['banner']);
-                if (!empty($bannerPaths)) {
-                    // Update page with banner paths
-                    $this->pageModel->update($pageId, ['banner_image' => json_encode($bannerPaths)]);
+            if (!empty($_FILES)) {
+                // Handle different banner file structures
+                $bannerFiles = [];
+                
+                // Check for indexed banner files (banner[0], banner[1], etc.)
+                $indexedBanners = [];
+                foreach ($_FILES as $key => $file) {
+                    if (preg_match('/^banner\[(\d+)\]$/', $key, $matches)) {
+                        $index = $matches[1];
+                        $indexedBanners[$index] = $file;
+                    }
                 }
+                
+                if (!empty($indexedBanners)) {
+                    // Reconstruct the array structure from indexed files
+                    $bannerFiles = [
+                        'name' => [],
+                        'type' => [],
+                        'tmp_name' => [],
+                        'error' => [],
+                        'size' => []
+                    ];
+                    
+                    ksort($indexedBanners); // Sort by index
+                    foreach ($indexedBanners as $index => $file) {
+                        $bannerFiles['name'][] = $file['name'];
+                        $bannerFiles['type'][] = $file['type'];
+                        $bannerFiles['tmp_name'][] = $file['tmp_name'];
+                        $bannerFiles['error'][] = $file['error'];
+                        $bannerFiles['size'][] = $file['size'];
+                    }
+                } else {
+                    // Handle standard banner files
+                    $bannerFiles = $_FILES['banner'] ?? $_FILES['banner[]'] ?? [];
+                }
+                
+                // Use the uploadPageBanners function which handles multiple files properly
+                $bannerPaths = uploadPageBanners($bannerFiles);
+            }
+            
+            if (!empty($bannerPaths)) {
+                $this->pageModel->update($pageId, ['banner_image' => $bannerPaths]);
             }
             
             // Log the action
@@ -174,7 +210,7 @@ class PageController {
      */
     public function showBySlug($slug) {
         try {
-            $page = $this->pageModel->findBySlug($slug);
+            $page = $this->pageModel->findBySlugInstance($slug);
             
             if (!$page) {
                 http_response_code(404);
@@ -256,7 +292,7 @@ class PageController {
             
             // If slug is being updated, check for uniqueness
             if (isset($data['slug']) && $data['slug'] !== $existingPage['slug']) {
-                $duplicatePage = $this->pageModel->findBySlug($data['slug']);
+                $duplicatePage = $this->pageModel->findBySlugInstance($data['slug']);
                 if ($duplicatePage) {
                     http_response_code(400);
                     echo json_encode([
@@ -269,26 +305,71 @@ class PageController {
             
             // Handle banner operations
             $bannerPaths = $existingPage['banner_image'] ?? [];
+            if (is_string($bannerPaths)) {
+                $bannerPaths = json_decode($bannerPaths, true) ?: [];
+            }
 
             // Check if banner should be deleted (banner_image set to null)
-            if (isset($data['banner_image']) && $data['banner_image'] === null) {
+            if (array_key_exists('banner_image', $data) && $data['banner_image'] === null) {
                 if (!empty($bannerPaths)) {
                     deletePageBanner($bannerPaths);
                 }
                 $data['banner_image'] = null;
+                $bannerPaths = []; // Clear for response
             }
-            // Check if new banner file is uploaded
-            elseif (isset($_FILES['banner']) && !empty($_FILES['banner']['name'][0])) {
-                // Delete old banners if they exist
+
+            // Check for new file uploads
+            $newBannerPaths = [];
+            if (!empty($_FILES)) {
+                
+                // Handle different banner file structures
+                $bannerFiles = [];
+                
+                // Check for indexed banner files (banner[0], banner[1], etc.)
+                $indexedBanners = [];
+                foreach ($_FILES as $key => $file) {
+                    if (preg_match('/^banner\[(\d+)\]$/', $key, $matches)) {
+                        $index = $matches[1];
+                        $indexedBanners[$index] = $file;
+                    }
+                }
+                
+                if (!empty($indexedBanners)) {
+                    // Reconstruct the array structure from indexed files
+                    $bannerFiles = [
+                        'name' => [],
+                        'type' => [],
+                        'tmp_name' => [],
+                        'error' => [],
+                        'size' => []
+                    ];
+                    
+                    ksort($indexedBanners); // Sort by index
+                    foreach ($indexedBanners as $index => $file) {
+                        $bannerFiles['name'][] = $file['name'];
+                        $bannerFiles['type'][] = $file['type'];
+                        $bannerFiles['tmp_name'][] = $file['tmp_name'];
+                        $bannerFiles['error'][] = $file['error'];
+                        $bannerFiles['size'][] = $file['size'];
+                    }
+                } else {
+                    // Handle standard banner files
+                    $bannerFiles = $_FILES['banner'] ?? $_FILES['banner[]'] ?? [];
+                }
+                
+                // Use the uploadPageBanners function which handles multiple files properly
+                $newBannerPaths = uploadPageBanners($bannerFiles);
+                
+            }
+
+            if (!empty($newBannerPaths)) {
+                // New banners were uploaded, so delete old ones
                 if (!empty($bannerPaths)) {
                     deletePageBanner($bannerPaths);
                 }
-                
-                $newBannerPaths = uploadPageBanners($_FILES['banner']);
-                if (!empty($newBannerPaths)) {
-                    $data['banner_image'] = json_encode($newBannerPaths);
-                    $bannerPaths = $newBannerPaths;
-                }
+                // And assign the new paths to be saved
+                $data['banner_image'] = $newBannerPaths;
+                $bannerPaths = $newBannerPaths; // Update for the response
             }
             
             $result = $this->pageModel->update($id, $data);
@@ -299,7 +380,7 @@ class PageController {
                     'page_id' => $id,
                     'slug' => $data['slug'] ?? $existingPage['slug'],
                     'title' => $data['title'] ?? $existingPage['title'],
-                    'banners_uploaded' => isset($newBannerPaths) ? count($newBannerPaths) : 0
+                    'banners_uploaded' => count($newBannerPaths)
                 ]);
                 
                 // Get banner info safely
@@ -355,7 +436,11 @@ class PageController {
             
             // Delete banner images if they exist
             if (!empty($existingPage['banner_image'])) {
-                deletePageBanner($existingPage['banner_image']);
+                $bannerPaths = $existingPage['banner_image'];
+                if (is_string($bannerPaths)) {
+                    $bannerPaths = json_decode($bannerPaths, true) ?: [];
+                }
+                deletePageBanner($bannerPaths);
             }
             
             $result = $this->pageModel->delete($id);
@@ -451,4 +536,4 @@ class PageController {
 
 
 }
-?> 
+?>

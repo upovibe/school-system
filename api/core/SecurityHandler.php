@@ -49,10 +49,6 @@ class SecurityHandler {
         if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT'])) {
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
             
-            // Log the content type for debugging
-            error_log("API Debug: Content-Type = '$contentType'");
-            error_log("API Debug: Allowed types = " . implode(', ', $this->config['request_validation']['allowed_content_types']));
-            
             // Check if content type starts with any allowed type (for multipart/form-data; boundary=...)
             $isValid = false;
             foreach ($this->config['request_validation']['allowed_content_types'] as $allowedType) {
@@ -63,7 +59,6 @@ class SecurityHandler {
             }
             
             if (!$isValid) {
-                error_log("API Error: Invalid content type '$contentType'");
                 $this->sendError(400, 'Invalid content type: ' . $contentType);
             }
         }

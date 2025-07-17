@@ -12,24 +12,24 @@ if (!document.querySelector('link[href*="quill"]')) {
 }
 
 /**
- * Contact Page Component (/contact)
+ * About Us Page Component (/about-us)
  * 
- * This is the contact page of the application.
- * It renders within the global RootLayout and fetches data for the "contact" slug.
- * File-based routing: /contact → app/public/contact.js
+ * This is the about us page of the application.
+ * It renders within the global RootLayout and fetches data for the "about-us" slug.
+ * File-based routing: /about-us → app/public/about-us/page.js
  */
-class ContactPage extends App {
+class AboutUsPage extends App {
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'Contact | UPO UI';
+        document.title = 'About Us | UPO UI';
         this.loadPageData();
     }
 
     async loadPageData() {
         // Check if data is already cached in global store
         const globalState = store.getState();
-        if (globalState.contactPageData) {
-            this.set('pageData', globalState.contactPageData);
+        if (globalState.aboutUsPageData) {
+            this.set('pageData', globalState.aboutUsPageData);
             this.render();
             return;
         }
@@ -40,20 +40,20 @@ class ContactPage extends App {
 
     async fetchPageData() {
         try {
-            const response = await api.get('/pages/slug/contact');
+            const response = await api.get('/pages/slug/about-us');
             if (response.data.success) {
                 const pageData = response.data.data;
                 
                 // Cache the data in global store
-                store.setState({ contactPageData: pageData });
+                store.setState({ aboutUsPageData: pageData });
                 
                 // Set local state and render
                 this.set('pageData', pageData);
                 this.render();
             }
         } catch (error) {
-            console.error('Error fetching contact page data:', error);
-            this.set('error', 'Failed to load contact page data');
+            console.error('Error fetching about us page data:', error);
+            this.set('error', 'Failed to load about us page data');
         }
     }
 
@@ -122,7 +122,7 @@ class ContactPage extends App {
     // Method to refresh data (clear cache and fetch again)
     async refreshData() {
         // Clear the cache
-        store.setState({ contactPageData: null });
+        store.setState({ aboutUsPageData: null });
         
         // Fetch fresh data
         await this.fetchPageData();
@@ -159,7 +159,7 @@ class ContactPage extends App {
                             <!-- Main Banner Image -->
                             <div class="relative w-full h-96">
                                 <img src="${this.getImageUrl(this.getBannerImages(pageData)[0])}" 
-                                     alt="Contact Banner Image" 
+                                     alt="About Us Banner Image" 
                                      class="w-full h-full object-cover rounded-lg shadow-lg"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg">
@@ -182,7 +182,7 @@ class ContactPage extends App {
                                         <div class="relative group">
                                             <div class="relative w-full h-32">
                                                 <img src="${this.getImageUrl(imagePath)}" 
-                                                     alt="Contact Gallery Image ${index + 2}" 
+                                                     alt="About Us Gallery Image ${index + 2}" 
                                                      class="w-full h-full object-cover rounded-lg border border-gray-200"
                                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
@@ -218,5 +218,5 @@ class ContactPage extends App {
     }
 }
 
-customElements.define('app-contact-page', ContactPage);
-export default ContactPage; 
+customElements.define('app-about-us-page', AboutUsPage);
+export default AboutUsPage; 

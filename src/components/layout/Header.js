@@ -239,13 +239,13 @@ class Header extends App {
     const navigationLinks = [
       { href: '/', label: 'Home' },
       { 
-        href: '/public/about', 
+        href: '/public/about-us', 
         label: 'About',
         subLinks: [
-          { href: '/public/about/history', label: 'Our History' },
-          { href: '/public/about/mission', label: 'Mission & Vision' },
-          { href: '/public/about/values', label: 'Our Values' },
-          { href: '/public/about/team', label: 'Our Team' }
+          { href: '/public/about-us/history', label: 'Our History' },
+          { href: '/public/about-us/mission', label: 'Mission & Vision' },
+          { href: '/public/about-us/values', label: 'Our Values' },
+          { href: '/public/about-us/team', label: 'Our Team' }
         ]
       },
       { 
@@ -267,8 +267,7 @@ class Header extends App {
           { href: '/public/admissions/fees', label: 'Tuition & Fees' },
           { href: '/public/admissions/scholarships', label: 'Scholarships' }
         ]
-      },
-      { href: '/public/contact', label: 'Contact' }
+      }
     ];
 
     // Social icons array

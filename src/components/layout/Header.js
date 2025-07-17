@@ -15,6 +15,7 @@ class Header extends App {
   connectedCallback() {
     super.connectedCallback();
     this.fetchSchoolLogo();
+    this.fetchContactInfo();
 
     // Subscribe to global state (e.g., for future auth UI)
     this.unsubscribe = store.subscribe((newState) => {
@@ -40,40 +41,70 @@ class Header extends App {
     }
   }
 
+  async fetchContactInfo() {
+    try {
+      // Fetch contact email
+      const emailResponse = await api.get('/settings/key/contact_email');
+      if (emailResponse.data.success && emailResponse.data.data.setting_value) {
+        this.set('contactEmail', emailResponse.data.data.setting_value);
+      }
+
+      // Fetch contact phone
+      const phoneResponse = await api.get('/settings/key/contact_phone');
+      if (phoneResponse.data.success && phoneResponse.data.data.setting_value) {
+        this.set('contactPhone', phoneResponse.data.data.setting_value);
+      }
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+    }
+  }
+
   render() {
     return `
       <header class="fixed top-0 left-0 right-0 z-50">
-        <div class="flex items-center justify-between h-16 backdrop-blur-sm bg-white/30 px-4 border-b border-gray-200">
+        <div class="flex container mx-auto items-center justify-between p-5">
 
-          <!-- Logo + Brand Name -->
-          <ui-link href="/" class="flex items-center gap-2 no-underline hover:opacity-90 transition-opacity">
-            <img class="size-10 rounded-full shadow-sm" src="${this.get('logoUrl') || '/src/assets/logo.png'}" alt="UPO UI Logo" />
-            <div class="flex flex-col leading-tight">
-              <span class="text-xl font-extrabold text-gray-800 tracking-tight">UPO UI</span>
-              <span class="text-xs text-gray-500 font-semibold tracking-wide">Version 1.0.0</span>
-            </div>
+          <!-- Left: Contact Information -->
+          <div class="flex flex-col text-sm text-gray-600 space-y-1">
+            ${this.get('contactEmail') ? `
+              <div class="flex items-center space-x-2">
+                <i class="fas fa-envelope text-gray-500"></i>
+                <a href="mailto:${this.get('contactEmail')}" class="hover:text-blue-600 transition-colors">
+                  ${this.get('contactEmail')}
+                </a>
+              </div>
+            ` : ''}
+            ${this.get('contactPhone') ? `
+              <div class="flex items-center space-x-2">
+                <i class="fas fa-phone text-gray-500"></i>
+                <a href="tel:${this.get('contactPhone')}" class="hover:text-blue-600 transition-colors">
+                  ${this.get('contactPhone')}
+                </a>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Center: Logo + Brand Name -->
+          <ui-link href="/" class="flex items-center">
+            <img class="w-auto max-w-none" src="${this.get('logoUrl') || '/src/assets/logo.png'}" alt="UPO UI Logo" />
           </ui-link>
 
-          <!-- Navigation -->
+          <!-- Right: Navigation Links -->
           <nav class="flex items-center space-x-4">
-            <!-- Docs Link -->
+            <!-- About Link -->
             <ui-link
-              href="https://github.com/upovibe/upoUI"
-              class="text-gray-700 hover:text-blue-600 font-medium transition-colors no-underline flex items-center space-x-2 p-2 rounded-md hover:bg-white/50"
+              href="/about"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors no-underline p-2 rounded-md hover:bg-white/50"
             >
-              <i class="fas fa-cubes text-xl"></i>
-              <span class="hidden md:inline">Docs</span>
+              <span class="hidden md:inline">About</span>
             </ui-link>
 
-            <!-- GitHub Link -->
+            <!-- Contact Link -->
             <ui-link
-              href="https://github.com/upovibe/upoUI"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-700 hover:text-gray-900 transition-colors no-underline flex items-center space-x-2 p-2 rounded-md hover:bg-white/50"
+              href="/contact"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors no-underline p-2 rounded-md hover:bg-white/50"
             >
-              <i class="fab fa-github text-xl"></i>
-              <span class="hidden md:inline">GitHub</span>
+              <span class="hidden md:inline">Contact</span>
             </ui-link>
           </nav>
         </div>

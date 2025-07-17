@@ -38,7 +38,6 @@ const store = {
         Object.assign(state, newState);
         
         // Notify all subscribers about the change
-        console.log('✅ Global state updated. Notifying subscribers...', state);
         subscribers.forEach(callback => callback(state));
     },
 

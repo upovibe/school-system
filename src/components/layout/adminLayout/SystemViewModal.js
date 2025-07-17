@@ -121,10 +121,10 @@ class SystemViewModal extends HTMLElement {
                         const imageUrl = this.getImageUrl(currentValue);
                         return `
                             <div class="space-y-3">
-                                <div class="relative">
+                                <div class="relative w-full h-72">
                                     <img src="${imageUrl}" 
                                          alt="Setting Image" 
-                                         class="w-fullobject-contain rounded-lg border border-gray-200 bg-gray-50"
+                                         class="w-full h-full object-cover rounded-lg border border-gray-200"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="text-center">

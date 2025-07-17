@@ -324,10 +324,12 @@ class ProfileContent extends App {
                         <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
                         <ui-button 
                             data-action="edit-profile"
-                            variant="primary"
-                            size="md"
+                            variant="outline"
+                            size="sm"
+                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
                         >
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit
                         </ui-button>
                     </div>
 

@@ -518,27 +518,55 @@ class FileUpload extends HTMLElement {
     this.updateFileList();
   }
 
-  // Set existing file from URL/path
+  // Set existing file(s) from URL/path or array of paths
   setValue(filePath) {
     if (filePath) {
-      // Create a file-like object for display
-      const fileName = filePath.split('/').pop() || filePath;
-      const existingFile = {
-        name: fileName,
-        size: 0, // We don't know the size
-        type: 'image/*',
-        path: filePath,
-        isExisting: true // Flag to identify existing files
-      };
+      let filePaths = [];
       
-      this.files = [existingFile];
+      // Handle both single path and array of paths
+      if (Array.isArray(filePath)) {
+        filePaths = filePath;
+      } else if (typeof filePath === 'string') {
+        // Try to parse as JSON array
+        try {
+          const parsed = JSON.parse(filePath);
+          if (Array.isArray(parsed)) {
+            filePaths = parsed;
+          } else {
+            filePaths = [filePath];
+          }
+        } catch (e) {
+          // If parsing fails, treat as single path
+          filePaths = [filePath];
+        }
+      }
+      
+      // Create file-like objects for display
+      this.files = filePaths.map(path => {
+        const fileName = path.split('/').pop() || path;
+        return {
+          name: fileName,
+          size: 0, // We don't know the size
+          type: 'image/*',
+          path: path,
+          isExisting: true // Flag to identify existing files
+        };
+      });
+      
       this.updateFileList();
     }
   }
 
-  // Get the value (file path)
+  // Get the value (file paths)
   getValue() {
-    return this.files.length > 0 ? this.files[0].path || this.files[0].name : '';
+    if (this.files.length === 0) {
+      return '';
+    } else if (this.files.length === 1) {
+      return this.files[0].path || this.files[0].name;
+    } else {
+      // Return array of paths for multiple files
+      return this.files.map(file => file.path || file.name);
+    }
   }
 }
 

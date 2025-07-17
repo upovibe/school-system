@@ -57,9 +57,10 @@ class PageUpdateModal extends HTMLElement {
         setTimeout(() => {
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
             if (bannerFileUpload && pageData.banner_image) {
+                // Pass the entire banner_image array to show all existing images
                 bannerFileUpload.setValue(pageData.banner_image);
             }
-        }, 0);
+        }, 100); // Increased timeout to ensure DOM is ready
     }
 
     open() {

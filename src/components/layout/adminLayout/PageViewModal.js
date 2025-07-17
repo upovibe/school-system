@@ -154,7 +154,7 @@ class PageViewModal extends HTMLElement {
                             </div>
                             ${this.getBannerImages().length > 0 ? `
                                 <div class="space-y-3">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div class="flex flex-col space-y-4">
                                         ${this.getBannerImages().map((imagePath, index) => `
                                             <div class="relative group">
                                                 <div class="relative w-full h-48">
@@ -181,16 +181,7 @@ class PageViewModal extends HTMLElement {
                                             </div>
                                         `).join('')}
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm text-gray-500">
-                                            <i class="fas fa-info-circle mr-1"></i>
-                                            ${this.getBannerImages().length} banner image${this.getBannerImages().length !== 1 ? 's' : ''}
-                                        </span>
-                                        <button onclick="this.showAllImages()" 
-                                                class="text-blue-500 hover:text-blue-700 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50">
-                                            <i class="fas fa-expand mr-1"></i>View All
-                                        </button>
-                                    </div>
+
                                 </div>
                             ` : `
                                 <div class="w-full h-72 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">

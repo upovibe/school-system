@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import store from '@/core/store.js';
+import api from '@/services/api.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';
@@ -39,10 +40,33 @@ class DashboardLayout extends App {
         }
     }
 
-    loadUserData() {
+    async loadUserData() {
+        // Get user ID and token from localStorage
         const userData = localStorage.getItem('userData');
-        this.currentUser = userData ? JSON.parse(userData) : null;
-        
+        let userId = null;
+        let token = null;
+        if (userData) {
+            try {
+                const parsed = JSON.parse(userData);
+                userId = parsed.id;
+            } catch (e) {
+                userId = null;
+            }
+        }
+        token = localStorage.getItem('token');
+
+        if (userId && token) {
+            try {
+                const response = await api.withToken(token).get(`/users/${userId}/profile`);
+                this.currentUser = response.data;
+            } catch (error) {
+                // If API fails, fallback to localStorage
+                this.currentUser = userData ? JSON.parse(userData) : null;
+            }
+        } else {
+            this.currentUser = userData ? JSON.parse(userData) : null;
+        }
+
         // Check if user needs to change password
         const requiresPasswordChange = localStorage.getItem('requiresPasswordChange') === 'true';
         this.set('requiresPasswordChange', requiresPasswordChange);

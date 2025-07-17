@@ -239,36 +239,36 @@ class Header extends App {
     const navigationLinks = [
       { href: '/', label: 'Home' },
       { 
-        href: '/about', 
+        href: '/public/about', 
         label: 'About',
         subLinks: [
-          { href: '/about/history', label: 'Our History' },
-          { href: '/about/mission', label: 'Mission & Vision' },
-          { href: '/about/values', label: 'Our Values' },
-          { href: '/about/team', label: 'Our Team' }
+          { href: '/public/about/history', label: 'Our History' },
+          { href: '/public/about/mission', label: 'Mission & Vision' },
+          { href: '/public/about/values', label: 'Our Values' },
+          { href: '/public/about/team', label: 'Our Team' }
         ]
       },
       { 
-        href: '/courses', 
+        href: '/public/courses', 
         label: 'Courses',
         subLinks: [
-          { href: '/courses/elementary', label: 'Elementary' },
-          { href: '/courses/middle-school', label: 'Middle School' },
-          { href: '/courses/high-school', label: 'High School' },
-          { href: '/courses/extracurricular', label: 'Extracurricular' }
+          { href: '/public/courses/elementary', label: 'Elementary' },
+          { href: '/public/courses/middle-school', label: 'Middle School' },
+          { href: '/public/courses/high-school', label: 'High School' },
+          { href: '/public/courses/extracurricular', label: 'Extracurricular' }
         ]
       },
       { 
-        href: '/admissions', 
+        href: '/public/admissions', 
         label: 'Admissions',
         subLinks: [
-          { href: '/admissions/requirements', label: 'Requirements' },
-          { href: '/admissions/process', label: 'Application Process' },
-          { href: '/admissions/fees', label: 'Tuition & Fees' },
-          { href: '/admissions/scholarships', label: 'Scholarships' }
+          { href: '/public/admissions/requirements', label: 'Requirements' },
+          { href: '/public/admissions/process', label: 'Application Process' },
+          { href: '/public/admissions/fees', label: 'Tuition & Fees' },
+          { href: '/public/admissions/scholarships', label: 'Scholarships' }
         ]
       },
-      { href: '/contact', label: 'Contact' }
+      { href: '/public/contact', label: 'Contact' }
     ];
 
     // Social icons array

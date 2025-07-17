@@ -342,13 +342,15 @@ class DashboardLayout extends App {
                     </header>
 
                     <!-- Page Content -->
-                    <main class="flex-1 p-6 bg-transparent container mx-auto overflow-y-auto">
+                    <main class="flex-1 bg-transparent overflow-y-auto">
+                        <div class="container mx-auto p-6">
                         ${(() => {
                             const requiresPasswordChange = this.get('requiresPasswordChange');
                             return requiresPasswordChange ? 
                                 `<auth-password-change-dialog></auth-password-change-dialog>` : 
                                 this.pageContent;
-                        })()}
+                        })()}                        
+                        </div>
                     </main>
                 </div>
             </div>

@@ -331,7 +331,7 @@ class ProfileContent extends App {
                         </ui-button>
                     </div>
 
-                    <div class="flex flex-col lg:flex-row items-center justify-center lg:items-start gap-5 space-x-8 mb-8">
+                    <div class="flex flex-col lg:flex-row items-center justify-center lg:items-start gap-8 space-x-8 mb-8">
                         <!-- Profile Picture (Left) -->
                         <div class="flex-shrink-0 w-2/6" style="aspect-ratio: 1; min-width: 8rem;">
                             <ui-profile-image-uploader 

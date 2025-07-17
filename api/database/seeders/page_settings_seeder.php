@@ -26,13 +26,23 @@ class PageSettingsSeeder
 
         $defaultPages = [
             [
+                'slug' => 'home',
+                'title' => 'Home',
+                'content' => '<h2>Welcome to Our School</h2><p>We are committed to providing quality education and fostering academic excellence.</p>',
+                'meta_description' => 'Learn about our school\'s history, mission, and commitment to education.',
+                'category' => 'home',
+                'is_active' => 1,
+                'sort_order' => 1,
+                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
+            ],
+            [
                 'slug' => 'about-us',
                 'title' => 'About Us',
                 'content' => '<h2>Welcome to Our School</h2><p>We are committed to providing quality education and fostering academic excellence.</p>',
                 'meta_description' => 'Learn about our school\'s history, mission, and commitment to education.',
                 'category' => 'about',
                 'is_active' => 1,
-                'sort_order' => 1,
+                'sort_order' => 2,
                 'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
             ],
             [
@@ -42,7 +52,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Discover our school\'s mission and vision for academic excellence.',
                 'category' => 'about',
                 'is_active' => 1,
-                'sort_order' => 2,
+                'sort_order' => 3,
                 'banner_image' => json_encode(['uploads/pages/Values_1752713298_6878485214266g'])
             ],
             [
@@ -52,7 +62,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Explore our core values and educational aims.',
                 'category' => 'about',
                 'is_active' => 1,
-                'sort_order' => 3,
+                'sort_order' => 4,
                 'banner_image' => json_encode(['uploads/pages/Values_1752713314_6878486264g'])
             ],
             [
@@ -62,7 +72,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Meet our school\'s leadership team and staff.',
                 'category' => 'about',
                 'is_active' => 1,
-                'sort_order' => 4,
+                'sort_order' => 5,
                 'banner_image' => json_encode(['uploads/pages/Values_1752713324_68784868g'])
             ],
             [
@@ -72,7 +82,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Contact information and location details.',
                 'category' => 'contact',
                 'is_active' => 1,
-                'sort_order' => 5,
+                'sort_order' => 6,
                 'banner_image' => json_encode(['uploads/pages/About_1752713456_687848c.jpg'])
             ],
             [
@@ -82,7 +92,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Discover our academic programs and curriculum.',
                 'category' => 'academics',
                 'is_active' => 1,
-                'sort_order' => 6,
+                'sort_order' => 7,
                 'banner_image' => json_encode(['uploads/pages/Curriculum_1752713333_687848757550f.jpg'])
             ],
             [
@@ -92,7 +102,7 @@ class PageSettingsSeeder
                 'meta_description' => 'Information about school admissions and application process.',
                 'category' => 'academics',
                 'is_active' => 1,
-                'sort_order' => 7,
+                'sort_order' => 8,
                 'banner_image' => json_encode(['uploads/pages/About_1752713342_68784878pg'])
             ]
         ];

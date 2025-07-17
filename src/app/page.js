@@ -171,7 +171,7 @@ class RootPage extends App {
                 <div class="bg-white p-6 rounded-md">
                     ${pageData.content ? `
                         <div class="content-section">
-                            <div class="content-preview">
+                            <div class="content-preview text-lg leading-relaxed">
                                 ${pageData.content}
                             </div>
                         </div>
@@ -180,11 +180,6 @@ class RootPage extends App {
                             <p class="text-gray-500 italic">No content available</p>
                         </div>
                     `}
-                </div>
-                
-                <div class="mt-8">
-                    <h2 class="text-xl font-semibold mb-4">Raw Data</h2>
-                    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">${JSON.stringify(pageData, null, 2)}</pre>
                 </div>
             </div>
         `;

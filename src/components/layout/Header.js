@@ -149,7 +149,7 @@ class Header extends App {
     }
 
     return `
-      <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}]">
+      <header class="fixed top-0 left-0 right-0 z-50 bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}]">
         <!-- Top header -->
         <div class="flex container mx-auto items-center justify-between p-5">     
 

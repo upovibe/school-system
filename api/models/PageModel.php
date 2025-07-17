@@ -23,7 +23,8 @@ class PageModel extends BaseModel {
     protected static $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'banner_image' => 'json'
     ];
     
     // Whether the model uses timestamps

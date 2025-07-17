@@ -113,10 +113,12 @@ class PageSettingsModal extends HTMLElement {
                 formData.append(key, pageData[key]);
             });
             
-            // Add banner file if selected
+            // Add banner files if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
-                const file = bannerFileUpload.getFiles()[0];
-                formData.append('banner', file);
+                const files = bannerFileUpload.getFiles();
+                files.forEach(file => {
+                    formData.append('banner[]', file, file.name);
+                });
             }
 
             console.log('FormData entries:'); // Debug log
@@ -249,7 +251,8 @@ class PageSettingsModal extends HTMLElement {
                                 data-field="banner"
                                 accept="image/*"
                                 max-size="5242880"
-                                max-files="1"
+                                max-files="5"
+                                multiple
                                 class="w-full">
                             </ui-file-upload>
                         </div>

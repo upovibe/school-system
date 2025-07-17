@@ -16,7 +16,7 @@ class Migration_20241001000020createpagestable {
                 content LONGTEXT,
                 meta_description TEXT,
                 meta_keywords TEXT,
-                banner_image VARCHAR(255) DEFAULT NULL,
+                banner_image JSON DEFAULT NULL,
                 category VARCHAR(100) DEFAULT 'general',
                 is_active BOOLEAN DEFAULT 1,
                 sort_order INT DEFAULT 0,

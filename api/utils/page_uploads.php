@@ -25,34 +25,57 @@ function uploadPageBanner($file) {
 }
 
 /**
- * Delete page banner
+ * Upload multiple page banners
  */
-function deletePageBanner($bannerPath) {
-    return deleteFile($bannerPath);
+function uploadPageBanners($files) {
+    $uploadedBanners = [];
+    foreach ($files['name'] as $key => $name) {
+        $file = [
+            'name' => $name,
+            'type' => $files['type'][$key],
+            'tmp_name' => $files['tmp_name'][$key],
+            'error' => $files['error'][$key],
+            'size' => $files['size'][$key]
+        ];
+        $result = uploadPageBanner($file);
+        if ($result['success']) {
+            $uploadedBanners[] = $result['filepath'];
+        }
+    }
+    return $uploadedBanners;
 }
 
 /**
- * Get banner info
+ * Delete page banner(s)
  */
-function getPageBannerInfo($bannerPath) {
-    if (!$bannerPath) {
-        return [
-            'url' => null,
-            'thumbnails' => []
-        ];
+function deletePageBanner($bannerPaths) {
+    if (is_array($bannerPaths)) {
+        foreach ($bannerPaths as $path) {
+            deleteFile($path);
+        }
+        return true;
+    } else {
+        return deleteFile($bannerPaths);
     }
-    
-    $fileInfo = getFileInfo($bannerPath);
-    if (!$fileInfo) {
-        return [
-            'url' => null,
-            'thumbnails' => []
-        ];
+}
+
+/**
+ * Get banner info for multiple banners
+ */
+function getPageBannerInfo($bannerPaths) {
+    if (empty($bannerPaths)) {
+        return [];
     }
-    
-    // Ensure we return the expected structure
-    return [
-        'url' => $fileInfo ? ($fileInfo['url'] ?? null) : null,
-        'thumbnails' => $fileInfo ? ($fileInfo['thumbnails'] ?? []) : []
-    ];
+
+    $bannerInfo = [];
+    foreach ($bannerPaths as $path) {
+        $fileInfo = getFileInfo($path);
+        if ($fileInfo) {
+            $bannerInfo[] = [
+                'url' => $fileInfo['url'] ?? null,
+                'thumbnails' => $fileInfo['thumbnails'] ?? []
+            ];
+        }
+    }
+    return $bannerInfo;
 } 

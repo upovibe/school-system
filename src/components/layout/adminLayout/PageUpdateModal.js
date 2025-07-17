@@ -126,11 +126,12 @@ class PageUpdateModal extends HTMLElement {
                 formData.append(key, pageData[key]);
             });
             
-            // Add banner file if selected
+            // Add banner files if selected
             if (bannerFileUpload && bannerFileUpload.getFiles().length > 0) {
-                const file = bannerFileUpload.getFiles()[0];
-                formData.append('banner', file);
-                // formData.append('banner_image', file);
+                const files = bannerFileUpload.getFiles();
+                files.forEach(file => {
+                    formData.append('banner[]', file, file.name);
+                });
             }
 
             // Update the page with multipart data
@@ -259,7 +260,8 @@ class PageUpdateModal extends HTMLElement {
                                 data-field="banner"
                                 accept="image/*"
                                 max-size="5242880"
-                                max-files="1"
+                                max-files="5"
+                                multiple
                                 value="${this.pageData?.banner_image || ''}"
                                 class="w-full">
                             </ui-file-upload>

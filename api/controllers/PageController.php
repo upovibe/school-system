@@ -85,14 +85,12 @@ class PageController {
             $pageId = $this->pageModel->create($data);
             
             // Handle banner upload if present
-            $bannerPath = null;
-            if (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $uploadResult = uploadPageBanner($_FILES['banner']);
-                
-                if ($uploadResult['success']) {
-                    $bannerPath = $uploadResult['filepath'];
-                    // Update page with banner path
-                    $this->pageModel->update($pageId, ['banner_image' => $bannerPath]);
+            $bannerPaths = [];
+            if (isset($_FILES['banner']) && !empty($_FILES['banner']['name'][0])) {
+                $bannerPaths = uploadPageBanners($_FILES['banner']);
+                if (!empty($bannerPaths)) {
+                    // Update page with banner paths
+                    $this->pageModel->update($pageId, ['banner_image' => json_encode($bannerPaths)]);
                 }
             }
             
@@ -101,20 +99,19 @@ class PageController {
                 'page_id' => $pageId,
                 'slug' => $data['slug'],
                 'title' => $data['title'],
-                'banner_uploaded' => !empty($bannerPath)
+                'banners_uploaded' => count($bannerPaths)
             ]);
             
             // Get banner info safely
-            $bannerInfo = $bannerPath ? getPageBannerInfo($bannerPath) : null;
+            $bannerInfo = getPageBannerInfo($bannerPaths);
             
             http_response_code(201);
             echo json_encode([
                 'success' => true,
                 'data' => [
                     'id' => $pageId,
-                    'banner_image' => $bannerPath,
-                    'banner_url' => $bannerInfo ? ($bannerInfo['url'] ?? null) : null,
-                    'thumbnails' => $bannerInfo ? ($bannerInfo['thumbnails'] ?? []) : []
+                    'banner_images' => $bannerPaths,
+                    'banner_urls' => $bannerInfo
                 ],
                 'message' => 'Page created successfully'
             ]);
@@ -271,27 +268,26 @@ class PageController {
             }
             
             // Handle banner operations
-            $bannerPath = null;
-            
+            $bannerPaths = $existingPage['banner_image'] ?? [];
+
             // Check if banner should be deleted (banner_image set to null)
             if (isset($data['banner_image']) && $data['banner_image'] === null) {
-                if ($existingPage['banner_image']) {
-                    deletePageBanner($existingPage['banner_image']);
+                if (!empty($bannerPaths)) {
+                    deletePageBanner($bannerPaths);
                 }
                 $data['banner_image'] = null;
             }
             // Check if new banner file is uploaded
-            elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-                // Delete old banner if exists
-                if ($existingPage['banner_image']) {
-                    deletePageBanner($existingPage['banner_image']);
+            elseif (isset($_FILES['banner']) && !empty($_FILES['banner']['name'][0])) {
+                // Delete old banners if they exist
+                if (!empty($bannerPaths)) {
+                    deletePageBanner($bannerPaths);
                 }
                 
-                $uploadResult = uploadPageBanner($_FILES['banner']);
-                
-                if ($uploadResult['success']) {
-                    $bannerPath = $uploadResult['filepath'];
-                    $data['banner_image'] = $bannerPath;
+                $newBannerPaths = uploadPageBanners($_FILES['banner']);
+                if (!empty($newBannerPaths)) {
+                    $data['banner_image'] = json_encode($newBannerPaths);
+                    $bannerPaths = $newBannerPaths;
                 }
             }
             
@@ -303,20 +299,19 @@ class PageController {
                     'page_id' => $id,
                     'slug' => $data['slug'] ?? $existingPage['slug'],
                     'title' => $data['title'] ?? $existingPage['title'],
-                    'banner_uploaded' => !empty($bannerPath)
+                    'banners_uploaded' => isset($newBannerPaths) ? count($newBannerPaths) : 0
                 ]);
                 
                 // Get banner info safely
-                $bannerInfo = $bannerPath ? getPageBannerInfo($bannerPath) : null;
+                $bannerInfo = getPageBannerInfo($bannerPaths);
                 
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
                     'message' => 'Page updated successfully',
                     'data' => [
-                        'banner_image' => $bannerPath,
-                        'banner_url' => $bannerInfo ? ($bannerInfo['url'] ?? null) : null,
-                        'thumbnails' => $bannerInfo ? ($bannerInfo['thumbnails'] ?? []) : []
+                        'banner_images' => $bannerPaths,
+                        'banner_urls' => $bannerInfo
                     ]
                 ]);
             } else {
@@ -358,8 +353,8 @@ class PageController {
             $pageTitle = $existingPage['title'];
             $pageSlug = $existingPage['slug'];
             
-            // Delete banner image if exists
-            if ($existingPage['banner_image']) {
+            // Delete banner images if they exist
+            if (!empty($existingPage['banner_image'])) {
                 deletePageBanner($existingPage['banner_image']);
             }
             

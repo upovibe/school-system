@@ -135,6 +135,14 @@ class AboutSection extends App {
                                 <div class="content-preview text-lg leading-relaxed">
                                     ${pageData.content}
                                 </div>
+                                
+                                <div class="mt-8">
+                                    <a href="/public/about-us" 
+                                       class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
+                                        Read More
+                                        <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
+                                    </a>
+                                </div>
                             </div>
                             
                             <!-- Banner Image Column (Right) -->

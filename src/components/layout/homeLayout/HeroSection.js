@@ -1,5 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
+import store from '@/core/store.js';
+import PageLoader from '@/components/common/PageLoader.js';
 
 /**
  * Hero Section Component
@@ -20,16 +22,35 @@ class HeroSection extends App {
         this.loadPageData();
     }
 
-    loadPageData() {
-        // Get page data from the page-data attribute
-        const pageDataAttr = this.getAttribute('page-data');
-        if (pageDataAttr) {
-            try {
-                const pageData = JSON.parse(pageDataAttr);
+    async loadPageData() {
+        // Check if data is already cached in global store
+        const globalState = store.getState();
+        if (globalState.homePageData) {
+            this.set('pageData', globalState.homePageData);
+            this.render();
+            return;
+        }
+
+        // If not cached, fetch from API
+        await this.fetchPageData();
+    }
+
+    async fetchPageData() {
+        try {
+            const response = await api.get('/pages/slug/home');
+            if (response.data.success) {
+                const pageData = response.data.data;
+                
+                // Cache the data in global store
+                store.setState({ homePageData: pageData });
+                
+                // Set local state and render
                 this.set('pageData', pageData);
-            } catch (error) {
-                console.error('Error parsing page data:', error);
+                this.render();
             }
+        } catch (error) {
+            console.error('Error fetching page data:', error);
+            this.set('error', 'Failed to load page data');
         }
     }
 
@@ -104,11 +125,26 @@ class HeroSection extends App {
 
     render() {
         const pageData = this.get('pageData');
+        const error = this.get('error');
         const heroTitle = this.get('heroTitle') || 'Welcome to Our School';
         const heroSubtitle = this.get('heroSubtitle') || 'Excellence in Education, Character, and Leadership';
 
+        if (error) {
+            return `
+                <div class="container mx-auto flex items-center justify-center p-8">
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        ${error}
+                    </div>
+                </div>
+            `;
+        }
+
         if (!pageData) {
-            return '';
+            return `
+                <div class="container flex items-center justify-center mx-auto p-8">
+                    <page-loader></page-loader>
+                </div>
+            `;
         }
 
         const bannerImages = this.getBannerImages(pageData);

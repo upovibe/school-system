@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import store from '@/core/store.js';
+import { fetchColorSettings } from '@/utils/colorSettings.js';
 
 /**
  * Hero Section Component
@@ -19,6 +20,7 @@ class HeroSection extends App {
         super.connectedCallback();
         this.loadHeroSettings();
         this.loadPageData();
+        this.loadColorSettings();
     }
 
     async loadPageData() {
@@ -68,6 +70,20 @@ class HeroSection extends App {
             }
         } catch (error) {
             console.error('Error fetching hero settings:', error);
+        }
+    }
+
+    async loadColorSettings() {
+        try {
+            const colors = await fetchColorSettings();
+            
+            // Set all color values to state
+            Object.entries(colors).forEach(([key, value]) => {
+                this.set(key, value);
+            });
+
+        } catch (error) {
+            console.error('Error fetching color settings:', error);
         }
     }
 
@@ -128,6 +144,16 @@ class HeroSection extends App {
         const heroTitle = this.get('heroTitle') || 'Welcome to Our School';
         const heroSubtitle = this.get('heroSubtitle') || 'Excellence in Education, Character, and Leadership';
 
+        // Get colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
+        const darkColor = this.get('dark_color');
+        const hoverPrimary = this.get('hover_primary');
+        const hoverSecondary = this.get('hover_secondary');
+        const hoverAccent = this.get('hover_accent');
+
         if (error) {
             return `
                 <div class="container mx-auto flex items-center justify-center p-8">
@@ -174,7 +200,7 @@ class HeroSection extends App {
                         
                         <!-- Hero Content Overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-white px-4 lg:px-8 max-w-4xl">
+                            <div class="text-center text-[${textColor}] px-4 lg:px-8 max-w-4xl">
                                 <h1 class="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
                                     ${heroTitle}
                                 </h1>
@@ -183,12 +209,12 @@ class HeroSection extends App {
                                 </p>
                                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                                     <a href="/public/about-us" 
-                                       class="inline-flex items-center justify-center px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                                       class="inline-flex items-center justify-center px-8 py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${hoverPrimary}] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
                                         <i class="fas fa-info-circle mr-2"></i>
                                         Learn More
                                     </a>
                                     <a href="/public/admissions" 
-                                       class="inline-flex items-center justify-center px-8 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:-translate-y-1">
+                                       class="inline-flex items-center justify-center px-8 py-3 border-2 border-[${textColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${textColor}] hover:text-[${darkColor}] transition-all duration-300 transform hover:-translate-y-1">
                                         <i class="fas fa-graduation-cap mr-2"></i>
                                         Apply Now
                                     </a>
@@ -198,9 +224,9 @@ class HeroSection extends App {
                         
                         <!-- Mouse Scroll Indicator -->
                         <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                            <div class="flex flex-col items-center text-white cursor-pointer group" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">
-                                <div class="w-5 h-8 border-2 border-white rounded-full flex justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-opacity-80">
-                                    <div class="w-1 h-2 bg-white rounded-full mt-1.5 animate-bounce transition-all duration-300 group-hover:bg-opacity-80"></div>
+                            <div class="flex flex-col items-center text-[${textColor}] cursor-pointer group" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">
+                                <div class="w-5 h-8 border-2 border-[${textColor}] rounded-full flex justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-opacity-80">
+                                    <div class="w-1 h-2 bg-[${textColor}] rounded-full mt-1.5 animate-bounce transition-all duration-300 group-hover:bg-opacity-80"></div>
                                 </div>
                                 <span class="text-xs mt-2 opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105">Scroll</span>
                             </div>

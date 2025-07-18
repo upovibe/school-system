@@ -261,15 +261,7 @@ class SystemSettingsPage extends App {
             { key: 'updated', label: 'Updated' }
         ];
 
-        // Debug: Check for problematic data
-        try {
-            const testJson = JSON.stringify(tableData);
-            console.log('Table data JSON length:', testJson.length);
-            console.log('Table data sample:', tableData.slice(0, 2));
-        } catch (error) {
-            console.error('JSON stringify error:', error);
-            console.log('Problematic data:', tableData);
-        }
+
         
         return `
             <div class="bg-white rounded-lg shadow-lg p-4">

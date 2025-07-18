@@ -57,37 +57,8 @@ class EventUpdateModal extends HTMLElement {
     // Set event data for editing
     setEventData(eventData) {
         this.eventData = eventData;
-        this.populateForm();
-    }
-
-    // Populate form with existing event data
-    populateForm() {
-        if (!this.eventData) return;
-
-        const titleInput = this.querySelector('ui-input[data-field="title"]');
-        const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
-        const locationInput = this.querySelector('ui-input[data-field="location"]');
-        const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
-        const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
-        const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
-        const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
-        const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
-
-        if (titleInput) titleInput.value = this.eventData.title || '';
-        if (descriptionTextarea) {
-            descriptionTextarea.value = this.eventData.description || '';
-            // Also set the inner textarea element value
-            const innerTextarea = descriptionTextarea.querySelector('textarea');
-            if (innerTextarea) {
-                innerTextarea.value = this.eventData.description || '';
-            }
-        }
-        if (locationInput) locationInput.value = this.eventData.location || '';
-        if (startDateInput) startDateInput.value = this.eventData.start_date ? this.eventData.start_date.slice(0, 16) : '';
-        if (endDateInput) endDateInput.value = this.eventData.end_date ? this.eventData.end_date.slice(0, 16) : '';
-        if (categoryDropdown) categoryDropdown.value = this.eventData.category || '';
-        if (statusDropdown) statusDropdown.value = this.eventData.status || '';
-        if (isActiveSwitch) isActiveSwitch.checked = this.eventData.is_active == 1 ? true : false;
+        // Re-render the modal with the new data
+        this.render();
     }
 
     // Update the event
@@ -244,6 +215,7 @@ class EventUpdateModal extends HTMLElement {
                                 data-field="title"
                                 type="text" 
                                 placeholder="Enter event title"
+                                value="${this.eventData?.title || ''}"
                                 class="w-full">
                             </ui-input>
                         </div>
@@ -254,6 +226,7 @@ class EventUpdateModal extends HTMLElement {
                                 data-field="description"
                                 placeholder="Enter event description"
                                 rows="4"
+                                value="${this.eventData?.description || ''}"
                                 class="w-full">
                             </ui-textarea>
                         </div>
@@ -263,6 +236,7 @@ class EventUpdateModal extends HTMLElement {
                             <ui-dropdown 
                                 data-field="category"
                                 placeholder="Select category"
+                                value="${this.eventData?.category || ''}"
                                 class="w-full">
                                 <ui-option value="sports">Sports</ui-option>
                                 <ui-option value="academic">Academic</ui-option>
@@ -281,6 +255,7 @@ class EventUpdateModal extends HTMLElement {
                                 <ui-input 
                                     data-field="start_date"
                                     type="datetime-local" 
+                                    value="${this.eventData?.start_date ? this.eventData.start_date.slice(0, 16) : ''}"
                                     class="w-full">
                                 </ui-input>
                             </div>
@@ -289,6 +264,7 @@ class EventUpdateModal extends HTMLElement {
                                 <ui-input 
                                     data-field="end_date"
                                     type="datetime-local" 
+                                    value="${this.eventData?.end_date ? this.eventData.end_date.slice(0, 16) : ''}"
                                     class="w-full">
                                 </ui-input>
                             </div>
@@ -300,6 +276,7 @@ class EventUpdateModal extends HTMLElement {
                                 data-field="location"
                                 type="text" 
                                 placeholder="Enter event location"
+                                value="${this.eventData?.location || ''}"
                                 class="w-full">
                             </ui-input>
                         </div>
@@ -309,6 +286,7 @@ class EventUpdateModal extends HTMLElement {
                             <ui-dropdown 
                                 data-field="status"
                                 placeholder="Select status"
+                                value="${this.eventData?.status || ''}"
                                 class="w-full">
                                 <ui-option value="upcoming">Upcoming</ui-option>
                                 <ui-option value="ongoing">Ongoing</ui-option>
@@ -331,6 +309,7 @@ class EventUpdateModal extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Event Status</label>
                             <ui-switch 
                                 name="is_active"
+                                ${this.eventData?.is_active == 1 ? 'checked' : ''}
                                 class="w-full">
                                 <span slot="label">Published</span>
                             </ui-switch>

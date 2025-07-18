@@ -224,14 +224,14 @@ class EventSettingsModal extends HTMLElement {
                                 data-field="category"
                                 placeholder="Select category"
                                 class="w-full">
-                                <option value="sports">Sports</option>
-                                <option value="academic">Academic</option>
-                                <option value="arts">Arts</option>
-                                <option value="career">Career</option>
-                                <option value="technology">Technology</option>
-                                <option value="community">Community</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="ceremony">Ceremony</option>
+                                <ui-option value="sports">Sports</ui-option>
+                                <ui-option value="academic">Academic</ui-option>
+                                <ui-option value="arts">Arts</ui-option>
+                                <ui-option value="career">Career</ui-option>
+                                <ui-option value="technology">Technology</ui-option>
+                                <ui-option value="community">Community</ui-option>
+                                <ui-option value="meeting">Meeting</ui-option>
+                                <ui-option value="ceremony">Ceremony</ui-option>
                             </ui-dropdown>
                         </div>
 
@@ -270,10 +270,10 @@ class EventSettingsModal extends HTMLElement {
                                 data-field="status"
                                 placeholder="Select status"
                                 class="w-full">
-                                <option value="upcoming">Upcoming</option>
-                                <option value="ongoing">Ongoing</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
+                                <ui-option value="upcoming">Upcoming</ui-option>
+                                <ui-option value="ongoing">Ongoing</ui-option>
+                                <ui-option value="completed">Completed</ui-option>
+                                <ui-option value="cancelled">Cancelled</ui-option>
                             </ui-dropdown>
                         </div>
 

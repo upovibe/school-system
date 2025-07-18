@@ -64,13 +64,9 @@ class ContactSection extends App {
         const hoverSecondary = this.get('hover_secondary');
         const hoverAccent = this.get('hover_accent');
 
-        // Don't show anything if no page data
-        if (!pageData) {
-            return '';
-        }
-
+ 
         // Only render if there's content
-        if (!pageData.content || pageData.content.trim() === '') {
+        if (!pageData?.content || pageData.content.trim() === '') {
             return '';
         }
 

@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
 import '@/components/layout/homeLayout/HeroSection.js';
 import '@/components/layout/homeLayout/AboutSection.js';
 import '@/components/layout/homeLayout/AcademicsSection.js';
@@ -135,18 +136,18 @@ class RootPage extends App {
             `;
         }
 
-        // Convert data to JSON strings for attributes
-        const colorsData = JSON.stringify(allData.colors);
-        const pagesData = JSON.stringify(allData.pages);
-        const settingsData = JSON.stringify(allData.settings);
+        // Convert data to JSON strings for attributes with proper escaping
+        const colorsData = escapeJsonForAttribute(allData.colors);
+        const pagesData = escapeJsonForAttribute(allData.pages);
+        const settingsData = escapeJsonForAttribute(allData.settings);
 
         return `
             <div class="mx-auto">
                 <!-- Hero Section Component -->
                 <hero-section 
                     colors='${colorsData}'
-                    page-data='${JSON.stringify(allData.pages.home)}'
-                    settings='${JSON.stringify({
+                    page-data='${escapeJsonForAttribute(allData.pages.home)}'
+                    settings='${escapeJsonForAttribute({
                         hero_title: allData.settings.hero_title,
                         hero_subtitle: allData.settings.hero_subtitle
                     })}'>
@@ -155,8 +156,8 @@ class RootPage extends App {
                 <!-- About Section Component -->
                 <about-section 
                     colors='${colorsData}'
-                    page-data='${JSON.stringify(allData.pages.about)}'
-                    settings='${JSON.stringify({
+                    page-data='${escapeJsonForAttribute(allData.pages.about)}'
+                    settings='${escapeJsonForAttribute({
                         about_title: allData.settings.about_title,
                         about_subtitle: allData.settings.about_subtitle
                     })}'>
@@ -165,8 +166,8 @@ class RootPage extends App {
                 <!-- Academics Section Component -->
                 <academics-section 
                     colors='${colorsData}'
-                    page-data='${JSON.stringify(allData.pages.academics)}'
-                    settings='${JSON.stringify({
+                    page-data='${escapeJsonForAttribute(allData.pages.academics)}'
+                    settings='${escapeJsonForAttribute({
                         academics_title: allData.settings.academics_title,
                         academics_subtitle: allData.settings.academics_subtitle
                     })}'>
@@ -175,8 +176,8 @@ class RootPage extends App {
                 <!-- Community Section Component -->
                 <community-section 
                     colors='${colorsData}'
-                    page-data='${JSON.stringify(allData.pages.community)}'
-                    settings='${JSON.stringify({
+                    page-data='${escapeJsonForAttribute(allData.pages.community)}'
+                    settings='${escapeJsonForAttribute({
                         community_title: allData.settings.community_title,
                         community_subtitle: allData.settings.community_subtitle
                     })}'>
@@ -185,8 +186,8 @@ class RootPage extends App {
                 <!-- Contact Section Component -->
                 <contact-section 
                     colors='${colorsData}'
-                    page-data='${JSON.stringify(allData.pages.contact)}'
-                    settings='${JSON.stringify({
+                    page-data='${escapeJsonForAttribute(allData.pages.contact)}'
+                    settings='${escapeJsonForAttribute({
                         contact_title: allData.settings.contact_title,
                         contact_subtitle: allData.settings.contact_subtitle,
                     })}'>

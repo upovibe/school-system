@@ -1,6 +1,5 @@
 import App from '@/core/App.js';
-import api from '@/services/api.js';
-import store from '@/core/store.js';
+import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -18,98 +17,63 @@ if (!document.querySelector('link[href*="quill"]')) {
 class AboutSection extends App {
     constructor() {
         super();
-        this.pageData = null;
-        this.aboutTitle = '';
-        this.aboutSubtitle = '';
     }
 
     connectedCallback() {
         super.connectedCallback();
-        this.loadAboutSettings();
-        this.loadPageData();
+        this.loadDataFromProps();
     }
 
-    async loadAboutSettings() {
-        try {
-            // Fetch about title and subtitle from settings
-            const aboutTitleResponse = await api.get('/settings/key/about_title');
-            const aboutSubtitleResponse = await api.get('/settings/key/about_subtitle');
-            
-            if (aboutTitleResponse.data.success) {
-                this.set('aboutTitle', aboutTitleResponse.data.data.setting_value);
-            }
-            
-            if (aboutSubtitleResponse.data.success) {
-                this.set('aboutSubtitle', aboutSubtitleResponse.data.data.setting_value);
-            }
-        } catch (error) {
-            console.error('Error fetching about settings:', error);
-        }
-    }
+    loadDataFromProps() {
+        // Get data from props/attributes
+        const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
+        const settingsAttr = this.getAttribute('settings');
 
-    async loadPageData() {
-        // Check if data is already cached in global store
-        const globalState = store.getState();
-        if (globalState.homePageData) {
-            this.set('pageData', globalState.homePageData);
-            this.render();
-            return;
+        if (colorsAttr) {
+            try {
+                const colors = JSON.parse(colorsAttr);
+                Object.entries(colors).forEach(([key, value]) => {
+                    this.set(key, value);
+                });
+            } catch (error) {
+                console.error('Error parsing colors:', error);
+            }
         }
 
-        // If not cached, wait a bit for HeroSection to load it first
-        setTimeout(async () => {
-            const updatedState = store.getState();
-            if (updatedState.homePageData) {
-                this.set('pageData', updatedState.homePageData);
-                this.render();
-            } else {
-                // Only fetch if HeroSection hasn't loaded it yet
-                await this.fetchPageData();
-            }
-        }, 100);
-    }
-
-    async fetchPageData() {
-        try {
-            const response = await api.get('/pages/slug/about-us');
-            if (response.data.success) {
-                const pageData = response.data.data;
-                
-                // Cache the data in global store
-                store.setState({ homePageData: pageData });
-                
-                // Set local state and render
+        if (pageDataAttr) {
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
                 this.set('pageData', pageData);
-                this.render();
             }
-        } catch (error) {
-            console.error('Error fetching page data:', error);
-            this.set('error', 'Failed to load page data');
         }
+
+        if (settingsAttr) {
+            const settings = unescapeJsonFromAttribute(settingsAttr);
+            if (settings) {
+                if (settings.about_title) this.set('aboutTitle', settings.about_title);
+                if (settings.about_subtitle) this.set('aboutSubtitle', settings.about_subtitle);
+            }
+        }
+
+        // Render immediately with the data
+        this.render();
     }
 
     render() {
         const pageData = this.get('pageData');
-        const error = this.get('error');
-
-        if (error) {
-            return `
-                <div class="container mx-auto flex items-center justify-center p-8">
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        ${error}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Don't show loading if pageData is null - just return empty
-        // This prevents duplicate loading spinners
-        if (!pageData) {
-            return '';
-        }
+        
+        // Get colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
+        const hoverPrimary = this.get('hover_primary');
+        const hoverSecondary = this.get('hover_secondary');
+        const hoverAccent = this.get('hover_accent');
 
         // Only render if there's content
-        if (!pageData.content || pageData.content.trim() === '') {
+        if (!pageData?.content || pageData.content.trim() === '') {
             return '';
         }
 
@@ -117,26 +81,26 @@ class AboutSection extends App {
             <!-- About Section -->
             <section class="mx-auto py-10">
                     <div class="text-center mb-12">
-                        <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                        <h2 class="text-3xl lg:text-4xl font-bold text-[${secondaryColor}] mb-4">
                             ${this.get('aboutTitle')}
                         </h2>
-                        <p class="text-lg text-gray-600 mb-4">
+                        <p class="text-lg text-[${secondaryColor}] opacity-80 mb-4">
                             ${this.get('aboutSubtitle')}
                         </p>
-                        <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
+                        <div class="w-24 h-1 bg-[${primaryColor}] mx-auto rounded-full"></div>
                     </div>
                     
-                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <!-- Content Column (Left) -->
                             <div class="p-5 lg:p-12 flex flex-col justify-center">
-                                <div class="content-preview text-lg leading-relaxed">
+                                <div class="content-preview text-lg leading-relaxed text-[${secondaryColor}]">
                                     ${pageData.content}
                                 </div>
                                 
                                 <div class="mt-8">
                                     <a href="/public/about-us" 
-                                       class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
+                                       class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl group">
                                         Read More
                                         <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
                                     </a>
@@ -149,10 +113,10 @@ class AboutSection extends App {
                                      alt="About Our School" 
                                      class="w-full h-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                                <div class="absolute inset-0 hidden items-center justify-center bg-[${primaryColor}] bg-opacity-10">
                                     <div class="text-center">
-                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                        <p class="text-gray-500">About banner image</p>
+                                        <i class="fas fa-image text-[${primaryColor}] text-4xl mb-2"></i>
+                                        <p class="text-[${secondaryColor}] font-medium">About banner image</p>
                                     </div>
                                 </div>
                             </div>

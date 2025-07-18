@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 
 /**
  * Hero Section Component
@@ -33,21 +34,17 @@ class HeroSection extends App {
         }
 
         if (pageDataAttr) {
-            try {
-                const pageData = JSON.parse(pageDataAttr);
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
                 this.set('pageData', pageData);
-            } catch (error) {
-                console.error('Error parsing page data:', error);
             }
         }
 
         if (settingsAttr) {
-            try {
-                const settings = JSON.parse(settingsAttr);
+            const settings = unescapeJsonFromAttribute(settingsAttr);
+            if (settings) {
                 if (settings.hero_title) this.set('heroTitle', settings.hero_title);
                 if (settings.hero_subtitle) this.set('heroSubtitle', settings.hero_subtitle);
-            } catch (error) {
-                console.error('Error parsing settings:', error);
             }
         }
 

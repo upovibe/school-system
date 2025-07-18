@@ -115,8 +115,7 @@ class AboutSection extends App {
 
         return `
             <!-- About Section -->
-            <section class="py-10 bg-gray-50">
-                <div class="mx-auto ">
+            <section class="mx-auto py-10 bg-gray-50">
                     <div class="text-center mb-12">
                         <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                             ${this.get('aboutTitle')}
@@ -127,7 +126,7 @@ class AboutSection extends App {
                         <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <!-- Content Column (Left) -->
                             <div class="p-5 lg:p-12 flex flex-col justify-center">
@@ -159,7 +158,6 @@ class AboutSection extends App {
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         `;
     }

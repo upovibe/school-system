@@ -157,7 +157,7 @@ class HeroSection extends App {
             <div class="mb-8">
                 <div class="relative">
                     <!-- Main Hero Banner Image -->
-                    <div class="relative w-full h-[500px] lg:h-[70vh] rounded-lg overflow-hidden">
+                    <div class="relative w-full h-[500px] lg:h-[70vh] rounded-3xl overflow-hidden">
                         <img src="${this.getImageUrl(bannerImages[0])}" 
                              alt="Hero Banner" 
                              class="w-full h-full object-cover"

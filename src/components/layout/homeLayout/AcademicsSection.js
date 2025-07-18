@@ -97,8 +97,7 @@ class AcademicsSection extends App {
 
         return `
             <!-- Academics Section -->
-            <section class="py-10 bg-gray-50">
-                <div class="mx-auto ">
+            <section class="mx-auto py-10 bg-gray-50">
                     <div class="text-center mb-12">
                         <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                             ${this.get('academicsTitle')}
@@ -109,7 +108,7 @@ class AcademicsSection extends App {
                         <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <!-- Banner Image Column (Left) -->
                             <div class="relative h-64 lg:h-auto">
@@ -141,7 +140,6 @@ class AcademicsSection extends App {
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         `;
     }

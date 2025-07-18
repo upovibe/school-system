@@ -85,7 +85,6 @@ class ContactSection extends App {
         return `
             <!-- Contact Section -->
             <section class="mx-auto py-16 px-4">
-                <div class="max-w-6xl mx-auto">
                     <!-- Contact Banner Card -->
                     <div class="relative group rounded-3xl overflow-hidden shadow-2xl">
                         <!-- Banner Background -->
@@ -124,7 +123,7 @@ class ContactSection extends App {
                                     
                                     <!-- Call to Action Button -->
                                     <div class="flex justify-center">
-                                        <a href="/contact" 
+                                        <a href="/public/contact" 
                                            class="inline-flex items-center px-8 py-4 bg-white/20 backdrop-blur-md text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group border border-white/30 hover:bg-white/30">
                                             <span>Contact Us</span>
                                             <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform duration-300"></i>
@@ -134,7 +133,6 @@ class ContactSection extends App {
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         `;
     }

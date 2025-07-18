@@ -223,12 +223,12 @@
           ]
         },
         { 
-          href: '/public/acadamics', 
+          href: '/public/academics', 
           label: 'Academics',
           subLinks: [
-            { href: '/public/acadamics/pre-school', label: 'Pre School' },
-            { href: '/public/acadamics/primary-school', label: 'Primary School' },
-            { href: '/public/acadamics/junior-high-school', label: 'Junior High School' },
+            { href: '/public/academics/pre-school', label: 'Pre School' },
+            { href: '/public/academics/primary-school', label: 'Primary School' },
+            { href: '/public/academics/junior-high-school', label: 'Junior High School' },
           ]
         },
         { 

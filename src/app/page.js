@@ -3,11 +3,11 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
-import '@/components/layout/homeLayout/HeroSection.js';
-import '@/components/layout/homeLayout/AboutSection.js';
-import '@/components/layout/homeLayout/AcademicsSection.js';
-import '@/components/layout/homeLayout/CommunitySection.js';
-import '@/components/layout/homeLayout/ContactSection.js';
+import '@/components/layout/publicLayout/HeroSection.js';
+import '@/components/layout/publicLayout/AboutSection.js';
+import '@/components/layout/publicLayout/AcademicsSection.js';
+import '@/components/layout/publicLayout/CommunitySection.js';
+import '@/components/layout/publicLayout/ContactSection.js';
 
 /**
  * Root Page Component (/)

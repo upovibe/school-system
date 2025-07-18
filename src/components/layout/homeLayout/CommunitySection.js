@@ -112,10 +112,11 @@ class CommunitySection extends App {
                     </div>
                     
                     <!-- Main Content Card -->
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-12">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
-                            <!-- Banner Image Column (Left) -->
-                            <div class="relative h-64 lg:h-auto lg:col-span-1">
+                    <div class="relative mb-12">
+                        <!-- Main content container -->
+                        <div class="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
+                            <!-- Top banner section with image -->
+                            <div class="relative h-48 lg:h-64">
                                 <img src="/api/${pageData.banner_image}" 
                                      alt="Community" 
                                      class="w-full h-full object-cover"
@@ -126,20 +127,57 @@ class CommunitySection extends App {
                                         <p class="text-blue-600 font-medium">Community banner</p>
                                     </div>
                                 </div>
+                                
+                                <!-- Overlay with community stats -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                <div class="absolute bottom-4 left-4 right-4">
+                                    <div class="flex flex-wrap gap-4 text-white">
+                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                                            <div class="text-2xl font-bold">500+</div>
+                                            <div class="text-sm opacity-90">Students</div>
+                                        </div>
+                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                                            <div class="text-2xl font-bold">50+</div>
+                                            <div class="text-sm opacity-90">Teachers</div>
+                                        </div>
+                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                                            <div class="text-2xl font-bold">1000+</div>
+                                            <div class="text-sm opacity-90">Families</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <!-- Content Column (Right) -->
-                            <div class="p-8 lg:p-12 flex flex-col justify-center lg:col-span-2">
-                                <div class="content-preview text-lg leading-relaxed text-gray-700">
-                                    ${pageData.content}
-                                </div>
-                                
-                                <div class="mt-8">
-                                    <a href="/public/community" 
-                                       class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
-                                        Explore Community
-                                        <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
-                                    </a>
+                            <!-- Content section with floating card design -->
+                            <div class="relative -mt-8 mx-4 mb-8">
+                                <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                                    <div class="flex items-center mb-6">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
+                                            <i class="fas fa-heart text-white text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold text-gray-900">Our Community Spirit</h3>
+                                            <p class="text-gray-600">Building connections that last a lifetime</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="content-preview text-lg leading-relaxed text-gray-700 mb-6">
+                                        ${pageData.content}
+                                    </div>
+                                    
+                                    <div class="flex flex-col sm:flex-row gap-4">
+                                        <a href="/public/community" 
+                                           class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
+                                            <i class="fas fa-users mr-2"></i>
+                                            Explore Community
+                                            <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
+                                        </a>
+                                        <a href="/public/contact" 
+                                           class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1 group">
+                                            <i class="fas fa-envelope mr-2"></i>
+                                            Get in Touch
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

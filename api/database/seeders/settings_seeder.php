@@ -25,13 +25,15 @@ class SettingsSeeder
 
         $defaultSettings = [
             // Theme Settings
-            ['setting_key' => 'theme_color', 'setting_value' => '#a38d00', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Primary theme color'],
-            ['setting_key' => 'brand_text_color', 'setting_value' => '#ffffff', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Text color for branding'],
-            ['setting_key' => 'secondary_color', 'setting_value' => '#270061', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Secondary accent color'],
             ['setting_key' => 'background_color', 'setting_value' => '#F9FAFB', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Page background color'],
-            ['setting_key' => 'hover_light_color', 'setting_value' => '#160066', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover overlay for light backgrounds'],
-            ['setting_key' => 'hover_dark_color', 'setting_value' => '#878a00', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover overlay for dark backgrounds'],
-            ['setting_key' => 'text_secondary_color', 'setting_value' => '#6e6e6e', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Secondary (muted) text color'],
+            ['setting_key' => 'primary_color', 'setting_value' => '#a38d00', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Primary brand color'],
+            ['setting_key' => 'secondary_color', 'setting_value' => '#270061', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Secondary brand color'],
+            ['setting_key' => 'accent_color', 'setting_value' => '#878a00', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Accent color for highlights'],
+            ['setting_key' => 'hover_primary', 'setting_value' => '#160066', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover state for primary elements'],
+            ['setting_key' => 'hover_secondary', 'setting_value' => '#4a0066', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover state for secondary elements'],
+            ['setting_key' => 'hover_accent', 'setting_value' => '#a3a000', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Hover state for accent elements'],
+            ['setting_key' => 'text_color', 'setting_value' => '#ffffff', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Primary text color'],
+            ['setting_key' => 'dark_color', 'setting_value' => '#000000', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Dark color (black)'],
             ['setting_key' => 'success_color', 'setting_value' => '#28a745', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for success messages'],
             ['setting_key' => 'error_color', 'setting_value' => '#dc3545', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for error messages'],
             ['setting_key' => 'warning_color', 'setting_value' => '#ffc107', 'setting_type' => 'color', 'category' => 'theme', 'description' => 'Color used for warning messages'],

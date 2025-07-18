@@ -192,19 +192,21 @@
 
     render() {
       // Get all colors from state
-      const themeColor = this.get('theme_color');
-      const secondaryColor = this.get('secondary_color');
       const backgroundColor = this.get('background_color');
-      const brandTextColor = this.get('brand_text_color');
-      const hoverLightColor = this.get('hover_light_color');
-      const hoverDarkColor = this.get('hover_dark_color');
-      const textSecondaryColor = this.get('text_secondary_color');
+      const primaryColor = this.get('primary_color');
+      const secondaryColor = this.get('secondary_color');
+      const accentColor = this.get('accent_color');
+      const textColor = this.get('text_color');
+      const darkColor = this.get('dark_color');
+      const hoverPrimary = this.get('hover_primary');
+      const hoverSecondary = this.get('hover_secondary');
+      const hoverAccent = this.get('hover_accent');
       const successColor = this.get('success_color');
       const errorColor = this.get('error_color');
       const warningColor = this.get('warning_color');
       
       // Only render if we have the essential colors
-      if (!backgroundColor || !brandTextColor || !secondaryColor) {
+      if (!backgroundColor || !textColor || !secondaryColor) {
         return '';
       }
 
@@ -278,7 +280,7 @@
               <div class="w-full">
                 ${link.subLinks ? `
                   <!-- Parent link with submenu toggle -->
-                  <button data-mobile-submenu-toggle class="w-full text-left text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] flex items-center justify-between">
+                                    <button data-mobile-submenu-toggle class="w-full text-left text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] flex items-center justify-between">
                     <span>${link.label}</span>
                     <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
                   </button>
@@ -286,15 +288,15 @@
                   <div class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out">
                     <div class="ml-4 space-y-2 pt-2">
                       ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
-                          ${subLink.label}
-                        </ui-link>
+                        <ui-link href="${subLink.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
+                            ${subLink.label}
+                          </ui-link>
                       `).join('')}
                     </div>
                   </div>
                 ` : `
                   <!-- Simple link without submenu -->
-                  <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${hoverDarkColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverDarkColor}] w-full block">
+                  <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] w-full block">
                     ${link.label}
                   </ui-link>
                 `}
@@ -304,7 +306,7 @@
             // Desktop version - with dropdown
             return `
               <div class="relative group">
-                <ui-link href="${link.href}" class="text-[${brandTextColor}] hover:text-[${themeColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${themeColor}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
+                <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${primaryColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${primaryColor}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
                   ${link.label}
                   ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
                 </ui-link>
@@ -312,7 +314,7 @@
                   <div class="absolute top-full left-0 mt-4 w-48 bg-[${secondaryColor}] border border-[${secondaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
                     <div class="py-2">
                       ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${brandTextColor}] hover:text-[${themeColor}] hover:bg-[${hoverLightColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${themeColor}]">
+                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${primaryColor}] hover:bg-[${hoverSecondary}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${primaryColor}]">
                           ${subLink.label}
                         </ui-link>
                       `).join('')}
@@ -328,7 +330,7 @@
       // Helper function to render social icons
       const renderSocialIcons = (isMobile = false) => {
         return socialIcons.map(social => `
-          <a href="${this.get(social.key) || '#'}" class="text-[${brandTextColor}] hover:text-[${isMobile ? hoverDarkColor : themeColor}] transition-colors">
+          <a href="${this.get(social.key) || '#'}" class="text-[${textColor}] hover:text-[${isMobile ? hoverAccent : primaryColor}] transition-colors">
             <i class="${social.icon} ${isMobile ? '' : 'text-sm lg:text-base'}"></i>
           </a>
         `).join('');
@@ -336,7 +338,7 @@
 
       return `
         <div class="relative">
-          <header class="bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${themeColor}]">
+          <header class="bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${primaryColor}]">
             <!-- Top header -->
             <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     
 
@@ -348,7 +350,7 @@
               <!-- Contact Information - Hidden on mobile -->
               <div class="hidden lg:flex flex-col text-sm text-[${secondaryColor}] space-y-1">
                 ${this.get('contactEmail') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${hoverDarkColor}]">
+                  <div class="flex items-center space-x-2 hover:text-[${hoverAccent}]">
                     <i class="fas fa-envelope"></i>
                     <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
                       ${this.get('contactEmail')}
@@ -356,7 +358,7 @@
                   </div>
                 ` : ''}
                 ${this.get('contactPhone') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${hoverDarkColor}]">
+                  <div class="flex items-center space-x-2 hover:text-[${hoverAccent}]">
                     <i class="fas text-lg fa-phone"></i>
                     <a href="tel:${this.get('contactPhone')}" class="transition-colors">
                       ${this.get('contactPhone')}
@@ -366,7 +368,7 @@
               </div>
 
               <!-- Mobile Menu Button - Right side -->
-              <button data-mobile-toggle class="lg:hidden text-[${secondaryColor}] size-8 rounded-md">
+              <button data-mobile-toggle class="lg:hidden text-[${textColor}] size-8 rounded-md">
                 <i class="fas fa-bars"></i>
               </button>
             </div>
@@ -393,7 +395,7 @@
             <!-- Mobile Header -->
             <div class="flex items-center justify-between p-4 border-b border-[${secondaryColor}]">
               <img class="lg:w-auto w-40 max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
-              <button data-mobile-toggle class="text-[${brandTextColor}] size-8 rounded-md">
+              <button data-mobile-toggle class="text-[${textColor}] size-8 rounded-md">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -401,8 +403,8 @@
             <!-- Mobile Content -->
             <div class="h-[calc(100vh-200px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full">
               <!-- Mobile Contact Info -->
-              <div class="border-b border-[${brandTextColor}] pb-4 w-full">
-                <div class="flex flex-col items-center justify-center text-sm text-[${brandTextColor}] space-y-3">
+              <div class="border-b border-[${textColor}] pb-4 w-full">
+                <div class="flex flex-col items-center justify-center text-sm text-[${textColor}] space-y-3">
                   ${this.get('contactEmail') ? `
                     <div class="flex items-center space-x-3 hover:opacity-50">
                       <i class="fas fa-envelope"></i>

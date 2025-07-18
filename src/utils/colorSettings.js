@@ -8,13 +8,15 @@ export async function fetchColorSettings() {
   try {
     // Define all color settings to fetch
     const colorSettings = [
-      'background_color',
-      'brand_text_color', 
+      'primary_color',
       'secondary_color',
-      'theme_color',
-      'hover_light_color',
-      'hover_dark_color',
-      'text_secondary_color',
+      'accent_color',
+      'hover_primary',
+      'hover_secondary',
+      'hover_accent',
+      'text_color',
+      'dark_color',
+      'background_color',
       'success_color',
       'error_color',
       'warning_color'
@@ -73,13 +75,15 @@ export async function fetchColorSetting(settingKey) {
  * Default color settings as fallback
  */
 export const defaultColors = {
-  background_color: '#ffffff',
-  brand_text_color: '#333333',
-  secondary_color: '#f8f9fa',
-  theme_color: '#007bff',
-  hover_light_color: '#e9ecef',
-  hover_dark_color: '#0056b3',
-  text_secondary_color: '#6c757d',
+  primary_color: '#a38d00',
+  secondary_color: '#270061',
+  accent_color: '#878a00',
+  hover_primary: '#160066',
+  hover_secondary: '#4a0066',
+  hover_accent: '#a3a000',
+  text_color: '#ffffff',
+  dark_color: '#000000',
+  background_color: '#F9FAFB',
   success_color: '#28a745',
   error_color: '#dc3545',
   warning_color: '#ffc107'

@@ -77,7 +77,11 @@ class SettingsSeeder
             
             // About Section Settings (General)
             ['setting_key' => 'about_title', 'setting_value' => 'About Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'About section title'],
-            ['setting_key' => 'about_subtitle', 'setting_value' => 'Discover our story, values, and commitment to excellence', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'About section subtitle or description']
+            ['setting_key' => 'about_subtitle', 'setting_value' => 'Discover our story, values, and commitment to excellence', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'About section subtitle or description'],
+            
+            // Academics Section Settings (General)
+            ['setting_key' => 'academics_title', 'setting_value' => 'Academic Excellence', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Academics section title'],
+            ['setting_key' => 'academics_subtitle', 'setting_value' => 'Comprehensive education programs designed for student success', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Academics section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

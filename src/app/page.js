@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import '@/components/layout/homeLayout/HeroSection.js';
 import '@/components/layout/homeLayout/AboutSection.js';
+import '@/components/layout/homeLayout/AcademicsSection.js';
 
 /**
  * Root Page Component (/)
@@ -22,6 +23,9 @@ class RootPage extends App {
                 
                 <!-- About Section Component -->
                 <about-section></about-section>
+                
+                <!-- Academics Section Component -->
+                <academics-section></academics-section>
             </div>
         `;
     }

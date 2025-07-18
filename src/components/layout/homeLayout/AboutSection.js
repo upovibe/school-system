@@ -20,11 +20,32 @@ class AboutSection extends App {
     constructor() {
         super();
         this.pageData = null;
+        this.aboutTitle = '';
+        this.aboutSubtitle = '';
     }
 
     connectedCallback() {
         super.connectedCallback();
+        this.loadAboutSettings();
         this.loadPageData();
+    }
+
+    async loadAboutSettings() {
+        try {
+            // Fetch about title and subtitle from settings
+            const aboutTitleResponse = await api.get('/settings/key/about_title');
+            const aboutSubtitleResponse = await api.get('/settings/key/about_subtitle');
+            
+            if (aboutTitleResponse.data.success) {
+                this.set('aboutTitle', aboutTitleResponse.data.data.setting_value);
+            }
+            
+            if (aboutSubtitleResponse.data.success) {
+                this.set('aboutSubtitle', aboutSubtitleResponse.data.data.setting_value);
+            }
+        } catch (error) {
+            console.error('Error fetching about settings:', error);
+        }
     }
 
     async loadPageData() {
@@ -96,11 +117,14 @@ class AboutSection extends App {
         return `
             <!-- About Section -->
             <section class="py-16 bg-gray-50">
-                <div class="mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto ">
                     <div class="text-center mb-12">
                         <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            About Our School
+                            ${this.get('aboutTitle')}
                         </h2>
+                        <p class="text-lg text-gray-600 mb-4">
+                            ${this.get('aboutSubtitle')}
+                        </p>
                         <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
                     </div>
                     

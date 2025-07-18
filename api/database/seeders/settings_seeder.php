@@ -73,7 +73,11 @@ class SettingsSeeder
             
             // Hero Section Settings (General)
             ['setting_key' => 'hero_title', 'setting_value' => 'Welcome to Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Main hero section title'],
-            ['setting_key' => 'hero_subtitle', 'setting_value' => 'Excellence in Education, Character, and Leadership', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Hero section subtitle or description']
+            ['setting_key' => 'hero_subtitle', 'setting_value' => 'Excellence in Education, Character, and Leadership', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Hero section subtitle or description'],
+            
+            // About Section Settings (General)
+            ['setting_key' => 'about_title', 'setting_value' => 'About Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'About section title'],
+            ['setting_key' => 'about_subtitle', 'setting_value' => 'Discover our story, values, and commitment to excellence', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'About section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

@@ -1,6 +1,7 @@
   import App from '@/core/App.js';
   import store from '@/core/store.js';
   import api from '@/services/api.js';
+  import { fetchColorSettings } from '@/utils/colorSettings.js';
   import '@/components/ui/Link.js';
 
   class Header extends App {
@@ -141,39 +142,11 @@
 
     async fetchColorSettings() {
       try {
-        // Fetch all color settings
-        const colorSettings = [
-          'background_color',
-          'brand_text_color', 
-          'secondary_color',
-          'theme_color',
-          'hover_light_color',
-          'hover_dark_color',
-          'text_secondary_color',
-          'success_color',
-          'error_color',
-          'warning_color'
-        ];
-
-        const colorPromises = colorSettings.map(async (settingKey) => {
-          try {
-            const response = await api.get(`/settings/key/${settingKey}`);
-            if (response.data.success && response.data.data.setting_value) {
-              return { key: settingKey, value: response.data.data.setting_value };
-            }
-          } catch (error) {
-            console.error(`Error fetching ${settingKey}:`, error);
-          }
-          return null;
-        });
-
-        const colorResults = await Promise.all(colorPromises);
+        const colors = await fetchColorSettings();
         
         // Set all color values to state
-        colorResults.forEach(result => {
-          if (result) {
-            this.set(result.key, result.value);
-          }
+        Object.entries(colors).forEach(([key, value]) => {
+          this.set(key, value);
         });
 
       } catch (error) {

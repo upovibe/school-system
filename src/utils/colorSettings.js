@@ -76,12 +76,12 @@ export async function fetchColorSetting(settingKey) {
  */
 export const defaultColors = {
   background_color: '#F9FAFB',
-  primary_color: '#a38d00',
-  secondary_color: '#270061',
+  primary_color: '#270061',
+  secondary_color: '#a38d00',
   accent_color: '#878a00',
-  hover_primary: '#160066',
-  hover_secondary: '#4a0066',
-  hover_accent: '#a3a000',
+  hover_primary: '#270061',
+  hover_secondary: '#a38d00',
+  hover_accent: '#878a00',
   text_color: '#ffffff',
   dark_color: '#000000',
   success_color: '#28a745',

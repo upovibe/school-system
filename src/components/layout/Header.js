@@ -306,15 +306,15 @@
             // Desktop version - with dropdown
             return `
               <div class="relative group">
-                <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${primaryColor}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${primaryColor}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
+                <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${hoverAccent}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
                   ${link.label}
                   ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
                 </ui-link>
                 ${link.subLinks ? `
-                  <div class="absolute top-full left-0 mt-4 w-48 bg-[${secondaryColor}] border border-[${secondaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
+                  <div class="absolute top-full left-0 mt-4 w-48 bg-[${primaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
                     <div class="py-2">
                       ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${primaryColor}] hover:bg-[${hoverSecondary}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${primaryColor}]">
+                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${primaryColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${hoverAccent}]">
                           ${subLink.label}
                         </ui-link>
                       `).join('')}
@@ -338,7 +338,7 @@
 
       return `
         <div class="relative">
-          <header class="bg-[${backgroundColor}] border-b-4 border-[${secondaryColor}] border-t-4 border-t-[${primaryColor}]">
+          <header class="bg-[${backgroundColor}] border-b-4 border-[${primaryColor}] border-t-4 border-t-[${secondaryColor}]">
             <!-- Top header -->
             <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     
 
@@ -348,9 +348,9 @@
               </ui-link>
 
               <!-- Contact Information - Hidden on mobile -->
-              <div class="hidden lg:flex flex-col text-sm text-[${secondaryColor}] space-y-1">
+              <div class="hidden lg:flex flex-col text-sm text-[${primaryColor}] space-y-1">
                 ${this.get('contactEmail') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${hoverAccent}]">
+                  <div class="flex items-center space-x-2 hover:text-[${secondaryColor}] transition-colors duration-300">
                     <i class="fas fa-envelope"></i>
                     <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
                       ${this.get('contactEmail')}
@@ -358,7 +358,7 @@
                   </div>
                 ` : ''}
                 ${this.get('contactPhone') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${hoverAccent}]">
+                  <div class="flex items-center space-x-2 hover:text-[${secondaryColor}] transition-colors duration-300">
                     <i class="fas text-lg fa-phone"></i>
                     <a href="tel:${this.get('contactPhone')}" class="transition-colors">
                       ${this.get('contactPhone')}
@@ -368,13 +368,13 @@
               </div>
 
               <!-- Mobile Menu Button - Right side -->
-              <button data-mobile-toggle class="lg:hidden text-[${textColor}] size-8 rounded-md">
+              <button data-mobile-toggle class="lg:hidden text-[${darkColor}] size-8 rounded-md">
                 <i class="fas fa-bars"></i>
               </button>
             </div>
 
             <!-- Bottom header -->
-            <div class="flex container mx-auto items-center justify-between p-3 lg:p-4 bg-[${secondaryColor}]">
+            <div class="flex container mx-auto items-center justify-between p-3 lg:p-4 bg-[${primaryColor}]">
               <!-- Navigation Links - Hidden on mobile -->
               <nav class="hidden lg:flex items-center space-x-6">
                 ${renderNavLinks(false)}
@@ -391,9 +391,9 @@
           <div data-mobile-overlay class="fixed inset-0 bg-black bg-opacity-50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
 
           <!-- Mobile Menu -->
-          <div data-mobile-menu class="fixed inset-0 bg-[${secondaryColor}] z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">
+          <div data-mobile-menu class="fixed inset-0 bg-[${primaryColor}] z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">
             <!-- Mobile Header -->
-            <div class="flex items-center justify-between p-4 border-b border-[${secondaryColor}]">
+            <div class="flex items-center justify-between p-4 border-b border-[${primaryColor}]">
               <img class="lg:w-auto w-40 max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
               <button data-mobile-toggle class="text-[${textColor}] size-8 rounded-md">
                 <i class="fas fa-times"></i>

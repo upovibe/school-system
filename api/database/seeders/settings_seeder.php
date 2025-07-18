@@ -85,7 +85,11 @@ class SettingsSeeder
             
             // Community Section Settings (General)
             ['setting_key' => 'community_title', 'setting_value' => 'Our Community', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Community section title'],
-            ['setting_key' => 'community_subtitle', 'setting_value' => 'Building connections and fostering relationships within our school family', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Community section subtitle or description']
+            ['setting_key' => 'community_subtitle', 'setting_value' => 'Building connections and fostering relationships within our school family', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Community section subtitle or description'],
+            
+            // Contact Section Settings (General)
+            ['setting_key' => 'contact_title', 'setting_value' => 'Get In Touch', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Contact section title'],
+            ['setting_key' => 'contact_subtitle', 'setting_value' => 'Have questions? We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Contact section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

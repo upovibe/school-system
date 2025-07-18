@@ -81,7 +81,11 @@ class SettingsSeeder
             
             // Academics Section Settings (General)
             ['setting_key' => 'academics_title', 'setting_value' => 'Academic Excellence', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Academics section title'],
-            ['setting_key' => 'academics_subtitle', 'setting_value' => 'Comprehensive education programs designed for student success', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Academics section subtitle or description']
+            ['setting_key' => 'academics_subtitle', 'setting_value' => 'Comprehensive education programs designed for student success', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Academics section subtitle or description'],
+            
+            // Community Section Settings (General)
+            ['setting_key' => 'community_title', 'setting_value' => 'Our Community', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Community section title'],
+            ['setting_key' => 'community_subtitle', 'setting_value' => 'Building connections and fostering relationships within our school family', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Community section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

@@ -242,12 +242,12 @@ class SystemSettingsPage extends App {
         const tableData = settings ? settings.map((setting, index) => ({
             id: setting.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
-            setting_key: setting.setting_key,
-            setting_value: setting.setting_value.length > 50 ? setting.setting_value.substring(0, 50) + '...' : setting.setting_value,
-            setting_type: setting.setting_type,
-            category: setting.category,
+            setting_key: setting.setting_key || '',
+            setting_value: (setting.setting_value || '').length > 50 ? (setting.setting_value || '').substring(0, 50) + '...' : (setting.setting_value || ''),
+            setting_type: setting.setting_type || '',
+            category: setting.category || '',
             status: setting.is_active ? 'Active' : 'Inactive',
-            updated: new Date(setting.updated_at).toLocaleString(),
+            updated: new Date(setting.updated_at || Date.now()).toLocaleString(),
         })) : [];
 
         const tableColumns = [
@@ -260,6 +260,16 @@ class SystemSettingsPage extends App {
             { key: 'status', label: 'Status' },
             { key: 'updated', label: 'Updated' }
         ];
+
+        // Debug: Check for problematic data
+        try {
+            const testJson = JSON.stringify(tableData);
+            console.log('Table data JSON length:', testJson.length);
+            console.log('Table data sample:', tableData.slice(0, 2));
+        } catch (error) {
+            console.error('JSON stringify error:', error);
+            console.log('Problematic data:', tableData);
+        }
         
         return `
             <div class="bg-white rounded-lg shadow-lg p-4">
@@ -276,8 +286,8 @@ class SystemSettingsPage extends App {
                         ${settings && settings.length > 0 ? `
                             <ui-table 
                                 title="System Settings"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
+                                data='${JSON.stringify(tableData).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
+                                columns='${JSON.stringify(tableColumns).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
                                 sortable
                                 searchable
                                 search-placeholder="Search settings..."

@@ -135,20 +135,9 @@ class AboutSection extends App {
                                     <i class="fas fa-bullseye text-white text-xl"></i>
                                 </div>
                                 <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Mission & Vision</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <h4 class="font-semibold text-[${primaryColor}] text-sm">Mission</h4>
-                                        <p class="text-gray-600 text-sm leading-relaxed">
-                                            Empowering students with knowledge, character, and leadership skills.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold text-[${primaryColor}] text-sm">Vision</h4>
-                                        <p class="text-gray-600 text-sm leading-relaxed">
-                                            Shaping tomorrow's leaders through innovative learning.
-                                        </p>
-                                    </div>
-                                </div>
+                                <p class="text-gray-600 text-sm leading-relaxed">
+                                    Empowering students and shaping tomorrow's leaders.
+                                </p>
                             </div>
                             
                             <!-- Values Card -->

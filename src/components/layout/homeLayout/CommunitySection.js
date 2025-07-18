@@ -126,8 +126,8 @@ class CommunitySection extends App {
                             
                             <!-- Animated overlay with community stats -->
                             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                            <div class="absolute bottom-20 left-4 right-4">
-                                <div class="flex flex-wrap gap-3 text-white">
+                            <div class="absolute bottom-2 gap-2 gap-y-4 galeft-4 right-4">
+                                <div class="flex flex-wrap gap-2 text-white">
                                     <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
                                         <div class="text-2xl font-bold animate-pulse">500+</div>
                                         <div class="text-sm opacity-90">Students</div>

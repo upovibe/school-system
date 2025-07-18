@@ -1,7 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import store from '@/core/store.js';
-import PageLoader from '@/components/common/PageLoader.js';
 
 /**
  * Hero Section Component

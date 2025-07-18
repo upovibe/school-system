@@ -82,6 +82,9 @@ class HeroSection extends App {
                 this.set(key, value);
             });
 
+            // Trigger render after colors are loaded
+            this.render();
+
         } catch (error) {
             console.error('Error fetching color settings:', error);
         }

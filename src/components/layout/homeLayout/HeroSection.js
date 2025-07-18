@@ -1,0 +1,206 @@
+import App from '@/core/App.js';
+import api from '@/services/api.js';
+
+/**
+ * Hero Section Component
+ * 
+ * Displays the hero banner with title, subtitle, buttons, and scroll indicator
+ */
+class HeroSection extends App {
+    constructor() {
+        super();
+        this.heroTitle = '';
+        this.heroSubtitle = '';
+        this.bannerImages = [];
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this.loadHeroSettings();
+        this.loadPageData();
+    }
+
+    loadPageData() {
+        // Get page data from the page-data attribute
+        const pageDataAttr = this.getAttribute('page-data');
+        if (pageDataAttr) {
+            try {
+                const pageData = JSON.parse(pageDataAttr);
+                this.set('pageData', pageData);
+            } catch (error) {
+                console.error('Error parsing page data:', error);
+            }
+        }
+    }
+
+    async loadHeroSettings() {
+        try {
+            // Fetch hero title and subtitle from settings
+            const heroTitleResponse = await api.get('/settings/key/hero_title');
+            const heroSubtitleResponse = await api.get('/settings/key/hero_subtitle');
+            
+            if (heroTitleResponse.data.success) {
+                this.set('heroTitle', heroTitleResponse.data.data.setting_value);
+            }
+            
+            if (heroSubtitleResponse.data.success) {
+                this.set('heroSubtitle', heroSubtitleResponse.data.data.setting_value);
+            }
+        } catch (error) {
+            console.error('Error fetching hero settings:', error);
+        }
+    }
+
+    // Helper method to get proper image URL
+    getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        
+        // If it's a relative path without /, construct the URL
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
+    }
+
+    // Helper method to parse banner images from various formats
+    getBannerImages(pageData) {
+        if (!pageData || !pageData.banner_image) {
+            return [];
+        }
+
+        let bannerImages = pageData.banner_image;
+
+        // If it's a string, try to parse as JSON
+        if (typeof bannerImages === 'string') {
+            try {
+                const parsed = JSON.parse(bannerImages);
+                if (Array.isArray(parsed)) {
+                    bannerImages = parsed;
+                } else {
+                    bannerImages = [bannerImages];
+                }
+            } catch (e) {
+                // If parsing fails, treat as single path
+                bannerImages = [bannerImages];
+            }
+        } else if (!Array.isArray(bannerImages)) {
+            // If it's not an array, wrap in array
+            bannerImages = [bannerImages];
+        }
+
+        // Filter out empty/null values
+        return bannerImages.filter(img => img && img.trim() !== '');
+    }
+
+    render() {
+        const pageData = this.get('pageData');
+        const heroTitle = this.get('heroTitle') || 'Welcome to Our School';
+        const heroSubtitle = this.get('heroSubtitle') || 'Excellence in Education, Character, and Leadership';
+
+        if (!pageData) {
+            return '';
+        }
+
+        const bannerImages = this.getBannerImages(pageData);
+
+        if (bannerImages.length === 0) {
+            return '';
+        }
+
+        return `
+            <!-- Hero Banner Section -->
+            <div class="mb-8">
+                <div class="relative">
+                    <!-- Main Hero Banner Image -->
+                    <div class="relative w-full h-[500px] lg:h-[70vh] rounded-lg overflow-hidden">
+                        <img src="${this.getImageUrl(bannerImages[0])}" 
+                             alt="Hero Banner" 
+                             class="w-full h-full object-cover"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50">
+                            <div class="text-center">
+                                <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
+                                <p class="text-gray-500">Banner image not found</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Dark gradient overlay from bottom to top -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                        
+                        <!-- Hero Content Overlay -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center text-white px-4 lg:px-8 max-w-4xl">
+                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
+                                    ${heroTitle}
+                                </h1>
+                                <p class="text-lg lg:text-xl mb-8 opacity-90 leading-relaxed">
+                                    ${heroSubtitle}
+                                </p>
+                                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <a href="/public/about-us" 
+                                       class="inline-flex items-center justify-center px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        Learn More
+                                    </a>
+                                    <a href="/public/admissions" 
+                                       class="inline-flex items-center justify-center px-8 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:-translate-y-1">
+                                        <i class="fas fa-graduation-cap mr-2"></i>
+                                        Apply Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mouse Scroll Indicator -->
+                        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+                            <div class="flex flex-col items-center text-white cursor-pointer group" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">
+                                <div class="w-5 h-8 border-2 border-white rounded-full flex justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-opacity-80">
+                                    <div class="w-1 h-2 bg-white rounded-full mt-1.5 animate-bounce transition-all duration-300 group-hover:bg-opacity-80"></div>
+                                </div>
+                                <span class="text-xs mt-2 opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105">Scroll</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Banner Images Grid -->
+                ${bannerImages.length > 1 ? `
+                    <div class="mt-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Gallery</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            ${bannerImages.slice(1).map((imagePath, index) => `
+                                <div class="relative group">
+                                    <div class="relative w-full h-32">
+                                        <img src="${this.getImageUrl(imagePath)}" 
+                                             alt="Gallery Image ${index + 2}" 
+                                             class="w-full h-full object-cover rounded-lg border border-gray-200"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="text-center">
+                                                <i class="fas fa-image text-gray-400 text-lg mb-1"></i>
+                                                <p class="text-gray-500 text-xs">Image not found</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+}
+
+customElements.define('hero-section', HeroSection);
+export default HeroSection; 

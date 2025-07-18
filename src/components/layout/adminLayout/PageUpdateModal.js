@@ -60,6 +60,15 @@ class PageUpdateModal extends HTMLElement {
                 // Pass the entire banner_image array to show all existing images
                 bannerFileUpload.setValue(pageData.banner_image);
             }
+            
+            // Set the content in the Wysiwyg component after render
+            const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
+            if (contentWysiwyg && pageData.content) {
+                // Wait a bit more for Wysiwyg to fully initialize
+                setTimeout(() => {
+                    contentWysiwyg.setValue(pageData.content);
+                },0);
+            }
         }, 100); // Increased timeout to ensure DOM is ready
     }
 
@@ -216,7 +225,6 @@ class PageUpdateModal extends HTMLElement {
                                 placeholder="Enter page content..."
                                 height="200px"
                                 toolbar="full"
-                                value="${this.pageData?.content || ''}"
                                 class="w-full">
                             </ui-wysiwyg>
                         </div>

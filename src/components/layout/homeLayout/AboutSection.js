@@ -51,7 +51,7 @@ class AboutSection extends App {
 
     async fetchPageData() {
         try {
-            const response = await api.get('/pages/slug/home');
+            const response = await api.get('/pages/slug/about-us');
             if (response.data.success) {
                 const pageData = response.data.data;
                 

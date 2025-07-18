@@ -44,13 +44,16 @@ class Wysiwyg extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue && this.editor) {
+        if (oldValue !== newValue && this.editor && this.initialized) {
             switch (name) {
                 case 'placeholder':
                     this.editor.root.setAttribute('data-placeholder', newValue);
                     break;
                 case 'value':
-                    this.editor.root.innerHTML = newValue;
+                    // Only set content if the editor is fully initialized
+                    if (this.editor && this.editor.root) {
+                        this.editor.root.innerHTML = newValue || '';
+                    }
                     break;
                 case 'readonly':
                     this.editor.enable(!this.hasAttribute('readonly'));
@@ -99,7 +102,8 @@ class Wysiwyg extends HTMLElement {
     initializeEditor() {
         if (this.initialized || !window.Quill) return;
 
-        this.initialized = true;
+        // Clear any existing content in the component
+        this.innerHTML = '';
         
         // Create editor container
         const container = document.createElement('div');
@@ -171,9 +175,9 @@ class Wysiwyg extends HTMLElement {
             }
         });
 
-        // Set initial content
+        // Set initial content after editor is created
         const initialValue = this.getAttribute('value');
-        if (initialValue) {
+        if (initialValue && this.editor && this.editor.root) {
             this.editor.root.innerHTML = initialValue;
         }
 
@@ -185,6 +189,9 @@ class Wysiwyg extends HTMLElement {
 
         // Set up event listeners
         this.setupEventListeners();
+        
+        // Mark as fully initialized
+        this.initialized = true;
     }
 
     addCustomStyles() {

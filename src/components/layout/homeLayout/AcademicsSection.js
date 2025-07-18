@@ -128,7 +128,7 @@ class AcademicsSection extends App {
                             </div>
                             
                             <!-- Content Column (Right) -->
-                            <div class="p-8 lg:p-12 flex flex-col justify-center">
+                            <div class="p-5 lg:p-12 flex flex-col justify-center">
                                 <div class="content-preview text-lg leading-relaxed">
                                     ${pageData.content}
                                 </div>

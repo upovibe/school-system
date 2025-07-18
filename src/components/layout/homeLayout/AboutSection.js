@@ -131,7 +131,7 @@ class AboutSection extends App {
                     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <!-- Content Column (Left) -->
-                            <div class="p-8 lg:p-12 flex flex-col justify-center">
+                            <div class="p-5 lg:p-12 flex flex-col justify-center">
                                 <div class="content-preview text-lg leading-relaxed">
                                     ${pageData.content}
                                 </div>

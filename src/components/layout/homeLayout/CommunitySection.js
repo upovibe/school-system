@@ -35,11 +35,11 @@ class CommunitySection extends App {
             // Fetch community title and subtitle from settings
             const communityTitleResponse = await api.get('/settings/key/community_title');
             const communitySubtitleResponse = await api.get('/settings/key/community_subtitle');
-            
+
             if (communityTitleResponse.data.success) {
                 this.set('communityTitle', communityTitleResponse.data.data.setting_value);
             }
-            
+
             if (communitySubtitleResponse.data.success) {
                 this.set('communitySubtitle', communitySubtitleResponse.data.data.setting_value);
             }
@@ -61,7 +61,7 @@ class CommunitySection extends App {
             const response = await api.get('/pages/slug/community');
             if (response.data.success) {
                 const pageData = response.data.data;
-                
+
                 // Set local state and render
                 this.set('pageData', pageData);
                 this.render();
@@ -99,27 +99,25 @@ class CommunitySection extends App {
 
         return `
             <!-- Community Section -->
-            <section class="py-10">
-                <div class="mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16">
-                        <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            ${this.get('communityTitle')}
-                        </h2>
-                        <p class="text-lg text-gray-600 mb-4 max-w-3xl mx-auto">
-                            ${this.get('communitySubtitle')}
-                        </p>
-                        <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
-                    </div>
-                    
+            <section class="mx-auto py-10">
                     <!-- Main Content Card -->
-                    <div class="relative mb-12">
-                        <!-- Main content container -->
-                        <div class="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
-                            <!-- Top banner section with image -->
-                            <div class="relative h-48 lg:h-64">
+                    <div class="relative mb-12 group">
+                        <!-- Animated background pattern -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl overflow-hidden">
+                            <div class="absolute inset-0 opacity-30">
+                                <div class="absolute top-0 left-0 w-32 h-32 bg-blue-200 rounded-full blur-3xl animate-pulse"></div>
+                                <div class="absolute top-1/4 right-0 w-24 h-24 bg-indigo-200 rounded-full blur-2xl animate-bounce"></div>
+                                <div class="absolute bottom-0 left-1/3 w-40 h-40 bg-purple-200 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main content container with glass effect -->
+                        <div class="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+                            <!-- Top banner section with parallax effect -->
+                            <div class="relative h-48 lg:h-64 overflow-hidden">
                                 <img src="/api/${pageData.banner_image}" 
                                      alt="Community" 
-                                     class="w-full h-full object-cover"
+                                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
                                     <div class="text-center">
@@ -128,63 +126,59 @@ class CommunitySection extends App {
                                     </div>
                                 </div>
                                 
-                                <!-- Overlay with community stats -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                <div class="absolute bottom-4 left-4 right-4">
-                                    <div class="flex flex-wrap gap-4 text-white">
-                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                            <div class="text-2xl font-bold">500+</div>
+                                <!-- Animated overlay with community stats -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                                <div class="absolute bottom-20 left-4 right-4">
+                                    <div class="flex flex-wrap gap-3 text-white">
+                                        <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                            <div class="text-2xl font-bold animate-pulse">500+</div>
                                             <div class="text-sm opacity-90">Students</div>
                                         </div>
-                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                            <div class="text-2xl font-bold">50+</div>
+                                        <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                            <div class="text-2xl font-bold animate-pulse delay-300">50+</div>
                                             <div class="text-sm opacity-90">Teachers</div>
                                         </div>
-                                        <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                            <div class="text-2xl font-bold">1000+</div>
+                                        <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                            <div class="text-2xl font-bold animate-pulse delay-700">1000+</div>
                                             <div class="text-sm opacity-90">Families</div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Content section with floating card design -->
-                            <div class="relative -mt-8 mx-4 mb-8">
-                                <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                                    <div class="flex items-center mb-6">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                                            <i class="fas fa-heart text-white text-xl"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-2xl font-bold text-gray-900">Our Community Spirit</h3>
-                                            <p class="text-gray-600">Building connections that last a lifetime</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="content-preview text-lg leading-relaxed text-gray-700 mb-6">
-                                        ${pageData.content}
-                                    </div>
-                                    
-                                    <div class="flex flex-col sm:flex-row gap-4">
-                                        <a href="/public/community" 
-                                           class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
-                                            <i class="fas fa-users mr-2"></i>
-                                            Explore Community
-                                            <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
-                                        </a>
-                                        <a href="/public/contact" 
-                                           class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1 group">
-                                            <i class="fas fa-envelope mr-2"></i>
-                                            Get in Touch
-                                        </a>
+                                
+                                <!-- Floating action indicator -->
+                                <div class="absolute top-4 right-4">
+                                    <div class="bg-white/20 backdrop-blur-md rounded-full p-2 border border-white/30 animate-bounce">
+                                        <i class="fas fa-hand-point-down text-white text-lg"></i>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Feature Cards Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            
+                            <!-- Content section with innovative floating design -->
+                            <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-5 lg:p-12 border border-white/50 relative overflow-hidden">
+                                    <!-- Decorative corner elements -->
+                                    <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-bl-2xl opacity-10"></div>
+                                    <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-500 to-pink-600 rounded-tr-2xl opacity-10"></div>
+                                    
+                                    <!-- Header with animated icon -->
+                                    <div class="flex items-start mb-6 relative z-10">
+                                        <div class="size-14 min-w-14 min-h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg transform hover:rotate-12 transition-transform duration-300">
+                                            <i class="fas fa-heart text-white text-xl animate-pulse"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                                ${this.get('communityTitle')}
+                                            </h3>
+                                            <p class="text-gray-600">${this.get('communitySubtitle')}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-col lg:flex-row gap-4 justify-center items-center">
+                                    <!-- Content with enhanced typography -->
+                                    <div class="content-preview text-lg leading-relaxed text-gray-700 mb-8 relative z-10">
+                                        ${pageData.content}
+                                    </div>
+                                    <!-- Feature Cards Grid -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Events Card -->
                         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6 text-center group">
                             <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -233,7 +227,15 @@ class CommunitySection extends App {
                             </a>
                         </div>
                     </div>
-                </div>
+                                    </div>
+                                    
+                                    
+                                    
+                                    <!-- Bottom decorative line -->
+                                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-b-2xl"></div>
+                                </div>
+                        </div>
+                    </div>
             </section>
         `;
     }

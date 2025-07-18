@@ -99,7 +99,7 @@ class AcademicsSection extends App {
 
         return `
             <!-- Academics Section -->
-            <section class="py-16 bg-gray-50">
+            <section class="py-10 bg-gray-50">
                 <div class="mx-auto ">
                     <div class="text-center mb-12">
                         <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">

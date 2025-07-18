@@ -3,6 +3,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Dropdown.js';
+import '@/components/ui/Switch.js';
 import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
@@ -70,6 +71,7 @@ class EventUpdateModal extends HTMLElement {
         const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
         const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
         const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
+        const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
 
         if (titleInput) titleInput.value = this.eventData.title || '';
         if (descriptionTextarea) descriptionTextarea.value = this.eventData.description || '';
@@ -78,6 +80,7 @@ class EventUpdateModal extends HTMLElement {
         if (endDateInput) endDateInput.value = this.eventData.end_date ? this.eventData.end_date.slice(0, 16) : '';
         if (categoryDropdown) categoryDropdown.value = this.eventData.category || '';
         if (statusDropdown) statusDropdown.value = this.eventData.status || '';
+        if (isActiveSwitch) isActiveSwitch.checked = this.eventData.is_active ? true : false;
     }
 
     // Update the event
@@ -92,6 +95,7 @@ class EventUpdateModal extends HTMLElement {
             
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
+            const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const eventData = {
@@ -101,7 +105,8 @@ class EventUpdateModal extends HTMLElement {
                 status: statusDropdown ? statusDropdown.value : '',
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
-                location: locationInput ? locationInput.value : ''
+                location: locationInput ? locationInput.value : '',
+                is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
 
             console.log('Event data being sent:', eventData); // Debug log
@@ -192,6 +197,7 @@ class EventUpdateModal extends HTMLElement {
                 start_date: eventData.start_date,
                 end_date: eventData.end_date,
                 location: eventData.location,
+                is_active: eventData.is_active,
                 banner_image: response.data.data?.banner_image || this.eventData.banner_image,
                 created_at: this.eventData.created_at,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -312,6 +318,15 @@ class EventUpdateModal extends HTMLElement {
                                 multiple="false"
                                 class="w-full">
                             </ui-file-upload>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <ui-switch 
+                                name="is_active"
+                                class="w-full">
+                                <span slot="label">Active</span>
+                            </ui-switch>
                         </div>
                     </form>
                 <div slot="footer">

@@ -1,7 +1,7 @@
 <?php
-// api/database/seeders/page_settings_seeder.php - Seeder for default pages and settings
+// api/database/seeders/settings_seeder.php - Seeder for default settings
 
-class PageSettingsSeeder
+class SettingsSeeder
 {
     private $pdo;
 
@@ -12,138 +12,11 @@ class PageSettingsSeeder
 
     public function run()
     {
-        echo "🌱 Seeding default pages and settings...\n";
+        echo "🌱 Seeding default settings...\n";
 
-        $this->seedDefaultPages();
         $this->seedDefaultSettings();
 
-        echo "✅ Default pages and settings seeded successfully!\n";
-    }
-
-    private function seedDefaultPages()
-    {
-        echo "📝 Seeding default pages...\n";
-
-        $defaultPages = [
-            [
-                'slug' => 'home',
-                'title' => 'Home',
-                'content' => '<h2>Welcome to Our School</h2><p>We are committed to providing quality education and fostering academic excellence.</p>',
-                'meta_description' => 'Learn about our school\'s history, mission, and commitment to education.',
-                'category' => 'general',
-                'is_active' => 1,
-                'sort_order' => 1,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
-            ],
-            [
-                'slug' => 'about-us',
-                'title' => 'About Us',
-                'content' => '<h2>Welcome to Our School</h2><p>We are committed to providing quality education and fostering academic excellence.</p>',
-                'meta_description' => 'Learn about our school\'s history, mission, and commitment to education.',
-                'category' => 'about',
-                'is_active' => 1,
-                'sort_order' => 2,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
-            ],
-            [
-                'slug' => 'mission-vision',
-                'title' => 'Mission & Vision',
-                'content' => '<h2>Our Mission</h2><p>To provide comprehensive education that empowers students to achieve their full potential.</p><h2>Our Vision</h2><p>To be a leading educational institution that shapes future leaders.</p>',
-                'meta_description' => 'Discover our school\'s mission and vision for academic excellence.',
-                'category' => 'about',
-                'is_active' => 1,
-                'sort_order' => 3,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713298_6878485214266g'])
-            ],
-            [
-                'slug' => 'values-aims',
-                'title' => 'Our Values & Aims',
-                'content' => '<h2>Core Values</h2><ul><li>Excellence in Education</li><li>Integrity and Honesty</li><li>Respect for Diversity</li><li>Innovation and Creativity</li></ul>',
-                'meta_description' => 'Explore our core values and educational aims.',
-                'category' => 'about',
-                'is_active' => 1,
-                'sort_order' => 4,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713314_6878486264g'])
-            ],
-            [
-                'slug' => 'our-team',
-                'title' => 'Our Team',
-                'content' => '<h2>Leadership Team</h2><p>Meet our dedicated team of educators and administrators.</p>',
-                'meta_description' => 'Meet our school\'s leadership team and staff.',
-                'category' => 'about',
-                'is_active' => 1,
-                'sort_order' => 5,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713324_68784868g'])
-            ],
-            [
-                'slug' => 'contact',
-                'title' => 'Contact Us',
-                'content' => '<h2>Get in Touch</h2><p>We\'d love to hear from you. Contact us for any inquiries.</p>',
-                'meta_description' => 'Contact information and location details.',
-                'category' => 'contact',
-                'is_active' => 1,
-                'sort_order' => 6,
-                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848c.jpg'])
-            ],
-            [
-                'slug' => 'academic-programs',
-                'title' => 'Academic Programs',
-                'content' => '<h2>Our Programs</h2><p>Explore our comprehensive academic programs designed for student success.</p>',
-                'meta_description' => 'Discover our academic programs and curriculum.',
-                'category' => 'academics',
-                'is_active' => 1,
-                'sort_order' => 7,
-                'banner_image' => json_encode(['uploads/pages/Curriculum_1752713333_687848757550f.jpg'])
-            ],
-            [
-                'slug' => 'admissions',
-                'title' => 'Admissions',
-                'content' => '<h2>How to Apply</h2><p>Learn about our admission process and requirements.</p>',
-                'meta_description' => 'Information about school admissions and application process.',
-                'category' => 'academics',
-                'is_active' => 1,
-                'sort_order' => 8,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_68784878pg'])
-            ]
-        ];
-
-        foreach ($defaultPages as $page) {
-            $this->seedPage($page);
-        }
-    }
-
-    private function seedPage($pageData)
-    {
-        try {
-            // Check if page already exists
-            $stmt = $this->pdo->prepare('SELECT id FROM pages WHERE slug = ?');
-            $stmt->execute([$pageData['slug']]);
-
-            if ($stmt->fetch()) {
-                echo "⚠️  Page '{$pageData['slug']}' already exists\n";
-                return;
-            }
-
-            $stmt = $this->pdo->prepare('
-                INSERT INTO pages (slug, title, content, meta_description, category, is_active, sort_order, banner_image, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ');
-
-            $stmt->execute([
-                $pageData['slug'],
-                $pageData['title'],
-                $pageData['content'],
-                $pageData['meta_description'],
-                $pageData['category'],
-                $pageData['is_active'],
-                $pageData['sort_order'],
-                $pageData['banner_image']
-            ]);
-
-            echo "✅ Seeded page: {$pageData['slug']}\n";
-        } catch (Exception $e) {
-            echo "❌ Error seeding page {$pageData['slug']}: " . $e->getMessage() . "\n";
-        }
+        echo "✅ Default settings seeded successfully!\n";
     }
 
     private function seedDefaultSettings()
@@ -234,4 +107,4 @@ class PageSettingsSeeder
             echo "❌ Error seeding setting {$settingData['setting_key']}: " . $e->getMessage() . "\n";
         }
     }
-}
+} 

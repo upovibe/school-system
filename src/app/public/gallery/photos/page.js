@@ -12,24 +12,24 @@ if (!document.querySelector('link[href*="quill"]')) {
 }
 
 /**
- * Academics Page Component (/acadamics)
+ * Photos Page Component (/gallery/photos)
  * 
- * This is the academics page of the application.
- * It renders within the global RootLayout and fetches data for the "acadamics" slug.
- * File-based routing: /acadamics → app/public/acadamics/page.js
+ * This is the photos page of the application.
+ * It renders within the global RootLayout and fetches data for the "photos" slug.
+ * File-based routing: /gallery/photos → app/public/gallery/photos/page.js
  */
-class AcademicsPage extends App {
+class PhotosPage extends App {
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'Academics | UPO UI';
+        document.title = 'Photos | UPO UI';
         this.loadPageData();
     }
 
     async loadPageData() {
         // Check if data is already cached in global store
         const globalState = store.getState();
-        if (globalState.academicsPageData) {
-            this.set('pageData', globalState.academicsPageData);
+        if (globalState.photosPageData) {
+            this.set('pageData', globalState.photosPageData);
             this.render();
             return;
         }
@@ -40,20 +40,20 @@ class AcademicsPage extends App {
 
     async fetchPageData() {
         try {
-            const response = await api.get('/pages/slug/academics');
+            const response = await api.get('/pages/slug/photos');
             if (response.data.success) {
                 const pageData = response.data.data;
                 
                 // Cache the data in global store
-                store.setState({ academicsPageData: pageData });
+                store.setState({ photosPageData: pageData });
                 
                 // Set local state and render
                 this.set('pageData', pageData);
                 this.render();
             }
         } catch (error) {
-            console.error('Error fetching academics page data:', error);
-            this.set('error', 'Failed to load academics page data');
+            console.error('Error fetching photos page data:', error);
+            this.set('error', 'Failed to load photos page data');
         }
     }
 
@@ -122,7 +122,7 @@ class AcademicsPage extends App {
     // Method to refresh data (clear cache and fetch again)
     async refreshData() {
         // Clear the cache
-        store.setState({ academicsPageData: null });
+        store.setState({ photosPageData: null });
         
         // Fetch fresh data
         await this.fetchPageData();
@@ -159,7 +159,7 @@ class AcademicsPage extends App {
                             <!-- Main Banner Image -->
                             <div class="relative w-full h-96">
                                 <img src="${this.getImageUrl(this.getBannerImages(pageData)[0])}" 
-                                     alt="Academics Banner Image" 
+                                     alt="Photos Banner Image" 
                                      class="w-full h-full object-cover rounded-lg shadow-lg"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg">
@@ -182,7 +182,7 @@ class AcademicsPage extends App {
                                         <div class="relative group">
                                             <div class="relative w-full h-32">
                                                 <img src="${this.getImageUrl(imagePath)}" 
-                                                     alt="Academics Gallery Image ${index + 2}" 
+                                                     alt="Photos Gallery Image ${index + 2}" 
                                                      class="w-full h-full object-cover rounded-lg border border-gray-200"
                                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
@@ -218,5 +218,5 @@ class AcademicsPage extends App {
     }
 }
 
-customElements.define('app-academics-page', AcademicsPage);
-export default AcademicsPage; 
+customElements.define('app-photos-page', PhotosPage);
+export default PhotosPage; 

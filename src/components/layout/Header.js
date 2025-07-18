@@ -267,7 +267,11 @@
         },
         { 
           href: '/public/gallery', 
-          label: 'Gallery' 
+          label: 'Gallery',
+          subLinks: [
+            { href: '/public/gallery/photos', label: 'Photos' },
+            { href: '/public/gallery/videos', label: 'Videos' },
+          ]
         },
         { 
           href: '/public/contact', 

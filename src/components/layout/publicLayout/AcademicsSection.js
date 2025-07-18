@@ -112,7 +112,7 @@ class AcademicsSection extends App {
                                     ${pageData.content}
                                 </div>
                                 
-                                ${window.location.pathname !== '/public/acadamics' ? `
+                                ${window.location.pathname !== '/public/academics' ? `
                                 <div class="mt-8">
                                     <a href="/public/acadamics" 
                                        class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl group">
@@ -125,42 +125,48 @@ class AcademicsSection extends App {
                         </div>
                     </div>
                     
-                    ${window.location.pathname === '/public/acadamics' ? `
+                    ${window.location.pathname === '/public/academics' ? `
                     <!-- School Levels Cards -->
                     <div class="mt-16">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <!-- Preschool Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-baby text-white text-xl"></i>
+                            <a href="/public/academics/pre-school" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-baby text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Preschool</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Early learning foundation for young minds.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Preschool</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Early learning foundation for young minds.
-                                </p>
-                            </div>
+                            </a>
                             
                             <!-- Primary School Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-child text-white text-xl"></i>
+                            <a href="/public/academics/primary-school" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-child text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Primary School</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Building strong academic foundations.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Primary School</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Building strong academic foundations.
-                                </p>
-                            </div>
+                            </a>
                             
                             <!-- Junior High School Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${secondaryColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-user-graduate text-white text-xl"></i>
+                            <a href="/public/academics/junior-high-school" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${secondaryColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-user-graduate text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Junior High School</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Preparing students for higher education.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Junior High School</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Preparing students for higher education.
-                                </p>
-                            </div>
+                            </a>
                         </div>
                     </div>
                     ` : ''}

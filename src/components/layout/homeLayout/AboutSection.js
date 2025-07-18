@@ -3,6 +3,14 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import PageLoader from '@/components/common/PageLoader.js';
 
+// Load Quill CSS for content display
+if (!document.querySelector('link[href*="quill"]')) {
+    const link = document.createElement('link');
+    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+}
+
 /**
  * About Section Component
  * 
@@ -88,7 +96,7 @@ class AboutSection extends App {
         return `
             <!-- About Section -->
             <section class="py-16 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12">
                         <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                             About Our School
@@ -96,21 +104,28 @@ class AboutSection extends App {
                         <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow-lg p-8 lg:p-12">
-                        <div class="prose prose-lg max-w-none">
-                            <div class="content-section">
-                                <div class="content-preview text-lg leading-relaxed text-gray-700">
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                            <!-- Content Column (Left) -->
+                            <div class="p-8 lg:p-12 flex flex-col justify-center">
+                                <div class="content-preview text-lg leading-relaxed">
                                     ${pageData.content}
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="mt-8 text-center">
-                            <a href="/public/about-us" 
-                               class="inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                                <i class="fas fa-arrow-right mr-2"></i>
-                                Learn More About Us
-                            </a>
+                            
+                            <!-- Banner Image Column (Right) -->
+                            <div class="relative h-64 lg:h-auto">
+                                <img src="/api/${pageData.banner_image}" 
+                                     alt="About Our School" 
+                                     class="w-full h-full object-cover"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                                    <div class="text-center">
+                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
+                                        <p class="text-gray-500">About banner image</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

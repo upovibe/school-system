@@ -300,16 +300,6 @@ class EventSettingsModal extends HTMLElement {
                             </ui-switch>
                         </div>
                     </form>
-                <div slot="footer">
-                    <div class="flex justify-end space-x-2">
-                        <ui-button variant="secondary" onclick="this.closest('event-settings-modal').close()">
-                            Cancel
-                        </ui-button>
-                        <ui-button variant="primary" onclick="this.closest('event-settings-modal').saveEvent()">
-                            Save Event
-                        </ui-button>
-                    </div>
-                </div>
             </ui-modal>
         `;
     }

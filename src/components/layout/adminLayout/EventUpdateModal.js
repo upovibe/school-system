@@ -315,16 +315,6 @@ class EventUpdateModal extends HTMLElement {
                             </ui-switch>
                         </div>
                     </form>
-                <div slot="footer">
-                    <div class="flex justify-end space-x-2">
-                        <ui-button variant="secondary" onclick="this.closest('event-update-modal').close()">
-                            Cancel
-                        </ui-button>
-                        <ui-button variant="primary" onclick="this.closest('event-update-modal').updateEvent()">
-                            Update Event
-                        </ui-button>
-                    </div>
-                </div>
             </ui-modal>
         `;
     }

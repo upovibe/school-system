@@ -18,7 +18,7 @@ import '@/components/layout/homeLayout/ContactSection.js';
 class RootPage extends App {
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'Home | UPO UI';
+        document.title = 'Home';
         this.loadAllData();
     }
 

@@ -1,135 +1,100 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
-import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
-
-// Load Quill CSS for content display
-if (!document.querySelector('link[href*="quill"]')) {
-    const link = document.createElement('link');
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-}
+import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import '@/components/layout/homeLayout/AboutSection.js';
 
 /**
  * About Us Page Component (/about-us)
  * 
  * This is the about us page of the application.
- * It renders within the global RootLayout and fetches data for the "about-us" slug.
+ * It now uses the same centralized data loading approach as the home page.
  * File-based routing: /about-us → app/public/about-us/page.js
  */
 class AboutUsPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'About Us | UPO UI';
-        this.loadPageData();
+        this.loadAllData();
     }
 
-    async loadPageData() {
-        // Check if data is already cached in global store
-        const globalState = store.getState();
-        if (globalState.aboutUsPageData) {
-            this.set('pageData', globalState.aboutUsPageData);
-            this.render();
-            return;
-        }
-
-        // If not cached, fetch from API
-        await this.fetchPageData();
-    }
-
-    async fetchPageData() {
+    async loadAllData() {
         try {
-            const response = await api.get('/pages/slug/about-us');
-            if (response.data.success) {
-                const pageData = response.data.data;
-                
-                // Cache the data in global store
-                store.setState({ aboutUsPageData: pageData });
-                
-                // Set local state and render
-                this.set('pageData', pageData);
-                this.render();
-            }
+            // Load colors first
+            const colors = await fetchColorSettings();
+            
+            // Load about page data
+            const aboutPageData = await this.fetchPageData('about-us');
+
+            // Load about settings
+            const settingsData = await this.loadAboutSettings();
+
+            // Combine all data
+            const allData = {
+                colors,
+                page: aboutPageData,
+                settings: settingsData
+            };
+
+            // Cache in global store
+            store.setState({ aboutUsPageData: allData });
+            
+            // Set local state and render
+            this.set('allData', allData);
+            this.render();
+
         } catch (error) {
-            console.error('Error fetching about us page data:', error);
+            console.error('Error loading about us data:', error);
             this.set('error', 'Failed to load about us page data');
         }
     }
 
-    // Helper method to get proper image URL
-    getImageUrl(imagePath) {
-        if (!imagePath) return null;
-        
-        // If it's already a full URL, return as is
-        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-            return imagePath;
+    async fetchPageData(slug) {
+        try {
+            const response = await api.get(`/pages/slug/${slug}`);
+            return response.data.success ? response.data.data : null;
+        } catch (error) {
+            console.error(`Error fetching ${slug} page data:`, error);
+            return null;
         }
-        
-        // If it's a relative path starting with /, construct the full URL
-        if (imagePath.startsWith('/')) {
-            const baseUrl = window.location.origin;
-            return baseUrl + imagePath;
-        }
-        
-        // If it's a relative path without /, construct the URL
-        const baseUrl = window.location.origin;
-        const apiPath = '/api';
-        return baseUrl + apiPath + '/' + imagePath;
     }
 
-    // Helper method to parse banner images from various formats
-    getBannerImages(pageData) {
-        if (!pageData || !pageData.banner_image) {
-            return [];
-        }
+    async loadAboutSettings() {
+        try {
+            const settingsKeys = [
+                'about_title', 'about_subtitle'
+            ];
 
-        let bannerImages = pageData.banner_image;
-
-        // If it's a string, try to parse as JSON
-        if (typeof bannerImages === 'string') {
-            try {
-                const parsed = JSON.parse(bannerImages);
-                if (Array.isArray(parsed)) {
-                    bannerImages = parsed;
-                } else {
-                    bannerImages = [bannerImages];
+            const settingsPromises = settingsKeys.map(async (key) => {
+                try {
+                    const response = await api.get(`/settings/key/${key}`);
+                    return response.data.success ? { key, value: response.data.data.setting_value } : null;
+                } catch (error) {
+                    console.error(`Error fetching setting ${key}:`, error);
+                    return null;
                 }
-            } catch (e) {
-                // If parsing fails, treat as single path
-                bannerImages = [bannerImages];
-            }
-        } else if (!Array.isArray(bannerImages)) {
-            // If it's not an array, wrap in array
-            bannerImages = [bannerImages];
+            });
+
+            const settingsResults = await Promise.all(settingsPromises);
+            
+            // Convert to object
+            const settingsObject = {};
+            settingsResults.forEach(result => {
+                if (result) {
+                    settingsObject[result.key] = result.value;
+                }
+            });
+
+            return settingsObject;
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            return {};
         }
-
-        // Filter out empty/null values
-        return bannerImages.filter(img => img && img.trim() !== '');
-    }
-
-    // Helper method to get content preview (first 150 characters)
-    getContentPreview(content) {
-        if (!content) return '';
-        
-        // Remove HTML tags and get plain text
-        const plainText = content.replace(/<[^>]*>/g, '');
-        
-        // Return first 150 characters with ellipsis if longer
-        return plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
-    }
-
-    // Method to refresh data (clear cache and fetch again)
-    async refreshData() {
-        // Clear the cache
-        store.setState({ aboutUsPageData: null });
-        
-        // Fetch fresh data
-        await this.fetchPageData();
     }
 
     render() {
-        const pageData = this.get('pageData');
+        const allData = this.get('allData');
         const error = this.get('error');
 
         if (error) {
@@ -142,7 +107,7 @@ class AboutUsPage extends App {
             `;
         }
 
-        if (!pageData) {
+        if (!allData) {
             return `
                 <div class="container flex items-center justify-center mx-auto p-8">
                     <page-loader></page-loader>
@@ -150,69 +115,20 @@ class AboutUsPage extends App {
             `;
         }
 
+        // Convert data to JSON strings for attributes with proper escaping
+        const colorsData = escapeJsonForAttribute(allData.colors);
+
         return `
-            <div class="max-w-7xl mx-auto">
-                <!-- Banner Images Section -->
-                ${this.getBannerImages(pageData).length > 0 ? `
-                    <div class="mb-8">
-                        <div class="relative">
-                            <!-- Main Banner Image -->
-                            <div class="relative w-full h-96">
-                                <img src="${this.getImageUrl(this.getBannerImages(pageData)[0])}" 
-                                     alt="About Us Banner Image" 
-                                     class="w-full h-full object-cover rounded-lg shadow-lg"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg">
-                                    <div class="text-center">
-                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                        <p class="text-gray-500">Banner image not found</p>
-                                    </div>
-                                </div>
-                                <!-- Dark gradient overlay from bottom to top -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-lg"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Additional Banner Images Grid -->
-                        ${this.getBannerImages(pageData).length > 1 ? `
-                            <div class="mt-6">
-                                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Gallery</h2>
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    ${this.getBannerImages(pageData).slice(1).map((imagePath, index) => `
-                                        <div class="relative group">
-                                            <div class="relative w-full h-32">
-                                                <img src="${this.getImageUrl(imagePath)}" 
-                                                     alt="About Us Gallery Image ${index + 2}" 
-                                                     class="w-full h-full object-cover rounded-lg border border-gray-200"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-                                                    <div class="text-center">
-                                                        <i class="fas fa-image text-gray-400 text-lg mb-1"></i>
-                                                        <p class="text-gray-500 text-xs">Image not found</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
-                
-                <div class="bg-white p-6 rounded-md">
-                    ${pageData.content ? `
-                        <div class="content-section">
-                            <div class="content-preview text-lg leading-relaxed">
-                                ${pageData.content}
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="text-center py-8">
-                            <p class="text-gray-500 italic">No content available</p>
-                        </div>
-                    `}
-                </div>
+            <div class="mx-auto">
+                <!-- About Section Component -->
+                <about-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.page)}'
+                    settings='${escapeJsonForAttribute({
+                        about_title: allData.settings.about_title,
+                        about_subtitle: allData.settings.about_subtitle
+                    })}'>
+                </about-section>
             </div>
         `;
     }

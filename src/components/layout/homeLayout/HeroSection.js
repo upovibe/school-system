@@ -8,9 +8,6 @@ import App from '@/core/App.js';
 class HeroSection extends App {
     constructor() {
         super();
-        this.heroTitle = '';
-        this.heroSubtitle = '';
-        this.bannerImages = [];
     }
 
     connectedCallback() {
@@ -136,19 +133,9 @@ class HeroSection extends App {
             `;
         }
 
-        if (!pageData) {
-            return `
-                <div class="container flex items-center justify-center mx-auto p-8">
-                    <page-loader></page-loader>
-                </div>
-            `;
-        }
 
-        const bannerImages = this.getBannerImages(pageData);
 
-        if (bannerImages.length === 0) {
-            return '';
-        }
+        const bannerImages = this.getBannerImages(pageData) || [];
 
         return `
             <!-- Hero Banner Section -->

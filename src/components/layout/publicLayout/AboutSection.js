@@ -130,37 +130,43 @@ class AboutSection extends App {
                     <div class="mt-16">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <!-- Mission & Vision Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-bullseye text-white text-xl"></i>
+                            <a href="/public/about-us/mission-vision" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-bullseye text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Mission & Vision</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Empowering students and shaping tomorrow's leaders.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Mission & Vision</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Empowering students and shaping tomorrow's leaders.
-                                </p>
-                            </div>
+                            </a>
                             
                             <!-- Values Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-heart text-white text-xl"></i>
+                            <a href="/public/about-us/values-aims" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-heart text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Values</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Excellence, Integrity, Respect, Innovation, and Community.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Values</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Excellence, Integrity, Respect, Innovation, and Community.
-                                </p>
-                            </div>
+                            </a>
                             
                             <!-- Team Card -->
-                            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                                <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${secondaryColor}] rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-users text-white text-xl"></i>
+                            <a href="/public/about-us/our-team" class="block">
+                                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${secondaryColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-users text-white text-xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Team</h3>
+                                    <p class="text-gray-600 text-sm leading-relaxed">
+                                        Dedicated educators committed to nurturing student potential.
+                                    </p>
                                 </div>
-                                <h3 class="text-xl font-semibold text-[${secondaryColor}] mb-3">Our Team</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    Dedicated educators committed to nurturing student potential.
-                                </p>
-                            </div>
+                            </a>
                         </div>
                     </div>
                     ` : ''}

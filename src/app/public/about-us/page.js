@@ -3,7 +3,7 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
-import '@/components/layout/homeLayout/AboutSection.js';
+import '@/components/layout/publicLayout/AboutSection.js';
 
 /**
  * About Us Page Component (/about-us)

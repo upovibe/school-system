@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import '@/components/layout/homeLayout/HeroSection.js';
+import '@/components/layout/homeLayout/AboutSection.js';
 
 /**
  * Root Page Component (/)
@@ -18,6 +19,9 @@ class RootPage extends App {
             <div class="mx-auto">
                 <!-- Hero Section Component -->
                 <hero-section></hero-section>
+                
+                <!-- About Section Component -->
+                <about-section></about-section>
             </div>
         `;
     }

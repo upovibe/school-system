@@ -1,7 +1,4 @@
 import App from '@/core/App.js';
-import api from '@/services/api.js';
-import store from '@/core/store.js';
-import { fetchColorSettings } from '@/utils/colorSettings.js';
 
 /**
  * Hero Section Component
@@ -18,77 +15,50 @@ class HeroSection extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        this.loadColorSettings();
-        this.loadHeroSettings();
-        this.loadPageData();
+        this.loadDataFromProps();
     }
 
-    async loadPageData() {
-        // Check if data is already cached in global store
-        const globalState = store.getState();
-        if (globalState.homePageData) {
-            this.set('pageData', globalState.homePageData);
-            this.render();
-            return;
+    loadDataFromProps() {
+        // Get data from props/attributes
+        const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
+        const settingsAttr = this.getAttribute('settings');
+
+        if (colorsAttr) {
+            try {
+                const colors = JSON.parse(colorsAttr);
+                Object.entries(colors).forEach(([key, value]) => {
+                    this.set(key, value);
+                });
+            } catch (error) {
+                console.error('Error parsing colors:', error);
+            }
         }
 
-        // If not cached, fetch from API
-        await this.fetchPageData();
-    }
-
-    async fetchPageData() {
-        try {
-            const response = await api.get('/pages/slug/home');
-            if (response.data.success) {
-                const pageData = response.data.data;
-                
-                // Cache the data in global store
-                store.setState({ homePageData: pageData });
-                
-                // Set local state and render
+        if (pageDataAttr) {
+            try {
+                const pageData = JSON.parse(pageDataAttr);
                 this.set('pageData', pageData);
-                this.render();
+            } catch (error) {
+                console.error('Error parsing page data:', error);
             }
-        } catch (error) {
-            console.error('Error fetching page data:', error);
-            this.set('error', 'Failed to load page data');
         }
+
+        if (settingsAttr) {
+            try {
+                const settings = JSON.parse(settingsAttr);
+                if (settings.hero_title) this.set('heroTitle', settings.hero_title);
+                if (settings.hero_subtitle) this.set('heroSubtitle', settings.hero_subtitle);
+            } catch (error) {
+                console.error('Error parsing settings:', error);
+            }
+        }
+
+        // Render immediately with the data
+        this.render();
     }
 
-    async loadHeroSettings() {
-        try {
-            // Fetch hero title and subtitle from settings
-            const heroTitleResponse = await api.get('/settings/key/hero_title');
-            const heroSubtitleResponse = await api.get('/settings/key/hero_subtitle');
-            
-            if (heroTitleResponse.data.success) {
-                this.set('heroTitle', heroTitleResponse.data.data.setting_value);
-            }
-            
-            if (heroSubtitleResponse.data.success) {
-                this.set('heroSubtitle', heroSubtitleResponse.data.data.setting_value);
-            }
-        } catch (error) {
-            console.error('Error fetching hero settings:', error);
-        }
-    }
 
-    async loadColorSettings() {
-        try {
-            const colors = await fetchColorSettings();
-            
-            // Set all color values to state
-            Object.entries(colors).forEach(([key, value]) => {
-                this.set(key, value);
-            });
-
-            // Trigger render after colors are loaded
-            this.render();
-
-        } catch (error) {
-            console.error('Error fetching color settings:', error);
-        }
-    }
 
     // Helper method to get proper image URL
     getImageUrl(imagePath) {
@@ -155,6 +125,7 @@ class HeroSection extends App {
         const hoverPrimary = this.get('hover_primary');
         const hoverSecondary = this.get('hover_secondary');
         const hoverAccent = this.get('hover_accent');
+
         if (error) {
             return `
                 <div class="container mx-auto flex items-center justify-center p-8">

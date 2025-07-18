@@ -61,66 +61,74 @@ class EventController {
                 $data = json_decode(file_get_contents('php://input'), true);
             }
             
-            // Validate required fields
-            if (empty($data['title'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Title is required'
-                ]);
-                return;
+
+            
+            // Convert date formats (handle multiple formats) - only if dates are provided
+            if (isset($data['start_date']) && !empty($data['start_date'])) {
+                $startDate = null;
+                $dateFormats = [
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'd/m/Y H:i',    // 25/9/2025 23:00
+                    'Y-m-d H:i'     // 2025-09-25 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $startDate = DateTime::createFromFormat($format, $data['start_date']);
+                    if ($startDate) break;
+                }
+                
+                if ($startDate) {
+                    $data['start_date'] = $startDate->format('Y-m-d H:i:s');
+                }
             }
             
-            if (empty($data['start_date'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Start date is required'
-                ]);
-                return;
+            if (isset($data['end_date']) && !empty($data['end_date'])) {
+                $endDate = null;
+                $dateFormats = [
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'd/m/Y H:i',    // 25/9/2025 23:00
+                    'Y-m-d H:i'     // 2025-09-25 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $endDate = DateTime::createFromFormat($format, $data['end_date']);
+                    if ($endDate) break;
+                }
+                
+                if ($endDate) {
+                    $data['end_date'] = $endDate->format('Y-m-d H:i:s');
+                }
             }
             
-            if (empty($data['end_date'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'End date is required'
-                ]);
-                return;
+            // Validate that end date is after start date (only if both dates are provided and valid)
+            if (isset($data['start_date']) && isset($data['end_date']) && 
+                !empty($data['start_date']) && !empty($data['end_date'])) {
+                $startDate = DateTime::createFromFormat('Y-m-d H:i:s', $data['start_date']);
+                $endDate = DateTime::createFromFormat('Y-m-d H:i:s', $data['end_date']);
+                if ($startDate && $endDate && $endDate <= $startDate) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'End date must be after start date'
+                    ]);
+                    return;
+                }
             }
             
-            // Validate date formats
-            $startDate = DateTime::createFromFormat('Y-m-d H:i:s', $data['start_date']);
-            $endDate = DateTime::createFromFormat('Y-m-d H:i:s', $data['end_date']);
-            
-            if (!$startDate || !$endDate) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid date format. Use YYYY-MM-DD HH:MM:SS'
-                ]);
-                return;
+            // Auto-generate slug from title (only if title is provided)
+            if (isset($data['title']) && !empty($data['title'])) {
+                $generatedSlug = generateSlug($data['title']);
+                $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'events', 'slug');
             }
             
-            // Validate that end date is after start date
-            if ($endDate <= $startDate) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'End date must be after start date'
-                ]);
-                return;
+            // Set default values (only for fields that exist in the table)
+            if (!isset($data['is_active'])) {
+                $data['is_active'] = 1;
             }
-            
-            // Auto-generate slug from title
-            $generatedSlug = generateSlug($data['title']);
-            $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'events', 'slug');
-            
-            // Set default values
-            $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
-            $data['is_featured'] = isset($data['is_featured']) ? (bool)$data['is_featured'] : false;
-            $data['registration_required'] = isset($data['registration_required']) ? (bool)$data['registration_required'] : false;
-            $data['current_attendees'] = 0;
             
             // Handle banner upload if present
             $bannerData = null;
@@ -132,27 +140,33 @@ class EventController {
             // Create event
             $eventId = $this->eventModel->create($data);
             
-            // Log the action
-            $this->logAction('event_created', "Created event: {$data['title']}", [
-                'event_id' => $eventId,
-                'slug' => $data['slug'],
-                'title' => $data['title'],
-                'start_date' => $data['start_date'],
-                'end_date' => $data['end_date'],
-                'banner_uploaded' => $bannerData ? true : false
-            ]);
-            
-            http_response_code(201);
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'id' => $eventId,
+            if ($eventId) {
+                // Get the created event data
+                $createdEvent = $this->eventModel->findById($eventId);
+                
+                // Log the action
+                $this->logAction('event_created', "Created event: {$data['title']}", [
+                    'event_id' => $eventId,
                     'slug' => $data['slug'],
-                    'banner_image' => $bannerData ? $bannerData['original'] : null,
-                    'banner_thumbnails' => $bannerData ? $bannerData['thumbnails'] : null
-                ],
-                'message' => 'Event created successfully'
-            ]);
+                    'title' => $data['title'],
+                    'start_date' => $data['start_date'],
+                    'end_date' => $data['end_date'],
+                    'banner_uploaded' => $bannerData ? true : false
+                ]);
+                
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $createdEvent,
+                    'message' => 'Event created successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to create event'
+                ]);
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -279,21 +293,23 @@ class EventController {
                 $data = json_decode(file_get_contents('php://input'), true);
             }
             
-            // Validate event date if provided
-            if (!empty($data['event_date'])) {
-                $eventDate = DateTime::createFromFormat('Y-m-d H:i:s', $data['event_date']);
-                if (!$eventDate) {
-                    http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Invalid event date format. Use YYYY-MM-DD HH:MM:SS'
-                    ]);
-                    return;
+            // Convert datetime-local format to database format if dates are provided
+            if (isset($data['start_date'])) {
+                $startDate = DateTime::createFromFormat('Y-m-d\TH:i', $data['start_date']);
+                if ($startDate) {
+                    $data['start_date'] = $startDate->format('Y-m-d H:i:s');
+                }
+            }
+            
+            if (isset($data['end_date'])) {
+                $endDate = DateTime::createFromFormat('Y-m-d\TH:i', $data['end_date']);
+                if ($endDate) {
+                    $data['end_date'] = $endDate->format('Y-m-d H:i:s');
                 }
             }
             
             // Handle slug generation if title changed
-            if (!empty($data['title']) && $data['title'] !== $existingEvent['title']) {
+            if (isset($data['title']) && $data['title'] !== $existingEvent['title']) {
                 $generatedSlug = generateSlug($data['title']);
                 $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'events', 'slug', $id);
             }
@@ -304,25 +320,31 @@ class EventController {
                 $data['banner_image'] = $bannerData['original'];
             }
             
-            // Update event
-            $this->eventModel->update($id, $data);
+            $result = $this->eventModel->update($id, $data);
             
-            // Log the action
-            $this->logAction('event_updated', "Updated event: {$existingEvent['title']}", [
-                'event_id' => $id,
-                'title' => $data['title'] ?? $existingEvent['title'],
-                'banner_updated' => isset($data['banner_image'])
-            ]);
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'id' => $id,
-                    'slug' => $data['slug'] ?? $existingEvent['slug']
-                ],
-                'message' => 'Event updated successfully'
-            ]);
+            if ($result) {
+                // Get the updated event data
+                $updatedEvent = $this->eventModel->findById($id);
+                
+                // Log the action
+                $this->logAction('event_updated', "Updated event: {$existingEvent['title']}", [
+                    'event_id' => $id,
+                    'title' => $data['title'] ?? $existingEvent['title']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $updatedEvent,
+                    'message' => 'Event updated successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to update event'
+                ]);
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([

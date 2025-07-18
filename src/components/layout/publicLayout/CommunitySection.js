@@ -81,7 +81,7 @@ class CommunitySection extends App {
             <!-- Community Section -->
             <section class="mx-auto py-10">
                 <!-- Main Content Card -->
-                <div class="relative mb-12 group">
+                <div class="relative mb-12">
                     <!-- Animated background pattern -->
                     <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl overflow-hidden">
                         <div class="absolute top-0 left-0 w-32 h-32 bg-blue-200 rounded-full blur-3xl animate-pulse opacity-30"></div>
@@ -92,10 +92,10 @@ class CommunitySection extends App {
                     <!-- Main content container with glass effect -->
                     <div class="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20">
                         <!-- Top banner section with parallax effect -->
-                        <div class="relative h-48 lg:h-64 overflow-hidden">
+                        <div class="relative h-48 lg:h-80 overflow-hidden">
                             <img src="/api/${pageData.banner_image}" 
                                  alt="Community" 
-                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                 class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
                                 <div class="text-center">

@@ -60,3 +60,17 @@ Router::get('/settings/category/{category}', 'SettingController@getByCategory');
 Router::get('/settings/{id}', 'SettingController@show');
 Router::put('/settings/{id}', 'SettingController@update');
 Router::delete('/settings/{id}', 'SettingController@destroy');
+
+// Event Management Routes (admin only for create/update/delete, public for view)
+Router::get('/events', 'EventController@index');
+Router::post('/events', 'EventController@store');
+Router::get('/events/active', 'EventController@getActive');
+Router::get('/events/upcoming', 'EventController@getUpcoming');
+Router::get('/events/category', 'EventController@getByCategory');
+Router::get('/events/search', 'EventController@search');
+Router::get('/events/slug/{slug}', 'EventController@showBySlug');
+Router::get('/events/{id}', 'EventController@show');
+Router::put('/events/{id}', 'EventController@update');
+Router::delete('/events/{id}', 'EventController@destroy');
+Router::put('/events/{id}/toggle-active', 'EventController@toggleActive');
+Router::put('/events/{id}/status', 'EventController@updateStatus');

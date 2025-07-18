@@ -151,7 +151,7 @@ class MissionVisionPage extends App {
         }
 
         return `
-            <div class="max-w-7xl mx-auto">
+            <div class="mx-auto">
                 <!-- Banner Images Section -->
                 ${this.getBannerImages(pageData).length > 0 ? `
                     <div class="mb-8">

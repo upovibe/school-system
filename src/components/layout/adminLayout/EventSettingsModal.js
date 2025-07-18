@@ -291,12 +291,12 @@ class EventSettingsModal extends HTMLElement {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Status</label>
                             <ui-switch 
                                 name="is_active"
                                 checked
                                 class="w-full">
-                                <span slot="label">Active</span>
+                                <span slot="label">Published</span>
                             </ui-switch>
                         </div>
                     </form>

@@ -74,13 +74,20 @@ class EventUpdateModal extends HTMLElement {
         const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
 
         if (titleInput) titleInput.value = this.eventData.title || '';
-        if (descriptionTextarea) descriptionTextarea.value = this.eventData.description || '';
+        if (descriptionTextarea) {
+            descriptionTextarea.value = this.eventData.description || '';
+            // Also set the inner textarea element value
+            const innerTextarea = descriptionTextarea.querySelector('textarea');
+            if (innerTextarea) {
+                innerTextarea.value = this.eventData.description || '';
+            }
+        }
         if (locationInput) locationInput.value = this.eventData.location || '';
         if (startDateInput) startDateInput.value = this.eventData.start_date ? this.eventData.start_date.slice(0, 16) : '';
         if (endDateInput) endDateInput.value = this.eventData.end_date ? this.eventData.end_date.slice(0, 16) : '';
         if (categoryDropdown) categoryDropdown.value = this.eventData.category || '';
         if (statusDropdown) statusDropdown.value = this.eventData.status || '';
-        if (isActiveSwitch) isActiveSwitch.checked = this.eventData.is_active ? true : false;
+        if (isActiveSwitch) isActiveSwitch.checked = this.eventData.is_active == 1 ? true : false;
     }
 
     // Update the event
@@ -321,11 +328,11 @@ class EventUpdateModal extends HTMLElement {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Status</label>
                             <ui-switch 
                                 name="is_active"
                                 class="w-full">
-                                <span slot="label">Active</span>
+                                <span slot="label">Published</span>
                             </ui-switch>
                         </div>
                     </form>

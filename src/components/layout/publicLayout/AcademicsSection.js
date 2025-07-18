@@ -114,7 +114,7 @@ class AcademicsSection extends App {
                                 
                                 ${window.location.pathname !== '/public/academics' ? `
                                 <div class="mt-8">
-                                    <a href="/public/acadamics" 
+                                    <a href="/public/academics" 
                                        class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl group">
                                         Learn More
                                         <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>

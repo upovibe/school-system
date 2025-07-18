@@ -18,9 +18,9 @@ class HeroSection extends App {
 
     connectedCallback() {
         super.connectedCallback();
+        this.loadColorSettings();
         this.loadHeroSettings();
         this.loadPageData();
-        this.loadColorSettings();
     }
 
     async loadPageData() {
@@ -143,17 +143,15 @@ class HeroSection extends App {
         const error = this.get('error');
         const heroTitle = this.get('heroTitle') || 'Welcome to Our School';
         const heroSubtitle = this.get('heroSubtitle') || 'Excellence in Education, Character, and Leadership';
-
+        
         // Get colors from state
         const primaryColor = this.get('primary_color');
         const secondaryColor = this.get('secondary_color');
         const accentColor = this.get('accent_color');
         const textColor = this.get('text_color');
-        const darkColor = this.get('dark_color');
         const hoverPrimary = this.get('hover_primary');
         const hoverSecondary = this.get('hover_secondary');
         const hoverAccent = this.get('hover_accent');
-
         if (error) {
             return `
                 <div class="container mx-auto flex items-center justify-center p-8">
@@ -200,22 +198,22 @@ class HeroSection extends App {
                         
                         <!-- Hero Content Overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-[${textColor}] px-4 lg:px-8 max-w-4xl">
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
+                            <div class="text-center text-white px-4 lg:px-8 max-w-4xl">
+                                <h1 class="text-4xl lg:text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
                                     ${heroTitle}
                                 </h1>
-                                <p class="text-lg lg:text-xl mb-8 opacity-90 leading-relaxed">
+                                <p class="text-lg lg:text-xl mb-10 opacity-95 leading-relaxed max-w-3xl mx-auto drop-shadow-md">
                                     ${heroSubtitle}
                                 </p>
                                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                                     <a href="/public/about-us" 
-                                       class="inline-flex items-center justify-center px-8 py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${hoverPrimary}] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                                        <i class="fas fa-info-circle mr-2"></i>
+                                       class="inline-flex items-center justify-center px-6 py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-info-circle mr-2 text-base"></i>
                                         Learn More
                                     </a>
                                     <a href="/public/admissions" 
-                                       class="inline-flex items-center justify-center px-8 py-3 border-2 border-[${textColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${textColor}] hover:text-[${darkColor}] transition-all duration-300 transform hover:-translate-y-1">
-                                        <i class="fas fa-graduation-cap mr-2"></i>
+                                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-[${textColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${textColor}] hover:text-[${secondaryColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-graduation-cap mr-2 text-base"></i>
                                         Apply Now
                                     </a>
                                 </div>
@@ -225,10 +223,10 @@ class HeroSection extends App {
                         <!-- Mouse Scroll Indicator -->
                         <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
                             <div class="flex flex-col items-center text-[${textColor}] cursor-pointer group" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">
-                                <div class="w-5 h-8 border-2 border-[${textColor}] rounded-full flex justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-opacity-80">
-                                    <div class="w-1 h-2 bg-[${textColor}] rounded-full mt-1.5 animate-bounce transition-all duration-300 group-hover:bg-opacity-80"></div>
+                                <div class="w-6 h-10 border-2 border-[${textColor}] rounded-full flex justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-[${accentColor}]">
+                                    <div class="w-1.5 h-3 bg-[${textColor}] rounded-full mt-2 animate-bounce transition-all duration-300 group-hover:bg-[${accentColor}]"></div>
                                 </div>
-                                <span class="text-xs mt-2 opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105">Scroll</span>
+                                <span class="text-sm mt-3 opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105 font-medium">Scroll</span>
                             </div>
                         </div>
                     </div>
@@ -236,22 +234,24 @@ class HeroSection extends App {
                 
                 <!-- Additional Banner Images Grid -->
                 ${bannerImages.length > 1 ? `
-                    <div class="mt-6">
-                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Gallery</h2>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="mt-8">
+                        <h2 class="text-3xl font-bold text-[${secondaryColor}] mb-6 text-center">Gallery</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             ${bannerImages.slice(1).map((imagePath, index) => `
-                                <div class="relative group">
-                                    <div class="relative w-full h-32">
+                                <div class="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                                    <div class="relative w-full h-40">
                                         <img src="${this.getImageUrl(imagePath)}" 
                                              alt="Gallery Image ${index + 2}" 
-                                             class="w-full h-full object-cover rounded-lg border border-gray-200"
+                                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                        <div class="absolute inset-0 hidden items-center justify-center bg-[${primaryColor}] bg-opacity-10 rounded-xl">
                                             <div class="text-center">
-                                                <i class="fas fa-image text-gray-400 text-lg mb-1"></i>
-                                                <p class="text-gray-500 text-xs">Image not found</p>
+                                                <i class="fas fa-image text-[${primaryColor}] text-xl mb-2"></i>
+                                                <p class="text-[${secondaryColor}] text-sm font-medium">Image not found</p>
                                             </div>
                                         </div>
+                                        <!-- Overlay on hover -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-[${secondaryColor}] via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
                                     </div>
                                 </div>
                             `).join('')}

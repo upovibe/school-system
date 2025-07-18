@@ -138,7 +138,7 @@ class RootPage extends App {
                         ${error}
                     </div>
                 </div>
-            `;
+            `;dark totrasparent 
         }
 
         if (!pageData) {

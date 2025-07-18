@@ -69,7 +69,11 @@ class SettingsSeeder
             ['setting_key' => 'footer_text', 'setting_value' => '© 2024 Our School. All rights reserved.', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Footer copyright text'],
             ['setting_key' => 'meta_keywords', 'setting_value' => 'school, education, learning, students', 'setting_type' => 'text', 'category' => 'general', 'description' => 'SEO meta keywords'],
             ['setting_key' => 'google_analytics', 'setting_value' => '', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Google Analytics tracking code'],
-            ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode']
+            ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode'],
+            
+            // Hero Section Settings (General)
+            ['setting_key' => 'hero_title', 'setting_value' => 'Welcome to Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Main hero section title'],
+            ['setting_key' => 'hero_subtitle', 'setting_value' => 'Excellence in Education, Character, and Leadership', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Hero section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

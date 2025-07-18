@@ -57,26 +57,6 @@ class RootPage extends App {
         }
     }
 
-    // Helper method to get content preview (first 150 characters)
-    getContentPreview(content) {
-        if (!content) return '';
-        
-        // Remove HTML tags and get plain text
-        const plainText = content.replace(/<[^>]*>/g, '');
-        
-        // Return first 150 characters with ellipsis if longer
-        return plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
-    }
-
-    // Method to refresh data (clear cache and fetch again)
-    async refreshData() {
-        // Clear the cache
-        store.setState({ homePageData: null });
-        
-        // Fetch fresh data
-        await this.fetchPageData();
-    }
-
     render() {
         const pageData = this.get('pageData');
         const error = this.get('error');

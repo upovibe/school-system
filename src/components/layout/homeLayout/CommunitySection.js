@@ -215,17 +215,17 @@ class CommunitySection extends App {
                                         </a>
                                     </div>
                                     
-                                    <!-- Parent Portal Card -->
-                                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6 text-center group">
-                                        <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                                            <i class="fas fa-user-friends text-white text-xl"></i>
-                                        </div>
-                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Parent Portal</h3>
-                                        <p class="text-gray-600 text-sm mb-4">Access your child's progress and stay connected</p>
-                                        <a href="/auth/login" class="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:underline">
-                                            Login <i class="fas fa-arrow-right ml-1"></i>
-                                        </a>
-                                    </div>
+                                                            <!-- Apply Now Card -->
+                        <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6 text-center group">
+                            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-graduation-cap text-white text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Apply Now</h3>
+                            <p class="text-gray-600 text-sm mb-4">Join our school community and start your child's journey</p>
+                            <a href="/public/apply" class="text-green-600 hover:text-green-700 font-medium text-sm group-hover:underline">
+                                Apply Now <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
                                 </div>
                             </div>
                             

@@ -1,5 +1,5 @@
 import App from '@/core/App.js';
-import api from '@/services/api.js';
+import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -17,81 +17,63 @@ if (!document.querySelector('link[href*="quill"]')) {
 class AcademicsSection extends App {
     constructor() {
         super();
-        this.pageData = null;
-        this.academicsTitle = '';
-        this.academicsSubtitle = '';
     }
 
     connectedCallback() {
         super.connectedCallback();
-        this.loadAcademicsSettings();
-        this.loadPageData();
+        this.loadDataFromProps();
     }
 
-    async loadAcademicsSettings() {
-        try {
-            // Fetch academics title and subtitle from settings
-            const academicsTitleResponse = await api.get('/settings/key/academics_title');
-            const academicsSubtitleResponse = await api.get('/settings/key/academics_subtitle');
-            
-            if (academicsTitleResponse.data.success) {
-                this.set('academicsTitle', academicsTitleResponse.data.data.setting_value);
+    loadDataFromProps() {
+        // Get data from props/attributes
+        const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
+        const settingsAttr = this.getAttribute('settings');
+
+        if (colorsAttr) {
+            try {
+                const colors = JSON.parse(colorsAttr);
+                Object.entries(colors).forEach(([key, value]) => {
+                    this.set(key, value);
+                });
+            } catch (error) {
+                console.error('Error parsing colors:', error);
             }
-            
-            if (academicsSubtitleResponse.data.success) {
-                this.set('academicsSubtitle', academicsSubtitleResponse.data.data.setting_value);
-            }
-        } catch (error) {
-            console.error('Error fetching academics settings:', error);
         }
-    }
 
-    async loadPageData() {
-        try {
-            await this.fetchPageData();
-        } catch (error) {
-            console.error('Error loading academics data:', error);
-        }
-    }
-
-    async fetchPageData() {
-        try {
-            const response = await api.get('/pages/slug/academics');
-            if (response.data.success) {
-                const pageData = response.data.data;
-                
-                // Set local state and render
+        if (pageDataAttr) {
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
                 this.set('pageData', pageData);
-                this.render();
             }
-        } catch (error) {
-            console.error('Error fetching academics data:', error);
-            this.set('error', 'Failed to load academics data');
         }
+
+        if (settingsAttr) {
+            const settings = unescapeJsonFromAttribute(settingsAttr);
+            if (settings) {
+                if (settings.academics_title) this.set('academicsTitle', settings.academics_title);
+                if (settings.academics_subtitle) this.set('academicsSubtitle', settings.academics_subtitle);
+            }
+        }
+
+        // Render immediately with the data
+        this.render();
     }
 
     render() {
         const pageData = this.get('pageData');
-        const error = this.get('error');
-
-        if (error) {
-            return `
-                <div class="container mx-auto flex items-center justify-center p-8">
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        ${error}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Don't show loading if pageData is null - just return empty
-        // This prevents duplicate loading spinners
-        if (!pageData) {
-            return '';
-        }
+        
+        // Get colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
+        const hoverPrimary = this.get('hover_primary');
+        const hoverSecondary = this.get('hover_secondary');
+        const hoverAccent = this.get('hover_accent');
 
         // Only render if there's content
-        if (!pageData.content || pageData.content.trim() === '') {
+        if (!pageData?.content || pageData.content.trim() === '') {
             return '';
         }
 
@@ -99,13 +81,13 @@ class AcademicsSection extends App {
             <!-- Academics Section -->
             <section class="mx-auto py-10 bg-gray-50">
                     <div class="text-center mb-12">
-                        <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                        <h2 class="text-3xl lg:text-4xl font-bold text-[${primaryColor}] mb-4">
                             ${this.get('academicsTitle')}
                         </h2>
-                        <p class="text-lg text-gray-600 mb-4">
+                        <p class="text-lg opacity-80 mb-4">
                             ${this.get('academicsSubtitle')}
                         </p>
-                        <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
+                        <div class="w-24 h-1 bg-[${primaryColor}] mx-auto rounded-full"></div>
                     </div>
                     
                     <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
@@ -119,7 +101,7 @@ class AcademicsSection extends App {
                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
                                     <div class="text-center">
                                         <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                        <p class="text-gray-500">Academics banner image</p>
+                                        <p class="text-gray-500 font-medium">Academics banner image</p>
                                     </div>
                                 </div>
                             </div>
@@ -132,7 +114,7 @@ class AcademicsSection extends App {
                                 
                                 <div class="mt-8">
                                     <a href="/public/academics" 
-                                       class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl group">
+                                       class="inline-flex items-center justify-center gap-2 px-6 py-1.5 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl group">
                                         Learn More
                                         <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
                                     </a>

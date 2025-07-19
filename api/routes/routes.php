@@ -74,3 +74,14 @@ Router::put('/events/{id}', 'EventController@update');
 Router::delete('/events/{id}', 'EventController@destroy');
 Router::put('/events/{id}/toggle-active', 'EventController@toggleActive');
 Router::put('/events/{id}/status', 'EventController@updateStatus');
+
+// News Management Routes (admin only for create/update/delete, public for view)
+Router::get('/news', 'NewsController@index');
+Router::post('/news', 'NewsController@store');
+Router::get('/news/active', 'NewsController@getActive');
+Router::get('/news/recent', 'NewsController@getRecent');
+Router::get('/news/search', 'NewsController@search');
+Router::get('/news/slug/{slug}', 'NewsController@showBySlug');
+Router::get('/news/{id}', 'NewsController@show');
+Router::put('/news/{id}', 'NewsController@update');
+Router::delete('/news/{id}', 'NewsController@destroy');

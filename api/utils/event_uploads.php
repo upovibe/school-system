@@ -222,7 +222,7 @@ function createThumbnail($sourcePath, $destPath, $width, $height) {
  * 
  * @param string $path Image file path
  * @param string $mimeType MIME type
- * @return resource|false Image resource or false on failure
+ * @return GdImage|false Image resource or false on failure
  */
 function createImageResource($path, $mimeType) {
     switch ($mimeType) {
@@ -243,7 +243,7 @@ function createImageResource($path, $mimeType) {
 /**
  * Save image to file
  * 
- * @param resource $image Image resource
+ * @param GdImage $image Image resource
  * @param string $path Output file path
  * @param string $mimeType MIME type
  * @return bool True if successful, false otherwise

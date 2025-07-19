@@ -285,6 +285,7 @@ class EventUpdateModal extends HTMLElement {
                                 data-field="banner"
                                 accept="image/*"
                                 multiple="false"
+                                value="${this.eventData?.banner_image || ''}"
                                 class="w-full">
                             </ui-file-upload>
                         </div>

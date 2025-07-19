@@ -48,10 +48,95 @@ class EventsSection extends App {
             }
         }
 
+        // Load events data from API
+        this.loadEventsData();
+    }
 
-
-        // Render immediately with the data
+    async loadEventsData() {
+        try {
+            const response = await fetch('/api/events/active');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    this.set('events', data.data);
+                } else {
+                    this.set('events', []);
+                }
+            } else {
+                console.error('Failed to fetch events:', response.statusText);
+                this.set('events', []);
+            }
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            this.set('events', []);
+        }
+        
+        // Render with the loaded data
         this.render();
+        
+        // Add event listeners after render
+        this.setupTabFiltering();
+    }
+
+    setupTabFiltering() {
+        // Wait for the DOM to be ready
+        setTimeout(() => {
+            const tabsContainer = this.querySelector('#events-tabs');
+            if (!tabsContainer) return;
+
+            // Listen for tab changes
+            tabsContainer.addEventListener('tab-changed', (event) => {
+                const selectedTab = event.detail.value;
+                this.filterEventsByStatus(selectedTab);
+            });
+
+            // Initial filter (show upcoming by default)
+            this.filterEventsByStatus('upcoming');
+        }, 100);
+    }
+
+    filterEventsByStatus(status) {
+        const eventCards = this.querySelectorAll('.event-card');
+        const eventsList = this.querySelector('#events-list');
+        
+        if (!eventsList) return;
+
+        let visibleCount = 0;
+
+        eventCards.forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            if (cardStatus === status) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide empty state message
+        const emptyState = eventsList.querySelector('.text-center');
+        if (emptyState) {
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // If no events match the status, show appropriate message
+        if (visibleCount === 0) {
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            if (!emptyState) {
+                const newEmptyState = document.createElement('div');
+                newEmptyState.className = 'text-center py-8 text-gray-500';
+                newEmptyState.innerHTML = `
+                    <i class="fas fa-calendar-times text-2xl mb-2"></i>
+                    <p>No ${status} events</p>
+                `;
+                eventsList.appendChild(newEmptyState);
+            } else {
+                emptyState.innerHTML = `
+                    <i class="fas fa-calendar-times text-2xl mb-2"></i>
+                    <p>No ${status} events</p>
+                `;
+            }
+        }
     }
 
     // Helper method to get proper image URL
@@ -107,6 +192,7 @@ class EventsSection extends App {
 
     render() {
         const pageData = this.get('pageData');
+        const events = this.get('events') || [];
         
         // Get colors from state
         const primaryColor = this.get('primary_color');
@@ -122,41 +208,57 @@ class EventsSection extends App {
             return '';
         }
 
-        // Dummy events data
-        const dummyEvents = [
-            {
-                id: 1,
-                title: 'Annual Sports Day',
-                date: '2025-08-01',
-                time: '09:00 AM',
-                category: 'Sports',
-                status: 'upcoming'
-            },
-            {
-                id: 2,
-                title: 'Science Fair Exhibition',
-                date: '2025-08-15',
-                time: '02:00 PM',
-                category: 'Academic',
-                status: 'upcoming'
-            },
-            {
-                id: 3,
-                title: 'Parent-Teacher Meeting',
-                date: '2025-08-20',
-                time: '06:00 PM',
-                category: 'Meeting',
-                status: 'upcoming'
-            },
-            {
-                id: 4,
-                title: 'Art & Culture Festival',
-                date: '2025-09-05',
-                time: '10:00 AM',
-                category: 'Arts',
-                status: 'upcoming'
+        // Helper function to get status badge styling
+        const getStatusBadge = (status) => {
+            switch (status?.toLowerCase()) {
+                case 'upcoming':
+                    return {
+                        class: 'bg-blue-100 text-blue-800',
+                        icon: 'fas fa-clock',
+                        text: 'Upcoming'
+                    };
+                case 'ongoing':
+                    return {
+                        class: 'bg-green-100 text-green-800',
+                        icon: 'fas fa-play',
+                        text: 'Ongoing'
+                    };
+                case 'completed':
+                    return {
+                        class: 'bg-gray-100 text-gray-800',
+                        icon: 'fas fa-check',
+                        text: 'Completed'
+                    };
+                case 'cancelled':
+                    return {
+                        class: 'bg-red-100 text-red-800',
+                        icon: 'fas fa-times',
+                        text: 'Cancelled'
+                    };
+                default:
+                    return {
+                        class: 'bg-gray-100 text-gray-800',
+                        icon: 'fas fa-circle',
+                        text: status || 'Unknown'
+                    };
             }
-        ];
+        };
+
+        // Helper function to format date
+        const formatDate = (dateString) => {
+            if (!dateString) return 'TBD';
+            try {
+                return new Date(dateString).toLocaleDateString();
+            } catch (error) {
+                return dateString;
+            }
+        };
+
+        // Helper function to format time
+        const formatTime = (timeString) => {
+            if (!timeString) return 'TBD';
+            return timeString;
+        };
 
         return `
             <!-- Events Section -->
@@ -211,39 +313,58 @@ class EventsSection extends App {
                                 <h3 class="text-xl font-semibold text-[${secondaryColor}]">All Events</h3>
                             </div>
                             
-                            <div class="max-h-96 overflow-y-auto pr-2 space-y-4">
-                                ${dummyEvents.map(event => `
-                                    <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}]">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="font-semibold text-[${secondaryColor}] mb-1">${event.title}</h4>
-                                                <div class="flex items-center gap-4 text-sm text-gray-600">
-                                                    <span class="flex items-center gap-1">
-                                                        <i class="fas fa-calendar text-[${primaryColor}]"></i>
-                                                        ${new Date(event.date).toLocaleDateString()}
-                                                    </span>
-                                                    <span class="flex items-center gap-1">
-                                                        <i class="fas fa-clock text-[${primaryColor}]"></i>
-                                                        ${event.time}
-                                                    </span>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[${primaryColor}] bg-opacity-10 text-[${primaryColor}]">
-                                                        <i class="fas fa-tag mr-1"></i>
-                                                        ${event.category}
-                                                    </span>
+                            <!-- Tabs Component -->
+                            <ui-tabs class="w-full" id="events-tabs">
+                                <ui-tab-list class="mb-6">
+                                    <ui-tab value="upcoming">Upcoming</ui-tab>
+                                    <ui-tab value="ongoing">Ongoing</ui-tab>
+                                    <ui-tab value="completed">Completed</ui-tab>
+                                    <ui-tab value="cancelled">Cancelled</ui-tab>
+                                </ui-tab-list>
+                                
+                                <!-- Single Events List Container -->
+                                <div class="max-h-80 overflow-y-auto pr-2 space-y-4" id="events-list">
+                                    ${events.length > 0 ? events.map(event => {
+                                        const statusBadge = getStatusBadge(event.status);
+                                        return `
+                                            <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card" data-status="${event.status?.toLowerCase() || 'unknown'}">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <h4 class="font-semibold text-[${secondaryColor}] mb-1">${event.title || 'Untitled Event'}</h4>
+                                                        <div class="flex items-center gap-4 text-sm text-gray-600">
+                                                            <span class="flex items-center gap-1">
+                                                                <i class="fas fa-calendar text-[${primaryColor}]"></i>
+                                                                ${formatDate(event.event_date)}
+                                                            </span>
+                                                            <span class="flex items-center gap-1">
+                                                                <i class="fas fa-clock text-[${primaryColor}]"></i>
+                                                                ${formatTime(event.event_time)}
+                                                            </span>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[${primaryColor}] bg-opacity-10 text-[${primaryColor}]">
+                                                                <i class="fas fa-tag mr-1"></i>
+                                                                ${event.category || 'General'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusBadge.class}">
+                                                            <i class="${statusBadge.icon} mr-1 text-xs"></i>
+                                                            ${statusBadge.text}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="ml-4">
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    <i class="fas fa-circle mr-1 text-xs"></i>
-                                                    ${event.status}
-                                                </span>
-                                            </div>
+                                        `;
+                                    }).join('') : `
+                                        <div class="text-center py-8 text-gray-500">
+                                            <i class="fas fa-calendar-times text-2xl mb-2"></i>
+                                            <p>No events available</p>
                                         </div>
-                                    </div>
-                                `).join('')}
-                            </div>
+                                    `}
+                                </div>
+                            </ui-tabs>
                         </div>
                     </div>
                 </div>

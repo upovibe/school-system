@@ -130,12 +130,14 @@ class EventDeleteDialog extends HTMLElement {
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                size="sm">
-                <div slot="title" class="flex items-center space-x-2">
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                    <span>Delete Event</span>
-                </div>
-                <div class="space-y-4">
+                title="Delete Event"
+                variant="danger">
+                <div slot="content" class="space-y-4">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        <span class="font-semibold text-red-900">Delete Event</span>
+                    </div>
+                    
                     <p class="text-gray-700">
                         Are you sure you want to delete this event? This action cannot be undone.
                     </p>
@@ -156,17 +158,6 @@ class EventDeleteDialog extends HTMLElement {
                     <p class="text-sm text-gray-600">
                         This will permanently remove the event from the system and cannot be recovered.
                     </p>
-                </div>
-                <div slot="footer">
-                    <div class="flex justify-end space-x-2">
-                        <ui-button variant="secondary" onclick="this.closest('event-delete-dialog').close()">
-                            Cancel
-                        </ui-button>
-                        <ui-button variant="danger" onclick="this.closest('event-delete-dialog').deleteEvent()">
-                            <i class="fas fa-trash mr-2"></i>
-                            Delete Event
-                        </ui-button>
-                    </div>
                 </div>
             </ui-dialog>
         `;

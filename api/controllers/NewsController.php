@@ -209,9 +209,9 @@ class NewsController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+                // Use standard PHP $_POST and $_FILES for multipart data
+                $data = $_POST;
+                // $_FILES is already available globally
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
@@ -231,7 +231,7 @@ class NewsController {
             }
             
             // Update news
-            $success = $this->newsModel->updateNews($id, $data);
+            $success = $this->newsModel->update($id, $data);
             
             if ($success) {
                 // Get the updated news data

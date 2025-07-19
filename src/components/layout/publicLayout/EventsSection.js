@@ -84,7 +84,17 @@ class EventsSection extends App {
             const tabsContainer = this.querySelector('#events-tabs');
             if (!tabsContainer) return;
 
-            // Listen for tab changes
+            // Listen for tab changes using the ui-tabs component's internal events
+            tabsContainer.addEventListener('click', (event) => {
+                const tabButton = event.target.closest('ui-tab button');
+                if (tabButton) {
+                    const tabItem = tabButton.closest('ui-tab');
+                    const selectedTab = tabItem.getAttribute('value');
+                    this.filterEventsByStatus(selectedTab);
+                }
+            });
+
+            // Also listen for the tab-changed event if it exists
             tabsContainer.addEventListener('tab-changed', (event) => {
                 const selectedTab = event.detail.value;
                 this.filterEventsByStatus(selectedTab);
@@ -105,6 +115,7 @@ class EventsSection extends App {
 
         eventCards.forEach(card => {
             const cardStatus = card.getAttribute('data-status');
+            console.log(`Card status: ${cardStatus}, Filtering for: ${status}`); // Debug log
             if (cardStatus === status) {
                 card.style.display = 'block';
                 visibleCount++;
@@ -112,6 +123,8 @@ class EventsSection extends App {
                 card.style.display = 'none';
             }
         });
+
+        console.log(`Visible count for ${status}: ${visibleCount}`); // Debug log
 
         // Show/hide empty state message
         const emptyState = eventsList.querySelector('.text-center');
@@ -244,6 +257,34 @@ class EventsSection extends App {
             }
         };
 
+        // Helper function to normalize status for filtering
+        const normalizeStatus = (status) => {
+            if (!status) return 'unknown';
+            const normalized = status.toLowerCase().trim();
+            
+            // Map common variations to standard statuses
+            switch (normalized) {
+                case 'upcoming':
+                case 'scheduled':
+                case 'planned':
+                    return 'upcoming';
+                case 'ongoing':
+                case 'in progress':
+                case 'active':
+                    return 'ongoing';
+                case 'completed':
+                case 'finished':
+                case 'done':
+                    return 'completed';
+                case 'cancelled':
+                case 'canceled':
+                case 'cancelled':
+                    return 'cancelled';
+                default:
+                    return normalized;
+            }
+        };
+
         // Helper function to format date
         const formatDate = (dateString) => {
             if (!dateString) return 'TBD';
@@ -337,11 +378,12 @@ class EventsSection extends App {
                                 </ui-tab-list>
                                 
                                 <!-- Single Events List Container -->
-                                <div class="max-h-80 overflow-y-auto pr-2 space-y-4" id="events-list">
+                                <div class="max-h-96 overflow-y-auto mx-auto p-5 rounded-xl border border-gray-200 mt-5 space-y-4" id="events-list">
                                     ${events.length > 0 ? events.map(event => {
                                         const statusBadge = getStatusBadge(event.status);
+                                        const normalizedStatus = normalizeStatus(event.status);
                                         return `
-                                            <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card" data-status="${event.status?.toLowerCase() || 'unknown'}">
+                                            <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card" data-status="${normalizedStatus}">
                                                 <div class="flex items-start justify-between">
                                                     <div class="flex-1 min-w-0">
                                                         <h4 class="font-semibold text-[${secondaryColor}] mb-1 truncate" title="${event.title || 'Untitled Event'}">${event.title || 'Untitled Event'}</h4>

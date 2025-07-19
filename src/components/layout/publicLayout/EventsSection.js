@@ -378,7 +378,7 @@ class EventsSection extends App {
                                 </ui-tab-list>
                                 
                                 <!-- Single Events List Container -->
-                                <div class="max-h-96 overflow-y-auto mx-auto p-5 rounded-xl border border-gray-200 mt-5 space-y-4" id="events-list">
+                                <div class="max-h-96 overflow-y-auto mx-auto p-5 pr-1 rounded-xl border border-gray-200 mt-5 space-y-4" id="events-list">
                                     ${events.length > 0 ? events.map(event => {
                                         const statusBadge = getStatusBadge(event.status);
                                         const normalizedStatus = normalizeStatus(event.status);

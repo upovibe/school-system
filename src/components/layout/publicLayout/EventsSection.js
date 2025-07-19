@@ -150,9 +150,14 @@ class EventsSection extends App {
     }
 
     openEventPage(slugOrId) {
-        // Navigate to the event page using slug or ID
+        // Navigate to the event page using SPA router
         const eventUrl = `/public/community/events/${slugOrId}`;
-        window.location.href = eventUrl;
+        if (window.router) {
+            window.router.navigate(eventUrl);
+        } else {
+            // Fallback to regular navigation if router is not available
+            window.location.href = eventUrl;
+        }
     }
 
     // Helper method to get proper image URL

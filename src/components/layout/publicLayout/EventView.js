@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import Toast from '@/components/ui/Toast.js';
 
 /**
  * Event View Component
@@ -202,7 +203,7 @@ class EventView extends App {
             </ui-breadcrumb>
 
             <!-- Event Banner - Always show (placeholder if no image) -->
-            <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-8">
+            <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-6">
                 ${event.banner_image ? `
                     <img src="/api/${event.banner_image}" 
                          alt="${event.title}" 
@@ -216,141 +217,129 @@ class EventView extends App {
                         <p class="text-lg text-gray-600">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'} • ${this.formatDate(event.start_date || event.event_date)}</p>
                     </div>
                 </div>
+                
+                <!-- Status Badge - Absolute positioned at top-right corner -->
+                <div class="absolute top-4 right-4 z-10">
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusBadge.class} shadow-lg">
+                        <i class="${statusBadge.icon} mr-2"></i>
+                        ${statusBadge.text}
+                    </span>
+                </div>
+                
+                <!-- Location - Absolute positioned at bottom-left corner -->
+                ${event.location ? `
+                    <div class="absolute bottom-4 left-4 z-10">
+                        <div class="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-400"></i>
+                                <span class="text-sm font-medium">${event.location}</span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                
                 <!-- Dark gradient overlay for images -->
                 ${event.banner_image ? `
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                 ` : ''}
             </div>
 
-            <div class="max-w-4xl mx-auto">
-                <!-- Event Content -->
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <!-- Event Header -->
-                    <div class="p-8 border-b border-gray-100">
-                        <div class="flex items-start justify-between mb-4">
+            <!-- Two Container Layout Under Banner -->
+            <div class="mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- Left Container -->
+                    <div class="space-y-6">
+                        <!-- Title with Share/Copy buttons -->
+                        <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <h1 class="text-3xl font-bold text-gray-900 mb-2">${event.title || 'Untitled Event'}</h1>
-                                <p class="text-gray-600 text-lg">${event.subtitle || ''}</p>
+                                ${event.subtitle ? `<p class="text-lg text-gray-600">${event.subtitle}</p>` : ''}
                             </div>
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusBadge.class}">
-                                <i class="${statusBadge.icon} mr-2"></i>
-                                ${statusBadge.text}
-                            </span>
+                            <div class="flex gap-3 ml-4">
+                                <i onclick="navigator.share ? navigator.share({title: '${event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
+                                   class="fas fa-share size-8 text-gray-600 hover:text-blue-600 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
+                                <i onclick="navigator.clipboard.writeText(window.location.href).then(() => { Toast.show({ message: 'Event URL copied to clipboard!', variant: 'success', duration: 3000 }); })" 
+                                   class="fas fa-copy size-8 text-gray-600 hover:text-gray-800 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
+                            </div>
                         </div>
 
-                        <!-- Event Meta -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-calendar text-blue-600 text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Date</p>
-                                    <p class="font-semibold text-gray-900">${this.formatDate(event.start_date || event.event_date)}</p>
+                        <!-- Description -->
+                        ${event.description ? `
+                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                                <div class="prose prose-sm max-w-none text-gray-700">
+                                    ${event.description}
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-clock text-green-600 text-xl"></i>
+                        ` : ''}
+
+                        <!-- Dates and Category -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="space-y-4">
+                                <!-- Start Date & Time -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-calendar text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Start Date & Time</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-semibold text-gray-900">${this.formatDate(event.start_date)}</p>
+                                            <p class="text-sm text-gray-600 font-semibold bg-gray-100 px-2 py-1 rounded-md">${this.formatTime(event.start_date)}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Time</p>
-                                    <p class="font-semibold text-gray-900">${this.formatTime(event.start_date || event.event_time)}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-tag text-purple-600 text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Category</p>
-                                    <p class="font-semibold text-gray-900">${event.category || 'General'}</p>
+
+                                <!-- End Date & Time -->
+                                ${event.end_date ? `
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-calendar-times text-red-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">End Date & Time</p>
+                                            <div class="flex items-center gap-2">
+                                                <p class="font-semibold text-gray-900">${this.formatDate(event.end_date)}</p>
+                                                <p class="text-sm text-gray-600 font-semibold bg-gray-100 px-2 py-1 rounded-md">${this.formatTime(event.end_date)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <!-- Category -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-tag text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Category</p>
+                                        <p class="font-semibold text-gray-900">${event.category || 'General'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Event Details -->
-                    <div class="p-8">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <!-- Main Content -->
-                            <div class="lg:col-span-2 space-y-6">
-                                <!-- Description -->
-                                ${event.description ? `
-                                    <div>
-                                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Description</h3>
-                                        <div class="prose prose-lg max-w-none">
-                                            ${event.description}
-                                        </div>
-                                    </div>
-                                ` : ''}
-
-                                <!-- Content -->
-                                ${event.content ? `
-                                    <div>
-                                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Details</h3>
-                                        <div class="prose prose-lg max-w-none">
-                                            ${event.content}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-
-                            <!-- Sidebar -->
-                            <div class="space-y-6">
-                                <!-- Location -->
-                                ${event.location ? `
-                                    <div class="bg-gray-50 rounded-xl p-6">
-                                        <h4 class="font-semibold text-gray-900 mb-3">Location</h4>
-                                        <div class="flex items-start gap-3">
-                                            <i class="fas fa-map-marker-alt text-red-500 text-lg mt-1"></i>
-                                            <p class="text-gray-700">${event.location}</p>
-                                        </div>
-                                    </div>
-                                ` : ''}
-
-                                <!-- Additional Info -->
-                                <div class="bg-gray-50 rounded-xl p-6">
-                                    <h4 class="font-semibold text-gray-900 mb-3">Event Information</h4>
-                                    <div class="space-y-3">
-                                        ${event.end_date ? `
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-gray-600">End Date:</span>
-                                                <span class="font-medium">${this.formatDate(event.end_date)}</span>
-                                            </div>
-                                        ` : ''}
-                                        ${event.max_participants ? `
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-gray-600">Max Participants:</span>
-                                                <span class="font-medium">${event.max_participants}</span>
-                                            </div>
-                                        ` : ''}
-                                        ${event.organizer ? `
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-gray-600">Organizer:</span>
-                                                <span class="font-medium">${event.organizer}</span>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-
-                                <!-- Share Event -->
-                                <div class="bg-gray-50 rounded-xl p-6">
-                                    <h4 class="font-semibold text-gray-900 mb-3">Share Event</h4>
-                                    <div class="flex gap-2">
-                                        <button onclick="navigator.share ? navigator.share({title: '${event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
-                                                class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                            <i class="fas fa-share mr-2"></i>
-                                            Share
-                                        </button>
-                                        <button onclick="navigator.clipboard.writeText(window.location.href)" 
-                                                class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                    <!-- Right Container -->
+                    <div class="space-y-6">
+                        <!-- Event List -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Event List</h3>
+                            <div class="space-y-4">
+                                <!-- Content will be added here later -->
                             </div>
                         </div>
+
+                        <!-- Content -->
+                        ${event.content ? `
+                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Details</h3>
+                                <div class="prose prose-sm max-w-none text-gray-700">
+                                    ${event.content}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>

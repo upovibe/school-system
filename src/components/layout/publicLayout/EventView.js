@@ -217,7 +217,7 @@ class EventView extends App {
             </ui-breadcrumb>
 
             <!-- Event Banner - Always show (placeholder if no image) -->
-            <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-6">
+            <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg my-6">
                 ${event.banner_image ? `
                     <img src="/api/${event.banner_image}" 
                          alt="${event.title}" 

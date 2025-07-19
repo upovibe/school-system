@@ -58,13 +58,13 @@ class NewsSettingsModal extends HTMLElement {
         try {
             // Get form data using the data-field attributes for reliable selection
             const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const contentTextarea = this.querySelector('ui-textarea[data-field="content"]');
+            const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const newsData = {
                 title: titleInput ? titleInput.value : '',
-                content: contentTextarea ? contentTextarea.value : '',
+                content: contentWysiwyg ? contentWysiwyg.getContent() : '',
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
 
@@ -187,12 +187,11 @@ class NewsSettingsModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                            <ui-textarea 
+                            <ui-wysiwyg 
                                 data-field="content"
                                 placeholder="Enter news content"
-                                rows="8"
                                 class="w-full">
-                            </ui-textarea>
+                            </ui-wysiwyg>
                         </div>
 
                         <div>

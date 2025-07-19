@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import Toast from '@/components/ui/Toast.js';
+import '@/components/layout/publicLayout/EventList.js';
 
 /**
  * Event View Component
@@ -338,22 +339,7 @@ class EventView extends App {
                     <!-- Right Container -->
                     <div class="space-y-6">
                         <!-- Event List -->
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Event List</h3>
-                            <div class="space-y-4">
-                                <!-- Content will be added here later -->
-                            </div>
-                        </div>
-
-                        <!-- Content -->
-                        ${event.content ? `
-                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Details</h3>
-                                <div class="prose prose-sm max-w-none text-gray-700">
-                                    ${event.content}
-                                </div>
-                            </div>
-                        ` : ''}
+                        <event-list></event-list>
                     </div>
                 </div>
             </div>

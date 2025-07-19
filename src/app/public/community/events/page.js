@@ -1,135 +1,65 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
-import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
-
-// Load Quill CSS for content display
-if (!document.querySelector('link[href*="quill"]')) {
-    const link = document.createElement('link');
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-}
+import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import '@/components/layout/publicLayout/EventsSection.js';
 
 /**
  * Events Page Component (/community/events)
  * 
  * This is the events page of the application.
- * It renders within the global RootLayout and fetches data for the "events" slug.
+ * It now uses the same centralized data loading approach as the community page.
  * File-based routing: /community/events → app/public/community/events/page.js
  */
 class EventsPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Events | UPO UI';
-        this.loadPageData();
+        this.loadAllData();
     }
 
-    async loadPageData() {
-        // Check if data is already cached in global store
-        const globalState = store.getState();
-        if (globalState.eventsPageData) {
-            this.set('pageData', globalState.eventsPageData);
-            this.render();
-            return;
-        }
-
-        // If not cached, fetch from API
-        await this.fetchPageData();
-    }
-
-    async fetchPageData() {
+    async loadAllData() {
         try {
-            const response = await api.get('/pages/slug/events');
-            if (response.data.success) {
-                const pageData = response.data.data;
-                
-                // Cache the data in global store
-                store.setState({ eventsPageData: pageData });
-                
-                // Set local state and render
-                this.set('pageData', pageData);
-                this.render();
-            }
+            // Load colors first
+            const colors = await fetchColorSettings();
+            
+            // Load events page data
+            const eventsPageData = await this.fetchPageData('events');
+
+            // Combine all data
+            const allData = {
+                colors,
+                page: eventsPageData
+            };
+
+            // Cache in global store
+            store.setState({ eventsPageData: allData });
+            
+            // Set local state and render
+            this.set('allData', allData);
+            this.render();
+
         } catch (error) {
-            console.error('Error fetching events page data:', error);
+            console.error('Error loading events data:', error);
             this.set('error', 'Failed to load events page data');
         }
     }
 
-    // Helper method to get proper image URL
-    getImageUrl(imagePath) {
-        if (!imagePath) return null;
-        
-        // If it's already a full URL, return as is
-        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-            return imagePath;
+    async fetchPageData(slug) {
+        try {
+            const response = await api.get(`/pages/slug/${slug}`);
+            return response.data.success ? response.data.data : null;
+        } catch (error) {
+            console.error(`Error fetching ${slug} page data:`, error);
+            return null;
         }
-        
-        // If it's a relative path starting with /, construct the full URL
-        if (imagePath.startsWith('/')) {
-            const baseUrl = window.location.origin;
-            return baseUrl + imagePath;
-        }
-        
-        // If it's a relative path without /, construct the URL
-        const baseUrl = window.location.origin;
-        const apiPath = '/api';
-        return baseUrl + apiPath + '/' + imagePath;
     }
 
-    // Helper method to parse banner images from various formats
-    getBannerImages(pageData) {
-        if (!pageData || !pageData.banner_image) {
-            return [];
-        }
 
-        let bannerImages = pageData.banner_image;
-
-        // If it's a string, try to parse as JSON
-        if (typeof bannerImages === 'string') {
-            try {
-                const parsed = JSON.parse(bannerImages);
-                if (Array.isArray(parsed)) {
-                    bannerImages = parsed;
-                } else {
-                    bannerImages = [bannerImages];
-                }
-            } catch (e) {
-                // If parsing fails, treat as single path
-                bannerImages = [bannerImages];
-            }
-        } else if (!Array.isArray(bannerImages)) {
-            // If it's not an array, wrap in array
-            bannerImages = [bannerImages];
-        }
-
-        // Filter out empty/null values
-        return bannerImages.filter(img => img && img.trim() !== '');
-    }
-
-    // Helper method to get content preview (first 150 characters)
-    getContentPreview(content) {
-        if (!content) return '';
-        
-        // Remove HTML tags and get plain text
-        const plainText = content.replace(/<[^>]*>/g, '');
-        
-        // Return first 150 characters with ellipsis if longer
-        return plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
-    }
-
-    // Method to refresh data (clear cache and fetch again)
-    async refreshData() {
-        // Clear the cache
-        store.setState({ eventsPageData: null });
-        
-        // Fetch fresh data
-        await this.fetchPageData();
-    }
 
     render() {
-        const pageData = this.get('pageData');
+        const allData = this.get('allData');
         const error = this.get('error');
 
         if (error) {
@@ -142,7 +72,7 @@ class EventsPage extends App {
             `;
         }
 
-        if (!pageData) {
+        if (!allData) {
             return `
                 <div class="container flex items-center justify-center mx-auto p-8">
                     <page-loader></page-loader>
@@ -150,69 +80,16 @@ class EventsPage extends App {
             `;
         }
 
+        // Convert data to JSON strings for attributes with proper escaping
+        const colorsData = escapeJsonForAttribute(allData.colors);
+
         return `
-            <div class="max-w-7xl mx-auto">
-                <!-- Banner Images Section -->
-                ${this.getBannerImages(pageData).length > 0 ? `
-                    <div class="mb-8">
-                        <div class="relative">
-                            <!-- Main Banner Image -->
-                            <div class="relative w-full h-96">
-                                <img src="${this.getImageUrl(this.getBannerImages(pageData)[0])}" 
-                                     alt="Events Banner Image" 
-                                     class="w-full h-full object-cover rounded-lg shadow-lg"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg">
-                                    <div class="text-center">
-                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                        <p class="text-gray-500">Banner image not found</p>
-                                    </div>
-                                </div>
-                                <!-- Dark gradient overlay from bottom to top -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-lg"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Additional Banner Images Grid -->
-                        ${this.getBannerImages(pageData).length > 1 ? `
-                            <div class="mt-6">
-                                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Gallery</h2>
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    ${this.getBannerImages(pageData).slice(1).map((imagePath, index) => `
-                                        <div class="relative group">
-                                            <div class="relative w-full h-32">
-                                                <img src="${this.getImageUrl(imagePath)}" 
-                                                     alt="Events Gallery Image ${index + 2}" 
-                                                     class="w-full h-full object-cover rounded-lg border border-gray-200"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-                                                    <div class="text-center">
-                                                        <i class="fas fa-image text-gray-400 text-lg mb-1"></i>
-                                                        <p class="text-gray-500 text-xs">Image not found</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
-                
-                <div class="bg-white p-6 rounded-md">
-                    ${pageData.content ? `
-                        <div class="content-section">
-                            <div class="content-preview text-lg leading-relaxed">
-                                ${pageData.content}
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="text-center py-8">
-                            <p class="text-gray-500 italic">No content available</p>
-                        </div>
-                    `}
-                </div>
+            <div class="mx-auto">
+                <!-- Events Section Component -->
+                <events-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.page)}'>
+                </events-section>
             </div>
         `;
     }

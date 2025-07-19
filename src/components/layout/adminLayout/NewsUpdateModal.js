@@ -214,6 +214,7 @@ class NewsUpdateModal extends HTMLElement {
                                 data-field="banner"
                                 accept="image/*"
                                 multiple="false"
+                                value="${this.newsData?.banner_image || ''}"
                                 class="w-full">
                             </ui-file-upload>
                         </div>

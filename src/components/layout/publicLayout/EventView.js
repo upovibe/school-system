@@ -17,12 +17,10 @@ class EventView extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        console.log('EventView connectedCallback called'); // Debug log
         
         // Check if slug attribute is provided and load data
         const slug = this.getAttribute('slug');
         if (slug) {
-            console.log('EventView received slug:', slug);
             this.loadEventData(slug);
         }
     }
@@ -34,7 +32,6 @@ class EventView extends App {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'slug' && newValue && newValue !== oldValue) {
-            console.log('EventView slug changed to:', newValue);
             this.loadEventData(newValue);
         }
     }
@@ -42,8 +39,6 @@ class EventView extends App {
     // Method to load event data (can be called externally)
     async loadEventData(slug) {
         try {
-            console.log('Loading event data for slug:', slug); // Debug log
-            
             if (!slug) {
                 this.set('error', 'Event not found');
                 this.set('loading', false);
@@ -52,25 +47,20 @@ class EventView extends App {
 
             // Fetch event data by slug
             const apiUrl = `/api/events/slug/${slug}`;
-            console.log('Fetching from:', apiUrl); // Debug log
             
             const response = await fetch(apiUrl);
-            console.log('Response status:', response.status); // Debug log
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('Response data:', data); // Debug log
                 if (data.success && data.data) {
                     this.set('event', data.data);
                 } else {
                     this.set('error', 'Event not found');
                 }
             } else {
-                console.error('Response not ok:', response.status, response.statusText); // Debug log
                 this.set('error', 'Failed to load event');
             }
         } catch (error) {
-            console.error('Error loading event:', error);
             this.set('error', 'Error loading event');
         }
         
@@ -172,10 +162,7 @@ class EventView extends App {
         const error = this.get('error');
         const event = this.get('event');
         
-        console.log('EventView render called - loading:', loading, 'error:', error, 'event:', event); // Debug log
-        
         if (loading) {
-            console.log('Showing loading spinner'); // Debug log
             return `
                 <div class="flex items-center justify-center min-h-96">
                     <div class="text-center">
@@ -187,7 +174,6 @@ class EventView extends App {
         }
 
         if (!loading && (error || !event)) {
-            console.log('Showing error or no event'); // Debug log
             return `
                 <div class="flex items-center justify-center min-h-96">
                     <div class="text-center">
@@ -205,7 +191,6 @@ class EventView extends App {
         }
 
         const statusBadge = this.getStatusBadge(event.status);
-        console.log('Rendering main event content'); // Debug log
 
         return `
             <!-- Breadcrumb -->
@@ -219,16 +204,16 @@ class EventView extends App {
             <!-- Event Banner - Always show (placeholder if no image) -->
             <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-8">
                 ${event.banner_image ? `
-                    <img src="${this.getImageUrl(event.banner_image)}" 
+                    <img src="/api/${event.banner_image}" 
                          alt="${event.title}" 
                          class="w-full h-full object-cover"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 ` : ''}
-                <div class="absolute inset-0 ${event.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-                    <div class="text-center text-white">
-                        <i class="fas fa-calendar-alt text-6xl mb-4 opacity-80"></i>
-                        <h2 class="text-2xl font-bold mb-2">${event.title || 'Event'}</h2>
-                        <p class="text-lg opacity-90">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'} • ${this.formatDate(event.start_date || event.event_date)}</p>
+                <div class="absolute inset-0 ${event.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gray-100">
+                    <div class="text-center">
+                        <i class="fas fa-calendar-alt text-gray-400 text-6xl mb-4"></i>
+                        <h2 class="text-2xl font-bold text-gray-700 mb-2">${event.title || 'Event'}</h2>
+                        <p class="text-lg text-gray-600">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'} • ${this.formatDate(event.start_date || event.event_date)}</p>
                     </div>
                 </div>
                 <!-- Dark gradient overlay for images -->

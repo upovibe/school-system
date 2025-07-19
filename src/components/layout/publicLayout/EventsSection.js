@@ -115,7 +115,6 @@ class EventsSection extends App {
 
         eventCards.forEach(card => {
             const cardStatus = card.getAttribute('data-status');
-            console.log(`Card status: ${cardStatus}, Filtering for: ${status}`); // Debug log
             if (cardStatus === status) {
                 card.style.display = 'block';
                 visibleCount++;
@@ -123,8 +122,6 @@ class EventsSection extends App {
                 card.style.display = 'none';
             }
         });
-
-        console.log(`Visible count for ${status}: ${visibleCount}`); // Debug log
 
         // Show/hide empty state message
         const emptyState = eventsList.querySelector('.text-center');

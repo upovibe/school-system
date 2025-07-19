@@ -210,31 +210,34 @@ class EventView extends App {
         return `
             <!-- Breadcrumb -->
             <ui-breadcrumb separator="chevron" color="primary">
-                <ui-breadcrumb-item href="/public">Home</ui-breadcrumb-item>
+                <ui-breadcrumb-item href="/">Home</ui-breadcrumb-item>
                 <ui-breadcrumb-item href="/public/community">Community</ui-breadcrumb-item>
                 <ui-breadcrumb-item href="/public/community/events">Events</ui-breadcrumb-item>
                 <ui-breadcrumb-item>${event.title || 'Event Details'}</ui-breadcrumb-item>
             </ui-breadcrumb>
 
-            <div class="max-w-4xl mx-auto">
-                <!-- Event Banner -->
+            <!-- Event Banner - Always show (placeholder if no image) -->
+            <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-8">
                 ${event.banner_image ? `
-                    <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-8">
-                        <img src="${this.getImageUrl(event.banner_image)}" 
-                             alt="${event.title}" 
-                             class="w-full h-full object-cover"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
-                            <div class="text-center">
-                                <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                <p class="text-gray-500 font-medium">Event banner</p>
-                            </div>
-                        </div>
-                        <!-- Dark gradient overlay -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    </div>
+                    <img src="${this.getImageUrl(event.banner_image)}" 
+                         alt="${event.title}" 
+                         class="w-full h-full object-cover"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 ` : ''}
+                <div class="absolute inset-0 ${event.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                    <div class="text-center text-white">
+                        <i class="fas fa-calendar-alt text-6xl mb-4 opacity-80"></i>
+                        <h2 class="text-2xl font-bold mb-2">${event.title || 'Event'}</h2>
+                        <p class="text-lg opacity-90">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'} • ${this.formatDate(event.start_date || event.event_date)}</p>
+                    </div>
+                </div>
+                <!-- Dark gradient overlay for images -->
+                ${event.banner_image ? `
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                ` : ''}
+            </div>
 
+            <div class="max-w-4xl mx-auto">
                 <!-- Event Content -->
                 <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                     <!-- Event Header -->

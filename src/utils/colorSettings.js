@@ -71,20 +71,4 @@ export async function fetchColorSetting(settingKey) {
   }
 }
 
-/**
- * Default color settings as fallback
- */
-export const defaultColors = {
-  background_color: '#F9FAFB',
-  primary_color: '#270061',
-  secondary_color: '#a38d00',
-  accent_color: '#878a00',
-  hover_primary: '#270061',
-  hover_secondary: '#a38d00',
-  hover_accent: '#878a00',
-  text_color: '#ffffff',
-  dark_color: '#000000',
-  success_color: '#28a745',
-  error_color: '#dc3545',
-  warning_color: '#ffc107'
-}; 
+ 

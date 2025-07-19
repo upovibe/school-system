@@ -1,4 +1,6 @@
 import App from '@/core/App.js';
+import { fetchColorSettings } from '@/utils/colorSettings.js';
+import '@/components/layout/skeletonLoaders/EventListSkeleton.js';
 
 /**
  * Event List Component
@@ -9,11 +11,27 @@ class EventList extends App {
     constructor() {
         super();
         this.set('events', []);
+        this.set('loading', true);
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
+        await this.loadColorsFromSettings();
         this.loadEventsData();
+    }
+
+    async loadColorsFromSettings() {
+        try {
+            // Fetch colors from API
+            const colors = await fetchColorSettings();
+            
+            // Set colors in component state
+            Object.entries(colors).forEach(([key, value]) => {
+                this.set(key, value);
+            });
+        } catch (error) {
+            console.error('Error loading color settings:', error);
+        }
     }
 
     async loadEventsData() {
@@ -34,6 +52,9 @@ class EventList extends App {
             console.error('Error fetching events:', error);
             this.set('events', []);
         }
+        
+        // Set loading to false
+        this.set('loading', false);
         
         // Render with the loaded data
         this.render();
@@ -219,11 +240,12 @@ class EventList extends App {
     }
 
     render() {
+        const loading = this.get('loading');
         const events = this.get('events') || [];
         
-        // Get colors from parent component or use defaults
-        const primaryColor = this.get('primary_color') || '#3b82f6';
-        const secondaryColor = this.get('secondary_color') || '#1f2937';
+        // Get colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
 
         return `
             <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
@@ -244,7 +266,7 @@ class EventList extends App {
                         
                         <!-- Single Events List Container -->
                         <div class="max-h-96 overflow-y-auto mx-auto py-1 rounded-xl mt-5 space-y-4" id="events-list">
-                            ${events.length > 0 ? events.map(event => {
+                            ${loading ? `<event-list-skeleton></event-list-skeleton>` : events.length > 0 ? events.map(event => {
                                 const statusBadge = this.getStatusBadge(event.status);
                                 const normalizedStatus = this.normalizeStatus(event.status);
                                 return `

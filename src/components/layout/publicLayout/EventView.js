@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import Toast from '@/components/ui/Toast.js';
 import '@/components/layout/publicLayout/EventList.js';
+import { fetchColorSettings } from '@/utils/colorSettings.js';
 
 /**
  * Event View Component
@@ -31,13 +32,30 @@ class EventView extends App {
         });
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
+        
+        // Load colors from settings
+        await this.loadColorsFromSettings();
         
         // Check if slug attribute is provided and load data
         const slug = this.getAttribute('slug');
         if (slug) {
             this.loadEventData(slug);
+        }
+    }
+
+    async loadColorsFromSettings() {
+        try {
+            // Fetch colors from API
+            const colors = await fetchColorSettings();
+            
+            // Set colors in component state
+            Object.entries(colors).forEach(([key, value]) => {
+                this.set(key, value);
+            });
+        } catch (error) {
+            console.error('Error loading color settings:', error);
         }
     }
 
@@ -178,11 +196,18 @@ class EventView extends App {
         const error = this.get('error');
         const event = this.get('event');
         
+        // Get colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
+        const darkColor = this.get('dark_color');
+        
         if (loading) {
             return `
                 <div class="flex items-center justify-center min-h-96">
                     <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[${primaryColor}] mx-auto mb-4"></div>
                         <p class="text-gray-600">Loading event...</p>
                     </div>
                 </div>
@@ -197,7 +222,7 @@ class EventView extends App {
                         <h1 class="text-2xl font-bold text-gray-800 mb-2">Event Not Found</h1>
                         <p class="text-gray-600 mb-6">The event you're looking for doesn't exist or has been removed.</p>
                         <a href="/public/community/events" 
-                           class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-colors">
                             <i class="fas fa-arrow-left"></i>
                             Back to Events
                         </a>
@@ -235,7 +260,7 @@ class EventView extends App {
                 
                 <!-- Status Badge - Absolute positioned at top-right corner -->
                 <div class="absolute top-4 right-4 z-10">
-                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusBadge.class} shadow-lg">
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-[${primaryColor}] bg-opacity-10 text-[${primaryColor}] shadow-lg">
                         <i class="${statusBadge.icon} mr-2"></i>
                         ${statusBadge.text}
                     </span>
@@ -244,9 +269,9 @@ class EventView extends App {
                 <!-- Location - Absolute positioned at bottom-left corner -->
                 ${event.location ? `
                     <div class="absolute bottom-4 left-4 z-10">
-                        <div class="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
+                        <div class="bg-[${darkColor}] bg-opacity-70 backdrop-blur-sm rounded-lg px-4 py-2 text-[${textColor}]">
                             <div class="flex items-center gap-2">
-                                <i class="fas fa-map-marker-alt text-red-400"></i>
+                                <i class="fas fa-map-marker-alt text-[${primaryColor}]"></i>
                                 <span class="text-sm font-medium">${event.location}</span>
                             </div>
                         </div>
@@ -268,12 +293,12 @@ class EventView extends App {
                         <!-- Title with Share/Copy buttons -->
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-2">${event.title || 'Untitled Event'}</h1>
+                                <h1 class="text-3xl font-bold text-[${secondaryColor}] mb-2">${event.title || 'Untitled Event'}</h1>
                                 ${event.subtitle ? `<p class="text-lg text-gray-600">${event.subtitle}</p>` : ''}
                             </div>
                             <div class="flex gap-3 ml-4">
                                 <i onclick="navigator.share ? navigator.share({title: '${event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
-                                   class="fas fa-share size-8 text-gray-600 hover:text-blue-600 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
+                                   class="fas fa-share size-8 text-gray-600 hover:text-[${primaryColor}] cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
                                 <i onclick="this.closest('app-event-view').copyEventUrl()" 
                                    class="fas fa-copy size-8 text-gray-600 hover:text-gray-800 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
                             </div>
@@ -282,7 +307,7 @@ class EventView extends App {
                         <!-- Description -->
                         ${event.description ? `
                             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                                <h3 class="text-lg font-semibold text-[${secondaryColor}] mb-3">Description</h3>
                                 <div class="prose prose-sm max-w-none text-gray-700">
                                     ${event.description}
                                 </div>
@@ -294,13 +319,13 @@ class EventView extends App {
                             <div class="space-y-4">
                                 <!-- Start Date & Time -->
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-calendar text-blue-600"></i>
+                                    <div class="w-10 h-10 bg-[${primaryColor}] bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-calendar text-[${primaryColor}]"></i>
                                     </div>
                                     <div>
                                         <p class="text-sm text-gray-600">Start Date & Time</p>
                                         <div class="flex items-center gap-2">
-                                            <p class="font-semibold text-gray-900">${this.formatDate(event.start_date)}</p>
+                                            <p class="font-semibold text-[${secondaryColor}]">${this.formatDate(event.start_date)}</p>
                                             <p class="text-sm text-gray-600 font-semibold bg-gray-100 px-2 py-1 rounded-md">${this.formatTime(event.start_date)}</p>
                                         </div>
                                     </div>
@@ -309,13 +334,13 @@ class EventView extends App {
                                 <!-- End Date & Time -->
                                 ${event.end_date ? `
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-calendar-times text-red-600"></i>
+                                        <div class="w-10 h-10 bg-[${accentColor}] bg-opacity-10 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-calendar-times text-[${accentColor}]"></i>
                                         </div>
                                         <div>
                                             <p class="text-sm text-gray-600">End Date & Time</p>
                                             <div class="flex items-center gap-2">
-                                                <p class="font-semibold text-gray-900">${this.formatDate(event.end_date)}</p>
+                                                <p class="font-semibold text-[${secondaryColor}]">${this.formatDate(event.end_date)}</p>
                                                 <p class="text-sm text-gray-600 font-semibold bg-gray-100 px-2 py-1 rounded-md">${this.formatTime(event.end_date)}</p>
                                             </div>
                                         </div>
@@ -324,12 +349,12 @@ class EventView extends App {
 
                                 <!-- Category -->
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-tag text-purple-600"></i>
+                                    <div class="w-10 h-10 bg-[${darkColor}] bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-tag text-[${darkColor}]"></i>
                                     </div>
                                     <div>
                                         <p class="text-sm text-gray-600">Category</p>
-                                        <p class="font-semibold text-gray-900">${event.category || 'General'}</p>
+                                        <p class="font-semibold text-[${secondaryColor}]">${event.category || 'General'}</p>
                                     </div>
                                 </div>
                             </div>

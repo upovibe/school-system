@@ -118,6 +118,7 @@ class EventsSection extends App {
         const secondaryColor = this.get('secondary_color');
         const accentColor = this.get('accent_color');
         const textColor = this.get('text_color');
+        const darkColor = this.get('dark_color');
         const hoverPrimary = this.get('hover_primary');
         const hoverSecondary = this.get('hover_secondary');
         const hoverAccent = this.get('hover_accent');

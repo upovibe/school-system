@@ -208,19 +208,13 @@ class NewsController {
             $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
             $rawData = file_get_contents('php://input');
 
-            if (strpos($content_type, 'multipart/form-data') !== false) {
-                // Use standard PHP $_POST and $_FILES for multipart data
-                $data = $_POST;
-                // $_FILES is already available globally
-                
-                // Debug logging
-                error_log("Update - Content-Type: " . $content_type);
-                error_log("Update - POST data: " . print_r($data, true));
-                error_log("Update - FILES data: " . print_r($_FILES, true));
+                        if (strpos($content_type, 'multipart/form-data') !== false) {
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
-                error_log("Update - JSON data: " . print_r($data, true));
             }
             
             // Auto-generate slug from title ONLY if title is being updated and is different

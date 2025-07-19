@@ -230,5 +230,41 @@ class EventModel extends BaseModel {
             throw new Exception('Error updating event status: ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Custom update method that allows null values
+     */
+    public function updateEvent($id, $data) {
+        try {
+            // Add updated_at timestamp
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            
+            // Build SET clause with placeholders (allow null values)
+            $setParts = [];
+            $params = [];
+            
+            foreach ($data as $key => $value) {
+                $setParts[] = "$key = ?";
+                $params[] = $value;
+            }
+            
+            if (empty($setParts)) {
+                return true;
+            }
+            
+            $setClause = implode(', ', $setParts);
+            $params[] = $id; // Add ID for WHERE clause
+            
+            $tableName = $this->getTableName();
+            $sql = "UPDATE {$tableName} SET $setClause WHERE id = ?";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute($params);
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error updating event: ' . $e->getMessage());
+        }
+    }
 }
 ?> 

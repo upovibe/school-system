@@ -346,7 +346,15 @@ class EventController {
                 $data['banner_image'] = $bannerData['original'];
             }
             
-            $result = $this->eventModel->update($id, $data);
+            // Ensure all fields are included in the update (even null values)
+            // Convert null strings to actual null for database
+            foreach ($data as $key => $value) {
+                if ($value === 'null' || $value === '') {
+                    $data[$key] = null;
+                }
+            }
+            
+            $result = $this->eventModel->updateEvent($id, $data);
             
             if ($result) {
                 // Get the updated event data

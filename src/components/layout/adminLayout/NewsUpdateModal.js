@@ -83,15 +83,6 @@ class NewsUpdateModal extends HTMLElement {
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
 
-            console.log('Form elements found:', {
-                titleInput: !!titleInput,
-                contentWysiwyg: !!contentWysiwyg,
-                isActiveSwitch: !!isActiveSwitch,
-                bannerFileUpload: !!bannerFileUpload
-            });
-
-            console.log('News data to be sent:', newsData);
-
             // Validate required fields
             if (!newsData.title) {
                 Toast.show({
@@ -141,11 +132,6 @@ class NewsUpdateModal extends HTMLElement {
                 newFiles.forEach(file => {
                     formData.append('banner', file, file.name);
                 });
-            }
-
-            console.log('FormData entries:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
             }
 
             // Update the news article with multipart data

@@ -28,8 +28,13 @@ class EventViewModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for close button click
+        // Listen for close button click (cancel)
         this.addEventListener('cancel', () => {
+            this.close();
+        });
+
+        // Listen for confirm button click (close)
+        this.addEventListener('confirm', () => {
             this.close();
         });
     }
@@ -110,7 +115,7 @@ class EventViewModal extends HTMLElement {
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="center" 
+                position="right" 
                 close-button="true"
                 size="lg">
                 <div slot="title">Event Details</div>
@@ -171,13 +176,7 @@ class EventViewModal extends HTMLElement {
                         </div>
                     </div>
                 </div>
-                <div slot="footer">
-                    <div class="flex justify-end">
-                        <ui-button variant="secondary" onclick="this.closest('event-view-modal').close()">
-                            Close
-                        </ui-button>
-                    </div>
-                </div>
+
             </ui-modal>
         `;
     }

@@ -4,8 +4,8 @@
 /**
  * Upload event banner image
  * 
- * @param array $file The uploaded file array from $_FILES
- * @return string|array The uploaded file path(s)
+ * @param array $file The uploaded file array from $_FILES or a manually parsed request
+ * @return array The uploaded file path(s)
  */
 function uploadEventBanner($file) {
     $uploadDir = __DIR__ . '/../uploads/events/';
@@ -29,8 +29,10 @@ function uploadEventBanner($file) {
     $filename = uniqid() . '_' . time() . '.' . $extension;
     $filepath = $uploadDir . $filename;
     
-    // Move uploaded file
-    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+    // Move uploaded file.
+    // move_uploaded_file() is for POST requests. For PUT requests where we parse the body manually,
+    // the file is already in a temporary location, so we can use rename() to move it.
+    if (!rename($file['tmp_name'], $filepath)) {
         throw new Exception('Failed to upload file.');
     }
     

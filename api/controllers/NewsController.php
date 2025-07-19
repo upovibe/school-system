@@ -217,10 +217,13 @@ class NewsController {
                 $data = json_decode($rawData, true) ?? [];
             }
             
-            // Auto-generate slug from title if title is being updated
+            // Auto-generate slug from title ONLY if title is being updated and is different
             if (isset($data['title']) && !empty($data['title']) && $data['title'] !== $existingNews['title']) {
                 $generatedSlug = generateSlug($data['title']);
                 $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'news', 'slug', $id);
+            } else {
+                // If title hasn't changed, remove slug from data to prevent update
+                unset($data['slug']);
             }
             
             // Handle banner upload if present

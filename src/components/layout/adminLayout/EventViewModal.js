@@ -1,5 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
 
 /**
  * Event View Modal Component
@@ -50,64 +51,50 @@ class EventViewModal extends HTMLElement {
     // Set event data for viewing
     setEventData(eventData) {
         this.eventData = eventData;
-        this.populateView();
+        // Re-render the modal with the new data
+        this.render();
     }
 
-    // Populate view with event data
-    populateView() {
-        if (!this.eventData) return;
-
-        // Update the modal content with event data
-        const titleElement = this.querySelector('#event-title');
-        const descriptionElement = this.querySelector('#event-description');
-        const categoryElement = this.querySelector('#event-category');
-        const statusElement = this.querySelector('#event-status');
-        const startDateElement = this.querySelector('#event-start-date');
-        const endDateElement = this.querySelector('#event-end-date');
-        const locationElement = this.querySelector('#event-location');
-        const bannerElement = this.querySelector('#event-banner');
-        const createdElement = this.querySelector('#event-created');
-        const updatedElement = this.querySelector('#event-updated');
-
-        if (titleElement) titleElement.textContent = this.eventData.title || 'N/A';
-        if (descriptionElement) descriptionElement.textContent = this.eventData.description || 'No description available';
-        if (categoryElement) categoryElement.textContent = this.eventData.category || 'N/A';
-        if (statusElement) {
-            statusElement.textContent = this.eventData.status || 'N/A';
-            // Add status-specific styling
-            statusElement.className = `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${this.getStatusBadgeClass(this.eventData.status)}`;
+    // Helper method to get proper image URL
+    getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
         }
-        if (startDateElement) startDateElement.textContent = this.eventData.start_date ? new Date(this.eventData.start_date).toLocaleString() : 'N/A';
-        if (endDateElement) endDateElement.textContent = this.eventData.end_date ? new Date(this.eventData.end_date).toLocaleString() : 'N/A';
-        if (locationElement) locationElement.textContent = this.eventData.location || 'TBD';
-        if (createdElement) createdElement.textContent = this.eventData.created_at ? new Date(this.eventData.created_at).toLocaleString() : 'N/A';
-        if (updatedElement) updatedElement.textContent = this.eventData.updated_at ? new Date(this.eventData.updated_at).toLocaleString() : 'N/A';
-
-        // Handle banner image
-        if (bannerElement) {
-            if (this.eventData.banner_image) {
-                bannerElement.innerHTML = `
-                    <img src="/api/${this.eventData.banner_image}" 
-                         alt="${this.eventData.title}" 
-                         class="w-full h-48 object-cover rounded-lg">
-                `;
-            } else {
-                bannerElement.innerHTML = `
-                    <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-image text-gray-400 text-4xl"></i>
-                    </div>
-                `;
-            }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
         }
+        
+        // If it's a relative path without /, construct the URL
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
     }
 
-    getStatusBadgeClass(status) {
+    // Helper method to get status badge color
+    getStatusBadgeColor(status) {
         switch (status) {
-            case 'upcoming': return 'bg-blue-100 text-blue-800';
-            case 'ongoing': return 'bg-green-100 text-green-800';
-            case 'completed': return 'bg-gray-100 text-gray-800';
-            case 'cancelled': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'upcoming': return 'info';
+            case 'ongoing': return 'success';
+            case 'completed': return 'secondary';
+            case 'cancelled': return 'error';
+            default: return 'secondary';
+        }
+    }
+
+    // Helper method to get status icon
+    getStatusIcon(status) {
+        switch (status) {
+            case 'upcoming': return 'fa-clock';
+            case 'ongoing': return 'fa-play';
+            case 'completed': return 'fa-check';
+            case 'cancelled': return 'fa-times';
+            default: return 'fa-question';
         }
     }
 
@@ -116,67 +103,144 @@ class EventViewModal extends HTMLElement {
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 position="right" 
-                close-button="true"
-                size="lg">
-                <div slot="title">Event Details</div>
-                <div class="space-y-6">
-                    <!-- Banner Image -->
-                    <div id="event-banner" class="w-full">
-                        <!-- Banner will be populated here -->
-                    </div>
+                size="lg"
+                close-button="true">
+                <div slot="title">View Event Details</div>
+                
+                <div>
+                    ${this.eventData ? `
+                        <!-- Event Title -->
+                        <div class="flex items-center gap-3 border-b pb-4">
+                            <h3 class="text-xl font-semibold text-gray-900">${this.eventData.title || 'N/A'}</h3>
+                            <ui-badge color="secondary"><i class="fas fa-tag mr-1"></i>${this.eventData.category || 'N/A'}</ui-badge>
+                            <ui-badge color="${this.getStatusBadgeColor(this.eventData.status)}">
+                                <i class="fas ${this.getStatusIcon(this.eventData.status)} mr-1"></i>${this.eventData.status || 'N/A'}
+                            </ui-badge>
+                        </div>
 
-                    <!-- Event Information -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Banner Image Preview -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-image text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Banner Image</h4>
+                            </div>
+                            ${this.eventData.banner_image ? `
+                                <div class="relative group">
+                                    <div class="relative w-full h-48">
+                                        <img src="${this.getImageUrl(this.eventData.banner_image)}" 
+                                             alt="${this.eventData.title}" 
+                                             class="w-full h-full object-cover rounded-lg border border-gray-200"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="text-center">
+                                                <i class="fas fa-image text-gray-400 text-xl mb-1"></i>
+                                                <p class="text-gray-500 text-xs">Image not found</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="window.open('${this.getImageUrl(this.eventData.banner_image)}', '_blank')" 
+                                                class="bg-white bg-opacity-90 text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <i class="fas fa-image text-gray-400 text-4xl mb-3"></i>
+                                        <p class="text-gray-500 text-sm font-medium">No banner image set</p>
+                                        <p class="text-gray-400 text-xs mt-1">Upload a banner image to enhance your event</p>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+
+                        <!-- Event Information -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Event Information</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-map-marker-alt mr-1"></i>Location
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.eventData.location || 'TBD'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-calendar-check mr-1"></i>Status
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.eventData.status || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time Information -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-clock text-green-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Date & Time</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-play mr-1"></i>Start Date & Time
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.eventData.start_date ? new Date(this.eventData.start_date).toLocaleString() : 'N/A'}</span>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-stop mr-1"></i>End Date & Time
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.eventData.end_date ? new Date(this.eventData.end_date).toLocaleString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="border-b pb-4">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">Description</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                                ${this.eventData.description ? `
+                                    <div class="text-gray-900 text-sm leading-relaxed">
+                                        ${this.eventData.description}
+                                    </div>
+                                ` : `
+                                    <p class="text-gray-500 italic">No description available</p>
+                                `}
+                            </div>
+                        </div>
+
+                        <!-- Timestamps -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
-                            <p id="event-title" class="text-lg font-semibold text-gray-900">-</p>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-history text-orange-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-plus mr-1"></i>Created
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.eventData.created_at ? new Date(this.eventData.created_at).toLocaleString() : 'N/A'}</span>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-edit mr-1"></i>Updated
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.eventData.updated_at ? new Date(this.eventData.updated_at).toLocaleString() : 'N/A'}</span>
+                                </div>
+                            </div>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <p id="event-category" class="text-gray-900">-</p>
+                    ` : `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">No event data available</p>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <p id="event-status" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">-</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                            <p id="event-location" class="text-gray-900">-</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
-                            <p id="event-start-date" class="text-gray-900">-</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
-                            <p id="event-end-date" class="text-gray-900">-</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Created</label>
-                            <p id="event-created" class="text-gray-900">-</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                            <p id="event-updated" class="text-gray-900">-</p>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <div id="event-description" class="text-gray-900 bg-gray-50 p-4 rounded-lg max-h-32 overflow-y-auto">
-                            -
-                        </div>
-                    </div>
+                    `}
                 </div>
-
             </ui-modal>
         `;
     }

@@ -152,6 +152,12 @@ class EventsSection extends App {
         }
     }
 
+    openEventPage(slugOrId) {
+        // Navigate to the event page using slug or ID
+        const eventUrl = `/public/community/events/${slugOrId}`;
+        window.location.href = eventUrl;
+    }
+
     // Helper method to get proper image URL
     getImageUrl(imagePath) {
         if (!imagePath) return null;
@@ -383,10 +389,13 @@ class EventsSection extends App {
                                         const statusBadge = getStatusBadge(event.status);
                                         const normalizedStatus = normalizeStatus(event.status);
                                         return `
-                                            <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card" data-status="${normalizedStatus}">
+                                            <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card cursor-pointer hover:bg-gray-100" 
+                                                 data-status="${normalizedStatus}" 
+                                                 data-event='${JSON.stringify(event).replace(/'/g, "&apos;")}'
+                                                 onclick="this.closest('events-section').openEventPage('${event.slug || event.id}')">
                                                 <div class="flex items-start justify-between">
                                                     <div class="flex-1 min-w-0">
-                                                        <h4 class="font-semibold text-[${secondaryColor}] mb-1 truncate" title="${event.title || 'Untitled Event'}">${event.title || 'Untitled Event'}</h4>
+                                                        <h4 class="font-semibold text-[${secondaryColor}] mb-1 truncate capitalize" title="${event.title || 'Untitled Event'}">${event.title || 'Untitled Event'}</h4>
                                                         <div class="flex items-center gap-4 text-sm text-gray-600">
                                                             <span class="flex items-center gap-1">
                                                                 <i class="fas fa-calendar text-[${primaryColor}]"></i>

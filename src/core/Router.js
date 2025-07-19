@@ -216,7 +216,9 @@ class Router {
                 const [first, second, third] = pathSegments;
                 possiblePaths.push(
                     `app/${first}/${second}/${third}/[id]/page.js`,  // app/dashboard/admin/users/[id]/page.js
+                    `app/${first}/${second}/${third}/[slug]/page.js`, // app/public/community/events/[slug]/page.js
                     `app/${first}/${second}/[id]/page.js`,           // app/dashboard/admin/[id]/page.js
+                    `app/${first}/${second}/[slug]/page.js`,         // app/public/community/[slug]/page.js
                     `app/${first}/[id]/page.js`                      // app/dashboard/[id]/page.js
                 );
             }

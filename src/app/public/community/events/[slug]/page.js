@@ -14,7 +14,6 @@ class EventPage extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        console.log('EventPage connectedCallback called'); // Debug log
         
         // Get slug from URL path
         const pathSegments = window.location.pathname.split('/');

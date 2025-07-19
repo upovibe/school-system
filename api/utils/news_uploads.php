@@ -38,9 +38,11 @@ function uploadNewsBanner($file) {
     $filename = uniqid() . '_' . time() . '.' . $extension;
     $originalPath = $uploadDir . $filename;
     
-    // Move uploaded file
-    if (!move_uploaded_file($file['tmp_name'], $originalPath)) {
-        throw new Exception('Failed to move uploaded file.');
+    // Move uploaded file.
+    // move_uploaded_file() is for POST requests. For PUT requests where we parse the body manually,
+    // the file is already in a temporary location, so we can use rename() to move it.
+    if (!rename($file['tmp_name'], $originalPath)) {
+        throw new Exception('Failed to upload file.');
     }
     
     // Create thumbnails

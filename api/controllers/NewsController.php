@@ -229,8 +229,14 @@ class NewsController {
             // Handle banner upload if present
             $bannerData = null;
             if (!empty($_FILES['banner']) && $_FILES['banner']['error'] === UPLOAD_ERR_OK) {
-                $bannerData = updateNewsBanner($_FILES['banner'], $existingNews['banner_image']);
-                $data['banner_image'] = $bannerData['original'];
+                try {
+                    $bannerData = uploadNewsBanner($_FILES['banner']);
+                    $data['banner_image'] = $bannerData['original'];
+                } catch (Exception $e) {
+                    // Log the error and continue without banner update
+                    error_log('Error uploading news banner: ' . $e->getMessage());
+                    // Don't fail the entire update if banner upload fails
+                }
             }
             
             // Update news

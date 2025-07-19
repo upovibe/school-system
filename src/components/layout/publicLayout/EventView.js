@@ -16,6 +16,20 @@ class EventView extends App {
         this.set('event', null);
     }
 
+    // Method to copy event URL to clipboard and show toast
+    copyEventUrl() {
+        const event = this.get('event');
+        const eventTitle = event?.title ? event.title.charAt(0).toUpperCase() + event.title.slice(1) : 'Event';
+        
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            Toast.show({ 
+                message: `${eventTitle} copied to clipboard!`, 
+                variant: 'success', 
+                duration: 3000 
+            });
+        });
+    }
+
     connectedCallback() {
         super.connectedCallback();
         
@@ -259,7 +273,7 @@ class EventView extends App {
                             <div class="flex gap-3 ml-4">
                                 <i onclick="navigator.share ? navigator.share({title: '${event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
                                    class="fas fa-share size-8 text-gray-600 hover:text-blue-600 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
-                                <i onclick="navigator.clipboard.writeText(window.location.href).then(() => { Toast.show({ message: 'Event URL copied to clipboard!', variant: 'success', duration: 3000 }); })" 
+                                <i onclick="this.closest('app-event-view').copyEventUrl()" 
                                    class="fas fa-copy size-8 text-gray-600 hover:text-gray-800 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
                             </div>
                         </div>

@@ -293,16 +293,42 @@ class EventController {
                 $data = json_decode(file_get_contents('php://input'), true);
             }
             
-            // Convert datetime-local format to database format if dates are provided
-            if (isset($data['start_date'])) {
-                $startDate = DateTime::createFromFormat('Y-m-d\TH:i', $data['start_date']);
+            // Convert date formats (handle multiple formats) - only if dates are provided
+            if (isset($data['start_date']) && !empty($data['start_date'])) {
+                $startDate = null;
+                $dateFormats = [
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'd/m/Y H:i',    // 25/9/2025 23:00
+                    'Y-m-d H:i'     // 2025-09-25 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $startDate = DateTime::createFromFormat($format, $data['start_date']);
+                    if ($startDate) break;
+                }
+                
                 if ($startDate) {
                     $data['start_date'] = $startDate->format('Y-m-d H:i:s');
                 }
             }
             
-            if (isset($data['end_date'])) {
-                $endDate = DateTime::createFromFormat('Y-m-d\TH:i', $data['end_date']);
+            if (isset($data['end_date']) && !empty($data['end_date'])) {
+                $endDate = null;
+                $dateFormats = [
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'd/m/Y H:i',    // 25/9/2025 23:00
+                    'Y-m-d H:i'     // 2025-09-25 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $endDate = DateTime::createFromFormat($format, $data['end_date']);
+                    if ($endDate) break;
+                }
+                
                 if ($endDate) {
                     $data['end_date'] = $endDate->format('Y-m-d H:i:s');
                 }

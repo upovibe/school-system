@@ -185,81 +185,65 @@ class Router {
     
     // Try to load a page automatically based on URL path
     async tryAutoLoad(path) {
-        // Smart pattern detection - try most likely patterns first
         const pathSegments = path.split('/').filter(Boolean);
-        const possiblePaths = [];
+        const possiblePaths = new Set(); // Use a Set to avoid duplicate paths
         const attemptedPaths = [];
         const errors = [];
-        
-        // If root path, try these
+
+        // 1. Add static path patterns
         if (path === '/') {
-            possiblePaths.push('app/page.js', 'app/home.js', 'app/index.js');
+            possiblePaths.add('app/page.js');
+        } else {
+            possiblePaths.add(`app${path}/page.js`); // e.g., app/about/us/page.js
+            possiblePaths.add(`app${path}.js`);      // e.g., app/about/us.js
         }
-        // For multi-segment paths, prioritize dynamic routes first (more likely)
-        else if (pathSegments.length > 1) {
-            // Try static patterns first (group folders)
-            possiblePaths.push(
-                `app${path}/page.js`,                  // Next.js style: /auth/signin → app/auth/signin/page.js
-                `app${path}.js`                        // Simple style: /auth/signin → app/auth/signin.js
-            );
+
+        // 2. Generate and add dynamic path patterns
+        // This creates patterns by replacing one segment at a time with a placeholder.
+        // For /public/community/events/science-fair-2024, it will try:
+        // - .../events/[slug].js
+        // - .../community/[slug]/...
+        // - etc.
+        for (let i = pathSegments.length - 1; i >= 0; i--) {
+            const tempSegments = [...pathSegments];
             
-            // Try common dynamic patterns
-            const [first, second] = pathSegments;
-            possiblePaths.push(
-                `app/${first}/[id]/page.js`,           // Most common: app/user/[id]/page.js
-                `app/${first}/[slug]/page.js`,         // Second most common
-                `app/${first}/[${second}]/page.js`     // Generic dynamic
-            );
-            
-            // Try deeper nested dynamic routes
-            if (pathSegments.length >= 4) {
-                const [first, second, third] = pathSegments;
-                possiblePaths.push(
-                    `app/${first}/${second}/${third}/[id]/page.js`,  // app/dashboard/admin/users/[id]/page.js
-                    `app/${first}/${second}/${third}/[slug]/page.js`, // app/public/community/events/[slug]/page.js
-                    `app/${first}/${second}/[id]/page.js`,           // app/dashboard/admin/[id]/page.js
-                    `app/${first}/${second}/[slug]/page.js`,         // app/public/community/[slug]/page.js
-                    `app/${first}/[id]/page.js`                      // app/dashboard/[id]/page.js
-                );
-            }
+            // Slug pattern
+            tempSegments[i] = '[slug]';
+            possiblePaths.add(`app/${tempSegments.join('/')}/page.js`);
+
+            // ID pattern
+            tempSegments[i] = '[id]';
+            possiblePaths.add(`app/${tempSegments.join('/')}/page.js`);
         }
-        // For single-segment paths, try static patterns first
-        else {
-            possiblePaths.push(
-                `app${path}.js`,                       // Simple style: /contact → app/contact.js
-                `app${path}/page.js`,                  // Next.js style: /contact → app/contact/page.js
-                `app${path}/index.js`,                 // Index style: /contact → app/contact/index.js
-                `app${path}/${path.split('/').pop()}.js`  // Named style: /contact → app/contact/contact.js
-            );
-        }
-        
+
         // Try each pattern and collect detailed error information
         for (const componentPath of possiblePaths) {
             attemptedPaths.push(componentPath);
             try {
-                const module = await import(`@/${componentPath}`);
-                
+                // FIX: URL-encode brackets in component path for dynamic route imports
+                const encodedComponentPath = componentPath.replace(/\[/g, '%5B').replace(/\]/g, '%5D');
+                const module = await import(`@/${encodedComponentPath}`);
+
                 // Cache it for next time and extract params if dynamic
                 this.componentCache.set(path, module.default);
-                
+
                 // If this was a dynamic route, extract and store params
                 if (componentPath.includes('[') && componentPath.includes(']')) {
                     const params = this.extractDynamicParams(componentPath, path);
                     this.componentCache.set(`${path}:params`, params);
                 }
-                
+
                 return module.default;
             } catch (error) {
+                // We expect errors here as we are probing, so we don't log them unless all probes fail.
                 errors.push({
                     path: componentPath,
-                    error: error.message,
-                    stack: error.stack
+                    error: error.message
                 });
-                // Continue to next pattern
                 continue;
             }
         }
-        
+
         // If we get here, no component was found - render detailed error
         this.renderComponentError(path, attemptedPaths, errors);
         return null;

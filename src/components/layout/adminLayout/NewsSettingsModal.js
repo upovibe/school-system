@@ -64,11 +64,9 @@ class NewsSettingsModal extends HTMLElement {
 
             const newsData = {
                 title: titleInput ? titleInput.value : '',
-                content: contentWysiwyg ? contentWysiwyg.getContent() : '',
+                content: contentWysiwyg ? contentWysiwyg.value : '',
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
-
-            console.log('News data being sent:', newsData); // Debug log
 
             // Validate required fields
             if (!newsData.title) {
@@ -121,10 +119,7 @@ class NewsSettingsModal extends HTMLElement {
                 });
             }
 
-            console.log('FormData entries:'); // Debug log
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
+
 
             // Create the news article with multipart data
             const response = await api.withToken(token).post('/news', formData);
@@ -157,7 +152,6 @@ class NewsSettingsModal extends HTMLElement {
 
         } catch (error) {
             console.error('❌ Error saving news:', error);
-            console.error('Error response:', error.response?.data); // Debug log
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create news article',

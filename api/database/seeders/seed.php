@@ -13,6 +13,8 @@ class Seed {
         
         $this->seedUsers();
         $this->seedPagesAndSettings();
+        $this->seedEvents();
+        $this->seedNews();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -37,6 +39,24 @@ class Seed {
         require_once __DIR__ . '/settings_seeder.php';
         $settingsSeeder = new SettingsSeeder($this->pdo);
         $settingsSeeder->run();
+    }
+    
+    private function seedEvents() {
+        echo "📅 Seeding events...\n";
+        
+        // Include the event seeder
+        require_once __DIR__ . '/event_seeder.php';
+        $eventSeeder = new EventSeeder($this->pdo);
+        $eventSeeder->run();
+    }
+    
+    private function seedNews() {
+        echo "📰 Seeding news...\n";
+        
+        // Include the news seeder
+        require_once __DIR__ . '/news_seeder.php';
+        $newsSeeder = new NewsSeeder($this->pdo);
+        $newsSeeder->run();
     }
     
 }

@@ -239,7 +239,7 @@ class EventView extends App {
                 <ui-breadcrumb-item href="/">Home</ui-breadcrumb-item>
                 <ui-breadcrumb-item href="/public/community">Community</ui-breadcrumb-item>
                 <ui-breadcrumb-item href="/public/community/events">Events</ui-breadcrumb-item>
-                <ui-breadcrumb-item>${event.title || 'Event Details'}</ui-breadcrumb-item>
+                <ui-breadcrumb-item>${event.title ? event.title.charAt(0).toUpperCase() + event.title.slice(1) : 'Event Details'}</ui-breadcrumb-item>
             </ui-breadcrumb>
 
             <!-- Event Banner - Always show (placeholder if no image) -->
@@ -253,7 +253,7 @@ class EventView extends App {
                 <div class="absolute inset-0 ${event.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gray-100">
                     <div class="text-center">
                         <i class="fas fa-calendar-alt text-gray-400 text-6xl mb-4"></i>
-                        <h2 class="text-2xl font-bold text-gray-700 mb-2">${event.title || 'Event'}</h2>
+                        <h2 class="text-2xl font-bold text-gray-700 mb-2">${event.title ? event.title.charAt(0).toUpperCase() + event.title.slice(1) : 'Event'}</h2>
                         <p class="text-lg text-gray-600">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'} • ${this.formatDate(event.start_date || event.event_date)}</p>
                     </div>
                 </div>
@@ -293,7 +293,7 @@ class EventView extends App {
                         <!-- Title with Share/Copy buttons -->
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
-                                <h1 class="text-3xl font-bold text-[${secondaryColor}] mb-2">${event.title || 'Untitled Event'}</h1>
+                                <h1 class="text-3xl font-bold text-[${secondaryColor}] mb-2">${event.title ? event.title.charAt(0).toUpperCase() + event.title.slice(1) : 'Untitled Event'}</h1>
                                 ${event.subtitle ? `<p class="text-lg text-gray-600">${event.subtitle}</p>` : ''}
                             </div>
                             <div class="flex gap-3 ml-4">

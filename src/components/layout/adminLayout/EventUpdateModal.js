@@ -59,6 +59,14 @@ class EventUpdateModal extends HTMLElement {
         this.eventData = eventData;
         // Re-render the modal with the new data
         this.render();
+        
+        // Set the banner value in the file upload component after render
+        setTimeout(() => {
+            const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
+            if (bannerFileUpload && eventData.banner_image) {
+                bannerFileUpload.setValue(eventData.banner_image);
+            }
+        }, 0); // Increased timeout to ensure DOM is ready
     }
 
     // Update the event
@@ -87,7 +95,7 @@ class EventUpdateModal extends HTMLElement {
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
 
-            console.log('Event data being sent:', eventData); // Debug log
+
 
             // Validate required fields
             if (!eventData.title) {
@@ -150,10 +158,7 @@ class EventUpdateModal extends HTMLElement {
                 });
             }
 
-            console.log('FormData entries:'); // Debug log
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
+
 
             // Update the event with multipart data
             const response = await api.withToken(token).put(`/events/${this.eventData.id}`, formData);

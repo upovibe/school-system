@@ -232,36 +232,46 @@ class EventModel extends BaseModel {
     }
     
     /**
-     * Custom update method that allows null values
+     * Custom update method that allows null values and is safe from mass assignment
      */
     public function updateEvent($id, $data) {
         try {
-            // Add updated_at timestamp
-            $data['updated_at'] = date('Y-m-d H:i:s');
-            
-            // Build SET clause with placeholders (allow null values)
-            $setParts = [];
-            $params = [];
-            
-            foreach ($data as $key => $value) {
-                $setParts[] = "$key = ?";
-                $params[] = $value;
-            }
-            
-            if (empty($setParts)) {
+            // Filter data to only include fillable fields
+            $fillableData = array_filter(
+                $data,
+                function ($key) {
+                    return in_array($key, static::$fillable);
+                },
+                ARRAY_FILTER_USE_KEY
+            );
+
+            // If there is no valid data to update, return true
+            if (empty($fillableData)) {
                 return true;
             }
+
+            // Add updated_at timestamp if the model uses them
+            if (static::$timestamps) {
+                $fillableData['updated_at'] = date('Y-m-d H:i:s');
+            }
             
+            // Build SET clause with placeholders
+            $setParts = [];
+            foreach ($fillableData as $key => $value) {
+                $setParts[] = "`{$key}` = ?";
+            }
             $setClause = implode(', ', $setParts);
+            
+            // Prepare parameters for execution
+            $params = array_values($fillableData);
             $params[] = $id; // Add ID for WHERE clause
             
             $tableName = $this->getTableName();
-            $sql = "UPDATE {$tableName} SET $setClause WHERE id = ?";
+            $sql = "UPDATE `{$tableName}` SET {$setClause} WHERE `id` = ?";
             
             $stmt = $this->pdo->prepare($sql);
-            $result = $stmt->execute($params);
-            
-            return $result;
+            return $stmt->execute($params);
+
         } catch (PDOException $e) {
             throw new Exception('Error updating event: ' . $e->getMessage());
         }

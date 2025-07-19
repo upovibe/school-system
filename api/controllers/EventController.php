@@ -53,12 +53,18 @@ class EventController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            // Handle multipart form data first (for file uploads)
-            if (!empty($_POST)) {
-                $data = $_POST;
+            // Handle multipart form data or JSON data for PUT/PATCH requests
+            $data = [];
+            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
+
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
-                // Fall back to JSON if no form data
-                $data = json_decode(file_get_contents('php://input'), true);
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
             }
             
 
@@ -285,12 +291,18 @@ class EventController {
                 return;
             }
             
-            // Handle multipart form data first (for file uploads)
-            if (!empty($_POST)) {
-                $data = $_POST;
+            // Handle multipart form data or JSON data for PUT/PATCH requests
+            $data = [];
+            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
+
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
-                // Fall back to JSON if no form data
-                $data = json_decode(file_get_contents('php://input'), true);
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
             }
             
             // Convert date formats (handle multiple formats) - only if dates are provided

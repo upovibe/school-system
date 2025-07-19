@@ -165,26 +165,10 @@ class EventUpdateModal extends HTMLElement {
                 duration: 3000
             });
 
-            // Construct the updated event data from response
-            const updatedEvent = {
-                id: this.eventData.id,
-                title: eventData.title,
-                description: eventData.description,
-                category: eventData.category,
-                status: eventData.status,
-                start_date: eventData.start_date,
-                end_date: eventData.end_date,
-                location: eventData.location,
-                is_active: eventData.is_active,
-                banner_image: response.data.data?.banner_image || this.eventData.banner_image,
-                created_at: this.eventData.created_at,
-                updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-            };
-
-            // Close modal and dispatch event
+            // Close modal and dispatch event with the updated data from the server
             this.close();
             this.dispatchEvent(new CustomEvent('event-updated', {
-                detail: { event: updatedEvent },
+                detail: { event: response.data.data },
                 bubbles: true,
                 composed: true
             }));

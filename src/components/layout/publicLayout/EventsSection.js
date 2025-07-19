@@ -248,7 +248,12 @@ class EventsSection extends App {
         const formatDate = (dateString) => {
             if (!dateString) return 'TBD';
             try {
-                return new Date(dateString).toLocaleDateString();
+                // Handle different date formats from API
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString;
+                }
+                return date.toLocaleDateString();
             } catch (error) {
                 return dateString;
             }
@@ -257,7 +262,16 @@ class EventsSection extends App {
         // Helper function to format time
         const formatTime = (timeString) => {
             if (!timeString) return 'TBD';
-            return timeString;
+            try {
+                // If it's a full datetime string, extract time
+                if (timeString.includes(' ')) {
+                    const timePart = timeString.split(' ')[1];
+                    return timePart.substring(0, 5); // Return HH:MM format
+                }
+                return timeString;
+            } catch (error) {
+                return timeString;
+            }
         };
 
         return `
@@ -329,16 +343,16 @@ class EventsSection extends App {
                                         return `
                                             <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] event-card" data-status="${event.status?.toLowerCase() || 'unknown'}">
                                                 <div class="flex items-start justify-between">
-                                                    <div class="flex-1">
-                                                        <h4 class="font-semibold text-[${secondaryColor}] mb-1">${event.title || 'Untitled Event'}</h4>
+                                                    <div class="flex-1 min-w-0">
+                                                        <h4 class="font-semibold text-[${secondaryColor}] mb-1 truncate" title="${event.title || 'Untitled Event'}">${event.title || 'Untitled Event'}</h4>
                                                         <div class="flex items-center gap-4 text-sm text-gray-600">
                                                             <span class="flex items-center gap-1">
                                                                 <i class="fas fa-calendar text-[${primaryColor}]"></i>
-                                                                ${formatDate(event.event_date)}
+                                                                ${formatDate(event.start_date || event.event_date)}
                                                             </span>
                                                             <span class="flex items-center gap-1">
                                                                 <i class="fas fa-clock text-[${primaryColor}]"></i>
-                                                                ${formatTime(event.event_time)}
+                                                                ${formatTime(event.start_date || event.event_time)}
                                                             </span>
                                                         </div>
                                                         <div class="mt-2">
@@ -348,7 +362,7 @@ class EventsSection extends App {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div class="ml-4">
+                                                    <div class="ml-4 flex-shrink-0">
                                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusBadge.class}">
                                                             <i class="${statusBadge.icon} mr-1 text-xs"></i>
                                                             ${statusBadge.text}

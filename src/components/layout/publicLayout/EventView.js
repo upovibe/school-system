@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import Toast from '@/components/ui/Toast.js';
 import '@/components/layout/publicLayout/EventList.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import '@/components/common/PageLoader.js';
 
 /**
  * Event View Component
@@ -14,8 +15,9 @@ class EventView extends App {
         super();
         // Initialize with loading state
         this.set('loading', true);
-        this.set('error', null);
+        this.set('colorsLoaded', false);
         this.set('event', null);
+        this.set('error', null);
     }
 
     // Method to copy event URL to clipboard and show toast
@@ -54,8 +56,11 @@ class EventView extends App {
             Object.entries(colors).forEach(([key, value]) => {
                 this.set(key, value);
             });
+            
+            // Mark colors as loaded
+            this.set('colorsLoaded', true);
         } catch (error) {
-            console.error('Error loading color settings:', error);
+            this.set('colorsLoaded', true);
         }
     }
 
@@ -193,6 +198,7 @@ class EventView extends App {
 
     render() {
         const loading = this.get('loading');
+        const colorsLoaded = this.get('colorsLoaded');
         const error = this.get('error');
         const event = this.get('event');
         
@@ -203,15 +209,9 @@ class EventView extends App {
         const textColor = this.get('text_color');
         const darkColor = this.get('dark_color');
         
-        if (loading) {
-            return `
-                <div class="flex items-center justify-center min-h-96">
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[${primaryColor}] mx-auto mb-4"></div>
-                        <p class="text-gray-600">Loading event...</p>
-                    </div>
-                </div>
-            `;
+        // Show loading if either colors or event data is still loading
+        if (loading || !colorsLoaded) {
+            return `<page-loader></page-loader>`;
         }
 
         if (!loading && (error || !event)) {

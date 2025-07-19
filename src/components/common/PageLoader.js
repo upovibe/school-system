@@ -18,8 +18,12 @@ class PageLoader extends HTMLElement {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    min-height: 200px;
+                    min-height: 100vh;
                     width: 100%;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    z-index: 9999;
                 }
                 
                 .loader {

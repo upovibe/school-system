@@ -17,13 +17,15 @@ if (!document.querySelector('link[href*="quill"]')) {
 class EventPage extends App {
     constructor() {
         super();
-        this.event = null;
-        this.loading = true;
-        this.error = null;
+        // Initialize with loading state
+        this.set('loading', true);
+        this.set('error', null);
+        this.set('event', null);
     }
 
     connectedCallback() {
         super.connectedCallback();
+        console.log('EventPage connectedCallback called'); // Debug log
         this.loadEventData();
     }
 
@@ -33,32 +35,39 @@ class EventPage extends App {
             const pathSegments = window.location.pathname.split('/');
             const slug = pathSegments[pathSegments.length - 1];
             
+            console.log('Loading event data for slug:', slug); // Debug log
+            
             if (!slug) {
-                this.error = 'Event not found';
-                this.loading = false;
-                this.render();
+                this.set('error', 'Event not found');
+                this.set('loading', false);
                 return;
             }
 
             // Fetch event data by slug
-            const response = await fetch(`/api/events/slug/${slug}`);
+            const apiUrl = `/api/events/slug/${slug}`;
+            console.log('Fetching from:', apiUrl); // Debug log
+            
+            const response = await fetch(apiUrl);
+            console.log('Response status:', response.status); // Debug log
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('Response data:', data); // Debug log
                 if (data.success && data.data) {
-                    this.event = data.data;
+                    this.set('event', data.data);
                 } else {
-                    this.error = 'Event not found';
+                    this.set('error', 'Event not found');
                 }
             } else {
-                this.error = 'Failed to load event';
+                console.error('Response not ok:', response.status, response.statusText); // Debug log
+                this.set('error', 'Failed to load event');
             }
         } catch (error) {
             console.error('Error loading event:', error);
-            this.error = 'Error loading event';
+            this.set('error', 'Error loading event');
         }
         
-        this.loading = false;
-        this.render();
+        this.set('loading', false);
     }
 
     // Helper method to get proper image URL
@@ -152,7 +161,14 @@ class EventPage extends App {
     }
 
     render() {
-        if (this.loading) {
+        const loading = this.get('loading');
+        const error = this.get('error');
+        const event = this.get('event');
+        
+        console.log('Render called - loading:', loading, 'error:', error, 'event:', event); // Debug log
+        
+        if (loading) {
+            console.log('Showing loading spinner'); // Debug log
             return `
                 <div class="min-h-screen bg-gray-50">
                     <div class="container mx-auto px-4 py-8">
@@ -167,7 +183,8 @@ class EventPage extends App {
             `;
         }
 
-        if (this.error || !this.event) {
+        if (!loading && (error || !event)) {
+            console.log('Showing error or no event'); // Debug log
             return `
                 <div class="min-h-screen bg-gray-50">
                     <div class="container mx-auto px-4 py-8">
@@ -188,32 +205,26 @@ class EventPage extends App {
             `;
         }
 
-        const statusBadge = this.getStatusBadge(this.event.status);
+        const statusBadge = this.getStatusBadge(event.status);
+        console.log('Rendering main event content'); // Debug log
 
         return `
             <div class="min-h-screen bg-gray-50">
                 <!-- Header -->
-                <div class="bg-white shadow-sm border-b">
-                    <div class="container mx-auto px-4 py-4">
-                        <div class="flex items-center gap-4">
-                            <a href="/public/community/events" 
-                               class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
-                                <i class="fas fa-arrow-left"></i>
-                                <span>Back to Events</span>
-                            </a>
-                            <div class="h-4 w-px bg-gray-300"></div>
-                            <span class="text-gray-500">Event Details</span>
-                        </div>
-                    </div>
-                </div>
+                <ui-breadcrumb separator="chevron" color="primary">
+                            <ui-breadcrumb-item href="/public">Home</ui-breadcrumb-item>
+                            <ui-breadcrumb-item href="/public/community">Community</ui-breadcrumb-item>
+                            <ui-breadcrumb-item href="/public/community/events">Events</ui-breadcrumb-item>
+                            <ui-breadcrumb-item>${event.title || 'Event Details'}</ui-breadcrumb-item>
+                        </ui-breadcrumb>
 
                 <div class="container mx-auto px-4 py-8">
                     <div class="max-w-4xl mx-auto">
                         <!-- Event Banner -->
-                        ${this.event.banner_image ? `
+                        ${event.banner_image ? `
                             <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg mb-8">
-                                <img src="${this.getImageUrl(this.event.banner_image)}" 
-                                     alt="${this.event.title}" 
+                                <img src="${this.getImageUrl(event.banner_image)}" 
+                                     alt="${event.title}" 
                                      class="w-full h-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
@@ -233,8 +244,8 @@ class EventPage extends App {
                             <div class="p-8 border-b border-gray-100">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex-1">
-                                        <h1 class="text-3xl font-bold text-gray-900 mb-2">${this.event.title || 'Untitled Event'}</h1>
-                                        <p class="text-gray-600 text-lg">${this.event.subtitle || ''}</p>
+                                        <h1 class="text-3xl font-bold text-gray-900 mb-2">${event.title || 'Untitled Event'}</h1>
+                                        <p class="text-gray-600 text-lg">${event.subtitle || ''}</p>
                                     </div>
                                     <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusBadge.class}">
                                         <i class="${statusBadge.icon} mr-2"></i>
@@ -250,7 +261,7 @@ class EventPage extends App {
                                         </div>
                                         <div>
                                             <p class="text-sm text-gray-600">Date</p>
-                                            <p class="font-semibold text-gray-900">${this.formatDate(this.event.start_date || this.event.event_date)}</p>
+                                            <p class="font-semibold text-gray-900">${this.formatDate(event.start_date || event.event_date)}</p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-3">
@@ -259,7 +270,7 @@ class EventPage extends App {
                                         </div>
                                         <div>
                                             <p class="text-sm text-gray-600">Time</p>
-                                            <p class="font-semibold text-gray-900">${this.formatTime(this.event.start_date || this.event.event_time)}</p>
+                                            <p class="font-semibold text-gray-900">${this.formatTime(event.start_date || event.event_time)}</p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-3">
@@ -268,7 +279,7 @@ class EventPage extends App {
                                         </div>
                                         <div>
                                             <p class="text-sm text-gray-600">Category</p>
-                                            <p class="font-semibold text-gray-900">${this.event.category || 'General'}</p>
+                                            <p class="font-semibold text-gray-900">${event.category || 'General'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -280,21 +291,21 @@ class EventPage extends App {
                                     <!-- Main Content -->
                                     <div class="lg:col-span-2 space-y-6">
                                         <!-- Description -->
-                                        ${this.event.description ? `
+                                        ${event.description ? `
                                             <div>
                                                 <h3 class="text-xl font-semibold text-gray-900 mb-4">Description</h3>
                                                 <div class="prose prose-lg max-w-none">
-                                                    ${this.event.description}
+                                                    ${event.description}
                                                 </div>
                                             </div>
                                         ` : ''}
 
                                         <!-- Content -->
-                                        ${this.event.content ? `
+                                        ${event.content ? `
                                             <div>
                                                 <h3 class="text-xl font-semibold text-gray-900 mb-4">Details</h3>
                                                 <div class="prose prose-lg max-w-none">
-                                                    ${this.event.content}
+                                                    ${event.content}
                                                 </div>
                                             </div>
                                         ` : ''}
@@ -303,12 +314,12 @@ class EventPage extends App {
                                     <!-- Sidebar -->
                                     <div class="space-y-6">
                                         <!-- Location -->
-                                        ${this.event.location ? `
+                                        ${event.location ? `
                                             <div class="bg-gray-50 rounded-xl p-6">
                                                 <h4 class="font-semibold text-gray-900 mb-3">Location</h4>
                                                 <div class="flex items-start gap-3">
                                                     <i class="fas fa-map-marker-alt text-red-500 text-lg mt-1"></i>
-                                                    <p class="text-gray-700">${this.event.location}</p>
+                                                    <p class="text-gray-700">${event.location}</p>
                                                 </div>
                                             </div>
                                         ` : ''}
@@ -317,22 +328,22 @@ class EventPage extends App {
                                         <div class="bg-gray-50 rounded-xl p-6">
                                             <h4 class="font-semibold text-gray-900 mb-3">Event Information</h4>
                                             <div class="space-y-3">
-                                                ${this.event.end_date ? `
+                                                ${event.end_date ? `
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-gray-600">End Date:</span>
-                                                        <span class="font-medium">${this.formatDate(this.event.end_date)}</span>
+                                                        <span class="font-medium">${this.formatDate(event.end_date)}</span>
                                                     </div>
                                                 ` : ''}
-                                                ${this.event.max_participants ? `
+                                                ${event.max_participants ? `
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-gray-600">Max Participants:</span>
-                                                        <span class="font-medium">${this.event.max_participants}</span>
+                                                        <span class="font-medium">${event.max_participants}</span>
                                                     </div>
                                                 ` : ''}
-                                                ${this.event.organizer ? `
+                                                ${event.organizer ? `
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-gray-600">Organizer:</span>
-                                                        <span class="font-medium">${this.event.organizer}</span>
+                                                        <span class="font-medium">${event.organizer}</span>
                                                     </div>
                                                 ` : ''}
                                             </div>
@@ -342,7 +353,7 @@ class EventPage extends App {
                                         <div class="bg-gray-50 rounded-xl p-6">
                                             <h4 class="font-semibold text-gray-900 mb-3">Share Event</h4>
                                             <div class="flex gap-2">
-                                                <button onclick="navigator.share ? navigator.share({title: '${this.event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
+                                                <button onclick="navigator.share ? navigator.share({title: '${event.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
                                                         class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
                                                     <i class="fas fa-share mr-2"></i>
                                                     Share

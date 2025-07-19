@@ -65,16 +65,7 @@ class NewsUpdateModal extends HTMLElement {
             if (bannerFileUpload && newsData.banner_image) {
                 bannerFileUpload.setValue(newsData.banner_image);
             }
-            
-            // Set the content in the Wysiwyg component after render
-            const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
-            if (contentWysiwyg && newsData.content) {
-                // Wait a bit more for Wysiwyg to fully initialize
-                setTimeout(() => {
-                    contentWysiwyg.setValue(newsData.content);
-                }, 0);
-            }
-        }, 100); // Increased timeout to ensure DOM is ready
+        }, 0); // Increased timeout to ensure DOM is ready
     }
 
     // Update the news article
@@ -91,6 +82,15 @@ class NewsUpdateModal extends HTMLElement {
                 content: contentWysiwyg ? contentWysiwyg.value : '',
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
+
+            console.log('Form elements found:', {
+                titleInput: !!titleInput,
+                contentWysiwyg: !!contentWysiwyg,
+                isActiveSwitch: !!isActiveSwitch,
+                bannerFileUpload: !!bannerFileUpload
+            });
+
+            console.log('News data to be sent:', newsData);
 
             // Validate required fields
             if (!newsData.title) {
@@ -141,6 +141,11 @@ class NewsUpdateModal extends HTMLElement {
                 newFiles.forEach(file => {
                     formData.append('banner', file, file.name);
                 });
+            }
+
+            console.log('FormData entries:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
             }
 
             // Update the news article with multipart data
@@ -198,6 +203,7 @@ class NewsUpdateModal extends HTMLElement {
                                 placeholder="Enter news content..."
                                 height="200px"
                                 toolbar="full"
+                                value="${this.newsData?.content || ''}"
                                 class="w-full">
                             </ui-wysiwyg>
                         </div>

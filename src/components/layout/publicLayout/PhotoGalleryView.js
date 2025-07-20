@@ -246,15 +246,15 @@ class PhotoGalleryView extends App {
 
             <!-- Gallery Images Grid -->
             ${gallery.images && gallery.images.length > 0 ? `
-                <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                <div class="bg-[${primaryColor}]/5 rounded-3xl shadow p-8 mb-6">
                     <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-2">Gallery Images</h2>
+                        <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-2">${gallery.images.length} Gallery Image${gallery.images.length === 1 ? '' : 's'}</h2>
                         <p class="text-gray-600">Browse through all ${gallery.images.length} photos in this gallery</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         ${gallery.images.map((image, index) => `
-                            <div class="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                            <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
                                 <div class="relative aspect-square">
                                     <img src="${this.getImageUrl(image)}" 
                                          alt="${gallery.name} - Image ${index + 1}" 

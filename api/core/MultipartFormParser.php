@@ -37,7 +37,29 @@ class MultipartFormParser {
             $parsedPart = self::parsePart($part);
             
             if ($parsedPart['isFile']) {
-                $files[$parsedPart['fieldName']] = $parsedPart['fileData'];
+                $fieldName = $parsedPart['fieldName'];
+                // Handle multiple files with the same field name
+                if (isset($files[$fieldName])) {
+                    // Convert single file to array if it's the first duplicate
+                    if (!isset($files[$fieldName]['name']) || !is_array($files[$fieldName]['name'])) {
+                        $singleFile = $files[$fieldName];
+                        $files[$fieldName] = [
+                            'name' => [$singleFile['name']],
+                            'type' => [$singleFile['type']],
+                            'tmp_name' => [$singleFile['tmp_name']],
+                            'error' => [$singleFile['error']],
+                            'size' => [$singleFile['size']]
+                        ];
+                    }
+                    // Add the new file to the array
+                    $files[$fieldName]['name'][] = $parsedPart['fileData']['name'];
+                    $files[$fieldName]['type'][] = $parsedPart['fileData']['type'];
+                    $files[$fieldName]['tmp_name'][] = $parsedPart['fileData']['tmp_name'];
+                    $files[$fieldName]['error'][] = $parsedPart['fileData']['error'];
+                    $files[$fieldName]['size'][] = $parsedPart['fileData']['size'];
+                } else {
+                    $files[$fieldName] = $parsedPart['fileData'];
+                }
             } else {
                 $data[$parsedPart['fieldName']] = $parsedPart['value'];
             }

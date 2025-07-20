@@ -264,7 +264,7 @@ class GalleriesPage extends App {
         const tableColumns = [
             { key: 'index', label: 'No.' },
             { key: 'name', label: 'Name' },
-            { key: 'slug', label: 'Slug' },
+            // { key: 'slug', label: 'Slug' },
             { key: 'images_count', label: 'Images' },
             { key: 'status', label: 'Status' },
             { key: 'updated', label: 'Updated' }

@@ -27,11 +27,15 @@ class ContactPage extends App {
             
             // Load contact settings
             const settingsData = await this.loadContactSettings();
+            
+            // Load page data
+            const pageData = await this.loadPageData();
 
             // Combine all data
             const allData = {
                 colors,
-                settings: settingsData
+                settings: settingsData,
+                pageData: pageData
             };
 
             // Cache in global store
@@ -47,6 +51,30 @@ class ContactPage extends App {
         }
     }
 
+    async loadPageData() {
+        // Check if data is already cached in global store
+        const globalState = store.getState();
+        if (globalState.contactPageContentData) {
+            return globalState.contactPageContentData;
+        }
+
+        // If not cached, fetch from API
+        try {
+            const response = await api.get('/pages/slug/contact');
+            if (response.data.success) {
+                const pageData = response.data.data;
+                
+                // Cache the data in global store
+                store.setState({ contactPageContentData: pageData });
+                
+                return pageData;
+            }
+        } catch (error) {
+            console.error('Error fetching contact page data:', error);
+            return null;
+        }
+    }
+
     async loadContactSettings() {
         try {
             const settingsKeys = [
@@ -56,23 +84,23 @@ class ContactPage extends App {
             ];
 
             const settingsPromises = settingsKeys.map(async (key) => {
-                try {
+            try {
                     const response = await api.get(`/settings/key/${key}`);
                     return response.data.success ? { key, value: response.data.data.setting_value } : null;
                 } catch (error) {
                     console.error(`Error fetching setting ${key}:`, error);
                     return null;
-                }
+    }
             });
 
             const settingsResults = await Promise.all(settingsPromises);
-            
+        
             // Convert to object
             const settingsObject = {};
             settingsResults.forEach(result => {
                 if (result) {
                     settingsObject[result.key] = result.value;
-                }
+    }
             });
 
             return settingsObject;
@@ -112,6 +140,7 @@ class ContactPage extends App {
                 <!-- Contact Section Alt Component -->
                 <contact-section-alt 
                     colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pageData || {})}'
                     settings='${escapeJsonForAttribute({
                         contact_title: allData.settings.contact_title,
                         contact_subtitle: allData.settings.contact_subtitle,

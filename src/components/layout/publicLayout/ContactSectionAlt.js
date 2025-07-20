@@ -4,11 +4,12 @@ import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Contact Section Alt Component
  * 
- * Displays a creative contact form with modern design
+ * Modern contact section with form, information, map, and social media links
  */
 class ContactSectionAlt extends App {
     constructor() {
@@ -31,6 +32,7 @@ class ContactSectionAlt extends App {
     loadDataFromProps() {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
         const settingsAttr = this.getAttribute('settings');
 
         if (colorsAttr) {
@@ -41,6 +43,13 @@ class ContactSectionAlt extends App {
                 });
             } catch (error) {
                 console.error('Error parsing colors:', error);
+            }
+        }
+
+        if (pageDataAttr) {
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
+                this.set('pageData', pageData);
             }
         }
 
@@ -189,6 +198,9 @@ class ContactSectionAlt extends App {
             { key: 'youtubeUrl', icon: 'fab fa-youtube', name: 'YouTube', color: '#FF0000' }
         ];
 
+        const secondaryColor = this.get('secondary_color');
+        const primaryColor = this.get('primary_color');
+
         return socialLinks
             .filter(link => this.get(link.key) && this.get(link.key).trim() !== '')
             .map(link => `
@@ -250,6 +262,18 @@ class ContactSectionAlt extends App {
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>
                 </div>
+
+                <!-- Page Content Section -->
+                ${this.get('pageData')?.content ? `
+                    <div class="mb-16">
+                        <div class="bg-white rounded-[2rem] shadow-2xl p-8">
+                            <content-display 
+                                content="${this.get('pageData').content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                            </content-display>
+                        </div>
+                    </div>
+                ` : ''}
 
                 <!-- Contact Content -->
                 <div class="relative">

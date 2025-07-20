@@ -161,6 +161,7 @@ class DashboardLayout extends App {
                 { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
                 { label: 'Events Management', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                 { label: 'News Management', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
+                { label: 'Gallery Management', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
                 { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
                 { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },
                 { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/system-report' }
@@ -205,7 +206,7 @@ class DashboardLayout extends App {
             'system-settings': 'System Settings', 'users': 'User Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
-            'messages': 'Messages', 'user-role': 'User Roles'
+            'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management'
         };
         return titles[lastSegment] || 'Dashboard';
     }

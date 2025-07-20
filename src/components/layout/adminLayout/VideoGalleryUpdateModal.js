@@ -1,4 +1,3 @@
-import App from '@/core/App.js';
 import '@/components/ui/Modal.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
@@ -12,222 +11,135 @@ import api from '@/services/api.js';
  * 
  * Modal for updating existing video galleries
  */
-class VideoGalleryUpdateModal extends App {
+class VideoGalleryUpdateModal extends HTMLElement {
     constructor() {
         super();
         this.videoGalleryData = null;
         this.videoLinks = [''];
-        this.loading = false;
-        
-        this.set('videoGalleryData', null);
-        this.set('videoLinks', ['']);
-        this.set('loading', false);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     connectedCallback() {
-        super.connectedCallback();
+        // Initial render can be empty or a placeholder
+        this.innerHTML = ''; 
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        // Listen for confirm button click (Update Video Gallery)
-        this.addEventListener('confirm', () => {
-            this.handleSubmit();
-        });
-
-        // Listen for cancel button click
-        this.addEventListener('cancel', () => {
-            this.close();
-        });
+        this.addEventListener('confirm', this.handleSubmit);
+        this.addEventListener('cancel', () => this.close());
 
         this.addEventListener('click', (e) => {
-            const addVideoButton = e.target.closest('[data-action="add-video-link"]');
-            if (addVideoButton) {
+            if (e.target.closest('[data-action="add-video-link"]')) {
                 e.preventDefault();
                 this.addVideoLink();
             }
-
-            const removeVideoButton = e.target.closest('[data-action="remove-video-link"]');
-            if (removeVideoButton) {
+            if (e.target.closest('[data-action="remove-video-link"]')) {
                 e.preventDefault();
-                const index = parseInt(removeVideoButton.dataset.index);
+                const index = parseInt(e.target.closest('[data-action="remove-video-link"]').dataset.index, 10);
                 this.removeVideoLink(index);
-            }
-        });
-
-        // Handle video link input changes
-        this.addEventListener('input', (e) => {
-            const input = e.target.closest('ui-input');
-            if (input && input.hasAttribute('data-video-index')) {
-                const index = parseInt(input.getAttribute('data-video-index'));
-                const value = input.value;
-                this.updateVideoLink(index, value);
             }
         });
     }
 
     setVideoGalleryData(data) {
-        this.set('videoGalleryData', data);
-        if (data && data.video_links) {
-            this.set('videoLinks', [...data.video_links]);
-        } else {
-            this.set('videoLinks', ['']);
-        }
-        this.populateForm();
+        this.videoGalleryData = data;
+        this.videoLinks = (data && data.video_links && data.video_links.length > 0) ? [...data.video_links] : [''];
+        this.render();
     }
 
-    populateForm() {
-        const data = this.get('videoGalleryData');
-        if (!data) return;
+    open() {
+        this.setAttribute('open', '');
+    }
 
-        const form = this.querySelector('form');
-        if (form) {
-            const nameInput = form.querySelector('[name="name"]');
-            const descriptionInput = form.querySelector('[name="description"]');
-            const activeSwitch = form.querySelector('[name="is_active"]');
+    close() {
+        this.removeAttribute('open');
+    }
 
-            if (nameInput) nameInput.value = data.name || '';
-            if (descriptionInput) descriptionInput.value = data.description || '';
-            if (activeSwitch) activeSwitch.checked = data.is_active !== false;
-        }
+    _syncVideoLinksFromDOM() {
+        const videoLinkInputs = this.querySelectorAll('input[data-video-index]');
+        this.videoLinks = Array.from(videoLinkInputs).map(input => input.value || '');
     }
 
     addVideoLink() {
-        const videoLinks = this.get('videoLinks');
-        videoLinks.push('');
-        this.set('videoLinks', [...videoLinks]);
+        this._syncVideoLinksFromDOM();
+        this.videoLinks.push('');
+        this.render();
     }
 
     removeVideoLink(index) {
-        const videoLinks = this.get('videoLinks');
-        if (videoLinks.length > 1) {
-            videoLinks.splice(index, 1);
-            this.set('videoLinks', [...videoLinks]);
+        this._syncVideoLinksFromDOM();
+        if (this.videoLinks.length > 1) {
+            this.videoLinks.splice(index, 1);
+            this.render();
         }
     }
 
-    updateVideoLink(index, value) {
-        const videoLinks = this.get('videoLinks');
-        videoLinks[index] = value;
-        this.set('videoLinks', [...videoLinks]);
-    }
-
     async handleSubmit() {
-        try {
-            this.set('loading', true);
+        this._syncVideoLinksFromDOM();
 
-            // Get form data using the data-field attributes for reliable selection
+        if (!this.videoGalleryData || !this.videoGalleryData.id) {
+            Toast.show({ title: 'Error', message: 'Video gallery data not found', variant: 'error' });
+            return;
+        }
+
+        try {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
             const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
 
+            const filteredVideoLinks = this.videoLinks.filter(link => link && link.trim() !== '');
+
             const data = {
                 name: nameInput ? nameInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.value : '',
-                is_active: isActiveSwitch ? isActiveSwitch.checked : true,
-                video_links: this.get('videoLinks').filter(link => link.trim() !== '')
+                is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1,
+                video_links: filteredVideoLinks
             };
 
-            // Validate required fields
             if (!data.name || !data.name.trim()) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Gallery name is required',
-                    variant: 'error',
-                    duration: 3000
-                });
+                Toast.show({ title: 'Validation Error', message: 'Gallery name is required', variant: 'error' });
                 return;
             }
 
             if (data.video_links.length === 0) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'At least one video link is required',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            const videoGalleryData = this.get('videoGalleryData');
-            if (!videoGalleryData || !videoGalleryData.id) {
-                Toast.show({
-                    title: 'Error',
-                    message: 'Video gallery data not found',
-                    variant: 'error',
-                    duration: 3000
-                });
+                Toast.show({ title: 'Validation Error', message: 'At least one video link is required', variant: 'error' });
                 return;
             }
 
             const token = localStorage.getItem('token');
             if (!token) {
-                Toast.show({
-                    title: 'Authentication Error',
-                    message: 'Please log in to update video gallery',
-                    variant: 'error',
-                    duration: 3000
-                });
+                Toast.show({ title: 'Authentication Error', message: 'Please log in to update', variant: 'error' });
                 return;
             }
 
-            const response = await api.withToken(token).put(`/video-galleries/${videoGalleryData.id}`, data);
+            const response = await api.withToken(token).put(`/video-galleries/${this.videoGalleryData.id}`, data);
 
-            Toast.show({
-                title: 'Success',
-                message: 'Video gallery updated successfully',
-                variant: 'success',
-                duration: 3000
-            });
+            Toast.show({ title: 'Success', message: 'Video gallery updated successfully', variant: 'success' });
 
-            // Dispatch event to parent component
             this.dispatchEvent(new CustomEvent('video-gallery-updated', {
                 detail: { videoGallery: response.data.data },
-                bubbles: true
+                bubbles: true,
+                composed: true
             }));
 
             this.close();
 
         } catch (error) {
             console.error('❌ Error updating video gallery:', error);
-            
-            Toast.show({
-                title: 'Error',
-                message: error.response?.data?.message || 'Failed to update video gallery',
-                variant: 'error',
-                duration: 3000
-            });
-        } finally {
-            this.set('loading', false);
-        }
-    }
-
-    close() {
-        const modal = this.querySelector('ui-modal');
-        if (modal) {
-            modal.close();
+            Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to update video gallery', variant: 'error' });
         }
     }
 
     render() {
-        const videoGalleryData = this.get('videoGalleryData');
-        const videoLinks = this.get('videoLinks');
-        const loading = this.get('loading');
-
-        if (!videoGalleryData) {
-            return `<ui-modal 
-                ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Update Video Gallery" 
-                size="lg">
-                <div class="text-center py-8 text-gray-500">
-                    <p>No video gallery data available</p>
-                </div>
-            </ui-modal>`;
+        if (!this.videoGalleryData) {
+            this.innerHTML = ''; // Or a loading state
+            return;
         }
 
-        return `
+        this.innerHTML = `
             <ui-modal 
-                ${this.hasAttribute('open') ? 'open' : ''} 
+                open
                 title="Update Video Gallery" 
                 size="lg"
                 close-button="true">
@@ -242,7 +154,7 @@ class VideoGalleryUpdateModal extends App {
                             data-field="name"
                             type="text"
                             placeholder="Enter gallery name"
-                            value="${videoGalleryData.name || ''}"
+                            value="${this.videoGalleryData.name || ''}"
                             required
                             class="w-full">
                         </ui-input>
@@ -258,7 +170,7 @@ class VideoGalleryUpdateModal extends App {
                             data-field="description"
                             placeholder="Enter gallery description"
                             rows="3"
-                            class="w-full">${videoGalleryData.description || ''}</ui-textarea>
+                            class="w-full">${this.videoGalleryData.description || ''}</ui-textarea>
                     </div>
 
                     <!-- Video Links -->
@@ -267,46 +179,43 @@ class VideoGalleryUpdateModal extends App {
                             Video Links *
                         </label>
                         <div class="space-y-3">
-                            ${videoLinks.map((link, index) => `
-                                <div class="flex gap-2">
+                            ${this.videoLinks.map((link, index) => `
+                                <div class="flex gap-2 items-center">
                                     <div class="flex-1">
-                                        <ui-input
+                                        <input
                                             type="url"
-                                            placeholder="Enter video URL (YouTube, Facebook, etc.)"
+                                            placeholder="Enter video URL"
                                             value="${link}"
                                             data-video-index="${index}"
-                                            class="w-full">
-                                        </ui-input>
+                                            class="w-full upo-input-default">
                                     </div>
-                                    ${videoLinks.length > 1 ? `
-                                        <div>
-                                            <ui-button
-                                                type="button"
-                                                variant="normal"
-                                                size="sm"
-                                                data-action="remove-video-link"
-                                                data-index="${index}"
-                                                class="px-3 bg-transparent">
-                                                <i class="fas fa-trash text-red-500"></i>
-                                            </ui-button>
-                                        </div>
+                                    ${this.videoLinks.length > 1 ? `
+                                        <ui-button
+                                            type="button"
+                                            variant="danger-outline"
+                                            size="sm"
+                                            data-action="remove-video-link"
+                                            data-index="${index}"
+                                            class="px-3">
+                                            <i class="fas fa-trash"></i>
+                                        </ui-button>
                                     ` : ''}
                                 </div>
                             `).join('')}
-                            <div class="flex justify-end">
-                                <ui-button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    data-action="add-video-link"
-                                    class="px-3">
-                                    <i class="fas fa-plus mr-1"></i>
-                                    Add
-                                </ui-button>
-                            </div>
+                        </div>
+                        <div class="flex justify-end mt-2">
+                            <ui-button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                data-action="add-video-link"
+                                class="px-3">
+                                <i class="fas fa-plus mr-1"></i>
+                                Add Link
+                            </ui-button>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
-                            Supported platforms: YouTube, Facebook, Vimeo, Dailymotion, and more
+                            Supported platforms: YouTube, Facebook, Vimeo, etc.
                         </p>
                     </div>
 
@@ -316,13 +225,15 @@ class VideoGalleryUpdateModal extends App {
                             <label class="text-sm font-medium text-gray-700">Active Status</label>
                             <p class="text-xs text-gray-500">Enable or disable this video gallery</p>
                         </div>
-                        <ui-switch name="is_active" ${videoGalleryData.is_active !== false ? 'checked' : ''}></ui-switch>
+                        <ui-switch name="is_active" ${this.videoGalleryData.is_active ? 'checked' : ''}></ui-switch>
                     </div>
                 </form>
             </ui-modal>
         `;
+        // Re-attach listeners because innerHTML is replaced
+        this.setupEventListeners();
     }
 }
 
 customElements.define('video-gallery-update-modal', VideoGalleryUpdateModal);
-export default VideoGalleryUpdateModal; 
+export default VideoGalleryUpdateModal;

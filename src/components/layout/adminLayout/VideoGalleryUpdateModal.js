@@ -140,17 +140,13 @@ class VideoGalleryUpdateModal extends HTMLElement {
         this.innerHTML = `
             <ui-modal 
                 open
-                title="Update Video Gallery" 
-                size="lg"
+                position="right" 
                 close-button="true">
-                <form class="space-y-6">
-                    <!-- Gallery Name -->
+                <div slot="title">Update Video Gallery</div>
+                <form id="video-gallery-form" class="space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Gallery Name *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gallery Name</label>
                         <ui-input
-                            id="name"
                             data-field="name"
                             type="text"
                             placeholder="Enter gallery name"
@@ -160,25 +156,18 @@ class VideoGalleryUpdateModal extends HTMLElement {
                         </ui-input>
                     </div>
 
-                    <!-- Description -->
                     <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <ui-textarea
-                            id="description"
                             data-field="description"
                             placeholder="Enter gallery description"
-                            rows="3"
+                            rows="4"
                             class="w-full">${this.videoGalleryData.description || ''}</ui-textarea>
                     </div>
 
-                    <!-- Video Links -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Video Links *
-                        </label>
-                        <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Video Links</label>
+                        <div class="space-y-2" id="video-links-container">
                             ${this.videoLinks.map((link, index) => `
                                 <div class="flex gap-2 items-center">
                                     <div class="flex-1">
@@ -214,18 +203,17 @@ class VideoGalleryUpdateModal extends HTMLElement {
                                 Add Link
                             </ui-button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            Supported platforms: YouTube, Facebook, Vimeo, etc.
-                        </p>
+                        <p class="text-xs text-gray-500 mt-1">Supports YouTube, Facebook, Vimeo, etc.</p>
                     </div>
 
-                    <!-- Active Status -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700">Active Status</label>
-                            <p class="text-xs text-gray-500">Enable or disable this video gallery</p>
-                        </div>
-                        <ui-switch name="is_active" ${this.videoGalleryData.is_active ? 'checked' : ''}></ui-switch>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gallery Status</label>
+                        <ui-switch 
+                            name="is_active"
+                            ${this.videoGalleryData.is_active ? 'checked' : ''}
+                            class="w-full">
+                            <span slot="label">Active</span>
+                        </ui-switch>
                     </div>
                 </form>
             </ui-modal>

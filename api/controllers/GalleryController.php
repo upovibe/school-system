@@ -78,11 +78,7 @@ class GalleryController {
                 $data['is_active'] = 1;
             }
             
-            // Debug logging
-            error_log('Gallery Create - Content-Type: ' . $content_type);
-            error_log('Gallery Create - Raw data length: ' . strlen($rawData));
-            error_log('Gallery Create - Parsed data: ' . json_encode($data));
-            error_log('Gallery Create - $_FILES: ' . json_encode($_FILES));
+
             
             // Handle image uploads if present
             $uploadedImages = [];
@@ -120,13 +116,7 @@ class GalleryController {
                 echo json_encode([
                     'success' => true,
                     'data' => $createdGallery,
-                    'message' => 'Gallery created successfully',
-                    'debug' => [
-                        'content_type' => $content_type,
-                        'raw_data_length' => strlen($rawData),
-                        'parsed_data' => $data,
-                        'files' => $_FILES
-                    ]
+                    'message' => 'Gallery created successfully'
                 ]);
             } else {
                 http_response_code(500);
@@ -247,16 +237,10 @@ class GalleryController {
             
             // Handle image uploads if present
             $uploadedImages = [];
-            $debugInfo = [];
-            $debugInfo[] = '$_FILES contents: ' . json_encode($_FILES);
-            $debugInfo[] = '$data contents: ' . json_encode($data);
             
             // Check for images with array notation
             $imagesKey = 'images[]';
             if (!empty($_FILES[$imagesKey])) {
-                $debugInfo[] = 'Processing image uploads';
-                $debugInfo[] = 'Files structure: ' . json_encode($_FILES[$imagesKey]);
-                
                 try {
                     $uploadedImages = uploadGalleryImages($_FILES[$imagesKey]);
                     $newImagePaths = array_map(function($image) {
@@ -266,15 +250,11 @@ class GalleryController {
                     // Combine with existing images
                     $existingImages = $existingGallery['images'] ?: [];
                     $data['images'] = array_merge($existingImages, $newImagePaths);
-                    $debugInfo[] = 'Final images array: ' . json_encode($data['images']);
-                    $debugInfo[] = 'Uploaded ' . count($uploadedImages) . ' images successfully';
                 } catch (Exception $e) {
-                    $debugInfo[] = 'Error uploading images: ' . $e->getMessage();
                     // Don't fail the entire update if image upload fails
                     $data['images'] = $existingGallery['images'] ?: [];
                 }
             } else {
-                $debugInfo[] = 'No new images uploaded, preserving existing images';
                 // Preserve existing images if no new images are uploaded
                 $data['images'] = $existingGallery['images'] ?: [];
             }
@@ -298,8 +278,7 @@ class GalleryController {
                 echo json_encode([
                     'success' => true,
                     'data' => $updatedGallery,
-                    'message' => 'Gallery updated successfully',
-                    'debug' => $debugInfo
+                    'message' => 'Gallery updated successfully'
                 ]);
             } else {
                 http_response_code(500);

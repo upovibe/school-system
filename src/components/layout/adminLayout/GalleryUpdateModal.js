@@ -77,20 +77,11 @@ class GalleryUpdateModal extends HTMLElement {
             const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
             const imagesFileUpload = this.querySelector('ui-file-upload[data-field="images"]');
 
-            console.log('Form elements found:', {
-                nameInput: !!nameInput,
-                descriptionTextarea: !!descriptionTextarea,
-                isActiveSwitch: !!isActiveSwitch,
-                imagesFileUpload: !!imagesFileUpload
-            });
-
             const galleryData = {
                 name: nameInput ? nameInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.value : '',
                 is_active: isActiveSwitch ? (isActiveSwitch.checked ? 1 : 0) : 1
             };
-
-            console.log('Gallery data to update:', galleryData);
 
             // Validate required fields
             if (!galleryData.name) {
@@ -118,13 +109,9 @@ class GalleryUpdateModal extends HTMLElement {
             // Prepare form data for multipart request
             const formData = new FormData();
             
-            console.log('Original gallery data:', this.galleryData);
-            console.log('Form data to send:', galleryData);
-            
             // Add all form fields
             Object.keys(galleryData).forEach(key => {
                 formData.append(key, galleryData[key]);
-                console.log(`Added to FormData: ${key} = ${galleryData[key]}`);
             });
             
             // Add images files if selected
@@ -138,23 +125,10 @@ class GalleryUpdateModal extends HTMLElement {
             }
 
             // Update the gallery with multipart data
-            console.log('Sending update request for gallery ID:', this.galleryData.id);
-            console.log('FormData contents:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
-            
-            console.log('API URL:', `/galleries/${this.galleryData.id}`);
-            console.log('Token:', token ? 'Present' : 'Missing');
-            
             let response;
             try {
                 response = await api.withToken(token).put(`/galleries/${this.galleryData.id}`, formData);
-                console.log('Update response:', response.data);
-                console.log('Response status:', response.status);
             } catch (apiError) {
-                console.error('API Error:', apiError);
-                console.error('API Error Response:', apiError.response?.data);
                 throw apiError;
             }
             

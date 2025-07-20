@@ -53,13 +53,13 @@ class GalleryController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            // Handle multipart form data or JSON data for PUT/PATCH requests
+            // Handle multipart form data or JSON data for POST requests
             $data = [];
             $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                // Use standard PHP $_POST and $_FILES for multipart data
+                // Use standard PHP $_POST and $_FILES for multipart data (POST requests)
                 $data = $_POST;
                 // $_FILES is already available globally
             } else {
@@ -78,14 +78,25 @@ class GalleryController {
                 $data['is_active'] = 1;
             }
             
+            // Debug logging
+            error_log('Gallery Create - Content-Type: ' . $content_type);
+            error_log('Gallery Create - Raw data length: ' . strlen($rawData));
+            error_log('Gallery Create - Parsed data: ' . json_encode($data));
+            error_log('Gallery Create - $_FILES: ' . json_encode($_FILES));
+            
             // Handle image uploads if present
             $uploadedImages = [];
             if (!empty($_FILES['images'])) {
-                $uploadedImages = uploadGalleryImages($_FILES['images']);
-                // Extract just the original paths for storage
-                $data['images'] = array_map(function($image) {
-                    return $image['original'];
-                }, $uploadedImages);
+                try {
+                    $uploadedImages = uploadGalleryImages($_FILES['images']);
+                    // Extract just the original paths for storage
+                    $data['images'] = array_map(function($image) {
+                        return $image['original'];
+                    }, $uploadedImages);
+                } catch (Exception $e) {
+                    // Don't fail the entire creation if image upload fails
+                    $data['images'] = [];
+                }
             } else {
                 $data['images'] = [];
             }
@@ -109,7 +120,13 @@ class GalleryController {
                 echo json_encode([
                     'success' => true,
                     'data' => $createdGallery,
-                    'message' => 'Gallery created successfully'
+                    'message' => 'Gallery created successfully',
+                    'debug' => [
+                        'content_type' => $content_type,
+                        'raw_data_length' => strlen($rawData),
+                        'parsed_data' => $data,
+                        'files' => $_FILES
+                    ]
                 ]);
             } else {
                 http_response_code(500);

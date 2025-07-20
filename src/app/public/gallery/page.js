@@ -33,13 +33,13 @@ class GalleryPage extends App {
                 colors,
                 page: galleryPageData
             };
-
+                
             // Cache in global store
             store.setState({ galleryPageData: allData });
-            
-            // Set local state and render
+                
+                // Set local state and render
             this.set('allData', allData);
-            this.render();
+                this.render();
 
         } catch (error) {
             console.error('Error loading gallery data:', error);
@@ -90,8 +90,8 @@ class GalleryPage extends App {
                     page-data='${escapeJsonForAttribute(allData.page)}'
                     settings='${escapeJsonForAttribute({})}'>
                 </gallery-section>
+                </div>
             </div>
-        </div>
         `;
     }
 }

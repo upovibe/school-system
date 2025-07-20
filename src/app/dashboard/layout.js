@@ -162,6 +162,7 @@ class DashboardLayout extends App {
                 { label: 'Events Management', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                 { label: 'News Management', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
                 { label: 'Gallery Management', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
+                { label: 'Video Gallery Management', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
                 { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
                 { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },
                 { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/system-report' }

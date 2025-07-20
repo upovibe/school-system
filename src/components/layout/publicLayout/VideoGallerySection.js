@@ -21,7 +21,6 @@ class VideoGallerySection extends App {
     loadDataFromProps() {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
-        const settingsAttr = this.getAttribute('settings');
 
         if (colorsAttr) {
             try {
@@ -34,13 +33,8 @@ class VideoGallerySection extends App {
             }
         }
 
-        if (settingsAttr) {
-            const settings = unescapeJsonFromAttribute(settingsAttr);
-            if (settings) {
-                if (settings.video_gallery_title) this.set('videoGalleryTitle', settings.video_gallery_title);
-                if (settings.video_gallery_subtitle) this.set('videoGallerySubtitle', settings.video_gallery_subtitle);
-            }
-        }
+        // Render immediately with the data
+        this.render();
     }
 
     async loadVideoGalleries() {
@@ -131,7 +125,7 @@ class VideoGallerySection extends App {
                             Video Gallery
                         </h1>
                         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            ${this.get('videoGallerySubtitle') || 'Explore our collection of videos showcasing school events, performances, and memorable moments'}
+                            Explore our collection of videos showcasing school events, performances, and memorable moments
                         </p>
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>

@@ -22,16 +22,12 @@ class PhotoGalleryPage extends App {
 
     async loadAllData() {
         try {
-            // Load colors first
+            // Load colors only
             const colors = await fetchColorSettings();
-            
-            // Load photo gallery settings
-            const settingsData = await this.loadPhotoGallerySettings();
 
             // Combine all data
             const allData = {
-                colors,
-                settings: settingsData
+                colors
             };
 
             // Cache in global store
@@ -44,39 +40,6 @@ class PhotoGalleryPage extends App {
         } catch (error) {
             console.error('Error loading photo gallery data:', error);
             this.set('error', 'Failed to load photo gallery page data');
-        }
-    }
-
-    async loadPhotoGallerySettings() {
-        try {
-            const settingsKeys = [
-                'photo_gallery_title', 'photo_gallery_subtitle'
-            ];
-
-            const settingsPromises = settingsKeys.map(async (key) => {
-                try {
-                    const response = await api.get(`/settings/key/${key}`);
-                    return response.data.success ? { key, value: response.data.data.setting_value } : null;
-                } catch (error) {
-                    console.error(`Error fetching setting ${key}:`, error);
-                    return null;
-                }
-            });
-
-            const settingsResults = await Promise.all(settingsPromises);
-            
-            // Convert to object
-            const settingsObject = {};
-            settingsResults.forEach(result => {
-                if (result) {
-                    settingsObject[result.key] = result.value;
-                }
-            });
-
-            return settingsObject;
-        } catch (error) {
-            console.error('Error loading settings:', error);
-            return {};
         }
     }
 
@@ -109,11 +72,7 @@ class PhotoGalleryPage extends App {
             <div class="mx-auto">
                 <!-- Photo Gallery Section Component -->
                 <photo-gallery-section 
-                    colors='${colorsData}'
-                    settings='${escapeJsonForAttribute({
-                        photo_gallery_title: allData.settings.photo_gallery_title,
-                        photo_gallery_subtitle: allData.settings.photo_gallery_subtitle
-                    })}'>
+                    colors='${colorsData}'>
                 </photo-gallery-section>
             </div>
         `;

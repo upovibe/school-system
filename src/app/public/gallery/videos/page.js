@@ -22,16 +22,12 @@ class VideoGalleryPage extends App {
 
     async loadAllData() {
         try {
-            // Load colors first
+            // Load colors only
             const colors = await fetchColorSettings();
-            
-            // Load video gallery settings
-            const settingsData = await this.loadVideoGallerySettings();
 
             // Combine all data
             const allData = {
-                colors,
-                settings: settingsData
+                colors
             };
 
             // Cache in global store
@@ -44,39 +40,6 @@ class VideoGalleryPage extends App {
         } catch (error) {
             console.error('Error loading video gallery data:', error);
             this.set('error', 'Failed to load video gallery page data');
-        }
-    }
-
-    async loadVideoGallerySettings() {
-        try {
-            const settingsKeys = [
-                'video_gallery_title', 'video_gallery_subtitle'
-            ];
-
-            const settingsPromises = settingsKeys.map(async (key) => {
-                try {
-                    const response = await api.get(`/settings/key/${key}`);
-                    return response.data.success ? { key, value: response.data.data.setting_value } : null;
-                } catch (error) {
-                    console.error(`Error fetching setting ${key}:`, error);
-                    return null;
-                }
-            });
-
-            const settingsResults = await Promise.all(settingsPromises);
-            
-            // Convert to object
-            const settingsObject = {};
-            settingsResults.forEach(result => {
-                if (result) {
-                    settingsObject[result.key] = result.value;
-                }
-            });
-
-            return settingsObject;
-        } catch (error) {
-            console.error('Error loading settings:', error);
-            return {};
         }
     }
 
@@ -109,11 +72,7 @@ class VideoGalleryPage extends App {
             <div class="mx-auto">
                 <!-- Video Gallery Section Component -->
                 <video-gallery-section 
-                    colors='${colorsData}'
-                    settings='${escapeJsonForAttribute({
-                        video_gallery_title: allData.settings.video_gallery_title,
-                        video_gallery_subtitle: allData.settings.video_gallery_subtitle
-                    })}'>
+                    colors='${colorsData}'>
                 </video-gallery-section>
             </div>
         `;

@@ -21,7 +21,6 @@ class GallerySection extends App {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
         const pageDataAttr = this.getAttribute('page-data');
-        const settingsAttr = this.getAttribute('settings');
 
         if (colorsAttr) {
             try {
@@ -38,14 +37,6 @@ class GallerySection extends App {
             const pageData = unescapeJsonFromAttribute(pageDataAttr);
             if (pageData) {
                 this.set('pageData', pageData);
-            }
-        }
-
-        if (settingsAttr) {
-            const settings = unescapeJsonFromAttribute(settingsAttr);
-            if (settings) {
-                if (settings.gallery_title) this.set('galleryTitle', settings.gallery_title);
-                if (settings.gallery_subtitle) this.set('gallerySubtitle', settings.gallery_subtitle);
             }
         }
 

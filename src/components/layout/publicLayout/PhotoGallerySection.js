@@ -21,7 +21,6 @@ class PhotoGallerySection extends App {
     loadDataFromProps() {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
-        const settingsAttr = this.getAttribute('settings');
 
         if (colorsAttr) {
             try {
@@ -34,13 +33,8 @@ class PhotoGallerySection extends App {
             }
         }
 
-        if (settingsAttr) {
-            const settings = unescapeJsonFromAttribute(settingsAttr);
-            if (settings) {
-                if (settings.photo_gallery_title) this.set('photoGalleryTitle', settings.photo_gallery_title);
-                if (settings.photo_gallery_subtitle) this.set('photoGallerySubtitle', settings.photo_gallery_subtitle);
-            }
-        }
+        // Render immediately with the data
+        this.render();
     }
 
     async loadPhotoGalleries() {
@@ -118,7 +112,7 @@ class PhotoGallerySection extends App {
                             Photo Gallery
                         </h1>
                         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            ${this.get('photoGallerySubtitle') || 'Explore our collection of beautiful photographs capturing precious moments from our school community'}
+                            Explore our collection of beautiful photographs capturing precious moments from our school community
                         </p>
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>

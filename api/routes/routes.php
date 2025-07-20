@@ -85,3 +85,14 @@ Router::get('/news/slug/{slug}', 'NewsController@showBySlug');
 Router::get('/news/{id}', 'NewsController@show');
 Router::put('/news/{id}', 'NewsController@update');
 Router::delete('/news/{id}', 'NewsController@destroy');
+
+// Gallery Management Routes (admin only for create/update/delete, public for view)
+Router::get('/galleries', 'GalleryController@index');
+Router::post('/galleries', 'GalleryController@store');
+Router::get('/galleries/active', 'GalleryController@getActive');
+Router::get('/galleries/recent', 'GalleryController@getRecent');
+Router::get('/galleries/search', 'GalleryController@search');
+Router::get('/galleries/slug/{slug}', 'GalleryController@showBySlug');
+Router::get('/galleries/{id}', 'GalleryController@show');
+Router::put('/galleries/{id}', 'GalleryController@update');
+Router::delete('/galleries/{id}', 'GalleryController@destroy');

@@ -169,86 +169,72 @@ class AdmissionsSection extends App {
                     </div>
                     
                     <!-- Unique Cards Layout -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
                         <!-- Requirements Card - Unique Design -->
-                        <div class="relative group">
-                            <div class="absolute inset-0 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-2xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-                            <div class="relative bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
-                                <!-- Card Header with Pattern -->
-                                <div class="relative h-32 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] overflow-hidden">
-                                    <!-- Geometric Pattern -->
-                                    <div class="absolute inset-0 opacity-20">
-                                        <div class="absolute top-4 left-4 w-8 h-8 border-2 border-white/30 rounded-lg rotate-45"></div>
-                                        <div class="absolute top-12 right-8 w-6 h-6 border-2 border-white/20 rounded-full"></div>
-                                        <div class="absolute bottom-8 left-12 w-4 h-4 border-2 border-white/40 rotate-45"></div>
-                                        <div class="absolute bottom-4 right-4 w-10 h-10 border-2 border-white/25 rounded-lg"></div>
-                                    </div>
-                                    
-                                    <!-- Icon Container -->
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
-                                            <i class="fas fa-clipboard-list text-white text-2xl"></i>
+                        <a href="/public/admissions/requirements" class="block group">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+                                <div class="relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                                    <!-- Card Header with Pattern -->
+                                    <div class="relative h-24 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] overflow-hidden">
+                                        <!-- Geometric Pattern -->
+                                        <div class="absolute inset-0 opacity-20">
+                                            <div class="absolute top-3 left-3 w-6 h-6 border-2 border-white/30 rounded-lg rotate-45"></div>
+                                            <div class="absolute top-8 right-6 w-4 h-4 border-2 border-white/20 rounded-full"></div>
+                                            <div class="absolute bottom-6 left-8 w-3 h-3 border-2 border-white/40 rotate-45"></div>
+                                            <div class="absolute bottom-3 right-3 w-8 h-8 border-2 border-white/25 rounded-lg"></div>
+                                        </div>
+                                        
+                                        <!-- Icon Container -->
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                                                <i class="fas fa-clipboard-list text-white text-lg"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Card Content -->
-                                <div class="p-8">
-                                    <h3 class="text-2xl font-bold text-[${secondaryColor}] mb-4 group-hover:text-[${primaryColor}] transition-colors duration-300">
-                                        Requirements
-                                    </h3>
-                                    <p class="text-gray-600 leading-relaxed mb-6">
-                                        Learn about the essential requirements and documents needed for admission to our school. We ensure a transparent and straightforward process.
-                                    </p>
                                     
-                                    <!-- Action Button -->
-                                    <a href="/public/admissions/requirements" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 group-hover:shadow-xl">
-                                        View Requirements
-                                        <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
-                                    </a>
+                                    <!-- Card Content -->
+                                    <div class="p-4 text-center">
+                                        <h3 class="text-lg font-bold text-[${secondaryColor}] group-hover:text-[${primaryColor}] transition-colors duration-300">
+                                            Requirements
+                                        </h3>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                         
                         <!-- Application Process Card - Unique Design -->
-                        <div class="relative group">
-                            <div class="absolute inset-0 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-2xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-                            <div class="relative bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
-                                <!-- Card Header with Pattern -->
-                                <div class="relative h-32 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] overflow-hidden">
-                                    <!-- Geometric Pattern -->
-                                    <div class="absolute inset-0 opacity-20">
-                                        <div class="absolute top-6 right-6 w-8 h-8 border-2 border-white/30 rounded-lg rotate-45"></div>
-                                        <div class="absolute top-16 left-6 w-6 h-6 border-2 border-white/20 rounded-full"></div>
-                                        <div class="absolute bottom-6 right-12 w-4 h-4 border-2 border-white/40 rotate-45"></div>
-                                        <div class="absolute bottom-8 left-6 w-10 h-10 border-2 border-white/25 rounded-lg"></div>
-                                    </div>
-                                    
-                                    <!-- Icon Container -->
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
-                                            <i class="fas fa-route text-white text-2xl"></i>
+                        <a href="/public/admissions/process" class="block group">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+                                <div class="relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                                    <!-- Card Header with Pattern -->
+                                    <div class="relative h-24 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] overflow-hidden">
+                                        <!-- Geometric Pattern -->
+                                        <div class="absolute inset-0 opacity-20">
+                                            <div class="absolute top-4 right-4 w-6 h-6 border-2 border-white/30 rounded-lg rotate-45"></div>
+                                            <div class="absolute top-10 left-4 w-4 h-4 border-2 border-white/20 rounded-full"></div>
+                                            <div class="absolute bottom-4 right-8 w-3 h-3 border-2 border-white/40 rotate-45"></div>
+                                            <div class="absolute bottom-4 left-4 w-8 h-8 border-2 border-white/25 rounded-lg"></div>
+                                        </div>
+                                        
+                                        <!-- Icon Container -->
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                                                <i class="fas fa-route text-white text-lg"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Card Content -->
-                                <div class="p-8">
-                                    <h3 class="text-2xl font-bold text-[${secondaryColor}] mb-4 group-hover:text-[${primaryColor}] transition-colors duration-300">
-                                        Application Process
-                                    </h3>
-                                    <p class="text-gray-600 leading-relaxed mb-6">
-                                        Follow our step-by-step application process to ensure a smooth admission experience. We guide you through every stage.
-                                    </p>
                                     
-                                    <!-- Action Button -->
-                                    <a href="/public/admissions/process" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[${secondaryColor}] to-[${primaryColor}] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 group-hover:shadow-xl">
-                                        Start Application
-                                        <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
-                                    </a>
+                                    <!-- Card Content -->
+                                    <div class="p-4 text-center">
+                                        <h3 class="text-lg font-bold text-[${secondaryColor}] group-hover:text-[${primaryColor}] transition-colors duration-300">
+                                            Application Process
+                                        </h3>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </section>

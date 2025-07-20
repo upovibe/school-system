@@ -123,7 +123,7 @@ class AdmissionsSection extends App {
             <section class="mx-auto">
                 <!-- Hero Banner -->
                 ${bannerImages.length > 0 ? `
-                    <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mx-6 mb-8">
+                    <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mb-8">
                         <img src="${this.getImageUrl(bannerImages[0])}" 
                              alt="Admissions Banner" 
                              class="w-full h-full object-cover rounded-3xl"
@@ -139,9 +139,9 @@ class AdmissionsSection extends App {
                         
                         <!-- Content overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-white">
-                                <h1 class="text-3xl lg:text-4xl font-bold mb-2">Admissions</h1>
-                                <p class="text-lg opacity-90">Join our school community and start your journey</p>
+                            <div class="text-center text-white px-4">
+                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">Admissions</h1>
+                                <p class="text-base lg:text-lg opacity-90">Join our school community and start your journey</p>
                             </div>
                         </div>
                     </div>

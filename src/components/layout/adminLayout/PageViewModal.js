@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/ContentDisplay.js';
 
 // Load Quill CSS for content preview
 if (!document.querySelector('link[href*="quill"]')) {
@@ -219,11 +220,13 @@ class PageViewModal extends HTMLElement {
                         <!-- Content Preview -->
                         <div class="border-b pb-4">
                             <h4 class="text-md font-semibold text-gray-800 mb-3">Content Preview</h4>
-                            <div class="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                            <div class="bg-gray-50 p-4 rounded-lg">
                                 ${this.pageData.content ? `
-                                    <div class="content-preview">
-                                        ${this.pageData.content}
-                                    </div>
+                                    <content-display 
+                                        content="${this.pageData.content.replace(/"/g, '&quot;')}"
+                                        max-height="160px"
+                                        no-styles>
+                                    </content-display>
                                 ` : `
                                     <p class="text-gray-500 italic">No content available</p>
                                 `}

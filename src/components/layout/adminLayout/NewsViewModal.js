@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * News View Modal Component
@@ -171,11 +172,13 @@ class NewsViewModal extends HTMLElement {
                                 <i class="fas fa-file-text text-green-500"></i>
                                 <h4 class="text-md font-semibold text-gray-800">Content</h4>
                             </div>
-                            <div class="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
+                            <div class="bg-gray-50 p-4 rounded-lg">
                                 ${this.newsData.content ? `
-                                    <div class="text-gray-900 text-sm leading-relaxed prose prose-sm max-w-none">
-                                        ${this.newsData.content}
-                                    </div>
+                                    <content-display 
+                                        content="${this.newsData.content.replace(/"/g, '&quot;')}"
+                                        max-height="240px"
+                                        no-styles>
+                                    </content-display>
                                 ` : `
                                     <p class="text-gray-500 italic">No content available</p>
                                 `}

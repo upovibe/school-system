@@ -3,6 +3,7 @@ import Toast from '@/components/ui/Toast.js';
 import '@/components/layout/publicLayout/NewsList.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import '@/components/common/PageLoader.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * News View Component
@@ -239,9 +240,10 @@ class NewsView extends App {
                         <!-- Content -->
                         ${news.content ? `
                             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                                <div class="ql-editor">
-                                    ${news.content}
-                                </div>
+                                <content-display 
+                                    content="${news.content.replace(/"/g, '&quot;')}"
+                                    no-styles>
+                                </content-display>
                             </div>
                         ` : ''}
 

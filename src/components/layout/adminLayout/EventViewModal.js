@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Event View Modal Component
@@ -203,11 +204,13 @@ class EventViewModal extends HTMLElement {
                         <!-- Description -->
                         <div class="border-b pb-4">
                             <h4 class="text-md font-semibold text-gray-800 mb-3">Description</h4>
-                            <div class="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                            <div class="bg-gray-50 p-4 rounded-lg">
                                 ${this.eventData.description ? `
-                                    <div class="text-gray-900 text-sm leading-relaxed">
-                                        ${this.eventData.description}
-                                    </div>
+                                    <content-display 
+                                        content="${this.eventData.description.replace(/"/g, '&quot;')}"
+                                        max-height="160px"
+                                        no-styles>
+                                    </content-display>
                                 ` : `
                                     <p class="text-gray-500 italic">No description available</p>
                                 `}

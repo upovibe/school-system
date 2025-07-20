@@ -3,6 +3,7 @@ import Toast from '@/components/ui/Toast.js';
 import '@/components/layout/publicLayout/EventList.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import '@/components/common/PageLoader.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Event View Component
@@ -308,9 +309,10 @@ class EventView extends App {
                         ${event.description ? `
                             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                                 <h3 class="text-lg font-semibold text-[${secondaryColor}] mb-3">Description</h3>
-                                <div class="prose prose-sm max-w-none text-gray-700">
-                                    ${event.description}
-                                </div>
+                                <content-display 
+                                    content="${event.description.replace(/"/g, '&quot;')}"
+                                    no-styles>
+                                </content-display>
                             </div>
                         ` : ''}
 

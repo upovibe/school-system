@@ -97,3 +97,15 @@ Router::get('/galleries/{id}', 'GalleryController@show');
 Router::put('/galleries/{id}', 'GalleryController@update');
 Router::delete('/galleries/{id}', 'GalleryController@destroy');
 Router::delete('/galleries/{id}/images/{imageIndex}', 'GalleryController@removeImage');
+
+// Video Gallery Management Routes (admin only for create/update/delete, public for view)
+Router::get('/video-galleries', 'VideoGalleryController@index');
+Router::post('/video-galleries', 'VideoGalleryController@store');
+Router::get('/video-galleries/active', 'VideoGalleryController@getActive');
+Router::get('/video-galleries/recent', 'VideoGalleryController@getRecent');
+Router::get('/video-galleries/search', 'VideoGalleryController@search');
+Router::get('/video-galleries/slug/{slug}', 'VideoGalleryController@showBySlug');
+Router::get('/video-galleries/{id}', 'VideoGalleryController@show');
+Router::put('/video-galleries/{id}', 'VideoGalleryController@update');
+Router::delete('/video-galleries/{id}', 'VideoGalleryController@destroy');
+Router::delete('/video-galleries/{id}/videos/{videoIndex}', 'VideoGalleryController@removeVideoLink');

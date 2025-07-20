@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/GallerySettingsModal.js';
 import '@/components/layout/adminLayout/GalleryUpdateModal.js';
 import '@/components/layout/adminLayout/GalleryViewModal.js';
@@ -20,7 +21,9 @@ class GalleriesPage extends App {
     constructor() {
         super();
         this.galleries = null;
-        this.loading = false;
+        this.videoGalleries = null;
+        this.loading = true; // Start with loading true
+        this.videoLoading = true; // Start with loading true
         this.showAddModal = false;
         this.showUpdateModal = false;
         this.showViewModal = false;
@@ -28,10 +31,13 @@ class GalleriesPage extends App {
         this.updateGalleryData = null;
         this.viewGalleryData = null;
         this.deleteGalleryData = null;
+        this.activeTab = 'photos';
         
         // Initialize state properly
         this.set('galleries', null);
-        this.set('loading', false);
+        this.set('videoGalleries', null);
+        this.set('loading', true); // Start with loading true
+        this.set('videoLoading', true); // Start with loading true
         this.set('showAddModal', false);
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
@@ -39,6 +45,7 @@ class GalleriesPage extends App {
         this.set('updateGalleryData', null);
         this.set('viewGalleryData', null);
         this.set('deleteGalleryData', null);
+        this.set('activeTab', 'photos');
     }
 
     connectedCallback() {
@@ -134,11 +141,18 @@ class GalleriesPage extends App {
                 }
             }
         });
+
+        // Listen for tab changes
+        this.addEventListener('tab-changed', (event) => {
+            const activeTab = event.detail.value;
+            this.set('activeTab', activeTab);
+        });
     }
 
     async loadData() {
         try {
             this.set('loading', true);
+            this.set('videoLoading', true);
             
             const token = localStorage.getItem('token');
             if (!token) {
@@ -151,15 +165,20 @@ class GalleriesPage extends App {
                 return;
             }
 
-            // Load galleries data
+            // Load photo galleries data
             const galleriesResponse = await api.withToken(token).get('/galleries');
-            
             this.set('galleries', galleriesResponse.data.data);
             this.set('loading', false);
+            
+            // Load video galleries data
+            const videoGalleriesResponse = await api.withToken(token).get('/video-galleries');
+            this.set('videoGalleries', videoGalleriesResponse.data.data);
+            this.set('videoLoading', false);
             
         } catch (error) {
             console.error('❌ Error loading data:', error);
             this.set('loading', false);
+            this.set('videoLoading', false);
             
             Toast.show({
                 title: 'Error',
@@ -173,49 +192,100 @@ class GalleriesPage extends App {
     // Action handlers
     onView(event) {
         const { detail } = event;
-        const viewGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
-        if (viewGallery) {
-            this.closeAllModals();
-            this.set('viewGalleryData', viewGallery);
-            this.set('showViewModal', true);
-            setTimeout(() => {
-                const viewModal = this.querySelector('gallery-view-modal');
-                if (viewModal) {
-                    viewModal.setGalleryData(viewGallery);
-                }
-            }, 0);
+        const activeTab = this.get('activeTab');
+        
+        if (activeTab === 'photos') {
+            const viewGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
+            if (viewGallery) {
+                this.closeAllModals();
+                this.set('viewGalleryData', viewGallery);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewModal = this.querySelector('gallery-view-modal');
+                    if (viewModal) {
+                        viewModal.setGalleryData(viewGallery);
+                    }
+                }, 0);
+            }
+        } else if (activeTab === 'videos') {
+            const viewVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+            if (viewVideoGallery) {
+                this.closeAllModals();
+                this.set('viewGalleryData', viewVideoGallery);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewModal = this.querySelector('gallery-view-modal');
+                    if (viewModal) {
+                        viewModal.setGalleryData(viewVideoGallery);
+                    }
+                }, 0);
+            }
         }
     }
 
     onEdit(event) {
         const { detail } = event;
-        const editGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
-        if (editGallery) {
-            this.closeAllModals();
-            this.set('updateGalleryData', editGallery);
-            this.set('showUpdateModal', true);
-            setTimeout(() => {
-                const updateModal = this.querySelector('gallery-update-modal');
-                if (updateModal) {
-                    updateModal.setGalleryData(editGallery);
-                }
-            }, 0);
+        const activeTab = this.get('activeTab');
+        
+        if (activeTab === 'photos') {
+            const editGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
+            if (editGallery) {
+                this.closeAllModals();
+                this.set('updateGalleryData', editGallery);
+                this.set('showUpdateModal', true);
+                setTimeout(() => {
+                    const updateModal = this.querySelector('gallery-update-modal');
+                    if (updateModal) {
+                        updateModal.setGalleryData(editGallery);
+                    }
+                }, 0);
+            }
+        } else if (activeTab === 'videos') {
+            const editVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+            if (editVideoGallery) {
+                this.closeAllModals();
+                this.set('updateGalleryData', editVideoGallery);
+                this.set('showUpdateModal', true);
+                setTimeout(() => {
+                    const updateModal = this.querySelector('gallery-update-modal');
+                    if (updateModal) {
+                        updateModal.setGalleryData(editVideoGallery);
+                    }
+                }, 0);
+            }
         }
     }
 
     onDelete(event) {
         const { detail } = event;
-        const deleteGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
-        if (deleteGallery) {
-            this.closeAllModals();
-            this.set('deleteGalleryData', deleteGallery);
-            this.set('showDeleteDialog', true);
-            setTimeout(() => {
-                const deleteDialog = this.querySelector('gallery-delete-dialog');
-                if (deleteDialog) {
-                    deleteDialog.setGalleryData(deleteGallery);
-                }
-            }, 0);
+        const activeTab = this.get('activeTab');
+        
+        if (activeTab === 'photos') {
+            const deleteGallery = this.get('galleries').find(gallery => gallery.id === detail.row.id);
+            if (deleteGallery) {
+                this.closeAllModals();
+                this.set('deleteGalleryData', deleteGallery);
+                this.set('showDeleteDialog', true);
+                setTimeout(() => {
+                    const deleteDialog = this.querySelector('gallery-delete-dialog');
+                    if (deleteDialog) {
+                        deleteDialog.setGalleryData(deleteGallery);
+                    }
+                }, 0);
+            }
+        } else if (activeTab === 'videos') {
+            const deleteVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+            if (deleteVideoGallery) {
+                this.closeAllModals();
+                this.set('deleteGalleryData', deleteVideoGallery);
+                this.set('showDeleteDialog', true);
+                setTimeout(() => {
+                    const deleteDialog = this.querySelector('gallery-delete-dialog');
+                    if (deleteDialog) {
+                        deleteDialog.setGalleryData(deleteVideoGallery);
+                    }
+                }, 0);
+            }
         }
     }
 
@@ -231,24 +301,45 @@ class GalleriesPage extends App {
     // Update table data without full page reload
     updateTableData() {
         const galleries = this.get('galleries');
-        if (!galleries) return;
+        const videoGalleries = this.get('videoGalleries');
+        const activeTab = this.get('activeTab');
 
-        // Prepare table data
-        const tableData = galleries.map((gallery, index) => ({
-            id: gallery.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
-            name: gallery.name,
-            slug: gallery.slug,
-            images_count: gallery.images ? gallery.images.length : 0,
-            status: gallery.is_active ? 'Active' : 'Inactive',
-            created: new Date(gallery.created_at).toLocaleString(),
-            updated: new Date(gallery.updated_at).toLocaleString(),
-        }));
+        if (activeTab === 'photos' && galleries) {
+            // Prepare photo gallery table data
+            const photoTableData = galleries.map((gallery, index) => ({
+                id: gallery.id,
+                index: index + 1,
+                name: gallery.name,
+                slug: gallery.slug,
+                images_count: gallery.images ? gallery.images.length : 0,
+                status: gallery.is_active ? 'Active' : 'Inactive',
+                created: new Date(gallery.created_at).toLocaleString(),
+                updated: new Date(gallery.updated_at).toLocaleString(),
+            }));
 
-        // Find the table component and update its data
-        const tableComponent = this.querySelector('ui-table');
-        if (tableComponent) {
-            tableComponent.setAttribute('data', JSON.stringify(tableData));
+            // Find the photo table component and update its data
+            const photoTableComponent = this.querySelector('ui-tab-panel[value="photos"] ui-table');
+            if (photoTableComponent) {
+                photoTableComponent.setAttribute('data', JSON.stringify(photoTableData));
+            }
+        } else if (activeTab === 'videos' && videoGalleries) {
+            // Prepare video gallery table data
+            const videoTableData = videoGalleries.map((videoGallery, index) => ({
+                id: videoGallery.id,
+                index: index + 1,
+                name: videoGallery.name,
+                slug: videoGallery.slug,
+                videos_count: videoGallery.video_links ? videoGallery.video_links.length : 0,
+                status: videoGallery.is_active ? 'Active' : 'Inactive',
+                created: new Date(videoGallery.created_at).toLocaleString(),
+                updated: new Date(videoGallery.updated_at).toLocaleString(),
+            }));
+
+            // Find the video table component and update its data
+            const videoTableComponent = this.querySelector('ui-tab-panel[value="videos"] ui-table');
+            if (videoTableComponent) {
+                videoTableComponent.setAttribute('data', JSON.stringify(videoTableData));
+            }
         }
     }
 
@@ -265,17 +356,18 @@ class GalleriesPage extends App {
 
     render() {
         const galleries = this.get('galleries');
+        const videoGalleries = this.get('videoGalleries');
         const loading = this.get('loading');
+        const videoLoading = this.get('videoLoading');
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
+        const activeTab = this.get('activeTab');
         
-
-        
-        const tableData = galleries ? galleries.map((gallery, index) => ({
-            id: gallery.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
+        const photoTableData = galleries ? galleries.map((gallery, index) => ({
+            id: gallery.id,
+            index: index + 1,
             name: gallery.name,
             slug: gallery.slug,
             images_count: gallery.images ? gallery.images.length : 0,
@@ -284,52 +376,117 @@ class GalleriesPage extends App {
             updated: new Date(gallery.updated_at).toLocaleString(),
         })) : [];
 
-        const tableColumns = [
+        const videoTableData = videoGalleries ? videoGalleries.map((videoGallery, index) => ({
+            id: videoGallery.id,
+            index: index + 1,
+            name: videoGallery.name,
+            slug: videoGallery.slug,
+            videos_count: videoGallery.video_links ? videoGallery.video_links.length : 0,
+            status: videoGallery.is_active ? 'Active' : 'Inactive',
+            created: new Date(videoGallery.created_at).toLocaleString(),
+            updated: new Date(videoGallery.updated_at).toLocaleString(),
+        })) : [];
+
+        const photoTableColumns = [
             { key: 'index', label: 'No.' },
             { key: 'name', label: 'Name' },
-            // { key: 'slug', label: 'Slug' },
             { key: 'images_count', label: 'Images' },
+            { key: 'status', label: 'Status' },
+            { key: 'updated', label: 'Updated' }
+        ];
+
+        const videoTableColumns = [
+            { key: 'index', label: 'No.' },
+            { key: 'name', label: 'Name' },
+            { key: 'videos_count', label: 'Videos' },
             { key: 'status', label: 'Status' },
             { key: 'updated', label: 'Updated' }
         ];
         
         return `
             <div class="bg-white rounded-lg shadow-lg p-4">
-                ${loading ? `
-                    <!-- Simple Skeleton Loading -->
-                    <div class="space-y-4">
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                    </div>
-                ` : `
-                    <!-- Gallery Table Section -->
-                    <div class="mb-8">
-                        ${galleries && galleries.length > 0 ? `
-                            <ui-table 
-                                title="Gallery Management"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search galleries..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
+                <ui-tabs>
+                    <ui-tab-list>
+                        <ui-tab value="photos">Photo Galleries</ui-tab>
+                        <ui-tab value="videos">Video Galleries</ui-tab>
+                    </ui-tab-list>
+                    
+                    <ui-tab-panel value="photos">
+                        ${loading ? `
+                            <!-- Photo Galleries Skeleton Loading -->
+                            <div class="space-y-4">
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                            </div>
                         ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No galleries found in database</p>
+                            <!-- Photo Galleries Table Section -->
+                            <div class="mb-8">
+                                ${galleries && galleries.length > 0 ? `
+                                    <ui-table 
+                                        title="Photo Gallery Management"
+                                        data='${JSON.stringify(photoTableData)}'
+                                        columns='${JSON.stringify(photoTableColumns)}'
+                                        sortable
+                                        searchable
+                                        search-placeholder="Search photo galleries..."
+                                        pagination
+                                        page-size="10"
+                                        action
+                                        addable
+                                        refresh
+                                        print
+                                        bordered
+                                        striped
+                                        class="w-full">
+                                    </ui-table>
+                                ` : `
+                                    <div class="text-center py-8 text-gray-500">
+                                        <p>No photo galleries found in database</p>
+                                    </div>
+                                `}
                             </div>
                         `}
-                    </div>
-                `}
+                    </ui-tab-panel>
+                    
+                    <ui-tab-panel value="videos">
+                        ${videoLoading ? `
+                            <!-- Video Galleries Skeleton Loading -->
+                            <div class="space-y-4">
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                                <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                            </div>
+                        ` : `
+                            <!-- Video Galleries Table Section -->
+                            <div class="mb-8">
+                                ${videoGalleries && videoGalleries.length > 0 ? `
+                                    <ui-table 
+                                        title="Video Gallery Management"
+                                        data='${JSON.stringify(videoTableData)}'
+                                        columns='${JSON.stringify(videoTableColumns)}'
+                                        sortable
+                                        searchable
+                                        search-placeholder="Search video galleries..."
+                                        pagination
+                                        page-size="10"
+                                        action
+                                        addable
+                                        refresh
+                                        print
+                                        bordered
+                                        striped
+                                        class="w-full">
+                                    </ui-table>
+                                ` : `
+                                    <div class="text-center py-8 text-gray-500">
+                                        <p>No video galleries found in database</p>
+                                    </div>
+                                `}
+                            </div>
+                        `}
+                    </ui-tab-panel>
+                </ui-tabs>
             </div>
             
             <!-- Modals and Dialogs -->

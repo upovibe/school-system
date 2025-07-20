@@ -59,9 +59,9 @@ class GalleryController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                // Use standard PHP $_POST and $_FILES for multipart data
-                $data = $_POST;
-                // $_FILES is already available globally
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
@@ -214,8 +214,11 @@ class GalleryController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $data = $_POST;
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
+                // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
             }
             

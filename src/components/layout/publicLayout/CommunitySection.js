@@ -1,13 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
-
-// Load Quill CSS for content display
-if (!document.querySelector('link[href*="quill"]')) {
-    const link = document.createElement('link');
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-}
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Community Section Component
@@ -153,8 +146,11 @@ class CommunitySection extends App {
                             <!-- Content and Feature Cards -->
                             <div class="flex flex-col lg:flex-row gap-8 relative z-10">
                                 <!-- Content with enhanced typography -->
-                                <div class="content-preview text-lg leading-relaxed text-gray-700 lg:flex-1">
-                                    ${pageData.content}
+                                <div class="lg:flex-1">
+                                    <content-display 
+                                        content="${pageData.content.replace(/"/g, '&quot;')}"
+                                        no-styles>
+                                    </content-display>
                                 </div>
                                 
                                 <!-- Feature Cards Grid -->

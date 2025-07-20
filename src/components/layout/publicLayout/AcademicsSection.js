@@ -1,13 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
-
-// Load Quill CSS for content display
-if (!document.querySelector('link[href*="quill"]')) {
-    const link = document.createElement('link');
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-}
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Academics Section Component
@@ -108,9 +101,10 @@ class AcademicsSection extends App {
                             
                             <!-- Content Column (Right) -->
                             <div class="p-5 lg:p-12 flex flex-col justify-center">
-                                <div class="content-preview text-lg leading-relaxed">
-                                    ${pageData.content}
-                                </div>
+                                <content-display 
+                                    content="${pageData.content.replace(/"/g, '&quot;')}"
+                                    no-styles>
+                                </content-display>
                                 
                                 ${window.location.pathname !== '/public/academics' ? `
                                 <div class="mt-8">

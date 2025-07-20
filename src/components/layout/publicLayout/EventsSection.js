@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 import '@/components/layout/publicLayout/EventList.js';
+import '@/components/ui/ContentDisplay.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -159,9 +160,10 @@ class EventsSection extends App {
                     <!-- Content Container -->
                     <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 flex-1 w-full">
                         <div class="p-5 lg:p-12">
-                            <div class="content-preview text-lg leading-relaxed">
-                                ${pageData.content}
-                            </div>
+                            <content-display 
+                                content="${pageData.content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                            </content-display>
                             
                             ${window.location.pathname !== '/public/community/events' ? `
                                 <div class="mt-8">

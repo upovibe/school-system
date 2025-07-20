@@ -1,13 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
-
-// Load Quill CSS for content display
-if (!document.querySelector('link[href*="quill"]')) {
-    const link = document.createElement('link');
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-}
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Community Section Alternative Component
@@ -129,9 +122,10 @@ class CommunitySectionAlt extends App {
                     <!-- Content Column (Left) -->
                     <div class="lg:flex-1">
                         <div class="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-                            <div class="content-preview text-lg leading-relaxed text-gray-700">
-                                ${pageData.content}
-                            </div>
+                            <content-display 
+                                content="${pageData.content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                            </content-display>
                             
                             ${window.location.pathname !== '/public/community' ? `
                                 <div class="mt-8">

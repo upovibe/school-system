@@ -1,45 +1,90 @@
-import App from '@/core/App.js';
 import '@/components/ui/Dialog.js';
-import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
 /**
  * News Delete Dialog Component
  * 
- * Dialog for confirming news deletion
+ * A dialog component for confirming news deletion in the admin panel
+ * 
+ * Attributes:
+ * - open: boolean - controls dialog visibility
+ * 
+ * Events:
+ * - news-deleted: Fired when a news article is successfully deleted
+ * - modal-closed: Fired when dialog is closed
  */
-class NewsDeleteDialog extends App {
+class NewsDeleteDialog extends HTMLElement {
     constructor() {
         super();
         this.newsData = null;
-        this.loading = false;
+    }
+
+    static get observedAttributes() {
+        return ['open'];
     }
 
     connectedCallback() {
-        super.connectedCallback();
+        this.render();
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        this.addEventListener('dialog-close', () => {
-            this.resetData();
+        // Listen for confirm button click (Delete News)
+        this.addEventListener('confirm', () => {
+            this.deleteNews();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
         });
     }
 
+    open() {
+        this.setAttribute('open', '');
+    }
+
+    close() {
+        this.removeAttribute('open');
+    }
+
+    // Set news data for deletion
     setNewsData(newsData) {
-        this.set('newsData', newsData);
+        this.newsData = newsData;
+        this.populateDialog();
     }
 
-    resetData() {
-        this.set('newsData', null);
-        this.set('loading', false);
+    // Populate dialog with news data
+    populateDialog() {
+        if (!this.newsData) return;
+
+        const newsTitleElement = this.querySelector('#news-title');
+        const newsSlugElement = this.querySelector('#news-slug');
+        const newsStatusElement = this.querySelector('#news-status');
+
+        if (newsTitleElement) newsTitleElement.textContent = this.newsData.title || 'Unknown News';
+        if (newsSlugElement) newsSlugElement.textContent = this.newsData.slug || 'N/A';
+        if (newsStatusElement) {
+            const status = this.newsData.is_active ? 'Active' : 'Inactive';
+            newsStatusElement.textContent = status;
+        }
     }
 
-    async handleDelete() {
+    // Delete the news
+    async deleteNews() {
         try {
-            this.set('loading', true);
+            if (!this.newsData) {
+                Toast.show({
+                    title: 'Error',
+                    message: 'No news data available for deletion',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
 
+            // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
@@ -51,118 +96,67 @@ class NewsDeleteDialog extends App {
                 return;
             }
 
-            const newsData = this.get('newsData');
-            if (!newsData || !newsData.id) {
-                Toast.show({
-                    title: 'Error',
-                    message: 'No news data to delete',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
+            // Delete the news
+            const response = await api.withToken(token).delete(`/news/${this.newsData.id}`);
+            
+            Toast.show({
+                title: 'Success',
+                message: 'News deleted successfully',
+                variant: 'success',
+                duration: 3000
+            });
 
-            // Delete news
-            const response = await api.withToken(token).delete(`/news/${newsData.id}`);
-
-            if (response.data.success) {
-                Toast.show({
-                    title: 'Success',
-                    message: 'News deleted successfully',
-                    variant: 'success',
-                    duration: 3000
-                });
-
-                // Dispatch event with deleted news ID
-                this.dispatchEvent(new CustomEvent('news-deleted', {
-                    detail: { newsId: newsData.id }
-                }));
-
-                // Close dialog
-                const dialog = this.querySelector('ui-dialog');
-                if (dialog) {
-                    dialog.close();
-                }
-            }
+            // Close dialog and dispatch event
+            this.close();
+            this.dispatchEvent(new CustomEvent('news-deleted', {
+                detail: { newsId: this.newsData.id },
+                bubbles: true,
+                composed: true
+            }));
 
         } catch (error) {
             console.error('❌ Error deleting news:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to delete news',
                 variant: 'error',
                 duration: 3000
             });
-        } finally {
-            this.set('loading', false);
         }
     }
 
     render() {
-        const newsData = this.get('newsData');
-        const loading = this.get('loading');
-        const open = this.hasAttribute('open');
-
-        if (!newsData) {
-            return `<ui-dialog ${open ? 'open' : ''}>
-                <div slot="header">
-                    <h3 class="text-lg font-semibold text-gray-900">Delete News Article</h3>
-                </div>
-                <div class="p-6 text-center text-gray-500">
-                    No news data available
-                </div>
-            </ui-dialog>`;
-        }
-
-        return `
-            <ui-dialog ${open ? 'open' : ''}>
-                <div slot="header">
-                    <h3 class="text-lg font-semibold text-gray-900">Delete News Article</h3>
-                </div>
-
-                <div class="p-6">
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-600 mb-4">
-                            Are you sure you want to delete this news article? This action cannot be undone.
-                        </p>
-                        
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <h4 class="font-medium text-red-800 mb-2">News to be deleted:</h4>
-                            <p class="text-red-700 font-semibold">${newsData.title}</p>
-                            ${newsData.slug ? `<p class="text-red-600 text-sm mt-1">Slug: ${newsData.slug}</p>` : ''}
+        this.innerHTML = `
+            <ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Delete News"
+                variant="danger">
+                <div slot="content" class="space-y-4">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        <span class="font-semibold text-red-900">Delete News Article</span>
+                    </div>
+                    
+                    <p class="text-gray-700">
+                        Are you sure you want to delete this news article? This action cannot be undone.
+                    </p>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-newspaper text-red-500 mt-1"></i>
+                            <div class="flex-1">
+                                <h4 id="news-title" class="font-semibold text-red-900">News Title</h4>
+                                <div class="mt-1 text-sm text-red-700">
+                                    <span id="news-slug">Slug</span> • 
+                                    <span id="news-status">Status</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="text-sm text-gray-500">
-                        <p><strong>Warning:</strong> This will permanently delete:</p>
-                        <ul class="list-disc list-inside mt-2 space-y-1">
-                            <li>The news article and all its content</li>
-                            <li>Associated banner image (if any)</li>
-                            <li>All related data and metadata</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button
-                        variant="outline"
-                        @click="${() => {
-                            const dialog = this.querySelector('ui-dialog');
-                            if (dialog) dialog.close();
-                        }}"
-                        disabled="${loading}"
-                    >
-                        Cancel
-                    </ui-button>
-                    <ui-button
-                        variant="danger"
-                        @click="${this.handleDelete.bind(this)}"
-                        loading="${loading}"
-                        disabled="${loading}"
-                    >
-                        ${loading ? 'Deleting...' : 'Delete News'}
-                    </ui-button>
+                    
+                    <p class="text-sm text-gray-600">
+                        This will permanently remove the news article from the system and cannot be recovered.
+                    </p>
                 </div>
             </ui-dialog>
         `;

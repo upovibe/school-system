@@ -96,3 +96,4 @@ Router::get('/galleries/slug/{slug}', 'GalleryController@showBySlug');
 Router::get('/galleries/{id}', 'GalleryController@show');
 Router::put('/galleries/{id}', 'GalleryController@update');
 Router::delete('/galleries/{id}', 'GalleryController@destroy');
+Router::delete('/galleries/{id}/images/{imageIndex}', 'GalleryController@removeImage');

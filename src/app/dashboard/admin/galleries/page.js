@@ -96,6 +96,29 @@ class GalleriesPage extends App {
             }
         });
         
+        this.addEventListener('gallery-image-deleted', (event) => {
+            // Update the existing gallery in the data when an image is deleted
+            const updatedGallery = event.detail.gallery;
+            if (updatedGallery) {
+                const currentGalleries = this.get('galleries') || [];
+                const updatedGalleriesList = currentGalleries.map(gallery => 
+                    gallery.id === updatedGallery.id ? updatedGallery : gallery
+                );
+                this.set('galleries', updatedGalleriesList);
+                this.updateTableData();
+                // Update the view modal data if it's open
+                if (this.get('showViewModal')) {
+                    this.set('viewGalleryData', updatedGallery);
+                    const viewModal = this.querySelector('gallery-view-modal');
+                    if (viewModal) {
+                        viewModal.setGalleryData(updatedGallery);
+                    }
+                }
+            } else {
+                this.loadData();
+            }
+        });
+        
         // Listen for modal opened event to pass data
         this.addEventListener('modal-opened', (event) => {
             const modal = event.target;

@@ -399,6 +399,84 @@ class GalleryController {
     }
 
     /**
+     * Remove a single image from gallery (admin only)
+     */
+    public function removeImage($galleryId, $imageIndex) {
+        try {
+            // Require admin authentication
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            // Check if gallery exists
+            $existingGallery = $this->galleryModel->findById($galleryId);
+            if (!$existingGallery) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Gallery not found'
+                ]);
+                return;
+            }
+            
+            // Get current images array
+            $images = $existingGallery['images'] ?: [];
+            
+            // Validate image index
+            if (!is_numeric($imageIndex) || $imageIndex < 0 || $imageIndex >= count($images)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid image index'
+                ]);
+                return;
+            }
+            
+            // Get the image to remove
+            $imageToRemove = $images[$imageIndex];
+            
+            // Remove the image from the array
+            array_splice($images, $imageIndex, 1);
+            
+            // Delete the image file and thumbnails
+            deleteGalleryImages([$imageToRemove]);
+            
+            // Update the gallery with the new images array
+            $updateData = ['images' => $images];
+            $result = $this->galleryModel->update($galleryId, $updateData);
+            
+            if ($result) {
+                // Get the updated gallery data
+                $updatedGallery = $this->galleryModel->findById($galleryId);
+                
+                // Log the action
+                $this->logAction('gallery_image_removed', "Removed image from gallery: {$existingGallery['name']}", [
+                    'gallery_id' => $galleryId,
+                    'image_removed' => $imageToRemove,
+                    'remaining_images' => count($images)
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $updatedGallery,
+                    'message' => 'Image removed successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to remove image'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error removing image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Search galleries (public)
      */
     public function search() {

@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import '@/components/layout/adminLayout/GalleryImageDeleteDialog.js';
 
 /**
  * Gallery View Modal Component
@@ -38,6 +39,32 @@ class GalleryViewModal extends HTMLElement {
         this.addEventListener('confirm', () => {
             this.close();
         });
+
+        // Listen for image delete events
+        this.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-image-btn')) {
+                e.preventDefault();
+                const imageIndex = parseInt(e.target.closest('.delete-image-btn').dataset.imageIndex);
+                const imagePath = this.galleryData.images[imageIndex];
+                this.showDeleteDialog(imageIndex, imagePath);
+            }
+        });
+
+        // Listen for image deleted event from dialog
+        this.addEventListener('image-deleted', (event) => {
+            // Update the gallery data with the response
+            this.galleryData = event.detail.gallery;
+            
+            // Re-render the modal
+            this.render();
+            
+            // Dispatch event to notify parent components
+            this.dispatchEvent(new CustomEvent('gallery-image-deleted', {
+                detail: { gallery: this.galleryData, imageIndex: event.detail.imageIndex },
+                bubbles: true,
+                composed: true
+            }));
+        });
     }
 
     open() {
@@ -53,6 +80,15 @@ class GalleryViewModal extends HTMLElement {
         this.galleryData = galleryData;
         // Re-render the modal with the new data
         this.render();
+    }
+
+    // Show delete dialog for image
+    showDeleteDialog(imageIndex, imagePath) {
+        const deleteDialog = this.querySelector('gallery-image-delete-dialog');
+        if (deleteDialog) {
+            deleteDialog.setImageData(this.galleryData, imageIndex, imagePath);
+            deleteDialog.open();
+        }
     }
 
     // Helper method to get proper image URL
@@ -164,10 +200,14 @@ class GalleryViewModal extends HTMLElement {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                                 <button onclick="window.open('${this.getImageUrl(image)}', '_blank')" 
                                                         class="bg-white bg-opacity-90 text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
                                                     <i class="fas fa-external-link-alt"></i>
+                                                </button>
+                                                <button class="delete-image-btn bg-white bg-opacity-90 text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded border border-red-200 hover:bg-red-50"
+                                                        data-image-index="${index}">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                             <div class="absolute bottom-2 left-2">
@@ -216,6 +256,9 @@ class GalleryViewModal extends HTMLElement {
                     `}
                 </div>
             </ui-modal>
+            
+            <!-- Image Delete Dialog -->
+            <gallery-image-delete-dialog></gallery-image-delete-dialog>
         `;
     }
 }

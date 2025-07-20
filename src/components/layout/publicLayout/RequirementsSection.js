@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
-import api from '@/services/api.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Requirements Section Component
@@ -34,11 +34,9 @@ class RequirementsSection extends App {
         }
 
         if (pageDataAttr) {
-            try {
-                const pageData = JSON.parse(pageDataAttr);
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
                 this.set('pageData', pageData);
-            } catch (error) {
-                console.error('Error parsing page data:', error);
             }
         }
 

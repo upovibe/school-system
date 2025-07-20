@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
-import api from '@/services/api.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Application Process Section Component
@@ -34,11 +34,9 @@ class ApplicationProcessSection extends App {
         }
 
         if (pageDataAttr) {
-            try {
-                const pageData = JSON.parse(pageDataAttr);
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
                 this.set('pageData', pageData);
-            } catch (error) {
-                console.error('Error parsing page data:', error);
             }
         }
 
@@ -110,7 +108,7 @@ class ApplicationProcessSection extends App {
             return `
                 <div class="text-center py-16">
                     <div class="bg-white rounded-lg shadow-sm p-8">
-                        <i class="fas fa-edit text-gray-400 text-4xl mb-4"></i>
+                        <i class="fas fa-tasks text-gray-400 text-4xl mb-4"></i>
                         <h2 class="text-xl font-medium text-gray-600 mb-2">Application Process</h2>
                         <p class="text-gray-500">Our application process is being prepared.</p>
                     </div>

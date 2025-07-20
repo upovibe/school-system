@@ -138,7 +138,7 @@ class PhotoGallerySection extends App {
                             <!-- Galleries Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-5 lg:p-8">
                                 ${galleries.map((gallery, index) => `
-                                    <a href="/public/gallery/${gallery.slug}" class="group perspective-1000">
+                                    <a href="/public/gallery/photos/${gallery.slug}" class="group perspective-1000">
                                         <div class="relative transform-style-preserve-3d transition-all duration-700 group-hover:rotate-y-12">
                                             <div class="relative bg-white rounded-[2rem] shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-700 transform hover:-translate-y-4 cursor-pointer">
                                                 <!-- Gallery Header -->

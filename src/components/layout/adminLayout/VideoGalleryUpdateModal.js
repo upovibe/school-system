@@ -30,6 +30,16 @@ class VideoGalleryUpdateModal extends App {
     }
 
     setupEventListeners() {
+        // Listen for confirm button click (Update Video Gallery)
+        this.addEventListener('confirm', () => {
+            this.handleSubmit();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+
         this.addEventListener('click', (e) => {
             const addVideoButton = e.target.closest('[data-action="add-video-link"]');
             if (addVideoButton) {
@@ -42,20 +52,6 @@ class VideoGalleryUpdateModal extends App {
                 e.preventDefault();
                 const index = parseInt(removeVideoButton.dataset.index);
                 this.removeVideoLink(index);
-            }
-
-            const removeExistingButton = e.target.closest('[data-action="remove-existing-video"]');
-            if (removeExistingButton) {
-                e.preventDefault();
-                const index = parseInt(removeExistingButton.dataset.index);
-                this.removeExistingVideo(index);
-            }
-        });
-
-        this.addEventListener('submit', (e) => {
-            if (e.target.matches('form')) {
-                e.preventDefault();
-                this.handleSubmit();
             }
         });
 
@@ -110,18 +106,6 @@ class VideoGalleryUpdateModal extends App {
         }
     }
 
-    removeExistingVideo(index) {
-        const videoGalleryData = this.get('videoGalleryData');
-        if (!videoGalleryData || !videoGalleryData.video_links) return;
-
-        const videoLinks = [...videoGalleryData.video_links];
-        videoLinks.splice(index, 1);
-        
-        videoGalleryData.video_links = videoLinks;
-        this.set('videoGalleryData', { ...videoGalleryData });
-        this.set('videoLinks', [...videoLinks]);
-    }
-
     updateVideoLink(index, value) {
         const videoLinks = this.get('videoLinks');
         videoLinks[index] = value;
@@ -132,11 +116,15 @@ class VideoGalleryUpdateModal extends App {
         try {
             this.set('loading', true);
 
-            const formData = new FormData(this.querySelector('form'));
+            // Get form data using the data-field attributes for reliable selection
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
+            const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
+
             const data = {
-                name: formData.get('name'),
-                description: formData.get('description'),
-                is_active: formData.get('is_active') === 'on',
+                name: nameInput ? nameInput.value : '',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                is_active: isActiveSwitch ? isActiveSwitch.checked : true,
                 video_links: this.get('videoLinks').filter(link => link.trim() !== '')
             };
 
@@ -227,7 +215,10 @@ class VideoGalleryUpdateModal extends App {
         const loading = this.get('loading');
 
         if (!videoGalleryData) {
-            return `<ui-modal title="Update Video Gallery" size="lg">
+            return `<ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Update Video Gallery" 
+                size="lg">
                 <div class="text-center py-8 text-gray-500">
                     <p>No video gallery data available</p>
                 </div>
@@ -235,7 +226,11 @@ class VideoGalleryUpdateModal extends App {
         }
 
         return `
-            <ui-modal title="Update Video Gallery" size="lg">
+            <ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Update Video Gallery" 
+                size="lg"
+                close-button="true">
                 <form class="space-y-6">
                     <!-- Gallery Name -->
                     <div>
@@ -244,7 +239,7 @@ class VideoGalleryUpdateModal extends App {
                         </label>
                         <ui-input
                             id="name"
-                            name="name"
+                            data-field="name"
                             type="text"
                             placeholder="Enter gallery name"
                             value="${videoGalleryData.name || ''}"
@@ -260,76 +255,55 @@ class VideoGalleryUpdateModal extends App {
                         </label>
                         <ui-textarea
                             id="description"
-                            name="description"
+                            data-field="description"
                             placeholder="Enter gallery description"
                             rows="3"
                             class="w-full">${videoGalleryData.description || ''}</ui-textarea>
                     </div>
 
-                    <!-- Existing Video Links -->
-                    ${videoGalleryData.video_links && videoGalleryData.video_links.length > 0 ? `
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Existing Video Links
-                            </label>
-                            <div class="space-y-2">
-                                ${videoGalleryData.video_links.map((link, index) => `
-                                    <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                                        <div class="flex-1">
-                                            <p class="text-sm text-gray-700 truncate">${link}</p>
-                                        </div>
-                                        <ui-button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            data-action="remove-existing-video"
-                                            data-index="${index}"
-                                            class="px-3">
-                                            <i class="fas fa-trash text-red-500"></i>
-                                        </ui-button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- New Video Links -->
+                    <!-- Video Links -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Add New Video Links
+                            Video Links *
                         </label>
                         <div class="space-y-3">
                             ${videoLinks.map((link, index) => `
                                 <div class="flex gap-2">
-                                    <ui-input
-                                        type="url"
-                                        placeholder="Enter video URL (YouTube, Facebook, etc.)"
-                                        value="${link}"
-                                        data-video-index="${index}"
-                                        class="flex-1">
-                                    </ui-input>
+                                    <div class="flex-1">
+                                        <ui-input
+                                            type="url"
+                                            placeholder="Enter video URL (YouTube, Facebook, etc.)"
+                                            value="${link}"
+                                            data-video-index="${index}"
+                                            class="w-full">
+                                        </ui-input>
+                                    </div>
                                     ${videoLinks.length > 1 ? `
-                                        <ui-button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            data-action="remove-video-link"
-                                            data-index="${index}"
-                                            class="px-3">
-                                            <i class="fas fa-trash text-red-500"></i>
-                                        </ui-button>
+                                        <div>
+                                            <ui-button
+                                                type="button"
+                                                variant="normal"
+                                                size="sm"
+                                                data-action="remove-video-link"
+                                                data-index="${index}"
+                                                class="px-3 bg-transparent">
+                                                <i class="fas fa-trash text-red-500"></i>
+                                            </ui-button>
+                                        </div>
                                     ` : ''}
                                 </div>
                             `).join('')}
-                            <ui-button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                data-action="add-video-link"
-                                class="w-full">
-                                <i class="fas fa-plus mr-2"></i>
-                                Add Another Video Link
-                            </ui-button>
+                            <div class="flex justify-end">
+                                <ui-button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-action="add-video-link"
+                                    class="px-3">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Add
+                                </ui-button>
+                            </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
                             Supported platforms: YouTube, Facebook, Vimeo, Dailymotion, and more
@@ -345,23 +319,6 @@ class VideoGalleryUpdateModal extends App {
                         <ui-switch name="is_active" ${videoGalleryData.is_active !== false ? 'checked' : ''}></ui-switch>
                     </div>
                 </form>
-
-                <div slot="footer" class="flex justify-end gap-3">
-                    <ui-button
-                        type="button"
-                        variant="outline"
-                        @click="${() => this.close()}"
-                        disabled="${loading}">
-                        Cancel
-                    </ui-button>
-                    <ui-button
-                        type="submit"
-                        variant="primary"
-                        @click="${() => this.handleSubmit()}"
-                        loading="${loading}">
-                        Update Video Gallery
-                    </ui-button>
-                </div>
             </ui-modal>
         `;
     }

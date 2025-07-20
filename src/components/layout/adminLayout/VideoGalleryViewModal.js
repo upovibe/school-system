@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Modal.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
 import api from '@/services/api.js';
 
 /**
@@ -25,6 +26,11 @@ class VideoGalleryViewModal extends App {
     }
 
     setupEventListeners() {
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+
         this.addEventListener('click', (e) => {
             const copyButton = e.target.closest('[data-action="copy-link"]');
             if (copyButton) {
@@ -187,7 +193,11 @@ class VideoGalleryViewModal extends App {
         const loading = this.get('loading');
 
         if (!videoGalleryData) {
-            return `<ui-modal title="View Video Gallery" size="xl">
+            return `<ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="View Video Gallery" 
+                size="xl"
+                close-button="true">
                 <div class="text-center py-8 text-gray-500">
                     <p>No video gallery data available</p>
                 </div>
@@ -195,25 +205,64 @@ class VideoGalleryViewModal extends App {
         }
 
         return `
-            <ui-modal title="View Video Gallery" size="xl">
-                <div class="space-y-6">
-                    <!-- Gallery Info -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">${videoGalleryData.name}</h3>
-                        ${videoGalleryData.description ? `
-                            <p class="text-gray-600 mb-3">${videoGalleryData.description}</p>
-                        ` : ''}
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <span>Status: ${videoGalleryData.is_active ? 'Active' : 'Inactive'}</span>
-                            <span>Videos: ${videoGalleryData.video_links ? videoGalleryData.video_links.length : 0}</span>
-                            <span>Created: ${new Date(videoGalleryData.created_at).toLocaleDateString()}</span>
+            <ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="View Video Gallery" 
+                size="xl"
+                close-button="true">
+                <div>
+                    <!-- Video Gallery Title -->
+                    <div class="flex items-center gap-3 border-b pb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">${videoGalleryData.name || 'N/A'}</h3>
+                        <ui-badge color="${videoGalleryData.is_active ? 'success' : 'secondary'}">
+                            <i class="fas ${videoGalleryData.is_active ? 'fa-check-circle' : 'fa-times-circle'} mr-1"></i>${videoGalleryData.is_active ? 'Active' : 'Inactive'}
+                        </ui-badge>
+                    </div>
+
+                    <!-- Video Gallery Information -->
+                    <div class="border-b pb-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <h4 class="text-md font-semibold text-gray-800">Video Gallery Information</h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-link mr-1"></i>Slug
+                                </label>
+                                <p class="text-gray-900 text-sm font-mono">${videoGalleryData.slug || 'N/A'}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-toggle-on mr-1"></i>Status
+                                </label>
+                                <p class="text-gray-900 text-sm">${videoGalleryData.is_active ? 'Active' : 'Inactive'}</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Videos Grid -->
-                    ${videoGalleryData.video_links && videoGalleryData.video_links.length > 0 ? `
-                        <div>
-                            <h4 class="text-md font-medium text-gray-700 mb-4">Videos</h4>
+                    <!-- Description -->
+                    <div class="border-b pb-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-file-text text-green-500"></i>
+                            <h4 class="text-md font-semibold text-gray-800">Description</h4>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            ${videoGalleryData.description ? `
+                                <p class="text-gray-900 text-sm whitespace-pre-wrap">${videoGalleryData.description}</p>
+                            ` : `
+                                <p class="text-gray-500 italic">No description available</p>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Videos Section -->
+                    <div class="border-b pb-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-video text-purple-500"></i>
+                            <h4 class="text-md font-semibold text-gray-800">Videos (${videoGalleryData.video_links ? videoGalleryData.video_links.length : 0})</h4>
+                        </div>
+                        ${videoGalleryData.video_links && videoGalleryData.video_links.length > 0 ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 ${videoGalleryData.video_links.map((link, index) => {
                                     const embedUrl = this.getEmbedUrl(link);
@@ -274,22 +323,38 @@ class VideoGalleryViewModal extends App {
                                     `;
                                 }).join('')}
                             </div>
-                        </div>
-                    ` : `
-                        <div class="text-center py-8 text-gray-500">
-                            <p>No videos in this gallery</p>
-                        </div>
-                    `}
-                </div>
+                        ` : `
+                            <div class="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-video text-gray-400 text-4xl mb-3"></i>
+                                    <p class="text-gray-500 text-sm font-medium">No videos in this gallery</p>
+                                    <p class="text-gray-400 text-xs mt-1">Add video links to create a beautiful video gallery</p>
+                                </div>
+                            </div>
+                        `}
+                    </div>
 
-                <div slot="footer" class="flex justify-end">
-                    <ui-button
-                        type="button"
-                        variant="outline"
-                        @click="${() => this.close()}"
-                        disabled="${loading}">
-                        Close
-                    </ui-button>
+                    <!-- Timestamps -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-history text-orange-500"></i>
+                            <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-plus mr-1"></i>Created
+                                </label>
+                                <span class="text-gray-900 text-sm">${videoGalleryData.created_at ? new Date(videoGalleryData.created_at).toLocaleString() : 'N/A'}</span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-edit mr-1"></i>Last Updated
+                                </label>
+                                <span class="text-gray-900 text-sm">${videoGalleryData.updated_at ? new Date(videoGalleryData.updated_at).toLocaleString() : 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </ui-modal>
         `;

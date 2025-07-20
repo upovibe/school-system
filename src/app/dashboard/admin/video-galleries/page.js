@@ -168,35 +168,50 @@ class VideoGalleriesPage extends App {
     }
 
     onView(event) {
-        const { id } = event.detail;
-        const videoGalleries = this.get('videoGalleries');
-        const videoGallery = videoGalleries.find(vg => vg.id === id);
-        
-        if (videoGallery) {
-            this.set('viewVideoGalleryData', videoGallery);
+        const { detail } = event;
+        const viewVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+        if (viewVideoGallery) {
+            this.closeAllModals();
+            this.set('viewVideoGalleryData', viewVideoGallery);
             this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('video-gallery-view-modal');
+                if (viewModal) {
+                    viewModal.setVideoGalleryData(viewVideoGallery);
+                }
+            }, 0);
         }
     }
 
     onEdit(event) {
-        const { id } = event.detail;
-        const videoGalleries = this.get('videoGalleries');
-        const videoGallery = videoGalleries.find(vg => vg.id === id);
-        
-        if (videoGallery) {
-            this.set('updateVideoGalleryData', videoGallery);
+        const { detail } = event;
+        const editVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+        if (editVideoGallery) {
+            this.closeAllModals();
+            this.set('updateVideoGalleryData', editVideoGallery);
             this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('video-gallery-update-modal');
+                if (updateModal) {
+                    updateModal.setVideoGalleryData(editVideoGallery);
+                }
+            }, 0);
         }
     }
 
     onDelete(event) {
-        const { id } = event.detail;
-        const videoGalleries = this.get('videoGalleries');
-        const videoGallery = videoGalleries.find(vg => vg.id === id);
-        
-        if (videoGallery) {
-            this.set('deleteVideoGalleryData', videoGallery);
+        const { detail } = event;
+        const deleteVideoGallery = this.get('videoGalleries').find(videoGallery => videoGallery.id === detail.row.id);
+        if (deleteVideoGallery) {
+            this.closeAllModals();
+            this.set('deleteVideoGalleryData', deleteVideoGallery);
             this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('video-gallery-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setVideoGalleryData(deleteVideoGallery);
+                }
+            }, 0);
         }
     }
 

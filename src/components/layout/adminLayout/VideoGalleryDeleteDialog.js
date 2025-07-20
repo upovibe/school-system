@@ -25,12 +25,14 @@ class VideoGalleryDeleteDialog extends App {
     }
 
     setupEventListeners() {
-        this.addEventListener('click', (e) => {
-            const confirmButton = e.target.closest('[data-action="confirm-delete"]');
-            if (confirmButton) {
-                e.preventDefault();
-                this.handleDelete();
-            }
+        // Listen for confirm button click (Delete Video Gallery)
+        this.addEventListener('confirm', () => {
+            this.handleDelete();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
         });
     }
 
@@ -107,7 +109,9 @@ class VideoGalleryDeleteDialog extends App {
         const loading = this.get('loading');
 
         if (!videoGalleryData) {
-            return `<ui-dialog title="Delete Video Gallery">
+            return `<ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Delete Video Gallery">
                 <div class="text-center py-8 text-gray-500">
                     <p>No video gallery data available</p>
                 </div>
@@ -115,7 +119,9 @@ class VideoGalleryDeleteDialog extends App {
         }
 
         return `
-            <ui-dialog title="Delete Video Gallery">
+            <ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Delete Video Gallery">
                 <div class="space-y-4">
                     <div class="text-center">
                         <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
@@ -151,23 +157,6 @@ class VideoGalleryDeleteDialog extends App {
                             </div>
                         </div>
                     ` : ''}
-                </div>
-
-                <div slot="footer" class="flex justify-end gap-3">
-                    <ui-button
-                        type="button"
-                        variant="outline"
-                        @click="${() => this.close()}"
-                        disabled="${loading}">
-                        Cancel
-                    </ui-button>
-                    <ui-button
-                        type="button"
-                        variant="danger"
-                        data-action="confirm-delete"
-                        loading="${loading}">
-                        Delete Video Gallery
-                    </ui-button>
                 </div>
             </ui-dialog>
         `;

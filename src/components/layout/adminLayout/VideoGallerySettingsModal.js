@@ -28,6 +28,16 @@ class VideoGallerySettingsModal extends App {
     }
 
     setupEventListeners() {
+        // Listen for confirm button click (Save Video Gallery)
+        this.addEventListener('confirm', () => {
+            this.handleSubmit();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+
         this.addEventListener('click', (e) => {
             const addVideoButton = e.target.closest('[data-action="add-video-link"]');
             if (addVideoButton) {
@@ -40,13 +50,6 @@ class VideoGallerySettingsModal extends App {
                 e.preventDefault();
                 const index = parseInt(removeVideoButton.dataset.index);
                 this.removeVideoLink(index);
-            }
-        });
-
-        this.addEventListener('submit', (e) => {
-            if (e.target.matches('form')) {
-                e.preventDefault();
-                this.handleSubmit();
             }
         });
 
@@ -85,11 +88,15 @@ class VideoGallerySettingsModal extends App {
         try {
             this.set('loading', true);
 
-            const formData = new FormData(this.querySelector('form'));
+            // Get form data using the data-field attributes for reliable selection
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
+            const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
+
             const data = {
-                name: formData.get('name'),
-                description: formData.get('description'),
-                is_active: formData.get('is_active') === 'on',
+                name: nameInput ? nameInput.value : '',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                is_active: isActiveSwitch ? isActiveSwitch.checked : true,
                 video_links: this.get('videoLinks').filter(link => link.trim() !== '')
             };
 
@@ -114,6 +121,7 @@ class VideoGallerySettingsModal extends App {
                 return;
             }
 
+            // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
@@ -125,8 +133,9 @@ class VideoGallerySettingsModal extends App {
                 return;
             }
 
+            // Create the video gallery
             const response = await api.withToken(token).post('/video-galleries', data);
-
+            
             Toast.show({
                 title: 'Success',
                 message: 'Video gallery created successfully',
@@ -134,19 +143,27 @@ class VideoGallerySettingsModal extends App {
                 duration: 3000
             });
 
-            // Dispatch event to parent component
+            // Construct the new video gallery data from response
+            const newVideoGallery = {
+                id: response.data.data?.id || response.data.id,
+                name: data.name,
+                description: data.description,
+                is_active: data.is_active,
+                video_links: data.video_links,
+                created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            };
+
+            // Close modal and dispatch event
+            this.close();
             this.dispatchEvent(new CustomEvent('video-gallery-saved', {
-                detail: { videoGallery: response.data.data },
-                bubbles: true
+                detail: { videoGallery: newVideoGallery },
+                bubbles: true,
+                composed: true
             }));
 
-            // Reset form
-            this.resetForm();
-            this.close();
-
         } catch (error) {
-            console.error('❌ Error creating video gallery:', error);
-            
+            console.error('❌ Error saving video gallery:', error);
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create video gallery',
@@ -178,7 +195,11 @@ class VideoGallerySettingsModal extends App {
         const loading = this.get('loading');
 
         return `
-            <ui-modal title="Create Video Gallery" size="lg">
+            <ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Create Video Gallery" 
+                size="lg"
+                close-button="true">
                 <form class="space-y-6">
                     <!-- Gallery Name -->
                     <div>
@@ -191,7 +212,8 @@ class VideoGallerySettingsModal extends App {
                             type="text"
                             placeholder="Enter gallery name"
                             required
-                            class="w-full">
+                            class="w-full"
+                            data-field="name">
                         </ui-input>
                     </div>
 
@@ -205,7 +227,8 @@ class VideoGallerySettingsModal extends App {
                             name="description"
                             placeholder="Enter gallery description"
                             rows="3"
-                            class="w-full">
+                            class="w-full"
+                            data-field="description">
                         </ui-textarea>
                     </div>
 
@@ -217,35 +240,41 @@ class VideoGallerySettingsModal extends App {
                         <div class="space-y-3">
                             ${videoLinks.map((link, index) => `
                                 <div class="flex gap-2">
-                                    <ui-input
-                                        type="url"
-                                        placeholder="Enter video URL (YouTube, Facebook, etc.)"
-                                        value="${link}"
-                                        data-video-index="${index}"
-                                        class="flex-1">
-                                    </ui-input>
+                                    <div class="flex-1">
+                                        <ui-input
+                                            type="url"
+                                            placeholder="Enter video URL (YouTube, Facebook, etc.)"
+                                            value="${link}"
+                                            data-video-index="${index}"
+                                            class="w-full">
+                                        </ui-input>
+                                    </div>
                                     ${videoLinks.length > 1 ? `
-                                        <ui-button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            data-action="remove-video-link"
-                                            data-index="${index}"
-                                            class="px-3">
-                                            <i class="fas fa-trash text-red-500"></i>
-                                        </ui-button>
+                                        <div>
+                                            <ui-button
+                                                type="button"
+                                                variant="normal"
+                                                size="sm"
+                                                data-action="remove-video-link"
+                                                data-index="${index}"
+                                                class="px-3 bg-transparent">
+                                                <i class="fas fa-trash text-red-500"></i>
+                                            </ui-button>
+                                        </div>
                                     ` : ''}
                                 </div>
                             `).join('')}
-                            <ui-button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                data-action="add-video-link"
-                                class="w-full">
-                                <i class="fas fa-plus mr-2"></i>
-                                Add Another Video Link
-                            </ui-button>
+                            <div class="flex justify-end">
+                                <ui-button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-action="add-video-link"
+                                    class="px-3">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Add
+                                </ui-button>
+                            </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
                             Supported platforms: YouTube, Facebook, Vimeo, Dailymotion, and more
@@ -261,23 +290,6 @@ class VideoGallerySettingsModal extends App {
                         <ui-switch name="is_active" checked></ui-switch>
                     </div>
                 </form>
-
-                <div slot="footer" class="flex justify-end gap-3">
-                    <ui-button
-                        type="button"
-                        variant="outline"
-                        @click="${() => this.close()}"
-                        disabled="${loading}">
-                        Cancel
-                    </ui-button>
-                    <ui-button
-                        type="submit"
-                        variant="primary"
-                        @click="${() => this.handleSubmit()}"
-                        loading="${loading}">
-                        Create Video Gallery
-                    </ui-button>
-                </div>
             </ui-modal>
         `;
     }

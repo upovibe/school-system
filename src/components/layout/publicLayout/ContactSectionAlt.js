@@ -5,7 +5,6 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/ContentDisplay.js';
-
 /**
  * Contact Section Alt Component
  * 
@@ -357,14 +356,14 @@ class ContactSectionAlt extends App {
                                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                                             Full Name *
                                         </label>
-                                        <input
+                                        <ui-input
                                             type="text"
                                             id="name"
                                             name="name"
                                             value="${formData.name}"
                                             placeholder="Enter your full name"
-                                            required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${primaryColor}] focus:border-transparent transition-all duration-300">
+                                            required>
+                                        </ui-input>
                                     </div>
                                     
                                     <!-- Email -->
@@ -372,14 +371,14 @@ class ContactSectionAlt extends App {
                                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                                             Email Address *
                                         </label>
-                                        <input
+                                        <ui-input
                                             type="email"
                                             id="email"
                                             name="email"
                                             value="${formData.email}"
                                             placeholder="Enter your email address"
-                                            required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${primaryColor}] focus:border-transparent transition-all duration-300">
+                                            required>
+                                        </ui-input>
                                     </div>
                                     
                                     <!-- Subject -->
@@ -387,13 +386,13 @@ class ContactSectionAlt extends App {
                                         <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
                                             Subject
                                         </label>
-                                        <input
+                                        <ui-input
                                             type="text"
                                             id="subject"
                                             name="subject"
                                             value="${formData.subject}"
-                                            placeholder="Enter message subject"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${primaryColor}] focus:border-transparent transition-all duration-300">
+                                            placeholder="Enter message subject">
+                                        </ui-input>
                                     </div>
                                     
                                     <!-- Message -->
@@ -401,29 +400,41 @@ class ContactSectionAlt extends App {
                                         <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
                                             Message *
                                         </label>
-                                        <textarea
+                                        <ui-textarea
                                             id="message"
                                             name="message"
                                             rows="5"
                                             placeholder="Enter your message"
-                                            required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${primaryColor}] focus:border-transparent transition-all duration-300 resize-none">${formData.message}</textarea>
+                                            required>${formData.message}</ui-textarea>
                                     </div>
                                     
                                     <!-- Submit Button -->
                                     <button
                                         type="submit"
                                         disabled="${loading}"
-                                        class="w-full py-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] text-[${textColor}] font-bold rounded-lg hover:from-[${accentColor}] hover:to-[${primaryColor}] transition-all duration-500 transform hover:-translate-y-1 hover:scale-105 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                        class="w-full bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] text-white font-semibold py-3 px-6 rounded-lg hover:from-[${primaryColor}] hover:to-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                         ${loading ? `
-                                            <i class="fas fa-spinner fa-spin mr-2"></i>
-                                            Sending Message...
+                                            <div class="flex items-center justify-center gap-2">
+                                                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Sending Message...
+                                            </div>
                                         ` : `
-                                            <i class="fas fa-paper-plane mr-2"></i>
-                                            Send Message
+                                            <div class="flex items-center justify-center gap-2">
+                                                <i class="fas fa-paper-plane"></i>
+                                                Send Message
+                                            </div>
                                         `}
-                                    </button>
-                                </form>
+                                    </button>                                    
+                                </form>                                
+                                    <!-- Social Media Links -->
+                                    ${this.hasSocialMediaLinks() ? `
+                                        <div class="border-t border-gray-200 pt-6">
+                                            <h3 class="text-lg font-semibold text-[${secondaryColor}] mb-4 text-center">Follow Us</h3>
+                                            <div class="grid grid-cols-3 gap-3">
+                                                ${this.renderSocialMediaLinks()}
+                                            </div>
+                                        </div>
+                                    ` : ''}
                             </div>
                         </div>
                     </div>
@@ -496,25 +507,6 @@ class ContactSectionAlt extends App {
                         </div>
                     </div>
                 </div>
-                
-                <!-- Social Media Section -->
-                ${this.hasSocialMediaLinks() ? `
-                    <div class="mt-16">
-                        <div class="text-center mb-8">
-                            <h2 class="text-3xl font-bold text-[${secondaryColor}] mb-4">Follow Us</h2>
-                            <p class="text-gray-600 max-w-2xl mx-auto">
-                                Stay connected with us on social media for the latest updates and news
-                            </p>
-                            <div class="w-24 h-1 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] mx-auto mt-4 rounded-full"></div>
-                        </div>
-                        
-                        <div class="bg-white rounded-[2rem] shadow-2xl p-8">
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                ${this.renderSocialMediaLinks()}
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
             </section>
         `;
     }

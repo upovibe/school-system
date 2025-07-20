@@ -132,24 +132,29 @@ class NewsList extends App {
                                     <div class="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-[${primaryColor}] news-card cursor-pointer hover:bg-gray-100" 
                                          data-news='${JSON.stringify(newsItem).replace(/'/g, "&apos;")}'
                                          onclick="this.closest('news-list').openNewsPage('${newsItem.slug || newsItem.id}')">
-                                        <div class="flex items-start justify-between">
+                                        <!-- Title at the top -->
+                                        <h4 class="font-semibold text-[${secondaryColor}] mb-3 truncate capitalize" title="${newsItem.title || 'Untitled News'}">${newsItem.title || 'Untitled News'}</h4>
+                                        
+                                        <!-- Content row with banner left and content/date right -->
+                                        <div class="flex items-start gap-4">
+                                            ${newsItem.banner_image ? `
+                                                <img src="/api/uploads/news/${newsItem.banner_image}" alt="${newsItem.title}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                            ` : `
+                                                <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-image text-gray-400"></i>
+                                                </div>
+                                            `}
                                             <div class="flex-1 min-w-0">
-                                                <h4 class="font-semibold text-[${secondaryColor}] mb-1 truncate capitalize" title="${newsItem.title || 'Untitled News'}">${newsItem.title || 'Untitled News'}</h4>
                                                 <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
                                                     <span class="flex items-center gap-1">
                                                         <i class="fas fa-calendar text-[${primaryColor}]"></i>
                                                         ${this.formatDate(newsItem.created_at)}
-                                                    </span>
-                                                    <span class="flex items-center gap-1">
-                                                        <i class="fas fa-link text-[${primaryColor}]"></i>
-                                                        ${newsItem.slug || 'N/A'}
                                                     </span>
                                                 </div>
                                                 <p class="text-sm text-gray-600 line-clamp-2">
                                                     ${this.getContentPreview(newsItem.content)}
                                                 </p>
                                             </div>
-
                                         </div>
                                     </div>
                                 `;

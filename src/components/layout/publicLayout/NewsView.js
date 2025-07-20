@@ -127,29 +127,7 @@ class NewsView extends App {
         return baseUrl + apiPath + '/' + imagePath;
     }
 
-    // Helper function to get status badge styling
-    getStatusBadge(status) {
-        switch (status?.toLowerCase()) {
-            case 'active':
-                return {
-                    class: 'bg-green-100 text-green-800',
-                    icon: 'fas fa-check-circle',
-                    text: 'Active'
-                };
-            case 'inactive':
-                return {
-                    class: 'bg-gray-100 text-gray-800',
-                    icon: 'fas fa-pause-circle',
-                    text: 'Inactive'
-                };
-            default:
-                return {
-                    class: 'bg-gray-100 text-gray-800',
-                    icon: 'fas fa-circle',
-                    text: status || 'Unknown'
-                };
-        }
-    }
+
 
     // Helper function to format date
     formatDate(dateString) {
@@ -205,7 +183,7 @@ class NewsView extends App {
             `;
         }
 
-        const statusBadge = this.getStatusBadge(news.status);
+
 
         return `
             <!-- Breadcrumb -->
@@ -232,12 +210,12 @@ class NewsView extends App {
                     </div>
                 </div>
                 
-                <!-- Status Badge - Absolute positioned at top-right corner -->
-                <div class="absolute top-4 right-4 z-10">
-                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-[${primaryColor}] bg-opacity-10 text-[${primaryColor}] shadow-lg">
-                        <i class="${statusBadge.icon} mr-2"></i>
-                        ${statusBadge.text}
-                    </span>
+                <!-- Share/Copy buttons - Absolute positioned at top-right corner -->
+                <div class="absolute top-4 right-4 z-10 flex gap-3">
+                    <i onclick="navigator.share ? navigator.share({title: '${news.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
+                       class="fas fa-share size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm"></i>
+                    <i onclick="this.closest('app-news-view').copyNewsUrl()" 
+                       class="fas fa-copy size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm"></i>
                 </div>
                 
                 <!-- Dark gradient overlay for images -->
@@ -252,25 +230,16 @@ class NewsView extends App {
                     
                     <!-- Left Container -->
                     <div class="space-y-6">
-                        <!-- Title with Share/Copy buttons -->
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h1 class="text-3xl font-bold text-[${secondaryColor}] mb-2">${news.title ? news.title.charAt(0).toUpperCase() + news.title.slice(1) : 'Untitled News'}</h1>
-                                ${news.subtitle ? `<p class="text-lg text-gray-600">${news.subtitle}</p>` : ''}
-                            </div>
-                            <div class="flex gap-3 ml-4">
-                                <i onclick="navigator.share ? navigator.share({title: '${news.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
-                                   class="fas fa-share size-8 text-gray-600 hover:text-[${primaryColor}] cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
-                                <i onclick="this.closest('app-news-view').copyNewsUrl()" 
-                                   class="fas fa-copy size-8 text-gray-600 hover:text-gray-800 cursor-pointer transition-colors border border-gray-300 rounded-lg p-1.5"></i>
-                            </div>
+                        <!-- Title -->
+                        <div>
+                            <h1 class="text-3xl font-bold text-[${secondaryColor}] mb-2">${news.title ? news.title.charAt(0).toUpperCase() + news.title.slice(1) : 'Untitled News'}</h1>
+                            ${news.subtitle ? `<p class="text-lg text-gray-600">${news.subtitle}</p>` : ''}
                         </div>
 
                         <!-- Content -->
                         ${news.content ? `
                             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                                <h3 class="text-lg font-semibold text-[${secondaryColor}] mb-3">Content</h3>
-                                <div class="prose prose-sm max-w-none text-gray-700">
+                                <div class="ql-editor">
                                     ${news.content}
                                 </div>
                             </div>

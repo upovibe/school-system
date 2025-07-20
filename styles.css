@@ -6,6 +6,69 @@
     color: #374151;
 }
 
+/* Quill Content Styles */
+.content-preview .ql-editor {
+    padding: 0;
+}
+
+.content-preview ul {
+    list-style-type: disc;
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.content-preview ol {
+    list-style-type: decimal;
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.content-preview li {
+    margin: 0.25em 0;
+    display: list-item;
+}
+
+.content-preview strong, .content-preview b {
+    font-weight: 600;
+}
+
+.content-preview em, .content-preview i {
+    font-style: italic;
+}
+
+.content-preview u {
+    text-decoration: underline;
+}
+
+.content-preview blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.content-preview code {
+    background-color: #f3f4f6;
+    padding: 0.125em 0.25em;
+    border-radius: 0.25em;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875em;
+}
+
+.content-preview pre {
+    background-color: #f3f4f6;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.content-preview pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
 .content-preview h1, .content-preview h2, .content-preview h3,
 .content-preview h4, .content-preview h5, .content-preview h6 {
     margin-top: 0.5em;
@@ -18,30 +81,6 @@
 .content-preview h2 { font-size: 1.25em; }
 .content-preview h3 { font-size: 1.125em; }
 
-.content-preview ul, .content-preview ol {
-    margin: 0.5em 0;
-    padding-left: 1.5em;
-}
-
-.content-preview li {
-    margin: 0.25em 0;
-}
-
 .content-preview p {
     margin: 0.5em 0;
-}
-
-.content-preview strong, .content-preview b {
-    font-weight: 600;
-}
-
-.content-preview em, .content-preview i {
-    font-style: italic;
-}
-
-.content-preview blockquote {
-    border-left: 4px solid #e5e7eb;
-    padding-left: 1em;
-    margin: 1em 0;
-    color: #6b7280;
 } 

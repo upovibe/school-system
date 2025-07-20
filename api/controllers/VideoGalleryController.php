@@ -51,27 +51,23 @@ class VideoGalleryController {
             // Require admin authentication
             RoleMiddleware::requireAdmin($this->pdo);
             
-            // Handle multipart form data or JSON data for POST requests
-            $data = [];
-            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
-            $rawData = file_get_contents('php://input');
-
-            if (strpos($content_type, 'multipart/form-data') !== false) {
-                // Use standard PHP $_POST and $_FILES for multipart data (POST requests)
-                $data = $_POST;
-                // $_FILES is already available globally
-            } else {
-                // Fall back to JSON
-                $data = json_decode($rawData, true) ?? [];
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (!isset($data['name']) || empty($data['name'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Gallery name is required'
+                ]);
+                return;
             }
             
-            // Auto-generate slug from name (only if name is provided)
-            if (isset($data['name']) && !empty($data['name'])) {
-                $generatedSlug = generateSlug($data['name']);
-                $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'video_galleries', 'slug');
-            }
+            // Auto-generate slug from name
+            $generatedSlug = generateSlug($data['name']);
+            $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'video_galleries', 'slug');
             
-            // Set default values (only for fields that exist in the table)
+            // Set default values
             if (!isset($data['is_active'])) {
                 $data['is_active'] = 1;
             }

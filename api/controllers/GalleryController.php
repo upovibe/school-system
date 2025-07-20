@@ -59,9 +59,9 @@ class GalleryController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+                // Use standard PHP $_POST and $_FILES for multipart data
+                $data = $_POST;
+                // $_FILES is already available globally
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
@@ -230,15 +230,36 @@ class GalleryController {
             
             // Handle image uploads if present
             $uploadedImages = [];
-            if (!empty($_FILES['images'])) {
-                $uploadedImages = uploadGalleryImages($_FILES['images']);
-                $newImagePaths = array_map(function($image) {
-                    return $image['original'];
-                }, $uploadedImages);
+            $debugInfo = [];
+            $debugInfo[] = '$_FILES contents: ' . json_encode($_FILES);
+            $debugInfo[] = '$data contents: ' . json_encode($data);
+            
+            // Check for images with array notation
+            $imagesKey = 'images[]';
+            if (!empty($_FILES[$imagesKey])) {
+                $debugInfo[] = 'Processing image uploads';
+                $debugInfo[] = 'Files structure: ' . json_encode($_FILES[$imagesKey]);
                 
-                // Combine with existing images
-                $existingImages = $existingGallery['images'] ?: [];
-                $data['images'] = array_merge($existingImages, $newImagePaths);
+                try {
+                    $uploadedImages = uploadGalleryImages($_FILES[$imagesKey]);
+                    $newImagePaths = array_map(function($image) {
+                        return $image['original'];
+                    }, $uploadedImages);
+                    
+                    // Combine with existing images
+                    $existingImages = $existingGallery['images'] ?: [];
+                    $data['images'] = array_merge($existingImages, $newImagePaths);
+                    $debugInfo[] = 'Final images array: ' . json_encode($data['images']);
+                    $debugInfo[] = 'Uploaded ' . count($uploadedImages) . ' images successfully';
+                } catch (Exception $e) {
+                    $debugInfo[] = 'Error uploading images: ' . $e->getMessage();
+                    // Don't fail the entire update if image upload fails
+                    $data['images'] = $existingGallery['images'] ?: [];
+                }
+            } else {
+                $debugInfo[] = 'No new images uploaded, preserving existing images';
+                // Preserve existing images if no new images are uploaded
+                $data['images'] = $existingGallery['images'] ?: [];
             }
             
             // Update gallery
@@ -260,7 +281,8 @@ class GalleryController {
                 echo json_encode([
                     'success' => true,
                     'data' => $updatedGallery,
-                    'message' => 'Gallery updated successfully'
+                    'message' => 'Gallery updated successfully',
+                    'debug' => $debugInfo
                 ]);
             } else {
                 http_response_code(500);

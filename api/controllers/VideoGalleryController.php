@@ -217,7 +217,7 @@ class VideoGalleryController {
             }
             
             // Update video gallery
-            $success = $this->videoGalleryModel->updateVideoGallery($id, $data);
+            $success = $this->videoGalleryModel->update($id, $data);
             
             if ($success) {
                 // Get the updated video gallery data

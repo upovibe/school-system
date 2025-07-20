@@ -51,7 +51,8 @@ class ContactPage extends App {
         try {
             const settingsKeys = [
                 'contact_title', 'contact_subtitle', 'contact_address', 'contact_phone', 'contact_email',
-                'map_location_name', 'map_address', 'map_latitude', 'map_longitude', 'map_embed_url', 'map_zoom_level'
+                'map_location_name', 'map_address', 'map_latitude', 'map_longitude', 'map_embed_url', 'map_zoom_level',
+                'facebook_url', 'twitter_url', 'instagram_url', 'linkedin_url', 'whatsapp_url', 'youtube_url'
             ];
 
             const settingsPromises = settingsKeys.map(async (key) => {
@@ -122,7 +123,13 @@ class ContactPage extends App {
                         map_latitude: allData.settings.map_latitude,
                         map_longitude: allData.settings.map_longitude,
                         map_embed_url: allData.settings.map_embed_url,
-                        map_zoom_level: allData.settings.map_zoom_level
+                        map_zoom_level: allData.settings.map_zoom_level,
+                        facebook_url: allData.settings.facebook_url,
+                        twitter_url: allData.settings.twitter_url,
+                        instagram_url: allData.settings.instagram_url,
+                        linkedin_url: allData.settings.linkedin_url,
+                        whatsapp_url: allData.settings.whatsapp_url,
+                        youtube_url: allData.settings.youtube_url
                     })}'>
                 </contact-section-alt>
             </div>

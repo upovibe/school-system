@@ -60,6 +60,14 @@ class ContactSectionAlt extends App {
                 if (settings.map_longitude) this.set('mapLongitude', settings.map_longitude);
                 if (settings.map_embed_url) this.set('mapEmbedUrl', settings.map_embed_url);
                 if (settings.map_zoom_level) this.set('mapZoomLevel', settings.map_zoom_level);
+                
+                // Social media settings
+                if (settings.facebook_url) this.set('facebookUrl', settings.facebook_url);
+                if (settings.twitter_url) this.set('twitterUrl', settings.twitter_url);
+                if (settings.instagram_url) this.set('instagramUrl', settings.instagram_url);
+                if (settings.linkedin_url) this.set('linkedinUrl', settings.linkedin_url);
+                if (settings.whatsapp_url) this.set('whatsappUrl', settings.whatsapp_url);
+                if (settings.youtube_url) this.set('youtubeUrl', settings.youtube_url);
             }
         }
     }
@@ -156,6 +164,47 @@ class ContactSectionAlt extends App {
         } finally {
             this.set('loading', false);
         }
+    }
+
+    // Helper method to check if any social media links exist
+    hasSocialMediaLinks() {
+        const facebookUrl = this.get('facebookUrl');
+        const twitterUrl = this.get('twitterUrl');
+        const instagramUrl = this.get('instagramUrl');
+        const linkedinUrl = this.get('linkedinUrl');
+        const whatsappUrl = this.get('whatsappUrl');
+        const youtubeUrl = this.get('youtubeUrl');
+        
+        return facebookUrl || twitterUrl || instagramUrl || linkedinUrl || whatsappUrl || youtubeUrl;
+    }
+
+    // Helper method to render social media links
+    renderSocialMediaLinks() {
+        const socialLinks = [
+            { key: 'facebookUrl', icon: 'fab fa-facebook', name: 'Facebook', color: '#1877F2' },
+            { key: 'twitterUrl', icon: 'fab fa-twitter', name: 'Twitter', color: '#1DA1F2' },
+            { key: 'instagramUrl', icon: 'fab fa-instagram', name: 'Instagram', color: '#E4405F' },
+            { key: 'linkedinUrl', icon: 'fab fa-linkedin', name: 'LinkedIn', color: '#0A66C2' },
+            { key: 'whatsappUrl', icon: 'fab fa-whatsapp', name: 'WhatsApp', color: '#25D366' },
+            { key: 'youtubeUrl', icon: 'fab fa-youtube', name: 'YouTube', color: '#FF0000' }
+        ];
+
+        return socialLinks
+            .filter(link => this.get(link.key) && this.get(link.key).trim() !== '')
+            .map(link => `
+                <a href="${this.get(link.key)}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="group flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300"
+                         style="background: linear-gradient(135deg, ${link.color}, ${link.color}dd)">
+                        <i class="${link.icon} text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-[${secondaryColor}] group-hover:text-[${primaryColor}] transition-colors">
+                        ${link.name}
+                    </span>
+                </a>
+            `).join('');
     }
 
     render() {
@@ -424,6 +473,25 @@ class ContactSectionAlt extends App {
                         </div>
                     </div>
                 </div>
+                
+                <!-- Social Media Section -->
+                ${this.hasSocialMediaLinks() ? `
+                    <div class="mt-16">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl font-bold text-[${secondaryColor}] mb-4">Follow Us</h2>
+                            <p class="text-gray-600 max-w-2xl mx-auto">
+                                Stay connected with us on social media for the latest updates and news
+                            </p>
+                            <div class="w-24 h-1 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] mx-auto mt-4 rounded-full"></div>
+                        </div>
+                        
+                        <div class="bg-white rounded-[2rem] shadow-2xl p-8">
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                ${this.renderSocialMediaLinks()}
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
             </section>
         `;
     }

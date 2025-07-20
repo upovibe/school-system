@@ -15,6 +15,7 @@ class Seed {
         $this->seedPagesAndSettings();
         $this->seedEvents();
         $this->seedNews();
+        $this->seedGalleries();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -57,6 +58,15 @@ class Seed {
         require_once __DIR__ . '/news_seeder.php';
         $newsSeeder = new NewsSeeder($this->pdo);
         $newsSeeder->run();
+    }
+    
+    private function seedGalleries() {
+        echo "🖼️  Seeding galleries...\n";
+        
+        // Include the gallery seeder
+        require_once __DIR__ . '/gallery_seeder.php';
+        $gallerySeeder = new GallerySeeder($this->pdo);
+        $gallerySeeder->run();
     }
     
 }

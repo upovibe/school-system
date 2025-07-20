@@ -263,18 +263,6 @@ class ContactSectionAlt extends App {
                     </div>
                 </div>
 
-                <!-- Page Content Section -->
-                ${this.get('pageData')?.content ? `
-                    <div class="mb-16">
-                        <div class="bg-white rounded-[2rem] shadow-2xl p-8">
-                            <content-display 
-                                content="${this.get('pageData').content.replace(/"/g, '&quot;')}"
-                                no-styles>
-                            </content-display>
-                        </div>
-                    </div>
-                ` : ''}
-
                 <!-- Contact Content -->
                 <div class="relative">
                     <!-- Animated Background -->
@@ -328,24 +316,35 @@ class ContactSectionAlt extends App {
                                     </div>
                                 </div>
                                 
-                                <!-- Office Hours -->
-                                <div class="bg-white rounded-[2rem] shadow-2xl p-8">
-                                    <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-6">Office Hours</h2>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600">Monday - Friday</span>
-                                            <span class="font-semibold text-[${secondaryColor}]">8:00 AM - 4:00 PM</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600">Saturday</span>
-                                            <span class="font-semibold text-[${secondaryColor}]">9:00 AM - 1:00 PM</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600">Sunday</span>
-                                            <span class="font-semibold text-[${secondaryColor}]">Closed</span>
+                                <!-- Page Content Section -->
+                                ${this.get('pageData')?.content ? `
+                                    <div class="bg-white rounded-[2rem] shadow-2xl p-8">
+                                        <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-6">About Our School</h2>
+                                        <content-display 
+                                            content="${this.get('pageData').content.replace(/"/g, '&quot;')}"
+                                            no-styles>
+                                        </content-display>
+                                    </div>
+                                ` : `
+                                    <!-- Office Hours (fallback if no content) -->
+                                    <div class="bg-white rounded-[2rem] shadow-2xl p-8">
+                                        <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-6">Office Hours</h2>
+                                        <div class="space-y-3">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Monday - Friday</span>
+                                                <span class="font-semibold text-[${secondaryColor}]">8:00 AM - 4:00 PM</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Saturday</span>
+                                                <span class="font-semibold text-[${secondaryColor}]">9:00 AM - 1:00 PM</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Sunday</span>
+                                                <span class="font-semibold text-[${secondaryColor}]">Closed</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                `}
                             </div>
                             
                             <!-- Contact Form -->

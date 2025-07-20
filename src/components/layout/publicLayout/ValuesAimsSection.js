@@ -119,13 +119,14 @@ class ValuesAimsSection extends App {
         const bannerImages = this.getBannerImages(pageData);
 
         return `
-            <!-- Values & Aims Section -->
+            <!-- Values Aims Section -->
             <section class="mx-auto">
-                <!-- Minimal Hero Banner -->
+                
+                <!-- Hero Banner -->
                 ${bannerImages.length > 0 ? `
-                    <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mx-6 mb-8">
+                    <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mb-8">
                         <img src="${this.getImageUrl(bannerImages[0])}" 
-                             alt="Values & Aims Banner" 
+                             alt="Values Aims Banner" 
                              class="w-full h-full object-cover rounded-3xl"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="absolute inset-0 hidden items-center justify-center bg-gray-100 rounded-3xl">
@@ -137,11 +138,11 @@ class ValuesAimsSection extends App {
                         <!-- Gradient overlay from dark bottom to transparent top -->
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-3xl"></div>
                         
-                        <!-- Minimal content overlay -->
+                        <!-- Content overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-white">
-                                <h1 class="text-3xl lg:text-4xl font-bold mb-2">Values & Aims</h1>
-                                <p class="text-lg opacity-90">Excellence, Integrity, Respect, Innovation, and Community</p>
+                            <div class="text-center text-white px-4">
+                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">Values & Aims</h1>
+                                <p class="text-base lg:text-lg opacity-90">Our core values and educational objectives</p>
                             </div>
                         </div>
                     </div>

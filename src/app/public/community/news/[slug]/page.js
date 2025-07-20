@@ -6,7 +6,7 @@ import '@/components/layout/publicLayout/NewsView.js';
  * 
  * Displays detailed information for a specific news article based on slug
  */
-class NewsPage extends App {
+class NewsArticlePage extends App {
     constructor() {
         super();
         this.slug = null;
@@ -29,5 +29,5 @@ class NewsPage extends App {
     }
 }
 
-customElements.define('app-news-page', NewsPage);
-export default NewsPage; 
+customElements.define('app-news-article-page', NewsArticlePage);
+export default NewsArticlePage; 

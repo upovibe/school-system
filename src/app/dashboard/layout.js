@@ -159,6 +159,7 @@ class DashboardLayout extends App {
                 { label: 'Admin Dashboard', icon: 'fas fa-shield-alt', href: '/dashboard/admin' },
                 {label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role'},
                 { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
+                { label: 'Team Management', icon: 'fas fa-user-friends', href: '/dashboard/admin/teams' },
                 { label: 'Events Management', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                 { label: 'News Management', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
                 { label: 'Gallery Management', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
@@ -204,7 +205,7 @@ class DashboardLayout extends App {
             'dashboard': 'Dashboard', 'admin': 'Admin Dashboard', 'teacher': 'Teacher Dashboard',
             'student': 'Student Dashboard', 'parent': 'Parent Dashboard', 'staff': 'Staff Dashboard',
             'profile': 'Profile', 'settings': 'Settings', 'page-settings': 'Page Settings',
-            'system-settings': 'System Settings', 'users': 'User Management', 'reports': 'Reports',
+            'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management'

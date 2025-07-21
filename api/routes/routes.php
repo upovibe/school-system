@@ -118,3 +118,7 @@ Router::get('/teams/department/{department}', 'TeamController@getByDepartment');
 Router::get('/teams/{id}', 'TeamController@show');
 Router::put('/teams/{id}', 'TeamController@update');
 Router::delete('/teams/{id}', 'TeamController@destroy');
+
+// DB setup endpoints
+Router::get('/db/check', 'DbController@check');
+Router::post('/db/fresh', 'DbController@fresh');

@@ -480,12 +480,12 @@ class DashboardLayout extends App {
                                         <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <div class="px-3 py-2">
-                                            <p class="text-sm font-medium text-[${textColor || '#374151'}]">${userName}</p>
-                                            <p class="text-xs text-[${darkColor || '#6b7280'}]">${email}</p>
+                                            <p class="text-sm font-medium text-gray-700">${userName}</p>
+                                            <p class="text-xs text-gray-500">${email}</p>
                                         </div>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <ui-dropdown-menu-item>
-                                            <a href="/dashboard/profile" class="w-full text-left no-underline text-[${textColor || '#374151'}] hover:text-[${accentColor || '#111827'}] flex items-center">
+                                            <a href="/dashboard/profile" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
                                                 <i class="fas fa-user w-4 h-4 mr-3"></i> Profile
                                             </a>
                                         </ui-dropdown-menu-item>

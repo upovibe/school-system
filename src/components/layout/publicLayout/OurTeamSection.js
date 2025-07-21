@@ -176,8 +176,8 @@ class OurTeamSection extends App {
                 ${teamMembers.length > 0 ? `
                     <div class="mt-16">
                         <div class="text-center mb-12">
-                            <h3 class="text-2xl lg:text-3xl font-bold text-[${secondaryColor}] mb-4">Meet Our Team</h3>
-                            <p class="text-lg text-gray-600">Dedicated professionals committed to student success</p>
+                            <h3 class="text-2xl lg:text-3xl font-bold text-[${secondaryColor}] mb-4">Our Team Members</h3>
+                            <p class="text-lg text-gray-600">Get to know the dedicated professionals behind our success</p>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

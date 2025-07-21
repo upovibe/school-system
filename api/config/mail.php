@@ -1,37 +1,20 @@
 <?php
-// api/email/config/mail.php - Email configuration with environment variables
+// api/config/mail.php - Email configuration using central app_config.php
 
-// Load environment variables
-if (!function_exists('getMailEnv')) {
-    function getMailEnv($key, $default = null) {
-        $envFile = __DIR__ . '/../../../.env';
-        if (file_exists($envFile)) {
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (strpos(trim($line), '#') === 0) continue; // Skip comments
-                list($envKey, $value) = explode('=', $line, 2);
-                if (trim($envKey) === $key) {
-                    return trim($value);
-                }
-            }
-        }
-        return $default;
-    }
-}
+$config = require __DIR__ . '/app_config.php';
+$mail = $config['mail'];
 
 return [
     'smtp' => [
-        'host' => getMailEnv('MAIL_HOST', 'smtp.gmail.com'),
-        'port' => getMailEnv('MAIL_PORT', 587),
-        'encryption' => getMailEnv('MAIL_ENCRYPTION', 'tls'),
-        'username' => getMailEnv('MAIL_USERNAME', ''),
-        'password' => getMailEnv('MAIL_PASSWORD', ''),
+        'host' => $mail['host'],
+        'port' => $mail['port'],
+        'encryption' => $mail['encryption'],
+        'username' => $mail['username'],
+        'password' => $mail['password'],
         'timeout' => 30,
     ],
-    
     'from' => [
-        'address' => getMailEnv('MAIL_FROM_ADDRESS', 'noreply@schoolsystem.com'),
-        'name' => getMailEnv('MAIL_FROM_NAME', 'School System'),
+        'address' => $mail['from_address'],
+        'name' => $mail['from_name'],
     ],
-];
-?> 
+]; 

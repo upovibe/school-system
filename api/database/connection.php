@@ -1,13 +1,14 @@
 <?php
 // api/database/connection.php - Reusable DB connection
 
-require_once __DIR__ . '/../config/load_env.php'; // Load env helper
-$env = loadEnv(__DIR__ . '/../../../.env'); // Path to .env outside web root (parent of project root)
+// Load config
+$config = require __DIR__ . '/../config/app_config.php';
+$dbConfig = $config['db'];
 
-$host = $env['DB_HOST'] ?? 'localhost';
-$db = $env['DB_NAME'] ?? 'upoui_db';
-$user = $env['DB_USER'] ?? 'root';
-$pass = $env['DB_PASS'] ?? '';
+$host = $dbConfig['host'];
+$db = $dbConfig['name'];
+$user = $dbConfig['user'];
+$pass = $dbConfig['pass'];
 
 // Step 1: Connect without DB to check/create it
 try {

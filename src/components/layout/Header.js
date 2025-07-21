@@ -336,7 +336,7 @@
       // Helper function to render social icons
       const renderSocialIcons = (isMobile = false) => {
         return socialIcons.map(social => `
-          <a href="${this.get(social.key) || '#'}" class="text-[${textColor}] hover:text-[${isMobile ? hoverAccent : primaryColor}] transition-colors">
+          <a href="${this.get(social.key) || '#'}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors">
             <i class="${social.icon} ${isMobile ? '' : 'text-sm lg:text-base'}"></i>
           </a>
         `).join('');

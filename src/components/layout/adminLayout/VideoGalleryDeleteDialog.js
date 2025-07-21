@@ -12,7 +12,7 @@ class VideoGalleryDeleteDialog extends HTMLElement {
         super();
         this.videoGalleryData = null;
     }
-
+        
     static get observedAttributes() {
         return ['open'];
     }
@@ -73,14 +73,14 @@ class VideoGalleryDeleteDialog extends HTMLElement {
     async deleteVideoGallery() {
         try {
             if (!this.videoGalleryData) {
-                Toast.show({
-                    title: 'Error',
+            Toast.show({
+                title: 'Error',
                     message: 'No video gallery data available for deletion',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
+                variant: 'error',
+                duration: 3000
+            });
+            return;
+        }
 
             // Get the auth token
             const token = localStorage.getItem('token');
@@ -96,7 +96,7 @@ class VideoGalleryDeleteDialog extends HTMLElement {
 
             // Delete the video gallery
             const response = await api.withToken(token).delete(`/video-galleries/${this.videoGalleryData.id}`);
-            
+
             Toast.show({
                 title: 'Success',
                 message: 'Video gallery deleted successfully',
@@ -134,7 +134,7 @@ class VideoGalleryDeleteDialog extends HTMLElement {
                         <i class="fas fa-exclamation-triangle text-red-500"></i>
                         <span class="font-semibold text-red-900">Delete Video Gallery</span>
                     </div>
-                    
+
                     <p class="text-gray-700">
                         Are you sure you want to delete this video gallery? This action cannot be undone.
                     </p>

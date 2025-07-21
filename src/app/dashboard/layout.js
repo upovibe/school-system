@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import store from '@/core/store.js';
 import api from '@/services/api.js';
+import { fetchColorSettings } from '@/utils/colorSettings.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';
@@ -28,7 +29,7 @@ class DashboardLayout extends App {
         super.connectedCallback();
         document.title = 'Dashboard | School System';
         await this.fetchLogoSetting();
-        await this.fetchBrandColor();
+        await this.fetchColorSettings();
         this.loadUserData();
         this.setupEventListeners();
         this.checkPasswordChangeRequirement();
@@ -89,16 +90,17 @@ class DashboardLayout extends App {
         }
     }
 
-    async fetchBrandColor() {
+    async fetchColorSettings() {
         try {
-            const response = await api.get('/settings/key/color');
-            if (response.data && response.data.success && response.data.data && response.data.data.setting_value) {
-                this.brandColor = response.data.data.setting_value;
-            } else {
-                this.brandColor = null;
-            }
-        } catch (e) {
-            this.brandColor = null;
+            const colors = await fetchColorSettings();
+            
+            // Set all color values to state
+            Object.entries(colors).forEach(([key, value]) => {
+                this.set(key, value);
+            });
+
+        } catch (error) {
+            console.error('Error fetching color settings:', error);
         }
     }
 
@@ -333,6 +335,19 @@ class DashboardLayout extends App {
             return `<div class="flex h-screen bg-gray-50 items-center justify-center"><div class="text-gray-500">Loading...</div></div>`;
         }
 
+        // Get all colors from state
+        const primaryColor = this.get('primary_color');
+        const secondaryColor = this.get('secondary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
+        const darkColor = this.get('dark_color');
+        const hoverPrimary = this.get('hover_primary');
+        const hoverSecondary = this.get('hover_secondary');
+        const hoverAccent = this.get('hover_accent');
+        const successColor = this.get('success_color');
+        const errorColor = this.get('error_color');
+        const warningColor = this.get('warning_color');
+
         const { role = 'User', name, username = 'User', email = '' } = this.currentUser;
         const userName = name || username;
         const navigationGroups = this.getNavigationItems();
@@ -358,6 +373,7 @@ class DashboardLayout extends App {
                     transform: translateX(-100%);
                     transition: transform 0.3s ease-in-out;
                     z-index: 50;
+                    background-color: ${primaryColor || '#2563eb'};
                 }
 
                 @media (min-width: 1280px) {
@@ -404,12 +420,12 @@ class DashboardLayout extends App {
                 <div data-sidebar-overlay @click="${() => this.toggleSidebar()}"></div>
 
                 <!-- Sidebar -->
-                <aside data-sidebar class="fixed inset-y-0 left-0 bg-gradient-to-b from-blue-600 to-blue-700 text-white flex flex-col shadow-lg">
-                    <div class="flex items-center justify-between h-16 px-4 border-b border-blue-500 flex-shrink-0">
+                <aside data-sidebar class="fixed inset-y-0 left-0 text-white flex flex-col shadow-lg">
+                    <div class="flex items-center justify-between h-16 px-4 border-b border-[${secondaryColor || '#3b82f6'}] flex-shrink-0">
                         <div class="flex items-center space-x-3">
                             <img src="${this.logoUrl ? this.getImageUrl(this.logoUrl) : '/src/assets/logo.png'}" alt="Logo" class="size-32 object-contain rounded-full" />
                         </div>
-                        <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-blue-200 hover:text-white hover:bg-blue-500">
+                        <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-[${textColor || '#bfdbfe'}] hover:text-white hover:bg-[${hoverPrimary || '#3b82f6'}]">
                             <i class="fas fa-times text-lg"></i>
                         </button>
                     </div>
@@ -417,11 +433,11 @@ class DashboardLayout extends App {
                     <nav class="flex-1 px-4 py-4 overflow-y-auto flex flex-col gap-2">
                         ${navigationGroups.map(group => `
                             <div class="mb-2">
-                                <div class="text-xs font-semibold uppercase text-blue-200 mb-1 pl-2 tracking-wide">${group.group}</div>
+                                <div class="text-xs font-semibold uppercase text-[${textColor || '#bfdbfe'}] mb-1 pl-2 tracking-wide">${group.group}</div>
                                 ${group.items.map(item => `
                                     <ui-link 
                                         href="${item.href}"
-                                        class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? 'bg-white text-blue-700' : 'text-blue-100 hover:bg-blue-500 hover:text-white'}"
+                                        class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? `bg-[${accentColor || '#ffffff'}] text-white` : `text-[${textColor || '#dbeafe'}] hover:bg-[${secondaryColor || '#3b82f6'}] hover:bg-opacity-50 hover:text-white`}"
                                     >
                                         <i class="${item.icon} size-5 flex items-center justify-center"></i>
                                         <span>${item.label}</span>
@@ -431,8 +447,8 @@ class DashboardLayout extends App {
                         `).join('')}
                     </nav>
 
-                    <div class="p-4 border-t border-blue-500 flex-shrink-0">
-                        <button data-action="logout" class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-500 hover:text-white rounded-md transition-colors">
+                    <div class="p-4 border-t border-[${secondaryColor || '#3b82f6'}] flex-shrink-0">
+                        <button data-action="logout" class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium text-[${errorColor || '#fecaca'}] hover:bg-[${errorColor || '#ef4444'}] hover:text-white rounded-md transition-colors">
                             <i class="fas fa-sign-out-alt size-5 flex items-center justify-center"></i>
                             <span>Logout</span>
                         </button>
@@ -445,10 +461,10 @@ class DashboardLayout extends App {
                     <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 flex-shrink-0">
                         <div class="flex items-center justify-between p-4">
                             <div class="flex items-center gap-4">
-                                <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                                <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-[${darkColor || '#9ca3af'}] hover:text-[${textColor || '#4b5563'}] hover:bg-gray-100">
                                     <i class="fas fa-bars text-lg"></i>
                                 </button>
-                                <h1 class="text-xl font-semibold text-gray-900">${this.getPageTitle()}</h1>
+                                <h1 class="text-xl font-semibold text-[${textColor || '#111827'}]">${this.getPageTitle()}</h1>
                             </div>
 
                             <div class="flex items-center space-x-4">
@@ -462,18 +478,18 @@ class DashboardLayout extends App {
                                         <ui-dropdown-menu-label>My Account</ui-dropdown-menu-label>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <div class="px-3 py-2">
-                                            <p class="text-sm font-medium text-gray-700">${userName}</p>
-                                            <p class="text-xs text-gray-500">${email}</p>
+                                            <p class="text-sm font-medium text-[${textColor || '#374151'}]">${userName}</p>
+                                            <p class="text-xs text-[${darkColor || '#6b7280'}]">${email}</p>
                                         </div>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <ui-dropdown-menu-item>
-                                            <a href="/dashboard/profile" class="w-full text-left no-underline text-gray-700 hover:text-gray-900 flex items-center">
+                                            <a href="/dashboard/profile" class="w-full text-left no-underline text-[${textColor || '#374151'}] hover:text-[${accentColor || '#111827'}] flex items-center">
                                                 <i class="fas fa-user w-4 h-4 mr-3"></i> Profile
                                             </a>
                                         </ui-dropdown-menu-item>
                                         <ui-dropdown-menu-separator></ui-dropdown-menu-separator>
                                         <ui-dropdown-menu-item color="red">
-                                            <button data-action="logout" class="w-full text-left bg-transparent border-none p-0 m-0 cursor-pointer text-red-500 hover:text-red-700 flex items-center">
+                                            <button data-action="logout" class="w-full text-left bg-transparent border-none p-0 m-0 cursor-pointer text-[${errorColor || '#ef4444'}] hover:text-[${errorColor || '#dc2626'}] flex items-center">
                                                 <i class="fas fa-sign-out-alt w-4 h-4 mr-3"></i> Logout
                                             </button>
                                         </ui-dropdown-menu-item>

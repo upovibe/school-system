@@ -293,9 +293,9 @@ class PageSettingsPage extends App {
                                 pagination
                                 page-size="10"
                                 action
-                                addable
-                                refresh
+                                actions="view,edit"
                                 print
+                                refresh
                                 bordered
                                 striped
                                 class="w-full">

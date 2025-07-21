@@ -39,7 +39,7 @@
  */
 class Table extends HTMLElement {
     static get observedAttributes() {
-        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'refresh', 'print'];
+        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'actions', 'refresh', 'print'];
     }
 
     constructor() {
@@ -64,6 +64,7 @@ class Table extends HTMLElement {
         this.action = this.hasAttribute('action');
         this.refresh = this.hasAttribute('refresh');
         this.print = this.hasAttribute('print');
+        this.actions = (this.getAttribute('actions') || '').split(',').map(a => a.trim()).filter(Boolean);
         
         // Internal state
         this.currentPage = 1;
@@ -686,6 +687,8 @@ class Table extends HTMLElement {
                 this.filteredData = [...this.data];
             } else if (name === 'sortable' || name === 'selectable' || name === 'pagination' || name === 'striped' || name === 'bordered' || name === 'compact' || name === 'searchable' || name === 'clickable' || name === 'filterable' || name === 'addable' || name === 'action' || name === 'refresh' || name === 'print') {
                 this[name] = this.hasAttribute(name);
+            } else if (name === 'actions') {
+                this.actions = (newValue || '').split(',').map(a => a.trim()).filter(Boolean);
             } else if (name === 'page-size') {
                 this.pageSize = parseInt(newValue) || 10;
             } else if (name === 'search-placeholder') {
@@ -1296,24 +1299,30 @@ class Table extends HTMLElement {
                     ${this.action ? `
                         <td class="upo-table-action-column">
                             <div class="upo-table-action-buttons">
+                                ${(!this.actions.length || this.actions.includes('view')) ? `
                                 <button class="upo-table-action-button view" onclick="this.closest('ui-table').viewRow(${index})" aria-label="View item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </button>
+                                ` : ''}
+                                ${(!this.actions.length || this.actions.includes('edit')) ? `
                                 <button class="upo-table-action-button edit" onclick="this.closest('ui-table').editRow(${index})" aria-label="Edit item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </button>
+                                ` : ''}
+                                ${(!this.actions.length || this.actions.includes('delete')) ? `
                                 <button class="upo-table-action-button delete" onclick="this.closest('ui-table').deleteRow(${index})" aria-label="Delete item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="3,6 5,6 21,6"></polyline>
                                         <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
                                     </svg>
                                 </button>
+                                ` : ''}
                             </div>
                         </td>
                     ` : ''}
@@ -1652,24 +1661,30 @@ class Table extends HTMLElement {
                         ${this.action ? `
                             <td class="upo-table-action-column">
                                 <div class="upo-table-action-buttons">
+                                    ${(!this.actions.length || this.actions.includes('view')) ? `
                                     <button class="upo-table-action-button view" onclick="this.closest('ui-table').viewRow(${index})" aria-label="View item">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>
                                         </svg>
                                     </button>
+                                    ` : ''}
+                                    ${(!this.actions.length || this.actions.includes('edit')) ? `
                                     <button class="upo-table-action-button edit" onclick="this.closest('ui-table').editRow(${index})" aria-label="Edit item">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                         </svg>
                                     </button>
+                                    ` : ''}
+                                    ${(!this.actions.length || this.actions.includes('delete')) ? `
                                     <button class="upo-table-action-button delete" onclick="this.closest('ui-table').deleteRow(${index})" aria-label="Delete item">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="3,6 5,6 21,6"></polyline>
                                             <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
                                         </svg>
                                     </button>
+                                    ` : ''}
                                 </div>
                             </td>
                         ` : ''}

@@ -154,48 +154,113 @@ class DashboardLayout extends App {
     getNavigationItems() {
         const userRole = this.currentUser?.role || 'student';
         const path = window.location.pathname;
-        const roleItems = {
+        // Grouped navigation structure with short labels
+        const roleGroups = {
             admin: [
-                { label: 'Admin Dashboard', icon: 'fas fa-shield-alt', href: '/dashboard/admin' },
-                {label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role'},
-                { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
-                { label: 'Team Management', icon: 'fas fa-user-friends', href: '/dashboard/admin/teams' },
-                { label: 'Applications', icon: 'fas fa-file-signature', href: '/dashboard/admin/applications' },
-                { label: 'Events Management', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
-                { label: 'News Management', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
-                { label: 'Gallery Management', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
-                { label: 'Video Gallery Management', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
-                { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
-                { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },
-                { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/system-report' }
+                {
+                    group: 'Dashboard',
+                    items: [
+                        { label: 'Admin Home', icon: 'fas fa-shield-alt', href: '/dashboard/admin' },
+                    ]
+                },
+                {
+                    group: 'Management',
+                    items: [
+                        { label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role' },
+                        { label: 'Users', icon: 'fas fa-users', href: '/dashboard/admin/users' },
+                        { label: 'Teams', icon: 'fas fa-user-friends', href: '/dashboard/admin/teams' },
+                        { label: 'Applications', icon: 'fas fa-file-signature', href: '/dashboard/admin/applications' },
+                        { label: 'Events', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
+                        { label: 'News', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
+                        { label: 'Gallery', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
+                        { label: 'Video Gallery', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
+                    ]
+                },
+                {
+                    group: 'Settings',
+                    items: [
+                        { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
+                        { label: 'System Settings', icon: 'fas fa-cog', href: '/dashboard/admin/system-settings' },
+                    ]
+                },
+                {
+                    group: 'Reports',
+                    items: [
+                        { label: 'System Reports', icon: 'fas fa-chart-bar', href: '/dashboard/admin/system-report' },
+                    ]
+                }
             ],
             teacher: [
-                { label: 'Teacher Dashboard', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/teacher/dashboard' },
-                { label: 'My Classes', icon: 'fas fa-book', href: '/dashboard/teacher/classes' },
-                { label: 'Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/grades' },
-                { label: 'Attendance', icon: 'fas fa-calendar-check', href: '/dashboard/teacher/attendance' }
+                {
+                    group: 'Dashboard',
+                    items: [
+                        { label: 'Home', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/teacher/dashboard' },
+                    ]
+                },
+                {
+                    group: 'Teaching',
+                    items: [
+                        { label: 'Classes', icon: 'fas fa-book', href: '/dashboard/teacher/classes' },
+                        { label: 'Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/grades' },
+                        { label: 'Attendance', icon: 'fas fa-calendar-check', href: '/dashboard/teacher/attendance' },
+                    ]
+                }
             ],
             student: [
-                { label: 'Student Dashboard', icon: 'fas fa-user-graduate', href: '/dashboard/student/dashboard' },
-                { label: 'My Courses', icon: 'fas fa-book-open', href: '/dashboard/student/courses' },
-                { label: 'Assignments', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
-                { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' }
+                {
+                    group: 'Dashboard',
+                    items: [
+                        { label: 'Home', icon: 'fas fa-user-graduate', href: '/dashboard/student/dashboard' },
+                    ]
+                },
+                {
+                    group: 'Academics',
+                    items: [
+                        { label: 'Courses', icon: 'fas fa-book-open', href: '/dashboard/student/courses' },
+                        { label: 'Assignments', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
+                        { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
+                    ]
+                }
             ],
             parent: [
-                { label: 'Parent Dashboard', icon: 'fas fa-users', href: '/dashboard/parent/dashboard' },
-                { label: 'My Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
-                { label: 'Progress Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
-                { label: 'Communications', icon: 'fas fa-comments', href: '/dashboard/parent/messages' }
+                {
+                    group: 'Dashboard',
+                    items: [
+                        { label: 'Home', icon: 'fas fa-users', href: '/dashboard/parent/dashboard' },
+                    ]
+                },
+                {
+                    group: 'Family',
+                    items: [
+                        { label: 'Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
+                        { label: 'Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
+                        { label: 'Messages', icon: 'fas fa-comments', href: '/dashboard/parent/messages' },
+                    ]
+                }
             ],
             staff: [
-                { label: 'Staff Dashboard', icon: 'fas fa-user-tie', href: '/dashboard/staff/dashboard' },
-                { label: 'Administration', icon: 'fas fa-clipboard-list', href: '/dashboard/staff/admin' },
-                { label: 'Reports', icon: 'fas fa-file-alt', href: '/dashboard/staff/reports' },
-                { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' }
+                {
+                    group: 'Dashboard',
+                    items: [
+                        { label: 'Home', icon: 'fas fa-user-tie', href: '/dashboard/staff/dashboard' },
+                    ]
+                },
+                {
+                    group: 'Work',
+                    items: [
+                        { label: 'Admin', icon: 'fas fa-clipboard-list', href: '/dashboard/staff/admin' },
+                        { label: 'Reports', icon: 'fas fa-file-alt', href: '/dashboard/staff/reports' },
+                        { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' },
+                    ]
+                }
             ]
         };
-        
-        return (roleItems[userRole] || []).map(item => ({ ...item, active: path === item.href }));
+        // Mark active
+        const groups = (roleGroups[userRole] || []);
+        groups.forEach(group => {
+            group.items = group.items.map(item => ({ ...item, active: path === item.href }));
+        });
+        return groups;
     }
 
     getPageTitle() {
@@ -240,7 +305,7 @@ class DashboardLayout extends App {
 
         const { role = 'User', name, username = 'User', email = '' } = this.currentUser;
         const userName = name || username;
-        const navigationItems = this.getNavigationItems();
+        const navigationGroups = this.getNavigationItems();
 
         return `
             <style>
@@ -321,14 +386,19 @@ class DashboardLayout extends App {
                     </div>
 
                     <nav class="flex-1 px-4 py-4 overflow-y-auto flex flex-col gap-2">
-                        ${navigationItems.map(item => `
-                            <ui-link 
-                                href="${item.href}"
-                                class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? 'bg-white text-blue-700' : 'text-blue-100 hover:bg-blue-500 hover:text-white'}"
-                            >
-                                <i class="${item.icon} size-5 flex items-center justify-center"></i>
-                                <span>${item.label}</span>
-                            </ui-link>
+                        ${navigationGroups.map(group => `
+                            <div class="mb-2">
+                                <div class="text-xs font-semibold uppercase text-blue-200 mb-1 pl-2 tracking-wide">${group.group}</div>
+                                ${group.items.map(item => `
+                                    <ui-link 
+                                        href="${item.href}"
+                                        class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? 'bg-white text-blue-700' : 'text-blue-100 hover:bg-blue-500 hover:text-white'}"
+                                    >
+                                        <i class="${item.icon} size-5 flex items-center justify-center"></i>
+                                        <span>${item.label}</span>
+                                    </ui-link>
+                                `).join('')}
+                            </div>
                         `).join('')}
                     </nav>
 

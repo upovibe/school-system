@@ -115,7 +115,7 @@
 
     async fetchSchoolLogo() {
       try {
-        const response = await api.get('/settings/key/school_logo');
+        const response = await api.get('/settings/key/application_logo');
         if (response.data.success && response.data.data.setting_value) {
           this.set('logoUrl', `/api/${response.data.data.setting_value}`);
         }

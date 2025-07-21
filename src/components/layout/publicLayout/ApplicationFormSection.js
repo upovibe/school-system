@@ -23,8 +23,8 @@ class ApplicationFormSection extends App {
         if (settingsAttr) {
             const settings = unescapeJsonFromAttribute(settingsAttr);
             if (settings) {
-                this.set('schoolLogo', settings.school_logo);
-                this.set('schoolName', settings.school_name);
+                this.set('applicationLogo', settings.application_logo);
+                this.set('applicationName', settings.application_name);
             }
         }
         // Get banner image from attribute
@@ -98,8 +98,8 @@ class ApplicationFormSection extends App {
     }
 
     render() {
-        const schoolLogo = this.get('schoolLogo');
-        const schoolName = this.get('schoolName');
+        const applicationLogo = this.get('applicationLogo');
+        const applicationName = this.get('applicationName');
         const contactBannerImage = this.get('contactBannerImage');
         const contactTitle = this.get('contactTitle');
         const contactSubtitle = this.get('contactSubtitle');
@@ -166,8 +166,8 @@ class ApplicationFormSection extends App {
             ` : ''}
             <section class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-8">
                 <div class="text-center mb-6">
-                    ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="h-24 mx-auto mb-2" />` : ''}
-                    <!--${schoolName ? `<h2 class="text-2xl font-bold mb-2">${schoolName}</h2>` : ''}-->
+                    ${applicationLogo ? `<img src="${applicationLogo}" alt="Application Logo" class="h-24 mx-auto mb-2" />` : ''}
+                    <!--${applicationName ? `<h2 class="text-2xl font-bold mb-2">${applicationName}</h2>` : ''}-->
                 </div>
                 <!-- <h2 class="text-2xl font-bold mb-6 text-center">Application Form</h2> -->
                 <form class="space-y-4">

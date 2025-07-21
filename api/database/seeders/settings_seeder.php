@@ -40,10 +40,10 @@ class SettingsSeeder
             ['setting_key' => 'font_family', 'setting_value' => 'Inter, sans-serif', 'setting_type' => 'text', 'category' => 'theme', 'description' => 'Primary font family'],
 
             // Branding Settings
-            ['setting_key' => 'school_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School name'],
-            ['setting_key' => 'school_logo', 'setting_value' => 'uploads/settings/logo_1752712977_687847114ab44.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School logo path'],
-            ['setting_key' => 'school_favicon', 'setting_value' => 'uploads/settings/favicon_1752713006_6878472e10dc2.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School favicon path'],
-            ['setting_key' => 'school_tagline', 'setting_value' => 'Excellence in Education', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School tagline'],
+            ['setting_key' => 'application_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School name'],
+            ['setting_key' => 'application_logo', 'setting_value' => 'uploads/settings/logo_1752712977_687847114ab44.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School logo path'],
+            ['setting_key' => 'application_favicon', 'setting_value' => 'uploads/settings/favicon_1752713006_6878472e10dc2.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School favicon path'],
+            ['setting_key' => 'application_tagline', 'setting_value' => 'Excellence in Education', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School tagline'],
 
             // Contact Settings
             ['setting_key' => 'contact_address', 'setting_value' => '123 School Street, City, Country', 'setting_type' => 'textarea', 'category' => 'contact', 'description' => 'School address'],

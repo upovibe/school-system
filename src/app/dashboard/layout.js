@@ -423,11 +423,6 @@ class DashboardLayout extends App {
                             </div>
 
                             <div class="flex items-center space-x-4">
-                                <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md relative">
-                                    <i class="fas fa-bell text-lg"></i>
-                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                </button>
-
                                 <ui-dropdown-menu>
                                     <ui-dropdown-menu-trigger>
                                         <div class="flex items-center p-1 rounded-full hover:bg-gray-100 transition-colors">

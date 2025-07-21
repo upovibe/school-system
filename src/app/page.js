@@ -98,7 +98,7 @@ class RootPage extends App {
                 'academics_title', 'academics_subtitle',
                 'community_title', 'community_subtitle',
                 'contact_title', 'contact_subtitle',
-                'school_logo', 'contact_email', 'contact_phone',
+                'application_logo', 'contact_email', 'contact_phone',
                 'facebook_url', 'twitter_url', 'instagram_url', 'linkedin_url', 'youtube_url'
             ];
 

@@ -25,7 +25,7 @@ class ApplyPage extends App {
             const [colors, settings, bannerImage, contactSettings] = await Promise.all([
                 fetchColorSettings(),
                 (async () => {
-                    const keys = ['school_logo', 'school_name'];
+                    const keys = ['application_logo', 'application_name'];
                     const settingsPromises = keys.map(async (key) => {
                         try {
                             const response = await api.get(`/settings/key/${key}`);
@@ -98,8 +98,8 @@ class ApplyPage extends App {
             `;
         }
         // Fix logo URL for consistency with Header
-        const logoUrl = allData.settings.school_logo ? `/api/${allData.settings.school_logo}` : '';
-        const settingsWithLogoUrl = { ...allData.settings, school_logo: logoUrl };
+        const logoUrl = allData.settings.application_logo ? `/api/${allData.settings.application_logo}` : '';
+        const settingsWithLogoUrl = { ...allData.settings, application_logo: logoUrl };
         return `
             <div class="mx-auto">
                 <application-form-section 

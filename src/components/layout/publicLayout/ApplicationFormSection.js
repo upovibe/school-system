@@ -104,8 +104,9 @@ class ApplicationFormSection extends App {
         const contactTitle = this.get('contactTitle');
         const contactSubtitle = this.get('contactSubtitle');
         // Get colors from state (with fallback)
-        const primaryColor = this.get('primary_color') || '#2563eb';
-        const accentColor = this.get('accent_color') || '#f59e42';
+        const primaryColor = this.get('primary_color');
+        const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
         // Grade options: K1, K2, K3, Primary 1-6, JHS 1-3
         const gradeOptions = [
             { value: '', label: 'Select Grade' },
@@ -165,10 +166,10 @@ class ApplicationFormSection extends App {
             ` : ''}
             <section class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-8">
                 <div class="text-center mb-6">
-                    ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="h-16 mx-auto mb-2" />` : ''}
-                    ${schoolName ? `<h2 class="text-2xl font-bold mb-2">${schoolName}</h2>` : ''}
+                    ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="h-24 mx-auto mb-2" />` : ''}
+                    <!--${schoolName ? `<h2 class="text-2xl font-bold mb-2">${schoolName}</h2>` : ''}-->
                 </div>
-                <h2 class="text-2xl font-bold mb-6 text-center">Application Form</h2>
+                <!-- <h2 class="text-2xl font-bold mb-6 text-center">Application Form</h2> -->
                 <form class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -217,7 +218,7 @@ class ApplicationFormSection extends App {
                         </div>
                     </div>
                     <div class="pt-4 text-center">
-                        <button type="submit" class="px-6 py-2 bg-[${primaryColor}] text-white font-bold rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300">Submit Application</button>
+                        <button type="submit" class="px-6 py-2 bg-[${primaryColor}] text-[${textColor}] font-bold rounded-full shadow hover:bg-[${accentColor}] focus:outline-none focus:ring-2 focus:ring-[${accentColor}] focus:ring-offset-2 transition-all duration-300">Submit Application</button>
                     </div>
                 </form>
             </section>

@@ -12,7 +12,7 @@ import '@/components/layout/DbSetupDialog.js';
 
 /**
  * Root Page Component (/)
- *
+ * 
  * This is the home page of the application.
  * It now renders within the global RootLayout.
  */
@@ -20,50 +20,64 @@ class RootPage extends App {
     async connectedCallback() {
         super.connectedCallback();
         document.title = 'Home';
-
+        // 1. Check DB connection first
         try {
-            const response = await api.get('/db/check');
-            if (!response.data.success) {
+            const dbCheck = await fetch('/api/db/check').then(r => r.json());
+            if (!dbCheck.success) {
                 this.set('dbNotConnected', true);
+                this.render();
                 return;
             }
-        } catch (error) {
+        } catch (e) {
             this.set('dbNotConnected', true);
+            this.render();
             return;
         }
-
-        this.set('dbNotConnected', false);
-        await this.loadAllData();
+        // 2. If connected, load data as usual
+        this.loadAllData();
     }
 
     async loadAllData() {
-        this.set('allData', null).set('error', null);
-
         try {
+            // Load colors first
             const colors = await fetchColorSettings();
-            const pages = await this.fetchAllPages();
-            const settings = await this.loadAllSettings();
+            
+            // Load all page data in parallel
+            const [homePageData, aboutPageData, academicsPageData, communityPageData, contactPageData] = await Promise.all([
+                this.fetchPageData('home'),
+                this.fetchPageData('about-us'),
+                this.fetchPageData('academics'),
+                this.fetchPageData('community'),
+                this.fetchPageData('contact')
+            ]);
 
-            const allData = { colors, pages, settings };
+            // Load all settings in parallel
+            const settingsData = await this.loadAllSettings();
+
+            // Combine all data
+            const allData = {
+                colors,
+                pages: {
+                    home: homePageData,
+                    about: aboutPageData,
+                    academics: academicsPageData,
+                    community: communityPageData,
+                    contact: contactPageData
+                },
+                settings: settingsData
+            };
+
+            // Cache in global store
             store.setState({ homePageData: allData });
+            
+            // Set local state and render
             this.set('allData', allData);
+            this.render();
+
         } catch (error) {
             console.error('Error loading all data:', error);
             this.set('error', 'Failed to load page data');
         }
-    }
-
-    async fetchAllPages() {
-        const pageSlugs = ['home', 'about-us', 'academics', 'community', 'contact'];
-        const pagePromises = pageSlugs.map(slug => this.fetchPageData(slug));
-        const pages = await Promise.all(pagePromises);
-        return {
-            home: pages[0],
-            about: pages[1],
-            academics: pages[2],
-            community: pages[3],
-            contact: pages[4],
-        };
     }
 
     async fetchPageData(slug) {
@@ -78,70 +92,122 @@ class RootPage extends App {
 
     async loadAllSettings() {
         try {
-            const response = await api.get('/settings/group/public');
-            if (response.data.success) {
-                const settingsObject = {};
-                response.data.data.forEach(item => {
-                    settingsObject[item.setting_key] = item.setting_value;
-                });
-                return settingsObject;
-            }
-            return {};
+            const settingsKeys = [
+                'hero_title', 'hero_subtitle',
+                'about_title', 'about_subtitle',
+                'academics_title', 'academics_subtitle',
+                'community_title', 'community_subtitle',
+                'contact_title', 'contact_subtitle',
+                'school_logo', 'contact_email', 'contact_phone',
+                'facebook_url', 'twitter_url', 'instagram_url', 'linkedin_url', 'youtube_url'
+            ];
+
+            const settingsPromises = settingsKeys.map(async (key) => {
+                try {
+                    const response = await api.get(`/settings/key/${key}`);
+                    return response.data.success ? { key, value: response.data.data.setting_value } : null;
+                } catch (error) {
+                    console.error(`Error fetching setting ${key}:`, error);
+                    return null;
+                }
+            });
+
+            const settingsResults = await Promise.all(settingsPromises);
+            
+            // Convert to object
+            const settingsObject = {};
+            settingsResults.forEach(result => {
+                if (result) {
+                    settingsObject[result.key] = result.value;
+                }
+            });
+
+            return settingsObject;
         } catch (error) {
             console.error('Error loading settings:', error);
             return {};
         }
     }
 
-    renderSection(sectionName, data) {
-        const { colors, pages, settings } = data;
-        const pageDataKey = sectionName.split('-')[0];
-        const pageData = pages[pageDataKey];
-
-        const sectionSettings = Object.entries(settings)
-            .filter(([key]) => key.startsWith(pageDataKey))
-            .reduce((obj, [key, value]) => {
-                obj[key] = value;
-                return obj;
-            }, {});
-
-        return `
-            <${sectionName}-section
-                colors='${escapeJsonForAttribute(colors)}'
-                page-data='${escapeJsonForAttribute(pageData)}'
-                settings='${escapeJsonForAttribute(sectionSettings)}'>
-            </${sectionName}-section>
-        `;
-    }
-
     render() {
         if (this.get('dbNotConnected')) {
             return `<db-setup-dialog></db-setup-dialog>`;
         }
-
-        const error = this.get('error');
-        if (error) {
-            return `<div class="container mx-auto flex items-center justify-center p-8">
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                            ${error}
-                        </div>
-                    </div>`;
-        }
-
         const allData = this.get('allData');
-        if (!allData) {
-            return `<div class="container flex items-center justify-center mx-auto p-8">
-                        <page-loader></page-loader>
-                    </div>`;
+        const error = this.get('error');
+
+        if (error) {
+            return `
+                <div class="container mx-auto flex items-center justify-center p-8">
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        ${error}
+                    </div>
+                </div>
+            `;
         }
+
+        if (!allData) {
+            return `
+                <div class="container flex items-center justify-center mx-auto p-8">
+                    <page-loader></page-loader>
+                </div>
+            `;
+        }
+
+        // Convert data to JSON strings for attributes with proper escaping
+        const colorsData = escapeJsonForAttribute(allData.colors);
 
         return `
             <div class="mx-auto">
-                ${this.renderSection('hero', allData)}
-                ${this.renderSection('about', allData)}
-                ${this.renderSection('academics', allData)}
-                ${this.renderSection('community', allData)}
-                ${this.renderSection('contact', allData)}
+                <!-- Hero Section Component -->
+                <hero-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pages.home)}'
+                    settings='${escapeJsonForAttribute({
+                        hero_title: allData.settings.hero_title,
+                        hero_subtitle: allData.settings.hero_subtitle
+                    })}'>
+                </hero-section>
+                
+                <!-- About Section Component -->
+                <about-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pages.about)}'
+                    settings='${escapeJsonForAttribute({
+                        about_title: allData.settings.about_title,
+                        about_subtitle: allData.settings.about_subtitle
+                    })}'>
+                </about-section>
+                
+                <!-- Academics Section Component -->
+                <academics-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pages.academics)}'
+                    settings='${escapeJsonForAttribute({
+                        academics_title: allData.settings.academics_title,
+                        academics_subtitle: allData.settings.academics_subtitle
+                    })}'>
+                </academics-section>
+                
+                <!-- Community Section Component -->
+                <community-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pages.community)}'
+                    settings='${escapeJsonForAttribute({
+                        community_title: allData.settings.community_title,
+                        community_subtitle: allData.settings.community_subtitle
+                    })}'>
+                </community-section>
+
+                <!-- Contact Section Component -->
+                <contact-section 
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.pages.contact)}'
+                    settings='${escapeJsonForAttribute({
+                        contact_title: allData.settings.contact_title,
+                        contact_subtitle: allData.settings.contact_subtitle,
+                    })}'>
+                </contact-section>
             </div>
         `;
     }

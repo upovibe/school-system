@@ -96,6 +96,7 @@ class ApplicationsPage extends App {
         })) : [];
         const tableColumns = [
             { key: 'index', label: 'No.' },
+            { key: 'applicant_number', label: 'Applicant Number' },
             { key: 'student_first_name', label: 'First Name' },
             { key: 'student_last_name', label: 'Last Name' },
             { key: 'grade', label: 'Grade' },

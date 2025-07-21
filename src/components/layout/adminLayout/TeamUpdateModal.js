@@ -2,7 +2,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
-import '@/components/ui/RadioGroup.js';
+import '@/components/ui/Switch.js';
 import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
@@ -75,14 +75,14 @@ class TeamUpdateModal extends HTMLElement {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const positionInput = this.querySelector('ui-input[data-field="position"]');
             const departmentDropdown = this.querySelector('ui-dropdown[data-field="department"]');
-            const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
+            const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
             const profileImageFileUpload = this.querySelector('ui-file-upload[data-field="profile-image"]');
 
             const teamData = {
                 name: nameInput ? nameInput.value : '',
                 position: positionInput ? positionInput.value : '',
                 department: departmentDropdown ? departmentDropdown.value : '',
-                is_active: statusRadioGroup ? (statusRadioGroup.value === 'active' ? 1 : 0) : 1
+                is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 
             console.log('Team data being sent:', teamData); // Debug log
@@ -242,14 +242,12 @@ class TeamUpdateModal extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <ui-radio-group 
-                                data-field="status"
-                                name="status" 
-                                value="${this.teamData?.is_active ? 'active' : 'inactive'}"
-                                layout="horizontal">
-                                <ui-radio-option value="active" label="Active"></ui-radio-option>
-                                <ui-radio-option value="inactive" label="Inactive"></ui-radio-option>
-                            </ui-radio-group>
+                            <ui-switch 
+                                name="is_active"
+                                ${this.teamData?.is_active ? 'checked' : ''}
+                                class="w-full">
+                                <span slot="label">Active</span>
+                            </ui-switch>
                         </div>
                     </form>
             </ui-modal>

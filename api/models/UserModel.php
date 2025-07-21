@@ -50,7 +50,7 @@ class UserModel extends BaseModel {
      * Verify password
      */
     public function verifyPassword($password) {
-        return password_verify($password, $this->password);
+        return password_verify($password, $this->attributes['password']);
     }
     
     /**

@@ -49,6 +49,17 @@ return [
         'subject' => 'Your Account Has Been Updated - School System',
         'template' => 'account-update',
         'variables' => ['userName', 'changes', 'oldEmail']
+    ],
+    'application-received' => [
+        'subject' => 'Your Application Was Received - School System',
+        'template' => 'application-received',
+        'variables' => ['applicantName', 'applicantNumber', 'grade', 'schoolName']
+    ],
+    'application-notification' => [
+        'subject' => 'New Application Submitted - School System',
+        'template' => 'application-notification',
+        'variables' => ['applicantName', 'applicantNumber', 'grade', 'schoolName', 'applicantEmail', 'parentPhone']
     ]
-];
-?> 
+]; 
+
+?>

@@ -83,6 +83,16 @@ class Avatar extends HTMLElement {
                     height: 4rem;
                     font-size: 1.25rem;
                 }
+                .upo-avatar-2xl {
+                    width: 6rem;
+                    height: 6rem;
+                    font-size: 1.5rem;
+                }
+                .upo-avatar-3xl {
+                    width: 8rem;
+                    height: 8rem;
+                    font-size: 2rem;
+                }
                 .upo-avatar img {
                     width: 100%;
                     height: 100%;

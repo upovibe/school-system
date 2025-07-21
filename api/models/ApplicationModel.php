@@ -44,11 +44,11 @@ class ApplicationModel extends BaseModel {
         return parent::create($data);
     }
 
-    // Generate a unique applicant number like APP2024XXXX
+    // Generate a unique applicant number like 202400001
     protected static function generateApplicantNumber($pdo) {
         $year = date('Y');
         do {
-            $unique = 'APP' . $year . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+            $unique = $year . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM applications WHERE applicant_number = ?');
             $stmt->execute([$unique]);
             $exists = $stmt->fetchColumn() > 0;

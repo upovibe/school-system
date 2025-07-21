@@ -8,6 +8,7 @@ import '@/components/layout/publicLayout/AboutSection.js';
 import '@/components/layout/publicLayout/AcademicsSection.js';
 import '@/components/layout/publicLayout/CommunitySection.js';
 import '@/components/layout/publicLayout/ContactSection.js';
+import '@/components/layout/DbSetupDialog.js';
 
 /**
  * Root Page Component (/)
@@ -16,9 +17,23 @@ import '@/components/layout/publicLayout/ContactSection.js';
  * It now renders within the global RootLayout.
  */
 class RootPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
         document.title = 'Home';
+        // 1. Check DB connection first
+        try {
+            const dbCheck = await fetch('/api/db/check').then(r => r.json());
+            if (!dbCheck.success) {
+                this.set('dbNotConnected', true);
+                this.render();
+                return;
+            }
+        } catch (e) {
+            this.set('dbNotConnected', true);
+            this.render();
+            return;
+        }
+        // 2. If connected, load data as usual
         this.loadAllData();
     }
 
@@ -115,6 +130,9 @@ class RootPage extends App {
     }
 
     render() {
+        if (this.get('dbNotConnected')) {
+            return `<db-setup-dialog></db-setup-dialog>`;
+        }
         const allData = this.get('allData');
         const error = this.get('error');
 

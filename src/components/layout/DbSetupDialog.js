@@ -33,16 +33,9 @@ class DbSetupDialog extends App {
     ensureEventListeners() {
         if (!this.dialog) return;
 
-        // Remove previous listeners to avoid duplicates
-        this.dialog.removeEventListener('cancel', this._handleCancelBound);
-        this.dialog.removeEventListener('dialog-close', this._handleCancelBound);
-        this.dialog.removeEventListener('confirm', this._handleConfirmBound);
-
-        // Bind handlers to preserve 'this' and allow removal
         this._handleCancelBound = this.handleCancel.bind(this);
         this._handleConfirmBound = this.handleConfirm.bind(this);
 
-        // Attach only to the correct events
         this.dialog.addEventListener('cancel', this._handleCancelBound);
         this.dialog.addEventListener('dialog-close', this._handleCancelBound);
         this.dialog.addEventListener('confirm', this._handleConfirmBound);
@@ -50,7 +43,6 @@ class DbSetupDialog extends App {
 
     handleCancel(e) {
         e.preventDefault();
-        // If confirm is in progress, do nothing.
         if (this.isConfirming) {
             return;
         }
@@ -71,28 +63,33 @@ class DbSetupDialog extends App {
 
         try {
             const response = await api.post('/db/fresh', {});
-            const { output, success } = response.data;
-
-            this.outputDiv.textContent = output || (success ? 'Database initialized!' : 'An unknown error occurred.');
+            const { output, success, message } = response.data;
 
             if (success) {
+                // Success! Finalize the UI before reloading.
+                this.setLoadingState(false);
+                this.outputDiv.textContent = output || 'Database initialized successfully!';
+                if (this.confirmBtn) {
+                    this.confirmBtn.disabled = true;
+                    this.confirmBtn.textContent = 'Success!';
+                }
                 Toast.show({ message: 'Database initialized successfully!', variant: 'success', duration: 3000 });
+                
                 // Reload the page to reflect the new state
                 setTimeout(() => {
-                    this.dialog.removeAttribute('open');
                     location.reload();
                 }, 2000);
             } else {
-                throw new Error('Failed to initialize database.');
+                // API call was ok, but operation failed.
+                throw new Error(message || 'Failed to initialize database.');
             }
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Failed to initialize database.';
-            this.outputDiv.textContent = error.response?.data?.output || errorMessage;
+            // Network error or thrown error from above.
+            const errorMessage = error.message || 'An unknown error occurred.';
+            this.outputDiv.textContent = errorMessage;
             Toast.show({ message: errorMessage, variant: 'error', duration: 4000 });
-            this.setLoadingState(false);
-        } finally {
-            // Reset the flag after operation is complete
-            this.isConfirming = false;
+            this.setLoadingState(false); // Make dialog interactive again
+            this.isConfirming = false; // Reset flag
         }
     }
 

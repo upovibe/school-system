@@ -461,12 +461,12 @@ class DashboardLayout extends App {
                 <div class="flex-1 flex flex-col xl:ml-64 overflow-hidden">
                     <!-- Header -->
                     <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 flex-shrink-0">
-                        <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center justify-between px-4 py-2">
                             <div class="flex items-center gap-4">
-                                <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-[${darkColor || '#9ca3af'}] hover:text-[${textColor || '#4b5563'}] hover:bg-gray-100">
+                                <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-[${darkColor || '#9ca3af'}] hover:text-[${darkColor || '#4b5563'}] hover:bg-gray-100">
                                     <i class="fas fa-bars text-lg"></i>
                                 </button>
-                                <h1 class="text-xl font-semibold text-[${textColor || '#111827'}]">${this.getPageTitle()}</h1>
+                                <h1 class="text-xl font-semibold text-[${darkColor || '#111827'}]">${this.getPageTitle()}</h1>
                             </div>
 
                             <div class="flex items-center space-x-4">

@@ -160,6 +160,7 @@ class DashboardLayout extends App {
                 {label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role'},
                 { label: 'User Management', icon: 'fas fa-users', href: '/dashboard/admin/users' },
                 { label: 'Team Management', icon: 'fas fa-user-friends', href: '/dashboard/admin/teams' },
+                { label: 'Applications', icon: 'fas fa-file-signature', href: '/dashboard/admin/applications' },
                 { label: 'Events Management', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                 { label: 'News Management', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
                 { label: 'Gallery Management', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },

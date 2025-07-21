@@ -6,7 +6,7 @@ require_once __DIR__ . '/../models/UserSessionModel.php';
 require_once __DIR__ . '/../models/PasswordResetModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../core/EmailService.php';
-require_once __DIR__ . '/../config/load_env.php';
+// REMOVE: require_once __DIR__ . '/../config/load_env.php';
 
 class AuthController {
     private $userModel;
@@ -14,19 +14,16 @@ class AuthController {
     private $passwordResetModel;
     private $logModel;
     private $emailService;
-    private $env;
+    private $config;
 
     public function __construct($pdo) {
         $this->userModel = new UserModel($pdo);
         $this->sessionModel = new UserSessionModel($pdo);
         $this->passwordResetModel = new PasswordResetModel($pdo);
         $this->logModel = new UserLogModel($pdo);
-        
-        // Initialize email service
         $this->emailService = new EmailService();
-        
-        // Load environment variables
-        $this->env = loadEnv(__DIR__ . '/../../../.env');
+        // Use config from app_config.php
+        $this->config = require __DIR__ . '/../config/app_config.php';
     }
 
     public function login() {
@@ -234,7 +231,7 @@ class AuthController {
             $this->passwordResetModel->create($resetData);
             
             // Send email with reset link
-            $clientUrl = $this->env['CLIENT_URL'] ?? 'http://localhost:8000';
+            $clientUrl = $this->config['client_url'] ?? 'http://localhost:8000';
             $resetUrl = $clientUrl . '/reset-password?token=' . $token;
             $emailSent = $this->emailService->sendPasswordResetEmail($data['email'], $resetUrl);
             

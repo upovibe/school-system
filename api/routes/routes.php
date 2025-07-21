@@ -119,6 +119,11 @@ Router::get('/teams/{id}', 'TeamController@show');
 Router::put('/teams/{id}', 'TeamController@update');
 Router::delete('/teams/{id}', 'TeamController@destroy');
 
+// Guest Applications
+Router::get('/applications', 'ApplicationController@index');
+Router::get('/applications/{id}', 'ApplicationController@show');
+Router::post('/applications', 'ApplicationController@store');
+
 // DB setup endpoints
 Router::get('/db/check', 'DbController@check');
 Router::post('/db/fresh', 'DbController@fresh');

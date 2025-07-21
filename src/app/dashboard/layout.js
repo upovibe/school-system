@@ -20,11 +20,15 @@ class DashboardLayout extends App {
         this.currentUser = null;
         this.unsubscribe = null;
         this.sidebarOpen = false;
+        this.logoUrl = null;
+        this.brandColor = null;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
         document.title = 'Dashboard | School System';
+        await this.fetchLogoSetting();
+        await this.fetchBrandColor();
         this.loadUserData();
         this.setupEventListeners();
         this.checkPasswordChangeRequirement();
@@ -70,6 +74,32 @@ class DashboardLayout extends App {
         // Check if user needs to change password
         const requiresPasswordChange = localStorage.getItem('requiresPasswordChange') === 'true';
         this.set('requiresPasswordChange', requiresPasswordChange);
+    }
+
+    async fetchLogoSetting() {
+        try {
+            const response = await api.get('/settings/key/application_logo');
+            if (response.data && response.data.success && response.data.data && response.data.data.setting_value) {
+                this.logoUrl = response.data.data.setting_value;
+            } else {
+                this.logoUrl = null;
+            }
+        } catch (e) {
+            this.logoUrl = null;
+        }
+    }
+
+    async fetchBrandColor() {
+        try {
+            const response = await api.get('/settings/key/color');
+            if (response.data && response.data.success && response.data.data && response.data.data.setting_value) {
+                this.brandColor = response.data.data.setting_value;
+            } else {
+                this.brandColor = null;
+            }
+        } catch (e) {
+            this.brandColor = null;
+        }
     }
 
     checkPasswordChangeRequirement() {
@@ -377,8 +407,7 @@ class DashboardLayout extends App {
                 <aside data-sidebar class="fixed inset-y-0 left-0 bg-gradient-to-b from-blue-600 to-blue-700 text-white flex flex-col shadow-lg">
                     <div class="flex items-center justify-between h-16 px-4 border-b border-blue-500 flex-shrink-0">
                         <div class="flex items-center space-x-3">
-                            <img class="w-8 h-8 rounded-full" src="/src/assets/logo.png" alt="Logo" />
-                            <span class="text-lg font-semibold">School System</span>
+                            <img src="${this.logoUrl ? this.getImageUrl(this.logoUrl) : '/src/assets/logo.png'}" alt="Logo" class="size-32 object-contain rounded-full" />
                         </div>
                         <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-blue-200 hover:text-white hover:bg-blue-500">
                             <i class="fas fa-times text-lg"></i>

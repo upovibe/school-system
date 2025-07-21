@@ -2,7 +2,7 @@
 // Central app configuration for database and email
 return [
     'db' => [
-        'host' => 'localhost',
+        'host' => 'localhost', // Change to your DB host
         'name' => 'school_db', // Change to your DB name
         'user' => 'root',      // Change to your DB user
         'pass' => '',          // Change to your DB password

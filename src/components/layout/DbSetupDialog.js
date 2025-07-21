@@ -72,7 +72,7 @@ class DbSetupDialog extends App {
         this.isConfirming = true;
         this.setLoadingState(true);
         Toast.show({ message: 'Initializing database...', variant: 'info' });
-        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-gray-200 rounded p-2 mt-2 text-xs overflow-x-auto">Initializing...</pre>';
+        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-gray-200 rounded p-2 text-xs overflow-x-auto w-full">Initializing...</pre>';
 
         try {
             const response = await api.post('/db/fresh', {});
@@ -80,7 +80,7 @@ class DbSetupDialog extends App {
 
             if (success) {
                 this.setLoadingState(false);
-                if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-green-200 rounded p-2 mt-2 text-xs overflow-x-auto">Database initialized successfully!</pre>';
+                if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-green-200 rounded p-2 text-xs overflow-x-auto w-full">Database initialized successfully!</pre>';
                 const initBtn = this.querySelector('#initialize-db');
                 if (initBtn) {
                     initBtn.disabled = true;

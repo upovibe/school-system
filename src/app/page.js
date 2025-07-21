@@ -20,36 +20,15 @@ class RootPage extends App {
     async connectedCallback() {
         super.connectedCallback();
         document.title = 'Home';
-        // 1. Check DB connection first
+        
+        // Check if database is already initialized by trying to load data
         try {
-            const response = await fetch('/api/db/check');
-            
-            if (!response.ok) {
-                this.set('dbNotConnected', true);
-                this.render();
-                return;
-            }
-            
-            const dbCheck = await response.json();
-            
-            // FOR TESTING: Force show dialog even if connection is successful
-            // Remove this line when you're done testing
+            await this.loadAllData();
+        } catch (error) {
+            // If loading fails, show the database setup dialog
             this.set('dbNotConnected', true);
             this.render();
-            return;
-            
-            if (!dbCheck.success) {
-                this.set('dbNotConnected', true);
-                this.render();
-                return;
-            }
-        } catch (e) {
-            this.set('dbNotConnected', true);
-            this.render();
-            return;
         }
-        // 2. If connected, load data as usual
-        this.loadAllData();
     }
 
     async loadAllData() {

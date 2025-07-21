@@ -1,6 +1,4 @@
-import App from '@/core/App.js';
 import '@/components/ui/Dialog.js';
-import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
@@ -9,25 +7,25 @@ import api from '@/services/api.js';
  * 
  * Dialog for confirming video gallery deletion
  */
-class VideoGalleryDeleteDialog extends App {
+class VideoGalleryDeleteDialog extends HTMLElement {
     constructor() {
         super();
         this.videoGalleryData = null;
-        this.loading = false;
-        
-        this.set('videoGalleryData', null);
-        this.set('loading', false);
+    }
+
+    static get observedAttributes() {
+        return ['open'];
     }
 
     connectedCallback() {
-        super.connectedCallback();
+        this.render();
         this.setupEventListeners();
     }
 
     setupEventListeners() {
         // Listen for confirm button click (Delete Video Gallery)
         this.addEventListener('confirm', () => {
-            this.handleDelete();
+            this.deleteVideoGallery();
         });
 
         // Listen for cancel button click
@@ -36,25 +34,55 @@ class VideoGalleryDeleteDialog extends App {
         });
     }
 
-    setVideoGalleryData(data) {
-        this.set('videoGalleryData', data);
+    open() {
+        this.setAttribute('open', '');
     }
 
-    async handleDelete() {
-        const videoGalleryData = this.get('videoGalleryData');
-        if (!videoGalleryData || !videoGalleryData.id) {
-            Toast.show({
-                title: 'Error',
-                message: 'Video gallery data not found',
-                variant: 'error',
-                duration: 3000
-            });
-            return;
+    close() {
+        this.removeAttribute('open');
+    }
+
+    // Set video gallery data for deletion
+    setVideoGalleryData(videoGalleryData) {
+        this.videoGalleryData = videoGalleryData;
+        this.populateDialog();
+    }
+
+    // Populate dialog with video gallery data
+    populateDialog() {
+        if (!this.videoGalleryData) return;
+
+        const videoGalleryNameElement = this.querySelector('#video-gallery-name');
+        const videoGallerySlugElement = this.querySelector('#video-gallery-slug');
+        const videoGalleryStatusElement = this.querySelector('#video-gallery-status');
+        const videoGalleryVideosElement = this.querySelector('#video-gallery-videos');
+
+        if (videoGalleryNameElement) videoGalleryNameElement.textContent = this.videoGalleryData.name || 'Unknown Video Gallery';
+        if (videoGallerySlugElement) videoGallerySlugElement.textContent = this.videoGalleryData.slug || 'N/A';
+        if (videoGalleryStatusElement) {
+            const status = this.videoGalleryData.is_active ? 'Active' : 'Inactive';
+            videoGalleryStatusElement.textContent = status;
         }
+        if (videoGalleryVideosElement) {
+            const videoCount = this.videoGalleryData.video_links ? this.videoGalleryData.video_links.length : 0;
+            videoGalleryVideosElement.textContent = `${videoCount} video${videoCount !== 1 ? 's' : ''}`;
+        }
+    }
 
+    // Delete the video gallery
+    async deleteVideoGallery() {
         try {
-            this.set('loading', true);
+            if (!this.videoGalleryData) {
+                Toast.show({
+                    title: 'Error',
+                    message: 'No video gallery data available for deletion',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
 
+            // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
@@ -66,8 +94,9 @@ class VideoGalleryDeleteDialog extends App {
                 return;
             }
 
-            await api.withToken(token).delete(`/video-galleries/${videoGalleryData.id}`);
-
+            // Delete the video gallery
+            const response = await api.withToken(token).delete(`/video-galleries/${this.videoGalleryData.id}`);
+            
             Toast.show({
                 title: 'Success',
                 message: 'Video gallery deleted successfully',
@@ -75,88 +104,58 @@ class VideoGalleryDeleteDialog extends App {
                 duration: 3000
             });
 
-            // Dispatch event to parent component
-            this.dispatchEvent(new CustomEvent('video-gallery-deleted', {
-                detail: { videoGalleryId: videoGalleryData.id },
-                bubbles: true
-            }));
-
+            // Close dialog and dispatch event
             this.close();
+            this.dispatchEvent(new CustomEvent('video-gallery-deleted', {
+                detail: { videoGalleryId: this.videoGalleryData.id },
+                bubbles: true,
+                composed: true
+            }));
 
         } catch (error) {
             console.error('❌ Error deleting video gallery:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to delete video gallery',
                 variant: 'error',
                 duration: 3000
             });
-        } finally {
-            this.set('loading', false);
-        }
-    }
-
-    close() {
-        const dialog = this.querySelector('ui-dialog');
-        if (dialog) {
-            dialog.close();
         }
     }
 
     render() {
-        const videoGalleryData = this.get('videoGalleryData');
-        const loading = this.get('loading');
-
-        if (!videoGalleryData) {
-            return `<ui-dialog 
-                ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Delete Video Gallery">
-                <div class="text-center py-8 text-gray-500">
-                    <p>No video gallery data available</p>
-                </div>
-            </ui-dialog>`;
-        }
-
-        return `
+        this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Delete Video Gallery">
-                <div class="space-y-4">
-                    <div class="text-center">
-                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">
-                            Delete Video Gallery
-                        </h3>
-                        <p class="text-sm text-gray-500">
-                            Are you sure you want to delete the video gallery 
-                            <strong>"${videoGalleryData.name}"</strong>? 
-                            This action cannot be undone.
-                        </p>
+                title="Delete Video Gallery"
+                variant="danger">
+                <div slot="content" class="space-y-4">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        <span class="font-semibold text-red-900">Delete Video Gallery</span>
                     </div>
-
-                    ${videoGalleryData.video_links && videoGalleryData.video_links.length > 0 ? `
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-info-circle text-yellow-400"></i>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-yellow-800">
-                                        Warning
-                                    </h3>
-                                    <div class="mt-2 text-sm text-yellow-700">
-                                        <p>
-                                            This gallery contains ${videoGalleryData.video_links.length} video(s). 
-                                            All videos will be permanently removed.
-                                        </p>
-                                    </div>
+                    
+                    <p class="text-gray-700">
+                        Are you sure you want to delete this video gallery? This action cannot be undone.
+                    </p>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-video text-red-500 mt-1"></i>
+                            <div class="flex-1">
+                                <h4 id="video-gallery-name" class="font-semibold text-red-900">Video Gallery Name</h4>
+                                <div class="mt-1 text-sm text-red-700">
+                                    <span id="video-gallery-slug">Slug</span> • 
+                                    <span id="video-gallery-status">Status</span> • 
+                                    <span id="video-gallery-videos">Videos</span>
                                 </div>
                             </div>
                         </div>
-                    ` : ''}
+                    </div>
+                    
+                    <p class="text-sm text-gray-600">
+                        This will permanently remove the video gallery and all its videos from the system and cannot be recovered.
+                    </p>
                 </div>
             </ui-dialog>
         `;

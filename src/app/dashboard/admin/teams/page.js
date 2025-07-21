@@ -5,6 +5,10 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/layout/adminLayout/TeamSettingsModal.js';
+import '@/components/layout/adminLayout/TeamUpdateModal.js';
+import '@/components/layout/adminLayout/TeamViewModal.js';
+import '@/components/layout/adminLayout/TeamDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**

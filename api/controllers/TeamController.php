@@ -111,6 +111,7 @@ class TeamController {
             $profileImagePath = null;
             if (!empty($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadResult = uploadTeamImage($_FILES['profile_image']);
+                
                 if ($uploadResult['success']) {
                     $profileImagePath = $uploadResult['filepath'];
                     // Update team member with profile image path
@@ -217,18 +218,21 @@ class TeamController {
                 return;
             }
 
-            // Handle multipart form data or JSON data
+            // Handle multipart/form-data for PUT requests (same as SettingController)
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'multipart/form-data') !== false && $_SERVER['REQUEST_METHOD'] === 'PUT') {
+                $rawData = file_get_contents('php://input');
+                MultipartFormParser::processRequest($rawData, $contentType);
+            }
+            
+            // Handle both JSON and multipart form data
             $data = [];
-            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
-            $rawData = file_get_contents('php://input');
-
-            if (strpos($content_type, 'multipart/form-data') !== false) {
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+            if (strpos($contentType, 'multipart/form-data') !== false) {
+                // Handle multipart form data
+                $data = $_POST;
             } else {
-                // Fall back to JSON
-                $data = json_decode($rawData, true) ?? [];
+                // Handle JSON data
+                $data = json_decode(file_get_contents('php://input'), true) ?? [];
             }
 
             // Validate department if provided
@@ -247,6 +251,7 @@ class TeamController {
             // Handle profile image upload if present
             if (!empty($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadResult = uploadTeamImage($_FILES['profile_image']);
+                
                 if ($uploadResult['success']) {
                     // Delete old profile image if it exists
                     if (!empty($existingTeamMember['profile_image']) && file_exists($existingTeamMember['profile_image'])) {

@@ -35,7 +35,7 @@ class TeamModel extends BaseModel {
     public function getActiveTeamMembers() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->table} 
+                SELECT * FROM {$this->getTableName()} 
                 WHERE is_active = 1 
                 ORDER BY department ASC, name ASC
             ");
@@ -59,7 +59,7 @@ class TeamModel extends BaseModel {
     public function getTeamMembersByDepartment($department) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->table} 
+                SELECT * FROM {$this->getTableName()} 
                 WHERE department = ? AND is_active = 1
                 ORDER BY name ASC
             ");
@@ -84,7 +84,7 @@ class TeamModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT department, COUNT(*) as count 
-                FROM {$this->table} 
+                FROM {$this->getTableName()} 
                 WHERE is_active = 1 
                 GROUP BY department 
                 ORDER BY department ASC
@@ -103,7 +103,7 @@ class TeamModel extends BaseModel {
         try {
             $searchTerm = "%{$query}%";
             $sql = "
-                SELECT * FROM {$this->table} 
+                SELECT * FROM {$this->getTableName()} 
                 WHERE is_active = 1 
                 AND (name LIKE ? OR position LIKE ?)
                 ORDER BY department ASC, name ASC
@@ -134,7 +134,7 @@ class TeamModel extends BaseModel {
     public function toggleActive($id) {
         try {
             $stmt = $this->pdo->prepare("
-                UPDATE {$this->table} 
+                UPDATE {$this->getTableName()} 
                 SET is_active = NOT is_active, updated_at = NOW() 
                 WHERE id = ?
             ");
@@ -178,7 +178,7 @@ class TeamModel extends BaseModel {
             // Add the ID to the values array
             $values[] = $id;
             
-            $sql = "UPDATE {$this->table} SET " . implode(', ', $setClause) . " WHERE id = ?";
+            $sql = "UPDATE {$this->getTableName()} SET " . implode(', ', $setClause) . " WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             
             return $stmt->execute($values);

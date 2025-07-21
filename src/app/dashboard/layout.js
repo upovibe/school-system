@@ -432,17 +432,19 @@ class DashboardLayout extends App {
 
                     <nav class="flex-1 px-4 py-4 overflow-y-auto flex flex-col gap-2">
                         ${navigationGroups.map(group => `
-                            <div class="mb-2">
-                                <div class="text-xs font-semibold uppercase text-[${textColor || '#bfdbfe'}] mb-1 pl-2 tracking-wide">${group.group}</div>
-                                ${group.items.map(item => `
-                                    <ui-link 
-                                        href="${item.href}"
-                                        class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? `bg-[${accentColor || '#ffffff'}] text-white` : `text-[${textColor || '#dbeafe'}] hover:bg-[${secondaryColor || '#3b82f6'}] hover:bg-opacity-50 hover:text-white`}"
-                                    >
-                                        <i class="${item.icon} size-5 flex items-center justify-center"></i>
-                                        <span>${item.label}</span>
-                                    </ui-link>
-                                `).join('')}
+                            <div class="mb-4">
+                                <div class="text-xs font-semibold uppercase text-[${textColor || '#bfdbfe'}] mb-2 pl-2 tracking-wide">${group.group}</div>
+                                <div class="flex flex-col gap-1">
+                                    ${group.items.map(item => `
+                                        <ui-link 
+                                            href="${item.href}"
+                                            class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? `bg-[${accentColor || '#ffffff'}] text-white` : `text-[${textColor || '#dbeafe'}] hover:bg-[${secondaryColor || '#3b82f6'}] hover:bg-opacity-50 hover:text-white`}"
+                                        >
+                                            <i class="${item.icon} size-5 flex items-center justify-center"></i>
+                                            <span>${item.label}</span>
+                                        </ui-link>
+                                    `).join('')}
+                                </div>
                             </div>
                         `).join('')}
                     </nav>

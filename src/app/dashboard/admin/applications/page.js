@@ -86,6 +86,7 @@ class ApplicationsPage extends App {
         const tableData = applications ? applications.map((app, index) => ({
             id: app.id,
             index: index + 1,
+            applicant_number: app.applicant_number,
             student_first_name: app.student_first_name,
             student_last_name: app.student_last_name,
             grade: app.grade,

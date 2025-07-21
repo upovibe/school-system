@@ -90,6 +90,12 @@ class ApplicationViewModal extends HTMLElement {
                                 <i class="fas fa-user-graduate mr-1"></i>
                                 ${this.applicationData.grade || 'N/A'}
                             </ui-badge>
+                            ${this.applicationData.applicant_number ? `
+                                <ui-badge color="primary">
+                                    <i class="fas fa-hashtag mr-1"></i>
+                                    ${this.applicationData.applicant_number}
+                                </ui-badge>
+                            ` : ''}
                         </div>
                         <div class="border-b pb-4">
                             <div class="flex items-center gap-2 mb-3">
@@ -127,6 +133,14 @@ class ApplicationViewModal extends HTMLElement {
                                     </label>
                                     <p class="text-gray-900 text-sm">
                                         ${this.applicationData.student_phone ? `<a href="tel:${this.applicationData.student_phone}" class="text-blue-600 hover:underline">${this.applicationData.student_phone}</a>` : 'N/A'}
+                                    </p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-id-card mr-1"></i>Application Number
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-mono font-bold">
+                                        ${this.applicationData.applicant_number || 'N/A'}
                                     </p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">

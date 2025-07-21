@@ -12,6 +12,7 @@ class Migration_20241001000006createapplicationstable {
         $this->pdo->exec("
             CREATE TABLE IF NOT EXISTS applications (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                applicant_number VARCHAR(30) NOT NULL UNIQUE,
                 student_first_name VARCHAR(100) NOT NULL,
                 student_last_name VARCHAR(100) NOT NULL,
                 father_name VARCHAR(100) DEFAULT NULL,

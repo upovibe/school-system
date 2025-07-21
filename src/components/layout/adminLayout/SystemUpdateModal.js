@@ -59,6 +59,25 @@ class SystemUpdateModal extends HTMLElement {
                 this.updateValueInput();
             }
         });
+
+        // Listen for color input and text input changes for color type
+        this.addEventListener('input', (event) => {
+            if (this.settingData && this.settingData.setting_type === 'color') {
+                if (event.target.name === 'setting_value_color') {
+                    this.settingData.setting_value = event.target.value;
+                    // Update the text input value
+                    const textInput = this.querySelector('ui-input[name="setting_value"]');
+                    if (textInput) textInput.value = event.target.value;
+                } else if (event.target.name === 'setting_value') {
+                    this.settingData.setting_value = event.target.value;
+                    // Update the color input value if it's a valid hex
+                    const colorInput = this.querySelector('input[name="setting_value_color"]');
+                    if (colorInput && /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(event.target.value)) {
+                        colorInput.value = event.target.value;
+                    }
+                }
+            }
+        });
     }
 
     open() {
@@ -137,11 +156,22 @@ class SystemUpdateModal extends HTMLElement {
             
             case 'color':
                 return `
-                    <input 
-                        name="setting_value"
-                        type="color" 
-                        value="${currentValue || '#000000'}"
-                        class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input 
+                            name="setting_value_color"
+                            type="color" 
+                            value="${/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(currentValue) ? currentValue : '#000000'}"
+                            class="w-10 h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            style="min-width: 2.5rem;"
+                        >
+                        <ui-input 
+                            name="setting_value"
+                            type="text" 
+                            placeholder="Enter color string (e.g. #ff0000, red, rgba(255,0,0,1))"
+                            value="${currentValue}"
+                            class="flex-1"
+                        ></ui-input>
+                    </div>
                 `;
             
             case 'file':

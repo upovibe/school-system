@@ -111,7 +111,7 @@ class DbSetupDialog extends App {
                 <div slot="content">
                     <p class="mb-4 font-semibold text-red-600">The database is not connected or initialized.</p>
                     <p class="mb-4">Click confirm to run the database setup. This will erase any existing data and create a fresh installation.</p>
-                    <div id="db-setup-output" class="mt-4 p-2 text-sm text-gray-700 bg-gray-100 rounded border min-h-[25px] max-h-[200px] flex items-center justify-center" max-height="100px" overflow-y-auto></div>
+                    <div id="db-setup-output" class="mt-4 p-2 text-sm text-gray-700 bg-gray-100 rounded border min-h-[25px] flex items-center justify-center" max-height="100px" overflow-y-auto></div>
                 </div>
             </ui-dialog>
         `;

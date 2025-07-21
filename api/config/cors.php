@@ -1,12 +1,9 @@
 <?php
 // api/config/cors.php - CORS configuration
 
-// Load environment variables
-require_once __DIR__ . '/load_env.php';
-$env = loadEnv(__DIR__ . '/../../../.env');
-
-// Get client URL from environment, fallback to localhost
-$clientUrl = $env['CLIENT_URL'] ?? 'http://localhost:8000';
+// Load client URL from central config
+$config = require __DIR__ . '/app_config.php';
+$clientUrl = $config['client_url'];
 
 return [
     // Allowed origins (domains that can access the API)

@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/layout/adminLayout/ApplicationViewModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -17,7 +18,6 @@ class ApplicationsPage extends App {
         super();
         this.applications = null;
         this.loading = false;
-        // Placeholders for future modals/dialogs
         this.showViewModal = false;
         this.viewApplicationData = null;
     }
@@ -26,7 +26,7 @@ class ApplicationsPage extends App {
         super.connectedCallback();
         document.title = 'Applications | School System';
         this.loadData();
-        // Only add event listener for refresh
+        this.addEventListener('table-row-click', this.onRowClick.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
     }
 
@@ -59,6 +59,22 @@ class ApplicationsPage extends App {
         }
     }
 
+    onRowClick(event) {
+        const { detail } = event;
+        const application = this.get('applications').find(app => app.id === detail.row.id);
+        if (application) {
+            this.set('viewApplicationData', application);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('application-view-modal');
+                if (viewModal) {
+                    viewModal.setApplicationData(application);
+                    viewModal.open();
+                }
+            }, 0);
+        }
+    }
+
     onRefresh() {
         this.loadData();
     }
@@ -66,7 +82,7 @@ class ApplicationsPage extends App {
     render() {
         const applications = this.get('applications');
         const loading = this.get('loading');
-        // Prepare table data
+        const showViewModal = this.get('showViewModal');
         const tableData = applications ? applications.map((app, index) => ({
             id: app.id,
             index: index + 1,
@@ -112,6 +128,7 @@ class ApplicationsPage extends App {
                                 print
                                 bordered
                                 striped
+                                clickable
                                 class="w-full">
                             </ui-table>
                         ` : `
@@ -122,6 +139,7 @@ class ApplicationsPage extends App {
                     </div>
                 `}
             </div>
+            <application-view-modal ${showViewModal ? 'open' : ''}></application-view-modal>
         `;
     }
 }

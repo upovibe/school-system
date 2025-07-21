@@ -2,7 +2,8 @@ import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
-import Toast from '@/components/ui/Toast.js';
+import '@/components/ui/Toast.js';
+import '@/components/common/PageLoader.js';
 
 /**
  * Application Form Section
@@ -26,6 +27,26 @@ class ApplicationFormSection extends App {
                 this.set('schoolName', settings.school_name);
             }
         }
+        // Get banner image from attribute
+        const bannerImageAttr = this.getAttribute('banner-image');
+        if (bannerImageAttr) {
+            this.set('contactBannerImage', bannerImageAttr);
+        }
+        // Get colors from attribute
+        const colorsAttr = this.getAttribute('colors');
+        if (colorsAttr) {
+            try {
+                const colors = JSON.parse(colorsAttr.replace(/&quot;/g, '"'));
+                Object.entries(colors).forEach(([key, value]) => {
+                    this.set(key, value);
+                });
+            } catch (e) {}
+        }
+        // Get contact title/subtitle from attributes
+        const contactTitleAttr = this.getAttribute('contact-title');
+        const contactSubtitleAttr = this.getAttribute('contact-subtitle');
+        this.set('contactTitle', contactTitleAttr || '');
+        this.set('contactSubtitle', contactSubtitleAttr || '');
         this.render();
     }
 
@@ -79,6 +100,12 @@ class ApplicationFormSection extends App {
     render() {
         const schoolLogo = this.get('schoolLogo');
         const schoolName = this.get('schoolName');
+        const contactBannerImage = this.get('contactBannerImage');
+        const contactTitle = this.get('contactTitle');
+        const contactSubtitle = this.get('contactSubtitle');
+        // Get colors from state (with fallback)
+        const primaryColor = this.get('primary_color') || '#2563eb';
+        const accentColor = this.get('accent_color') || '#f59e42';
         // Grade options: K1, K2, K3, Primary 1-6, JHS 1-3
         const gradeOptions = [
             { value: '', label: 'Select Grade' },
@@ -98,6 +125,44 @@ class ApplicationFormSection extends App {
             { value: 'JHS 3', label: 'JHS 3 (Form 3)' }
         ];
         this.innerHTML = `
+            ${contactBannerImage ? `
+            <section class="mx-auto py-8 px-4">
+                <div class="relative group rounded-3xl overflow-hidden shadow-2xl mb-8">
+                    <div class="relative h-80 lg:h-96 overflow-hidden">
+                        <img src="${contactBannerImage}" 
+                             alt="Contact Banner" 
+                             class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                            <div class="text-center">
+                                <i class="fas fa-envelope text-gray-400 text-4xl mb-2"></i>
+                                <p class="text-gray-500 font-medium">Contact banner</p>
+                            </div>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                        <!-- Overlay content: title and subtitle -->
+                        <div class="absolute inset-0 flex items-center justify-center p-6">
+                            <div class="text-center text-white relative z-10">
+                                <h2 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                                    ${contactTitle}
+                                </h2>
+                                <!-- <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
+                                    ${contactSubtitle}
+                                </p> -->
+                                <!-- Call to Action Button -->
+                                <div class="flex justify-center">
+                                    <a href="/public/contact" 
+                                       class="inline-flex items-center px-4 py-2 bg-[${primaryColor}]/20 backdrop-blur-md text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group border border-white/30 hover:bg-[${accentColor}]/30">
+                                        <span>Contact Us</span>
+                                        <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform duration-300"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            ` : ''}
             <section class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-8">
                 <div class="text-center mb-6">
                     ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="h-16 mx-auto mb-2" />` : ''}
@@ -152,7 +217,7 @@ class ApplicationFormSection extends App {
                         </div>
                     </div>
                     <div class="pt-4 text-center">
-                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300">Submit Application</button>
+                        <button type="submit" class="px-6 py-2 bg-[${primaryColor}] text-white font-bold rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300">Submit Application</button>
                     </div>
                 </form>
             </section>

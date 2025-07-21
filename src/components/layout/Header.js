@@ -273,6 +273,12 @@
 
       // Helper function to render navigation links
       const renderNavLinks = (isMobile = false) => {
+        const currentPath = window.location.pathname;
+        // Helper to check if a link is active
+        const isActive = (href) => {
+          if (href === '/') return currentPath === '/';
+          return currentPath === href || currentPath.startsWith(href + '/');
+        };
         return navigationLinks.map(link => {
           if (isMobile) {
             // Mobile version - with collapsible submenus
@@ -280,7 +286,7 @@
               <div class="w-full">
                 ${link.subLinks ? `
                   <!-- Parent link with submenu toggle -->
-                                    <button data-mobile-submenu-toggle class="w-full text-left text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] flex items-center justify-between">
+                  <button data-mobile-submenu-toggle class="w-full text-left text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] flex items-center justify-between ${isActive(link.href) ? 'active-link' : ''}">
                     <span>${link.label}</span>
                     <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
                   </button>
@@ -288,7 +294,7 @@
                   <div class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out">
                     <div class="ml-4 space-y-2 pt-2">
                       ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100">
+                        <ui-link href="${subLink.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-1 block text-sm opacity-75 hover:opacity-100 ${isActive(subLink.href) ? 'active-link' : ''}">
                             ${subLink.label}
                           </ui-link>
                       `).join('')}
@@ -296,7 +302,7 @@
                   </div>
                 ` : `
                   <!-- Simple link without submenu -->
-                  <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] w-full block">
+                  <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-2 border-transparent hover:border-[${hoverAccent}] w-full block ${isActive(link.href) ? 'active-link' : ''}">
                     ${link.label}
                   </ui-link>
                 `}
@@ -306,7 +312,7 @@
             // Desktop version - with dropdown
             return `
               <div class="relative group">
-                <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${hoverAccent}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center">
+                <ui-link href="${link.href}" class="text-[${textColor}] hover:text-[${hoverAccent}] font-medium transition-all duration-300 ease-in-out py-2 border-b-4 border-transparent hover:border-[${hoverAccent}] hover:opacity-100 -mb-3 lg:-mb-4 flex items-center ${isActive(link.href) ? 'active-link' : ''}">
                   ${link.label}
                   ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
                 </ui-link>
@@ -314,7 +320,7 @@
                   <div class="absolute top-full left-0 mt-4 w-48 bg-[${primaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
                     <div class="py-2">
                       ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${primaryColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${hoverAccent}]">
+                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${primaryColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${hoverAccent}] ${isActive(subLink.href) ? 'active-link' : ''}">
                           ${subLink.label}
                         </ui-link>
                       `).join('')}
@@ -336,8 +342,21 @@
         `).join('');
       };
 
+      // Add styles for active link
+      const style = `
+        <style>
+          .active-link {
+            color: ${accentColor} !important;
+            border-color: ${accentColor} !important;
+            opacity: 1 !important;
+            font-weight: bold !important;
+          }
+        </style>
+      `;
+
       return `
         <div class="relative">
+          ${style}
           <header class="bg-[${backgroundColor}] border-b-4 border-[${primaryColor}] border-t-4 border-t-[${secondaryColor}]">
             <!-- Top header -->
             <div class="flex container mx-auto items-center justify-between p-3 lg:p-5">     

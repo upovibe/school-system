@@ -112,6 +112,7 @@ Router::delete('/video-galleries/{id}/videos/{videoIndex}', 'VideoGalleryControl
 
 // Team Management Routes (admin only for create/update/delete, public for view)
 Router::get('/teams', 'TeamController@index');
+Router::get('/teams/public', 'TeamController@getPublic');
 Router::post('/teams', 'TeamController@store');
 Router::get('/teams/department/{department}', 'TeamController@getByDepartment');
 Router::get('/teams/{id}', 'TeamController@show');

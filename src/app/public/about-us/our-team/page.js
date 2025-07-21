@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
-import PageLoader from '@/components/common/PageLoader.js';
+import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
@@ -28,10 +28,14 @@ class OurTeamPage extends App {
             // Load our team page data
             const pageData = await this.fetchPageData();
 
+            // Load team members data
+            const teamMembers = await this.fetchTeamMembers();
+
             // Combine all data
             const allData = {
                 colors,
-                page: pageData
+                page: pageData,
+                teamMembers
             };
 
             // Cache in global store
@@ -71,6 +75,30 @@ class OurTeamPage extends App {
         }
     }
 
+    async fetchTeamMembers() {
+        // Check if data is already cached in global store
+        const globalState = store.getState();
+        if (globalState.ourTeamMembersData) {
+            return globalState.ourTeamMembersData;
+        }
+
+        // If not cached, fetch from API
+        try {
+            const response = await api.get('/teams/public');
+            if (response.data.success) {
+                const teamMembers = response.data.data;
+                
+                // Cache the data in global store
+                store.setState({ ourTeamMembersData: teamMembers });
+                
+                return teamMembers;
+            }
+        } catch (error) {
+            console.error('Error fetching team members:', error);
+            return [];
+        }
+    }
+
     render() {
         const allData = this.get('allData');
         const error = this.get('error');
@@ -101,7 +129,8 @@ class OurTeamPage extends App {
                 <!-- Our Team Section Component -->
                 <our-team-section 
                     colors='${colorsData}'
-                    page-data='${escapeJsonForAttribute(allData.page)}'>
+                    page-data='${escapeJsonForAttribute(allData.page)}'
+                    team-members='${escapeJsonForAttribute(allData.teamMembers)}'>
                 </our-team-section>
             </div>
         `;

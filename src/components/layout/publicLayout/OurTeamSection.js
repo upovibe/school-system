@@ -40,6 +40,15 @@ class OurTeamSection extends App {
             }
         }
 
+        // Get team members from props
+        const teamMembersAttr = this.getAttribute('team-members');
+        if (teamMembersAttr) {
+            const teamMembers = unescapeJsonFromAttribute(teamMembersAttr);
+            if (teamMembers) {
+                this.set('teamMembers', teamMembers);
+            }
+        }
+
         // Render immediately with the data
         this.render();
     }
@@ -97,11 +106,13 @@ class OurTeamSection extends App {
 
     render() {
         const pageData = this.get('pageData');
+        const teamMembers = this.get('teamMembers') || [];
         
         // Get colors from state
         const primaryColor = this.get('primary_color');
         const secondaryColor = this.get('secondary_color');
         const accentColor = this.get('accent_color');
+        const textColor = this.get('text_color');
 
         // Only render if there's content
         if (!pageData?.content || pageData.content.trim() === '') {
@@ -120,86 +131,39 @@ class OurTeamSection extends App {
 
         return `
             <!-- Our Team Section -->
-            <section class="mx-auto py-10">
-                <!-- Team Hero Banner -->
-                ${bannerImages.length > 0 ? `
-                    <div class="mb-16">
-                        <div class="relative">
-                            <!-- Main Banner Image with Team Styling -->
-                            <div class="relative w-full h-[500px] overflow-hidden">
+            <section class="mx-auto py-10 bg-gray-50">
+                <!-- Team Header -->
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl lg:text-4xl font-bold text-[${primaryColor}] mb-4">
+                        Our Team
+                    </h2>
+                    <p class="text-lg opacity-80 mb-4">
+                        Dedicated educators committed to excellence
+                    </p>
+                    <div class="w-24 h-1 bg-[${primaryColor}] mx-auto rounded-full"></div>
+                </div>
+                
+                <!-- Main Content Section (Image Left, Content Right) -->
+                <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                        <!-- Banner Image Column (Left) -->
+                        <div class="relative h-64 lg:h-auto">
+                            ${bannerImages.length > 0 ? `
                                 <img src="${this.getImageUrl(bannerImages[0])}" 
-                                     alt="Our Team Banner" 
+                                     alt="Our Team" 
                                      class="w-full h-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}]">
-                                    <div class="text-center text-white">
-                                        <i class="fas fa-users text-6xl mb-4"></i>
-                                        <p class="text-xl">Our Team</p>
-                                    </div>
-                                </div>
-                                <!-- Team specific overlay -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                
-                                <!-- Team Content Overlay -->
-                                <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
-                                    <div class="max-w-4xl mx-auto">
-                                        <div class="flex items-center gap-4 mb-4">
-                                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                                <i class="fas fa-users text-2xl"></i>
-                                            </div>
-                                            <div>
-                                                <h1 class="text-4xl lg:text-5xl font-bold mb-2">Our Team</h1>
-                                                <p class="text-lg opacity-90">Dedicated educators committed to excellence</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                            ` : ''}
+                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                                <div class="text-center">
+                                    <i class="fas fa-users text-gray-400 text-4xl mb-2"></i>
+                                    <p class="text-gray-500 font-medium">Our team image</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Team Gallery -->
-                        ${bannerImages.length > 1 ? `
-                            <div class="mt-12">
-                                <h2 class="text-3xl font-bold text-[${secondaryColor}] mb-8 text-center">Meet Our Team</h2>
-                                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                    ${bannerImages.slice(1).map((imagePath, index) => `
-                                        <div class="relative group">
-                                            <div class="relative w-full aspect-square overflow-hidden rounded-full">
-                                                <img src="${this.getImageUrl(imagePath)}" 
-                                                     alt="Team Member ${index + 2}" 
-                                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full">
-                                                    <div class="text-center text-white">
-                                                        <i class="fas fa-user text-lg mb-1"></i>
-                                                        <p class="text-xs">Image not found</p>
-                                                    </div>
-                                                </div>
-                                                <!-- Hover overlay -->
-                                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
-                
-                <!-- Team Content Section -->
-                <div class="bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-                    <div class="p-8 lg:p-16">
-                        <!-- Team Header -->
-                        <div class="text-center mb-12">
-                            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-full mb-6">
-                                <i class="fas fa-users text-white text-2xl"></i>
-                            </div>
-                            <h2 class="text-3xl lg:text-4xl font-bold text-[${secondaryColor}] mb-4">Our Dedicated Team</h2>
-                            <div class="w-24 h-1 bg-gradient-to-r from-[${secondaryColor}] to-[${primaryColor}] mx-auto rounded-full"></div>
-                        </div>
-                        
-                        <!-- Content Display -->
-                        <div class="max-w-4xl mx-auto">
+                        <!-- Content Column (Right) -->
+                        <div class="p-5 lg:p-12 flex flex-col justify-center">
                             <content-display 
                                 content="${pageData.content.replace(/"/g, '&quot;')}"
                                 no-styles>
@@ -207,6 +171,75 @@ class OurTeamSection extends App {
                         </div>
                     </div>
                 </div>
+                
+                <!-- Team Members Grid -->
+                ${teamMembers.length > 0 ? `
+                    <div class="mt-16">
+                        <div class="text-center mb-12">
+                            <h3 class="text-2xl lg:text-3xl font-bold text-[${secondaryColor}] mb-4">Meet Our Team</h3>
+                            <p class="text-lg text-gray-600">Dedicated professionals committed to student success</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            ${teamMembers.map(member => `
+                                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+                                    <!-- Team Member Image -->
+                                    <div class="relative h-48 overflow-hidden">
+                                        ${member.profile_image ? `
+                                            <img src="${this.getImageUrl(member.profile_image)}" 
+                                                 alt="${member.name}" 
+                                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        ` : ''}
+                                        <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}]">
+                                            <div class="text-center text-white">
+                                                <i class="fas fa-user text-4xl mb-2"></i>
+                                                <p class="text-sm">No image</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Department Badge -->
+                                        ${member.department ? `
+                                            <div class="absolute top-3 right-3">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[${primaryColor}] text-white">
+                                                    ${member.department}
+                                                </span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    <!-- Team Member Info -->
+                                    <div class="p-6">
+                                        <h4 class="text-lg font-semibold text-[${secondaryColor}] mb-2">${member.name}</h4>
+                                        ${member.position ? `
+                                            <p class="text-sm text-gray-600 mb-3">${member.position}</p>
+                                        ` : ''}
+                                        
+                                        ${member.bio ? `
+                                            <p class="text-sm text-gray-500 line-clamp-3">${member.bio}</p>
+                                        ` : ''}
+                                        
+                                        <!-- Contact Info -->
+                                        <div class="mt-4 pt-4 border-t border-gray-100">
+                                            ${member.email ? `
+                                                <div class="flex items-center text-sm text-gray-600 mb-1">
+                                                    <i class="fas fa-envelope w-4 mr-2"></i>
+                                                    <span class="truncate">${member.email}</span>
+                                                </div>
+                                            ` : ''}
+                                            ${member.phone ? `
+                                                <div class="flex items-center text-sm text-gray-600">
+                                                    <i class="fas fa-phone w-4 mr-2"></i>
+                                                    <span>${member.phone}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
             </section>
         `;
     }

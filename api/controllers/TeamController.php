@@ -352,6 +352,28 @@ class TeamController {
     }
 
     /**
+     * Get all active team members (public endpoint)
+     */
+    public function getPublic() {
+        try {
+            $teamMembers = $this->teamModel->getActiveTeamMembers();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $teamMembers,
+                'message' => 'Active team members retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving team members: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get team members by department (public endpoint)
      */
     public function getByDepartment($department) {

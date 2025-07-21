@@ -59,37 +59,33 @@ class DbSetupDialog extends App {
         this.isConfirming = true;
         this.setLoadingState(true);
         Toast.show({ message: 'Initializing database...', variant: 'info' });
-        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="text-xs overflow-x-auto">Initializing...</pre>';
+        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-gray-200 rounded p-2 mt-2 text-xs overflow-x-auto">Initializing...</pre>';
 
         try {
             const response = await api.post('/db/fresh', {});
-            const { output, success, message } = response.data;
+            const { success, message } = response.data;
 
             if (success) {
-                // Success! Finalize the UI before reloading.
                 this.setLoadingState(false);
-                this.outputDiv.textContent = output || 'Database initialized successfully!';
+                if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-green-200 rounded p-2 mt-2 text-xs overflow-x-auto">Database initialized successfully!</pre>';
                 if (this.confirmBtn) {
                     this.confirmBtn.disabled = true;
                     this.confirmBtn.textContent = 'Success!';
                 }
                 Toast.show({ message: 'Database initialized successfully!', variant: 'success', duration: 3000 });
-                
-                // Reload the page to reflect the new state
                 setTimeout(() => {
+                    this.dialog.removeAttribute('open');
                     location.reload();
                 }, 2000);
             } else {
-                // API call was ok, but operation failed.
                 throw new Error(message || 'Failed to initialize database.');
             }
         } catch (error) {
-            // Network error or thrown error from above.
             const errorMessage = error.message || 'An unknown error occurred.';
-            this.outputDiv.textContent = errorMessage;
+            if (this.outputDiv) this.outputDiv.innerHTML = `<pre class="bg-red-200 rounded p-2 mt-2 text-xs overflow-x-auto">${errorMessage}</pre>`;
             Toast.show({ message: errorMessage, variant: 'error', duration: 4000 });
-            this.setLoadingState(false); // Make dialog interactive again
-            this.isConfirming = false; // Reset flag
+            this.setLoadingState(false);
+            this.isConfirming = false;
         }
     }
 

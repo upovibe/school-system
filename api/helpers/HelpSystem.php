@@ -32,6 +32,9 @@ class HelpSystem
         echo "  --email:user@example.com     Test email functionality\n";
         echo "                               Sends a test email to specified address\n\n";
         
+        echo "  --db:check                    Test database connection\n";
+        echo "                               Checks if the database is connected and accessible\n\n";
+        
         echo "  --help, -h                   Show this help message\n\n";
         
         echo "Examples:\n";
@@ -145,6 +148,17 @@ class HelpSystem
                 echo "  php api/index.php --email:test@gmail.com\n\n";
                 echo "Make sure email is configured in:\n";
                 echo "• api/core/Emailer.php\n";
+                break;
+
+            case '--db:check':
+                echo "Command: --db:check\n";
+                echo "Purpose: Test database connection\n\n";
+                echo "What it does:\n";
+                echo "• Attempts to connect to the database and run a simple query\n";
+                echo "• Prints a success or error message\n\n";
+                echo "Usage:\n";
+                echo "  php api/index.php --db:check\n\n";
+                echo "If successful, you'll see a success message.\n";
                 break;
 
             default:

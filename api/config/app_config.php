@@ -20,3 +20,7 @@ return [
     'api_url' => 'http://localhost:8000/api',
     'app_url' => 'http://localhost:8000',
 ]; 
+
+// cd school-system; php -S localhost:8000
+
+// cd school-system; php api/index.php --help

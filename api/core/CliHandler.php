@@ -35,6 +35,22 @@ class CliHandler
             exit(1);
         }
 
+        // Add database connection check command
+        if ($argv[1] === '--db:check') {
+            require_once __DIR__ . '/../helpers/HelpSystem.php';
+            try {
+                $stmt = $pdo->query("SELECT 1");
+                if ($stmt) {
+                    HelpSystem::showSuccess("Database connection successful!");
+                } else {
+                    HelpSystem::showError("Database connection failed (query error)");
+                }
+            } catch (Exception $e) {
+                HelpSystem::showError("Database connection failed: " . $e->getMessage());
+            }
+            exit();
+        }
+
         switch ($argv[1]) {
             case '--migrate':
                 require_once __DIR__ . '/Migrator.php';

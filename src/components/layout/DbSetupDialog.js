@@ -19,6 +19,13 @@ class DbSetupDialog extends App {
         this.outputDiv = this.querySelector('#db-setup-output');
         this.confirmBtn = this.dialog?.shadowRoot?.getElementById('confirm-btn');
 
+        // Show default message in output area
+        if (this.outputDiv) {
+            this.outputDiv.innerHTML = `
+                <pre class="btext-xs overflow-x-auto my-auto">php api/index.php --fresh</pre>
+            `; 
+        }
+
         this.ensureEventListeners();
     }
 
@@ -45,7 +52,7 @@ class DbSetupDialog extends App {
         e.preventDefault();
         this.setLoadingState(true);
         Toast.show({ message: 'Initializing database...', variant: 'info' });
-        this.outputDiv.textContent = '';
+        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="text-xs overflow-x-auto">Initializing...</pre>';
 
         try {
             const response = await api.post('/db/fresh', {});
@@ -93,7 +100,7 @@ class DbSetupDialog extends App {
                 <div slot="content">
                     <p class="mb-4 font-semibold text-red-600">The database is not connected or initialized.</p>
                     <p class="mb-4">Click confirm to run the database setup. This will erase any existing data and create a fresh installation.</p>
-                    <div id="db-setup-output" class="mt-4 p-2 text-sm text-gray-700 bg-gray-100 rounded border min-h-[50px]"></div>
+                    <div id="db-setup-output" class="mt-4 p-2 text-sm text-gray-700 bg-gray-100 rounded border min-h-[25px] max-h-[100px] flex items-center justify-center" max-height="100px" overflow-y-auto></div>
                 </div>
             </ui-dialog>
         `;

@@ -26,8 +26,7 @@ class ApplicationsPage extends App {
         super.connectedCallback();
         document.title = 'Applications | School System';
         this.loadData();
-        // Add event listeners for table events (view, refresh, etc.)
-        this.addEventListener('table-view', this.onView.bind(this));
+        // Only add event listener for refresh
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
     }
 
@@ -60,16 +59,6 @@ class ApplicationsPage extends App {
         }
     }
 
-    onView(event) {
-        const { detail } = event;
-        const application = this.get('applications').find(app => app.id === detail.row.id);
-        if (application) {
-            this.set('viewApplicationData', application);
-            this.set('showViewModal', true);
-            // Placeholder: open modal and pass data
-        }
-    }
-
     onRefresh() {
         this.loadData();
     }
@@ -77,7 +66,6 @@ class ApplicationsPage extends App {
     render() {
         const applications = this.get('applications');
         const loading = this.get('loading');
-        const showViewModal = this.get('showViewModal');
         // Prepare table data
         const tableData = applications ? applications.map((app, index) => ({
             id: app.id,
@@ -120,7 +108,6 @@ class ApplicationsPage extends App {
                                 search-placeholder="Search applications..."
                                 pagination
                                 page-size="10"
-                                action
                                 refresh
                                 print
                                 bordered
@@ -135,7 +122,6 @@ class ApplicationsPage extends App {
                     </div>
                 `}
             </div>
-            <!-- Placeholder for future view modal -->
         `;
     }
 }

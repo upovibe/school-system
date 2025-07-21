@@ -22,7 +22,22 @@ class RootPage extends App {
         document.title = 'Home';
         // 1. Check DB connection first
         try {
-            const dbCheck = await fetch('/api/db/check').then(r => r.json());
+            const response = await fetch('/api/db/check');
+            
+            if (!response.ok) {
+                this.set('dbNotConnected', true);
+                this.render();
+                return;
+            }
+            
+            const dbCheck = await response.json();
+            
+            // FOR TESTING: Force show dialog even if connection is successful
+            // Remove this line when you're done testing
+            this.set('dbNotConnected', true);
+            this.render();
+            return;
+            
             if (!dbCheck.success) {
                 this.set('dbNotConnected', true);
                 this.render();

@@ -55,8 +55,6 @@ class ContactSectionAlt extends App {
         if (settingsAttr) {
             const settings = unescapeJsonFromAttribute(settingsAttr);
             if (settings) {
-                if (settings.contact_title) this.set('contactTitle', settings.contact_title);
-                if (settings.contact_subtitle) this.set('contactSubtitle', settings.contact_subtitle);
                 if (settings.contact_address) this.set('contactAddress', settings.contact_address);
                 if (settings.contact_phone) this.set('contactPhone', settings.contact_phone);
                 if (settings.contact_email) this.set('contactEmail', settings.contact_email);

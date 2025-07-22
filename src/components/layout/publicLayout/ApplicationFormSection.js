@@ -42,11 +42,14 @@ class ApplicationFormSection extends App {
                 });
             } catch (e) {}
         }
-        // Get contact title/subtitle from attributes
-        const contactTitleAttr = this.getAttribute('contact-title');
-        const contactSubtitleAttr = this.getAttribute('contact-subtitle');
-        this.set('contactTitle', contactTitleAttr || '');
-        this.set('contactSubtitle', contactSubtitleAttr || '');
+        // Get page data from attribute
+        const pageDataAttr = this.getAttribute('page-data');
+        if (pageDataAttr) {
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
+                this.set('pageData', pageData);
+            }
+        }
         this.render();
     }
 
@@ -101,8 +104,7 @@ class ApplicationFormSection extends App {
         const applicationLogo = this.get('applicationLogo');
         const applicationName = this.get('applicationName');
         const contactBannerImage = this.get('contactBannerImage');
-        const contactTitle = this.get('contactTitle');
-        const contactSubtitle = this.get('contactSubtitle');
+        const pageData = this.get('pageData');
         // Get colors from state (with fallback)
         const primaryColor = this.get('primary_color');
         const accentColor = this.get('accent_color');
@@ -145,10 +147,10 @@ class ApplicationFormSection extends App {
                         <div class="absolute inset-0 flex items-center justify-center p-6">
                             <div class="text-center text-white relative z-10">
                                 <h2 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
-                                    ${contactTitle}
+                                    ${pageData?.title || ''}
                                 </h2>
                                 <!-- <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
-                                    ${contactSubtitle}
+                                    ${pageData?.subtitle || ''}
                                 </p> -->
                                 <!-- Call to Action Button -->
                                 <div class="flex justify-center">

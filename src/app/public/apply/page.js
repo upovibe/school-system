@@ -21,8 +21,8 @@ class ApplyPage extends App {
                 this.render();
                 return;
             }
-            // Fetch colors, settings, banner, and contact title/subtitle in parallel
-            const [colors, settings, bannerImage, contactSettings] = await Promise.all([
+            // Fetch colors, settings, banner, and contact page data in parallel
+            const [colors, settings, bannerImage, contactPageData] = await Promise.all([
                 fetchColorSettings(),
                 (async () => {
                     const keys = ['application_logo', 'application_name'];
@@ -51,25 +51,19 @@ class ApplyPage extends App {
                     return null;
                 })(),
                 (async () => {
-                    // Fetch contact_title and contact_subtitle
-                    const keys = ['contact_title', 'contact_subtitle'];
-                    const settingsPromises = keys.map(async (key) => {
-                        try {
-                            const response = await api.get(`/settings/key/${key}`);
-                            return response.data.success ? { key, value: response.data.data.setting_value } : null;
-                        } catch (error) {
-                            return null;
+                    // Fetch contact page data
+                    try {
+                        const response = await api.get('/pages/slug/contact');
+                        if (response.data.success) {
+                            return response.data.data;
                         }
-                    });
-                    const settingsResults = await Promise.all(settingsPromises);
-                    const settingsObj = {};
-                    settingsResults.forEach(result => {
-                        if (result) settingsObj[result.key] = result.value;
-                    });
-                    return settingsObj;
+                    } catch (error) {
+                        console.error('Error fetching contact page data:', error);
+                    }
+                    return null;
                 })()
             ]);
-            const allData = { colors, settings, bannerImage, contactSettings };
+            const allData = { colors, settings, bannerImage, contactPageData };
             store.setState({ applyPageAllData: allData });
             this.set('allData', allData);
             this.render();
@@ -106,8 +100,7 @@ class ApplyPage extends App {
                     settings='${JSON.stringify(settingsWithLogoUrl).replace(/'/g, "&apos;")}'
                     banner-image='${allData.bannerImage ? `/api/${allData.bannerImage}` : ''}'
                     colors='${escapeJsonForAttribute(allData.colors)}'
-                    contact-title='${allData.contactSettings?.contact_title || ''}'
-                    contact-subtitle='${allData.contactSettings?.contact_subtitle || ''}'
+                    page-data='${escapeJsonForAttribute(allData.contactPageData || {})}'
                 ></application-form-section>
             </div>
         `;

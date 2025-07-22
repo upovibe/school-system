@@ -72,26 +72,6 @@ class SettingsSeeder
             ['setting_key' => 'meta_keywords', 'setting_value' => 'school, education, learning, students', 'setting_type' => 'text', 'category' => 'general', 'description' => 'SEO meta keywords'],
             ['setting_key' => 'google_analytics', 'setting_value' => '', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Google Analytics tracking code'],
             ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode'],
-            
-            // Hero Section Settings (General)
-            ['setting_key' => 'hero_title', 'setting_value' => 'Welcome to Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Main hero section title'],
-            ['setting_key' => 'hero_subtitle', 'setting_value' => 'Excellence in Education, Character, and Leadership', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Hero section subtitle or description'],
-            
-            // About Section Settings (General)
-            ['setting_key' => 'about_title', 'setting_value' => 'About Our School', 'setting_type' => 'text', 'category' => 'general', 'description' => 'About section title'],
-            ['setting_key' => 'about_subtitle', 'setting_value' => 'Discover our story, values, and commitment to excellence', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'About section subtitle or description'],
-            
-            // Academics Section Settings (General)
-            ['setting_key' => 'academics_title', 'setting_value' => 'Academic Excellence', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Academics section title'],
-            ['setting_key' => 'academics_subtitle', 'setting_value' => 'Comprehensive education programs designed for student success', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Academics section subtitle or description'],
-            
-            // Community Section Settings (General)
-            ['setting_key' => 'community_title', 'setting_value' => 'Our Community', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Community section title'],
-            ['setting_key' => 'community_subtitle', 'setting_value' => 'Building connections and fostering relationships within our school family', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Community section subtitle or description'],
-            
-            // Contact Section Settings (General)
-            ['setting_key' => 'contact_title', 'setting_value' => 'Get In Touch', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Contact section title'],
-            ['setting_key' => 'contact_subtitle', 'setting_value' => 'Have questions? We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.', 'setting_type' => 'textarea', 'category' => 'general', 'description' => 'Contact section subtitle or description']
         ];
 
         foreach ($defaultSettings as $setting) {

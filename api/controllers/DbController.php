@@ -1,6 +1,34 @@
 <?php
 // api/controllers/DbController.php
 class DbController {
+    public function test() {
+        require_once __DIR__ . '/../database/connection.php';
+        global $pdo;
+        try {
+            // Get database configuration
+            $config = require __DIR__ . '/../config/app_config.php';
+            $dbConfig = $config['db'];
+            
+            // Test simple query to verify connection
+            $pdo->query("SELECT 1");
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Database connection successful',
+                'config' => [
+                    'host' => $dbConfig['host'],
+                    'database' => $dbConfig['name'],
+                    'user' => $dbConfig['user']
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Database connection failed: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function check() {
         require_once __DIR__ . '/../database/connection.php';
         global $pdo;

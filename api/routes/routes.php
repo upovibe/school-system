@@ -125,5 +125,6 @@ Router::get('/applications/{id}', 'ApplicationController@show');
 Router::post('/applications', 'ApplicationController@store');
 
 // DB setup endpoints
+Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');
 Router::post('/db/fresh', 'DbController@fresh');

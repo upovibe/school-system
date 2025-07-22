@@ -163,6 +163,7 @@ class SystemUpdateModal extends HTMLElement {
                             value="${/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(currentValue) ? currentValue : '#000000'}"
                             class="w-10 h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             style="min-width: 2.5rem;"
+                            oninput="this.nextElementSibling.value = this.value"
                         >
                         <ui-input 
                             name="setting_value"
@@ -170,6 +171,7 @@ class SystemUpdateModal extends HTMLElement {
                             placeholder="Enter color string (e.g. #ff0000, red, rgba(255,0,0,1))"
                             value="${currentValue}"
                             class="flex-1"
+                            oninput="if(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/.test(this.value)) { this.previousElementSibling.value = this.value; }"
                         ></ui-input>
                     </div>
                 `;

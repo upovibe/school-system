@@ -38,11 +38,41 @@ $security->validateMethod($method);
 $security->validateRequest();
 
 // Process URI
+$originalUri = $uri;
 $uri = trim(str_replace('/api', '', $uri), '/');
+
+// Handle direct database routes for server compatibility
+if ($uri === 'db/test' && $method === 'GET') {
+    require_once __DIR__ . '/controllers/DbController.php';
+    $controller = new DbController();
+    $controller->test();
+    exit;
+}
+
+if ($uri === 'db/check' && $method === 'GET') {
+    require_once __DIR__ . '/controllers/DbController.php';
+    $controller = new DbController();
+    $controller->check();
+    exit;
+}
+
+if ($uri === 'db/fresh' && $method === 'POST') {
+    require_once __DIR__ . '/controllers/DbController.php';
+    $controller = new DbController();
+    $controller->fresh();
+    exit;
+}
+
 $security->validateUri($uri);
 
 // Route the request
 try {
+    // Test if basic routing works
+    if ($uri === 'test' && $method === 'GET') {
+        echo json_encode(['success' => true, 'message' => 'Test route working', 'uri' => $uri]);
+        exit;
+    }
+    
     Router::dispatch('/' . $uri, $method, $pdo);
 } catch (Exception $e) {
     $security->handleError($e);

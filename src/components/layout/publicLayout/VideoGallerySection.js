@@ -21,6 +21,7 @@ class VideoGallerySection extends App {
     loadDataFromProps() {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
 
         if (colorsAttr) {
             try {
@@ -30,6 +31,17 @@ class VideoGallerySection extends App {
                 });
             } catch (error) {
                 console.error('Error parsing colors:', error);
+            }
+        }
+
+        if (pageDataAttr) {
+            try {
+                const pageData = unescapeJsonFromAttribute(pageDataAttr);
+                if (pageData) {
+                    this.set('pageData', pageData);
+                }
+            } catch (error) {
+                console.error('Error parsing page-data:', error);
             }
         }
 
@@ -87,6 +99,7 @@ class VideoGallerySection extends App {
 
     render() {
         const videoGalleries = this.get('videoGalleries');
+        const pageData = this.get('pageData') || {};
         
         // Don't render until video galleries data is loaded
         if (videoGalleries === undefined) {
@@ -122,10 +135,10 @@ class VideoGallerySection extends App {
                             </div>
                         </div>
                         <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                            Video Gallery
+                            ${pageData.title || ''}
                         </h1>
                         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            Explore our collection of videos showcasing school events, performances, and memorable moments
+                            ${pageData.subtitle || ''}
                         </p>
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>

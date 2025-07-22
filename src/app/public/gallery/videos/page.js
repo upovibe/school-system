@@ -22,17 +22,21 @@ class VideoGalleryPage extends App {
 
     async loadAllData() {
         try {
-            // Load colors only
+            // Load colors
             const colors = await fetchColorSettings();
+
+            // Load video gallery page data by slug
+            const videoPageData = await this.fetchPageData('videos');
 
             // Combine all data
             const allData = {
-                colors
+                colors,
+                page: videoPageData
             };
 
             // Cache in global store
             store.setState({ videoGalleryPageData: allData });
-            
+
             // Set local state and render
             this.set('allData', allData);
             this.render();
@@ -40,6 +44,16 @@ class VideoGalleryPage extends App {
         } catch (error) {
             console.error('Error loading video gallery data:', error);
             this.set('error', 'Failed to load video gallery page data');
+        }
+    }
+
+    async fetchPageData(slug) {
+        try {
+            const response = await api.get(`/pages/slug/${slug}`);
+            return response.data.success ? response.data.data : null;
+        } catch (error) {
+            console.error(`Error fetching ${slug} page data:`, error);
+            return null;
         }
     }
 
@@ -72,7 +86,8 @@ class VideoGalleryPage extends App {
             <div class="mx-auto">
                 <!-- Video Gallery Section Component -->
                 <video-gallery-section 
-                    colors='${colorsData}'>
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.page)}'>
                 </video-gallery-section>
             </div>
         `;

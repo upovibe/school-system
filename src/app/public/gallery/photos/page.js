@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
-import PageLoader from '@/components/common/PageLoader.js';
+import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
@@ -22,17 +22,21 @@ class PhotoGalleryPage extends App {
 
     async loadAllData() {
         try {
-            // Load colors only
+            // Load colors
             const colors = await fetchColorSettings();
+
+            // Load photo gallery page data by slug
+            const photoPageData = await this.fetchPageData('photos');
 
             // Combine all data
             const allData = {
-                colors
+                colors,
+                page: photoPageData
             };
 
             // Cache in global store
             store.setState({ photoGalleryPageData: allData });
-            
+
             // Set local state and render
             this.set('allData', allData);
             this.render();
@@ -40,6 +44,16 @@ class PhotoGalleryPage extends App {
         } catch (error) {
             console.error('Error loading photo gallery data:', error);
             this.set('error', 'Failed to load photo gallery page data');
+        }
+    }
+
+    async fetchPageData(slug) {
+        try {
+            const response = await api.get(`/pages/slug/${slug}`);
+            return response.data.success ? response.data.data : null;
+        } catch (error) {
+            console.error(`Error fetching ${slug} page data:`, error);
+            return null;
         }
     }
 
@@ -72,7 +86,8 @@ class PhotoGalleryPage extends App {
             <div class="mx-auto">
                 <!-- Photo Gallery Section Component -->
                 <photo-gallery-section 
-                    colors='${colorsData}'>
+                    colors='${colorsData}'
+                    page-data='${escapeJsonForAttribute(allData.page)}'>
                 </photo-gallery-section>
             </div>
         `;

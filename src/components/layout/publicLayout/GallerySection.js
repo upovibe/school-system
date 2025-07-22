@@ -93,11 +93,21 @@ class GallerySection extends App {
                                             <p class="text-gray-500 font-medium">Gallery banner image</p>
                                         </div>
                                     </div>
-                                    
+                                    <!-- Overlay for title and subtitle -->
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                                        <div class="absolute inset-0 bg-black/40"></div>
+                                        <div class="relative z-10">
+                                            <h2 class="text-3xl lg:text-4xl font-bold text-white mb-3 drop-shadow-lg">
+                                                ${pageData.title || ''}
+                                            </h2>
+                                            <p class="text-lg text-white/90 mb-2 drop-shadow">
+                                                ${pageData.subtitle || ''}
+                                            </p>
+                                        </div>
+                                    </div>
                                     <!-- Creative Overlay Pattern -->
                                     <div class="absolute inset-0 bg-gradient-to-br from-[${primaryColor}]/20 via-transparent to-[${accentColor}]/20"></div>
                                     <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);"></div>
-                                    
                                     <!-- Floating Creative Elements -->
                                     <div class="absolute top-6 right-6">
                                         <div class="relative">
@@ -109,7 +119,6 @@ class GallerySection extends App {
                                             <div class="absolute -top-2 -right-2 w-6 h-6 bg-[${accentColor}] rounded-full animate-bounce"></div>
                                         </div>
                                     </div>
-                                    
                                     <!-- Corner Decoration -->
                                     <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[${primaryColor}]/30 to-transparent clip-path-polygon"></div>
                                 </div>

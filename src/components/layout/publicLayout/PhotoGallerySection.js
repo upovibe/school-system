@@ -21,6 +21,7 @@ class PhotoGallerySection extends App {
     loadDataFromProps() {
         // Get data from props/attributes
         const colorsAttr = this.getAttribute('colors');
+        const pageDataAttr = this.getAttribute('page-data');
 
         if (colorsAttr) {
             try {
@@ -30,6 +31,17 @@ class PhotoGallerySection extends App {
                 });
             } catch (error) {
                 console.error('Error parsing colors:', error);
+            }
+        }
+
+        if (pageDataAttr) {
+            try {
+                const pageData = unescapeJsonFromAttribute(pageDataAttr);
+                if (pageData) {
+                    this.set('pageData', pageData);
+                }
+            } catch (error) {
+                console.error('Error parsing page-data:', error);
             }
         }
 
@@ -74,6 +86,7 @@ class PhotoGallerySection extends App {
 
     render() {
         const galleries = this.get('galleries');
+        const pageData = this.get('pageData') || {};
         
         // Don't render until galleries data is loaded
         if (galleries === undefined) {
@@ -109,10 +122,10 @@ class PhotoGallerySection extends App {
                             </div>
                         </div>
                         <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                            Photo Gallery
+                            ${pageData.title || ''}
                         </h1>
                         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            Explore our collection of beautiful photographs capturing precious moments from our school community
+                            ${pageData.subtitle || ''}
                         </p>
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>

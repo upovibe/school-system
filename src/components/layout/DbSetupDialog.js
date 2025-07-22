@@ -160,10 +160,10 @@ class DbSetupDialog extends App {
                         
                         <div class="flex gap-2 mb-4 justify-center w-full">
                             <button id="test-connection" class="px-4 py-2 bg-blue-500/90 backdrop-blur-sm text-white rounded hover:bg-blue-600 transition-colors w-full">
-                                Test Status
+                                Test
                             </button>
                             <button id="initialize-db" class="px-4 py-2 bg-green-500/90 backdrop-blur-sm text-white rounded hover:bg-green-600 transition-colors w-full">
-                                Initialize Database
+                                Initialize
                             </button>
                         </div>
                         

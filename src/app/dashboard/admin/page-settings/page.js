@@ -158,6 +158,12 @@ class PageSettingsPage extends App {
     onEdit(event) {
         const { detail } = event;
         const editPage = this.get('pages').find(page => page.id === detail.row.id);
+        // Ensure name and subtitle are present
+        if (editPage && (!('name' in editPage) || !('subtitle' in editPage))) {
+            // Try to get from table row if missing
+            editPage.name = detail.row.name || '';
+            editPage.subtitle = detail.row.subtitle || '';
+        }
         if (editPage) {
             // Close any open modals first
             this.closeAllModals();
@@ -208,6 +214,8 @@ class PageSettingsPage extends App {
         const tableData = pages.map((page, index) => ({
             id: page.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
+            name: page.name,
+            subtitle: page.subtitle,
             title: page.title,
             slug: page.slug,
             category: page.category,
@@ -248,6 +256,8 @@ class PageSettingsPage extends App {
         const tableData = pages ? pages.map((page, index) => ({
             id: page.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
+            name: page.name,
+            subtitle: page.subtitle,
             title: page.title,
             slug: page.slug,
             category: page.category,
@@ -294,6 +304,7 @@ class PageSettingsPage extends App {
                                 page-size="10"
                                 action
                                 actions="view,edit"
+                                addable
                                 print
                                 refresh
                                 bordered

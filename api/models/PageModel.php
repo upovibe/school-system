@@ -48,7 +48,8 @@ class PageModel extends BaseModel {
      */
     public function findBySlugInstance($slug) {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+            $tableName = $this->getTableName();
+            $stmt = $this->pdo->prepare("SELECT * FROM {$tableName} WHERE slug = ?");
             $stmt->execute([$slug]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($result) {

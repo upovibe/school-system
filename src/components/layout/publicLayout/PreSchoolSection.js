@@ -141,8 +141,8 @@ class PreSchoolSection extends App {
                         <!-- Content overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div class="text-center text-white px-4">
-                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">Pre School</h1>
-                                <p class="text-base lg:text-lg opacity-90">Early childhood education and development</p>
+                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">${pageData.title || ''}</h1>
+                                <p class="text-base lg:text-lg opacity-90">${pageData.subtitle || ''}</p>
                             </div>
                         </div>
                     </div>

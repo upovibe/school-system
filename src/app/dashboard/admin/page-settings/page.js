@@ -304,7 +304,6 @@ class PageSettingsPage extends App {
                                 page-size="10"
                                 action
                                 actions="view,edit"
-                                addable
                                 print
                                 refresh
                                 bordered

@@ -88,7 +88,7 @@ class CliHandler
         }
     }
 
-    private static function clearDatabase()
+    public static function clearDatabase()
     {
         global $pdo;
         require_once __DIR__ . '/../helpers/HelpSystem.php';
@@ -122,7 +122,7 @@ class CliHandler
         }
     }
 
-    private static function freshDatabase()
+    public static function freshDatabase()
     {
         require_once __DIR__ . '/../helpers/HelpSystem.php';
         

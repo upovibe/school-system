@@ -137,9 +137,9 @@ class CommunitySection extends App {
                                 </div>
                                 <div>
                                     <h3 class="text-2xl font-bold text-[${secondaryColor}] bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                                        ${this.get('communityTitle')}
+                                        ${pageData.title || ''}
                                     </h3>
-                                    <p class="text-gray-600">${this.get('communitySubtitle')}</p>
+                                    <p class="text-gray-600">${pageData.subtitle || ''}</p>
                                 </div>
                             </div>
                             

@@ -103,10 +103,10 @@ class ContactSection extends App {
                                     
                                     <!-- Title and Subtitle -->
                                     <h2 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
-                                        ${this.get('contactTitle')}
+                                        ${pageData.title || ''}
                                     </h2>
                                     <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
-                                        ${this.get('contactSubtitle')}
+                                        ${pageData.subtitle || ''}
                                     </p>
                                     
                                     <!-- Call to Action Button -->

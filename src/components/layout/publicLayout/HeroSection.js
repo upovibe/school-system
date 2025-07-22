@@ -108,8 +108,8 @@ class HeroSection extends App {
     render() {
         const pageData = this.get('pageData');
         const error = this.get('error');
-        const heroTitle = this.get('heroTitle') || 'Welcome to Our School';
-        const heroSubtitle = this.get('heroSubtitle') || 'Excellence in Education, Character, and Leadership';
+        const heroTitle = (pageData && pageData.title) ? pageData.title : '';
+        const heroSubtitle = (pageData && pageData.subtitle) ? pageData.subtitle : '';
         
         // Get colors from state
         const primaryColor = this.get('primary_color');

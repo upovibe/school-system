@@ -149,7 +149,15 @@ class EventsSection extends App {
                                 </div>
                             </div>
                             <!-- Dark gradient overlay from bottom to top -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-3xl"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent rounded-3xl"></div>
+                            
+                            <!-- Content overlay -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center text-white px-4">
+                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">${pageData.title || ''}</h1>
+                                <p class="text-base lg:text-lg opacity-90">${pageData.subtitle || ''}</p>
+                            </div>
+                        </div>
                         </div>
                     </div>
                 ` : ''}

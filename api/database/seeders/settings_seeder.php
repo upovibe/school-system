@@ -41,6 +41,7 @@ class SettingsSeeder
 
             // Branding Settings
             ['setting_key' => 'application_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School name'],
+            ['setting_key' => 'application_description', 'setting_value' => 'Empowering students with quality education and fostering academic excellence for a brighter future.', 'setting_type' => 'textarea', 'category' => 'branding', 'description' => 'School description'],
             ['setting_key' => 'application_logo', 'setting_value' => 'uploads/settings/logo_1752712977_687847114ab44.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School logo path'],
             ['setting_key' => 'application_favicon', 'setting_value' => 'uploads/settings/favicon_1752713006_6878472e10dc2.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School favicon path'],
             ['setting_key' => 'application_tagline', 'setting_value' => 'Excellence in Education', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School tagline'],
@@ -68,7 +69,7 @@ class SettingsSeeder
             ['setting_key' => 'map_zoom_level', 'setting_value' => '15', 'setting_type' => 'number', 'category' => 'map', 'description' => 'Map zoom level (1-20)'],
 
             // General Settings
-            ['setting_key' => 'footer_text', 'setting_value' => '© 2024 Our School. All rights reserved.', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Footer copyright text'],
+            ['setting_key' => 'footer_copyright', 'setting_value' => '© 2024 Our School. All rights reserved.', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Footer copyright text'],
             ['setting_key' => 'meta_keywords', 'setting_value' => 'school, education, learning, students', 'setting_type' => 'text', 'category' => 'general', 'description' => 'SEO meta keywords'],
             ['setting_key' => 'google_analytics', 'setting_value' => '', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Google Analytics tracking code'],
             ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode'],

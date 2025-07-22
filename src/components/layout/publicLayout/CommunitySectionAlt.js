@@ -76,10 +76,10 @@ class CommunitySectionAlt extends App {
                 <!-- Header Section -->
                 <div class="text-center mb-12">
                     <h2 class="text-3xl lg:text-4xl font-bold text-[${primaryColor}] mb-4">
-                        ${this.get('communityTitle')}
+                        ${pageData.title || ''}
                     </h2>
                     <p class="text-lg opacity-80 mb-4">
-                        ${this.get('communitySubtitle')}
+                        ${pageData.subtitle || ''}
                     </p>
                     <div class="w-24 h-1 bg-[${primaryColor}] mx-auto rounded-full"></div>
                 </div>

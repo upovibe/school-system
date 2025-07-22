@@ -85,6 +85,8 @@ class PageUpdateModal extends HTMLElement {
         try {
             // Get values from custom UI components using data-field attributes
             const titleInput = this.querySelector('ui-input[data-field="title"]');
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const subtitleInput = this.querySelector('ui-input[data-field="subtitle"]');
             const contentWysiwyg = this.querySelector('ui-wysiwyg[data-field="content"]');
             const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
             const statusRadioGroup = this.querySelector('ui-radio-group[data-field="status"]');
@@ -94,6 +96,8 @@ class PageUpdateModal extends HTMLElement {
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const pageData = {
+                name: nameInput ? nameInput.value.trim() : '',
+                subtitle: subtitleInput ? subtitleInput.value.trim() : '',
                 title: titleInput ? titleInput.value : '',
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
@@ -104,6 +108,15 @@ class PageUpdateModal extends HTMLElement {
             };
 
             // Validate required fields
+            if (!pageData.name) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in the page name',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
             if (!pageData.title) {
                 Toast.show({
                     title: 'Validation Error',
@@ -190,6 +203,17 @@ class PageUpdateModal extends HTMLElement {
                 <div slot="title">Page Update</div>
                     <form id="page-update-form" class="space-y-4">
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Page Name <span class="text-red-500">*</span></label>
+                            <ui-input 
+                                data-field="name"
+                                name="name"
+                                type="text" 
+                                placeholder="Enter page name (used for slug)"
+                                value="${this.pageData?.name || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
                             <ui-input 
                                 data-field="title"
@@ -200,9 +224,17 @@ class PageUpdateModal extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                        
-
-                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                            <ui-input 
+                                data-field="subtitle"
+                                name="subtitle"
+                                type="text" 
+                                placeholder="Enter page subtitle (optional)"
+                                value="${this.pageData?.subtitle || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <ui-dropdown 

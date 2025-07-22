@@ -59,6 +59,8 @@ class PageSettingsModal extends HTMLElement {
         try {
             // Get form data using the data-field attributes for reliable selection
             const titleInput = this.querySelector('ui-input[data-field="title"]');
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const subtitleInput = this.querySelector('ui-input[data-field="subtitle"]');
             const metaKeywordsInput = this.querySelector('ui-input[data-field="meta-keywords"]');
             const sortOrderInput = this.querySelector('ui-input[data-field="sort-order"]');
             
@@ -69,6 +71,8 @@ class PageSettingsModal extends HTMLElement {
             const bannerFileUpload = this.querySelector('ui-file-upload[data-field="banner"]');
 
             const pageData = {
+                name: nameInput ? nameInput.value.trim() : '',
+                subtitle: subtitleInput ? subtitleInput.value.trim() : '',
                 title: titleInput ? titleInput.value : '',
                 category: categoryDropdown ? categoryDropdown.value : '',
                 content: contentWysiwyg ? contentWysiwyg.value : '',
@@ -81,6 +85,15 @@ class PageSettingsModal extends HTMLElement {
             console.log('Page data being sent:', pageData); // Debug log
 
             // Validate required fields
+            if (!pageData.name) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in the page name',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
             if (!pageData.title) {
                 Toast.show({
                     title: 'Validation Error',
@@ -181,6 +194,15 @@ class PageSettingsModal extends HTMLElement {
                 <div slot="title">Page Settings</div>
                     <form id="page-form" class="space-y-4">
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Page Name <span class="text-red-500">*</span></label>
+                            <ui-input 
+                                data-field="name"
+                                type="text" 
+                                placeholder="Enter page name (used for slug)"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
                             <ui-input 
                                 data-field="title"
@@ -189,9 +211,15 @@ class PageSettingsModal extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                        
-
-                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                            <ui-input 
+                                data-field="subtitle"
+                                type="text" 
+                                placeholder="Enter page subtitle (optional)"
+                                class="w-full">
+                            </ui-input>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <ui-dropdown 

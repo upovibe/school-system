@@ -189,7 +189,7 @@ class Footer extends App {
         };
 
         return `
-            <footer class="bg-[${primaryColor}] border-t-4 border-[${primaryColor}]">
+            <footer class="bg-[${primaryColor}] border-t-4 border-[${primaryColor}] mt-24">
                 <!-- Main Footer Content -->
                 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

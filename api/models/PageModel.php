@@ -8,7 +8,9 @@ class PageModel extends BaseModel {
     
     // Fields that can be mass assigned
     protected static $fillable = [
+        'name',
         'title',
+        'subtitle',
         'slug',
         'category',
         'content',

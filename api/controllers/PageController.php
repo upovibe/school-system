@@ -71,9 +71,16 @@ class PageController {
                 return;
             }
             
-            // Auto-generate slug from name (or title if name is not set)
-            $slugSource = !empty($data['name']) ? $data['name'] : $data['title'];
-            $generatedSlug = generateSlug($slugSource);
+            // Auto-generate slug from name only
+            if (empty($data['name'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Name is required to generate slug'
+                ]);
+                return;
+            }
+            $generatedSlug = generateSlug($data['name']);
             $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'pages', 'slug');
             
             // Create page first to get the ID
@@ -286,10 +293,9 @@ class PageController {
                 return;
             }
             
-            // Auto-generate slug if name or title is changed and no slug is provided
-            if (((isset($data['name']) && $data['name'] !== $existingPage['name']) || (isset($data['title']) && $data['title'] !== $existingPage['title'])) && !isset($data['slug'])) {
-                $slugSource = isset($data['name']) ? $data['name'] : (isset($data['title']) ? $data['title'] : $existingPage['title']);
-                $generatedSlug = generateSlug($slugSource);
+            // Auto-generate slug if name is changed and no slug is provided
+            if ((isset($data['name']) && $data['name'] !== $existingPage['name']) && !isset($data['slug'])) {
+                $generatedSlug = generateSlug($data['name']);
                 $data['slug'] = ensureUniqueSlug($this->pdo, $generatedSlug, 'pages', 'slug', $id);
             }
             

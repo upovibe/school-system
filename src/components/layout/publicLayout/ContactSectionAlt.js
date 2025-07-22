@@ -253,10 +253,10 @@ class ContactSectionAlt extends App {
                             </div>
                         </div>
                         <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                            ${this.get('contactTitle') || 'Get In Touch'}
+                            ${(this.get('pageData') && this.get('pageData').title) ? this.get('pageData').title : ''}
                         </h1>
                         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            ${this.get('contactSubtitle') || 'Have a question or want to learn more about our school? We\'d love to hear from you!'}
+                            ${(this.get('pageData') && this.get('pageData').subtitle) ? this.get('pageData').subtitle : ''}
                         </p>
                         <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>

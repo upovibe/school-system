@@ -19,14 +19,14 @@ class Migration_20241001000000createrolestable {
         ");
 
         // Insert default roles
-        $this->pdo->exec("
-            INSERT INTO roles (name, description) VALUES 
-            ('admin', 'System administrator with full access'),
-            ('teacher', 'Teacher with class and grade management access'),
-            ('student', 'Student with limited access to own data'),
-            ('parent', 'Parent with access to child information'),
-            ('staff', 'Staff member with administrative access')
-        ");
+        // $this->pdo->exec("
+        //     INSERT INTO roles (name, description) VALUES 
+        //     ('admin', 'System administrator with full access'),
+        //     ('teacher', 'Teacher with class and grade management access'),
+        //     ('student', 'Student with limited access to own data'),
+        //     ('parent', 'Parent with access to child information'),
+        //     ('staff', 'Staff member with administrative access')
+        // ");
     }
 
     public function down() {

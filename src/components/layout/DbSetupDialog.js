@@ -68,6 +68,29 @@ class DbSetupDialog extends App {
         });
     }
 
+    async handleTestConnection() {
+        if (this.outputDiv) this.outputDiv.innerHTML = '<pre class="bg-blue-200 rounded p-2 text-xs overflow-x-auto w-full">Testing database connection...</pre>';
+        
+        try {
+            const response = await api.get('/db/test');
+            const { success, message, error, config } = response.data;
+
+            if (success) {
+                const configInfo = config ? `\nHost: ${config.host}\nDatabase: ${config.database}\nUser: ${config.user}` : '';
+                if (this.outputDiv) this.outputDiv.innerHTML = `<pre class="bg-green-200 rounded p-2 text-xs overflow-x-auto w-full">✅ ${message}${configInfo}</pre>`;
+                Toast.show({ message: 'Database connection successful!', variant: 'success', duration: 3000 });
+            } else {
+                const configInfo = config ? `\nHost: ${config.host}\nDatabase: ${config.database}\nUser: ${config.user}` : '';
+                if (this.outputDiv) this.outputDiv.innerHTML = `<pre class="bg-red-200 rounded p-2 text-xs overflow-x-auto w-full">❌ ${error}${configInfo}</pre>`;
+                Toast.show({ message: 'Database connection failed!', variant: 'error', duration: 4000 });
+            }
+        } catch (error) {
+            const errorMessage = error.message || 'An unknown error occurred.';
+            if (this.outputDiv) this.outputDiv.innerHTML = `<pre class="bg-red-200 rounded p-2 text-xs overflow-x-auto w-full">❌ ${errorMessage}</pre>`;
+            Toast.show({ message: 'Connection test failed!', variant: 'error', duration: 4000 });
+        }
+    }
+
     async handleConfirm(e) {
         if (e) e.preventDefault();
         this.isConfirming = true;
@@ -137,7 +160,7 @@ class DbSetupDialog extends App {
                         
                         <div class="flex gap-2 mb-4 justify-center w-full">
                             <button id="test-connection" class="px-4 py-2 bg-blue-500/90 backdrop-blur-sm text-white rounded hover:bg-blue-600 transition-colors w-full">
-                                Check Status
+                                Test Status
                             </button>
                             <button id="initialize-db" class="px-4 py-2 bg-green-500/90 backdrop-blur-sm text-white rounded hover:bg-green-600 transition-colors w-full">
                                 Initialize Database

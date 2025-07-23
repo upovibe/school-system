@@ -64,5 +64,4 @@ class CorsHandler {
     public function getAllowedOrigins() {
         return $this->config['allowed_origins'];
     }
-}
-?> 
+} 

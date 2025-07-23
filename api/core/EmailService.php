@@ -261,5 +261,4 @@ class EmailService {
         
         return true;
     }
-}
-?> 
+} 

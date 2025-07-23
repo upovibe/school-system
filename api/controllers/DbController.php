@@ -49,8 +49,16 @@ class DbController {
     public function fresh() {
         $output = [];
         $result = 0;
-        // Use full path to PHP and index.php for reliability
-        $cmd = 'php ' . escapeshellarg(__DIR__ . '/../index.php') . ' --fresh 2>&1';
+        $phpPath = PHP_BINARY;
+        $indexPath = realpath(__DIR__ . '/../index.php');
+        if (!$indexPath || !file_exists($indexPath)) {
+            echo json_encode([
+                'success' => false,
+                'error' => "Index file not found at $indexPath"
+            ]);
+            return;
+        }
+        $cmd = escapeshellarg($phpPath) . ' ' . escapeshellarg($indexPath) . ' --fresh 2>&1';
         exec($cmd, $output, $result);
         echo json_encode([
             'success' => $result === 0,

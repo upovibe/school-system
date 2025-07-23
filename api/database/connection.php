@@ -28,5 +28,4 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die(json_encode(['error' => 'DB Connection failed: ' . $e->getMessage()]));
-}
-?> 
+} 

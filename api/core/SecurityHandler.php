@@ -96,5 +96,4 @@ class SecurityHandler {
     public function getConfig() {
         return $this->config;
     }
-}
-?> 
+} 

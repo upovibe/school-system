@@ -3,7 +3,7 @@
 return [
     'db' => [
         'host' => 'localhost', // Change to your DB host
-        'name' => 'school_db', // Change to your DB name
+        'name' => '4555497_school', // Change to your DB name
         'user' => 'root',      // Change to your DB user
         'pass' => '',          // Change to your DB password
     ],

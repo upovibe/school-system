@@ -35,7 +35,7 @@ class PageSeeder
                 'category' => 'general',
                 'is_active' => 1,
                 'sort_order' => 1,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'contact',
@@ -47,7 +47,7 @@ class PageSeeder
                 'category' => 'general',
                 'is_active' => 1,
                 'sort_order' => 2,
-                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848c.jpg'])
+                'banner_image' => json_encode([])
             ],
 
             // ===== ABOUT PAGES =====
@@ -61,7 +61,7 @@ class PageSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 3,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'mission-vision',
@@ -73,7 +73,7 @@ class PageSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 4,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713298_6878485214266g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'values-aims',
@@ -85,7 +85,7 @@ class PageSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 5,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713314_6878486264g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'our-team',
@@ -97,7 +97,7 @@ class PageSeeder
                 'category' => 'about',
                 'is_active' => 1,
                 'sort_order' => 6,
-                'banner_image' => json_encode(['uploads/pages/Values_1752713324_68784868g'])
+                'banner_image' => json_encode([])
             ],
 
             // ===== ACADEMICS PAGES =====
@@ -111,7 +111,7 @@ class PageSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 7,
-                'banner_image' => json_encode(['uploads/pages/Curriculum_1752713333_687848757550f.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'pre-school',
@@ -123,7 +123,7 @@ class PageSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 8,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_6878487ef2458.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'primary-school',
@@ -135,7 +135,7 @@ class PageSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 9,
-                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848f08022c.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'junior-high-school',
@@ -147,7 +147,7 @@ class PageSeeder
                 'category' => 'academics',
                 'is_active' => 1,
                 'sort_order' => 10,
-                'banner_image' => json_encode(['uploads/pages/1_1752790102_68797456e2b8c.jpg'])
+                'banner_image' => json_encode([])
             ],
 
             // ===== COMMUNITY PAGES =====
@@ -161,7 +161,7 @@ class PageSeeder
                 'category' => 'community',
                 'is_active' => 1,
                 'sort_order' => 11,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'events',
@@ -173,7 +173,7 @@ class PageSeeder
                 'category' => 'community',
                 'is_active' => 1,
                 'sort_order' => 12,
-                'banner_image' => json_encode(['uploads/pages/1_1752790102_68797456e2b8c.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'news',
@@ -185,7 +185,7 @@ class PageSeeder
                 'category' => 'community',
                 'is_active' => 1,
                 'sort_order' => 13,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_6878487ef2458.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'announcements',
@@ -197,7 +197,7 @@ class PageSeeder
                 'category' => 'community',
                 'is_active' => 1,
                 'sort_order' => 14,
-                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848f08022c.jpg'])
+                'banner_image' => json_encode([])
             ],
 
             // ===== GALLERY PAGES =====
@@ -211,7 +211,7 @@ class PageSeeder
                 'category' => 'gallery',
                 'is_active' => 1,
                 'sort_order' => 15,
-                'banner_image' => json_encode(['uploads/pages/5_1752713285_687848450g'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'photos',
@@ -223,7 +223,7 @@ class PageSeeder
                 'category' => 'gallery',
                 'is_active' => 1,
                 'sort_order' => 16,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_6878487ef2458.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'videos',
@@ -235,7 +235,7 @@ class PageSeeder
                 'category' => 'gallery',
                 'is_active' => 1,
                 'sort_order' => 17,
-                'banner_image' => json_encode(['uploads/pages/About_1752713456_687848f08022c.jpg'])
+                'banner_image' => json_encode([])
             ],
 
             // ===== ADMISSIONS PAGES =====
@@ -249,7 +249,7 @@ class PageSeeder
                 'category' => 'admissions',
                 'is_active' => 1,
                 'sort_order' => 18,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_68784878pg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'requirements',
@@ -261,7 +261,7 @@ class PageSeeder
                 'category' => 'admissions',
                 'is_active' => 1,
                 'sort_order' => 19,
-                'banner_image' => json_encode(['uploads/pages/Curriculum_1752713333_687848757550f.jpg'])
+                'banner_image' => json_encode([])
             ],
             [
                 'slug' => 'process',
@@ -273,7 +273,7 @@ class PageSeeder
                 'category' => 'admissions',
                 'is_active' => 1,
                 'sort_order' => 20,
-                'banner_image' => json_encode(['uploads/pages/About_1752713342_6878487ef2458.jpg'])
+                'banner_image' => json_encode([])
             ]
         ];
 

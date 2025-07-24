@@ -35,48 +35,6 @@ class GallerySeeder {
                 'description' => 'Highlights from our annual sports day featuring students participating in various athletic events, team sports, and friendly competitions.',
                 'images' => [],
                 'is_active' => true
-            ],
-            [
-                'name' => 'Cultural Festival',
-                'description' => 'Images from our cultural festival showcasing student performances, art exhibitions, and traditional celebrations.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Science Fair',
-                'description' => 'Photos from our annual science fair where students showcase their innovative projects and scientific discoveries.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Campus Life',
-                'description' => 'Daily life at our school campus, including classroom activities, library sessions, and student interactions.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Field Trips',
-                'description' => 'Educational field trips and outdoor learning experiences that enrich our students\' educational journey.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Teacher Appreciation',
-                'description' => 'Special moments celebrating our dedicated teachers and their contributions to student success.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Art Exhibition',
-                'description' => 'Student artwork and creative projects displayed in our annual art exhibition.',
-                'images' => [],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Community Service',
-                'description' => 'Photos from various community service activities and volunteer programs organized by our school.',
-                'images' => [],
-                'is_active' => true
             ]
         ];
 

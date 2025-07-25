@@ -388,6 +388,10 @@
                   <span class="mr-2">Apply Now</span>
                   <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
                 </a>
+                <a href="/auth/login" class="mt-3 inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${primaryColor}] focus:outline-none focus:ring-2 focus:ring-[${primaryColor}] focus:ring-offset-2 transition-all duration-300 animate-pulse text-base group">
+                  <span class="mr-2">Login</span>
+                  <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
+                </a>
               </div>
 
               <!-- Mobile Menu Button - Right side -->

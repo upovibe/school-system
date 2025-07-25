@@ -93,7 +93,7 @@ class GalleryViewModal extends HTMLElement {
 
     // Helper method to get proper image URL
     getImageUrl(imagePath) {
-        if (!imagePath) return null;
+        if (!imagePath) return '';
         
         // If it's already a full URL, return as is
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {

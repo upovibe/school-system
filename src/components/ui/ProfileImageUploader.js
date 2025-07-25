@@ -687,7 +687,7 @@ class ProfileImageUploader extends HTMLElement {
 
     // Helper method to construct proper image URL
     constructImageUrl(imagePath) {
-        if (!imagePath) return null;
+        if (!imagePath) return ''; // Return empty string instead of null
         
         // If it's already a full URL, return as is
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {

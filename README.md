@@ -1,7 +1,7 @@
 # 🎨 UPO UI
 
 A lightweight, vanilla JavaScript Web Component library designed for CSS framework compatibility. No build tools, no dependencies, just pure ES Modules.
-
+ 
 ## ✨ Features
 
 - 🚀 **Zero Dependencies** - Pure vanilla JavaScript

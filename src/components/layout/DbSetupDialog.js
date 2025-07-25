@@ -120,7 +120,7 @@ class DbSetupDialog extends App {
                 throw new Error(`${errorDetails}${outputDetails}`);
             }
         } catch (error) {
-            const errorMessage = error.message || 'An unknown error occurred.';
+            const errorMessage = error.response?.data?.error || error.message || 'An unknown error occurred.';
             if (this.outputDiv) this.outputDiv.innerHTML = `<pre class="bg-red-200 rounded p-2 mt-2 text-xs overflow-x-auto">${errorMessage}</pre>`;
             Toast.show({ message: errorMessage, variant: 'error', duration: 4000 });
             this.setLoadingState(false);

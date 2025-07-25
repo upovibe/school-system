@@ -77,11 +77,14 @@ class ContactSection extends App {
                     <div class="relative group rounded-3xl overflow-hidden shadow-2xl">
                         <!-- Banner Background -->
                         <div class="relative h-80 lg:h-96 overflow-hidden">
-                            <img src="/api/${pageData.banner_image}" 
-                                 alt="Contact Us" 
-                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                            ${pageData.banner_image ? 
+                                `<img src="/api/${pageData.banner_image}" 
+                                     alt="Contact Us" 
+                                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                ''
+                            }
+                            <div class="absolute inset-0 ${pageData.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gray-100">
                                 <div class="text-center">
                                     <i class="fas fa-envelope text-gray-400 text-4xl mb-2"></i>
                                     <p class="text-gray-500 font-medium">Contact banner</p>

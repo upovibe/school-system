@@ -56,7 +56,7 @@ class HeroSection extends App {
 
     // Helper method to get proper image URL
     getImageUrl(imagePath) {
-        if (!imagePath) return null;
+        if (!imagePath) return ''; // Return empty string instead of null
         
         // If it's already a full URL, return as is
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
@@ -140,11 +140,14 @@ class HeroSection extends App {
                 <div class="relative">
                     <!-- Main Hero Banner Image -->
                     <div class="relative w-full h-[500px] lg:h-[70vh] rounded-3xl overflow-hidden">
-                        <img src="${this.getImageUrl(bannerImages[0])}" 
-                             alt="Hero Banner" 
-                             class="w-full h-full object-cover"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-50">
+                        ${bannerImages.length > 0 && bannerImages[0] ? 
+                            `<img src="${this.getImageUrl(bannerImages[0])}" 
+                                 alt="Hero Banner" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                            ''
+                        }
+                        <div class="absolute inset-0 ${bannerImages.length > 0 && bannerImages[0] ? 'hidden' : 'flex'} items-center justify-center bg-gray-50">
                             <div class="text-center">
                                 <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
                                 <p class="text-gray-500">Banner image not found</p>

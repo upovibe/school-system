@@ -86,11 +86,14 @@ class CommunitySection extends App {
                     <div class="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20">
                         <!-- Top banner section with parallax effect -->
                         <div class="relative h-48 lg:h-80 overflow-hidden">
-                            <img src="/api/${pageData.banner_image}" 
-                                 alt="Community" 
-                                 class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+                            ${pageData.banner_image ? 
+                                `<img src="/api/${pageData.banner_image}" 
+                                     alt="Community" 
+                                     class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                ''
+                            }
+                            <div class="absolute inset-0 ${pageData.banner_image ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
                                 <div class="text-center">
                                     <i class="fas fa-users text-gray-400 text-4xl mb-2"></i>
                                     <p class="text-gray-500 font-medium">Community banner</p>

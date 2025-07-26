@@ -123,30 +123,30 @@ class MissionVisionSection extends App {
             <section class="mx-auto">
                 
                 <!-- Hero Banner -->
-                ${bannerImages.length > 0 ? `
-                    <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mb-8">
+                <div class="relative w-full h-[400px] overflow-hidden rounded-3xl mb-8">
+                    ${bannerImages.length > 0 ? `
                         <img src="${this.getImageUrl(bannerImages[0])}" 
                              alt="Mission Vision Banner" 
                              class="w-full h-full object-cover rounded-3xl"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="absolute inset-0 hidden items-center justify-center bg-gray-100 rounded-3xl">
-                            <div class="text-center text-gray-500">
-                                <i class="fas fa-image text-3xl mb-2"></i>
-                                <p>Banner image</p>
-                            </div>
-                        </div>
-                        <!-- Gradient overlay from dark bottom to transparent top -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-3xl"></div>
-                        
-                        <!-- Content overlay -->
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-white px-4">
-                                <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">Mission & Vision</h1>
-                                <p class="text-base lg:text-lg opacity-90">Our guiding principles and future aspirations</p>
-                            </div>
+                    ` : ''}
+                    <div class="absolute inset-0 ${bannerImages.length > 0 ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-bullseye text-4xl mb-3"></i>
+                            <p class="text-lg font-medium">Mission & Vision Banner</p>
                         </div>
                     </div>
-                ` : ''}
+                    <!-- Gradient overlay from dark bottom to transparent top -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-3xl"></div>
+                    
+                    <!-- Content overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center text-white px-4">
+                            <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">Mission & Vision</h1>
+                            <p class="text-base lg:text-lg opacity-90">Our guiding principles and future aspirations</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Minimal Content Section -->
                 <div class="max-w-4xl mx-auto p-5">

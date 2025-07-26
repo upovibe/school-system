@@ -135,32 +135,32 @@ class EventsSection extends App {
             <!-- Events Section -->
             <section class="mx-auto py-10">
                 <!-- Banner Image at Top -->
-                ${this.getBannerImages(pageData).length > 0 ? `
-                    <div class="mb-8">
-                        <div class="relative w-full h-96">
+                <div class="mb-8">
+                    <div class="relative w-full h-96">
+                        ${this.getBannerImages(pageData).length > 0 ? `
                             <img src="${this.getImageUrl(this.getBannerImages(pageData)[0])}" 
                                  alt="Events Banner" 
                                  class="w-full h-full object-cover rounded-3xl shadow-lg"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-50 rounded-3xl">
-                                <div class="text-center">
-                                    <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                    <p class="text-gray-500 font-medium">Events banner image</p>
-                                </div>
+                        ` : ''}
+                        <div class="absolute inset-0 ${this.getBannerImages(pageData).length > 0 ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl shadow-lg">
+                            <div class="text-center">
+                                <i class="fas fa-calendar-alt text-gray-400 text-4xl mb-2"></i>
+                                <p class="text-gray-500 font-medium">Events Banner</p>
                             </div>
-                            <!-- Dark gradient overlay from bottom to top -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent rounded-3xl"></div>
-                            
-                            <!-- Content overlay -->
+                        </div>
+                        <!-- Dark gradient overlay from bottom to top -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent rounded-3xl"></div>
+                        
+                        <!-- Content overlay -->
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div class="text-center text-white px-4">
                                 <h1 class="text-2xl lg:text-3xl xl:text-4xl font-bold mb-2">${pageData.title || ''}</h1>
                                 <p class="text-base lg:text-lg opacity-90">${pageData.subtitle || ''}</p>
                             </div>
                         </div>
-                        </div>
                     </div>
-                ` : ''}
+                </div>
 
 
                 

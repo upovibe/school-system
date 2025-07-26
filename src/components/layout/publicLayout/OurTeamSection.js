@@ -155,10 +155,10 @@ class OurTeamSection extends App {
                                      class="w-full h-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             ` : ''}
-                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                            <div class="absolute inset-0 ${bannerImages.length > 0 ? 'hidden' : 'flex'} items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                                 <div class="text-center">
                                     <i class="fas fa-users text-gray-400 text-4xl mb-2"></i>
-                                    <p class="text-gray-500 font-medium">Our team image</p>
+                                    <p class="text-gray-500 font-medium">Our Team Image</p>
                                 </div>
                             </div>
                         </div>

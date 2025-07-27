@@ -1,4 +1,7 @@
 <?php
+// Start output buffering
+ob_start();
+
 // api/index.php - API entry point
 
 // Handle CLI commands

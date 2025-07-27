@@ -22,13 +22,17 @@ class RootPage extends App {
         document.title = 'Home';
         // 1. Check DB connection first
         try {
-            const dbCheck = await fetch('/api/db/check').then(r => r.json());
+            const dbCheckResponse = await fetch('/api/db/check');
+            const dbCheck = await dbCheckResponse.json();
+            
             if (!dbCheck.success) {
+                console.warn('Database connection failed');
                 this.set('dbNotConnected', true);
                 this.render();
                 return;
             }
         } catch (e) {
+            console.error('Database check error:', e);
             this.set('dbNotConnected', true);
             this.render();
             return;
@@ -43,14 +47,16 @@ class RootPage extends App {
             const colors = await fetchColorSettings();
             
             // Load all page data in parallel
-            const [homePageData, aboutPageData, academicsPageData, communityPageData, contactPageData] = await Promise.all([
+            const pagePromises = await Promise.all([
                 this.fetchPageData('home'),
                 this.fetchPageData('about-us'),
                 this.fetchPageData('academics'),
                 this.fetchPageData('community'),
                 this.fetchPageData('contact')
             ]);
-
+            
+            const [homePageData, aboutPageData, academicsPageData, communityPageData, contactPageData] = pagePromises;
+            
             // Load all settings in parallel
             const settingsData = await this.loadAllSettings();
 
@@ -83,9 +89,14 @@ class RootPage extends App {
     async fetchPageData(slug) {
         try {
             const response = await api.get(`/pages/slug/${slug}`);
+            
+            if (!response.data.success) {
+                return null;
+            }
+            
             return response.data.success ? response.data.data : null;
         } catch (error) {
-            console.error(`Error fetching ${slug} page data:`, error);
+            console.error(`Error fetching ${slug} page:`, error.message);
             return null;
         }
     }

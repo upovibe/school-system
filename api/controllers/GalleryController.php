@@ -84,15 +84,16 @@ class GalleryController {
             $uploadedImages = [];
             if (!empty($_FILES['images'])) {
                 try {
+                    // Use the uploadGalleryImages function which handles multiple files properly
                     $uploadedImages = uploadGalleryImages($_FILES['images']);
-                    // Extract just the original paths for storage
-                    $data['images'] = array_map(function($image) {
-                        return $image['original'];
-                    }, $uploadedImages);
                 } catch (Exception $e) {
                     // Don't fail the entire creation if image upload fails
-                    $data['images'] = [];
+                    $uploadedImages = [];
                 }
+            }
+            
+            if (!empty($uploadedImages)) {
+                $data['images'] = $uploadedImages;
             } else {
                 $data['images'] = [];
             }
@@ -112,10 +113,21 @@ class GalleryController {
                     'images_uploaded' => count($uploadedImages)
                 ]);
                 
+                // Get image info safely
+                $imageInfo = getGalleryImageInfo($uploadedImages);
+                
                 http_response_code(201);
                 echo json_encode([
                     'success' => true,
-                    'data' => $createdGallery,
+                    'data' => [
+                        'id' => $galleryId,
+                        'slug' => $data['slug'],
+                        'name' => $data['name'],
+                        'description' => $data['description'],
+                        'is_active' => $data['is_active'],
+                        'images' => $uploadedImages,
+                        'image_urls' => $imageInfo
+                    ],
                     'message' => 'Gallery created successfully'
                 ]);
             } else {
@@ -242,14 +254,12 @@ class GalleryController {
             $imagesKey = 'images[]';
             if (!empty($_FILES[$imagesKey])) {
                 try {
+                    // Use the uploadGalleryImages function which handles multiple files properly
                     $uploadedImages = uploadGalleryImages($_FILES[$imagesKey]);
-                    $newImagePaths = array_map(function($image) {
-                        return $image['original'];
-                    }, $uploadedImages);
                     
                     // Combine with existing images
                     $existingImages = $existingGallery['images'] ?: [];
-                    $data['images'] = array_merge($existingImages, $newImagePaths);
+                    $data['images'] = array_merge($existingImages, $uploadedImages);
                 } catch (Exception $e) {
                     // Don't fail the entire update if image upload fails
                     $data['images'] = $existingGallery['images'] ?: [];
@@ -273,6 +283,9 @@ class GalleryController {
                     'name' => $data['name'] ?? $existingGallery['name'],
                     'images_added' => count($uploadedImages)
                 ]);
+                
+                // Get image info for the new images
+                $newImageInfo = getGalleryImageInfo($uploadedImages);
                 
                 http_response_code(200);
                 echo json_encode([

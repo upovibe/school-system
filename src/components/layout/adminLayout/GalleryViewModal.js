@@ -93,7 +93,7 @@ class GalleryViewModal extends HTMLElement {
 
     // Helper method to get proper image URL
     getImageUrl(imagePath) {
-        if (!imagePath) return '';
+        if (!imagePath) return null;
         
         // If it's already a full URL, return as is
         if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
@@ -106,7 +106,8 @@ class GalleryViewModal extends HTMLElement {
             return baseUrl + imagePath;
         }
         
-        // If it's a relative path without /, construct the URL
+        // For relative paths like "uploads/galleries/filename.jpg"
+        // Construct the URL by adding the base URL and /api
         const baseUrl = window.location.origin;
         const apiPath = '/api';
         return baseUrl + apiPath + '/' + imagePath;

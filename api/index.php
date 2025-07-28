@@ -79,5 +79,4 @@ try {
     Router::dispatch('/' . $uri, $method, $pdo);
 } catch (Exception $e) {
     $security->handleError($e);
-}
-?> 
+} 

@@ -271,6 +271,7 @@ class PageSettingsPage extends App {
         const tableColumns = [
             // { key: 'id', label: 'ID', html: false }, // Hidden but kept for reference
             { key: 'index', label: 'No.', html: false },
+            { key: 'name', label: 'Name' },
             { key: 'title', label: 'Title' },
             // { key: 'slug', label: 'Slug', html: false },
             { key: 'category', label: 'Category' },

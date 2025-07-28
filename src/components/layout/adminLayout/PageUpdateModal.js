@@ -108,15 +108,6 @@ class PageUpdateModal extends HTMLElement {
             };
 
             // Validate required fields
-            if (!pageData.name) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please fill in the page name',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
             if (!pageData.title) {
                 Toast.show({
                     title: 'Validation Error',
@@ -202,7 +193,7 @@ class PageUpdateModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Page Update</div>
                     <form id="page-update-form" class="space-y-4">
-                        <div>
+                        <div class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Name <span class="text-red-500">*</span></label>
                             <ui-input 
                                 data-field="name"

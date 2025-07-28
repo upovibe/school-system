@@ -305,29 +305,23 @@ class GalleriesPage extends App {
                 ` : `
                     <!-- Gallery Table Section -->
                     <div class="mb-8">
-                        ${galleries && galleries.length > 0 ? `
-                            <ui-table 
-                                title="Gallery Management"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search galleries..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No galleries found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Gallery Management"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search galleries..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

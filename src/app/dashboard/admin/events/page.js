@@ -275,29 +275,23 @@ class EventsPage extends App {
                 ` : `
                     <!-- Events Table Section -->
                     <div class="mb-8">
-                        ${events && events.length > 0 ? `
-                            <ui-table 
-                                title="Events Management"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search events..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No events found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Events Management"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search events..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

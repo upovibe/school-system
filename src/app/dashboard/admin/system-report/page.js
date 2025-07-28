@@ -229,29 +229,23 @@ class SystemReportPage extends App {
                 ` : `
                     <!-- System Logs Table Section -->
                     <div class="mb-8">
-                        ${logs && logs.length > 0 ? `
-                            <ui-table 
-                                title="System Activity Logs"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search logs..."
-                                pagination
-                                page-size="15"
-                                refresh
-                                print
-                                export
-                                bordered
-                                striped
-                                clickable
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No system logs found</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="System Activity Logs"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search logs..."
+                            pagination
+                            page-size="15"
+                            refresh
+                            print
+                            export
+                            bordered
+                            striped
+                            clickable
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

@@ -278,29 +278,23 @@ class UsersPage extends App {
                 ` : `
                     <!-- Users Table Section -->
                     <div class="mb-8">
-                        ${users && users.length > 0 ? `
-                            <ui-table 
-                                title="Users"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search users..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No users found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Users"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search users..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

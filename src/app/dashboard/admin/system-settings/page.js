@@ -275,29 +275,23 @@ class SystemSettingsPage extends App {
                 ` : `
                     <!-- Settings Table Section -->
                     <div class="mb-8">
-                        ${settings && settings.length > 0 ? `
-                            <ui-table 
-                                title="System Settings"
-                                data='${JSON.stringify(tableData).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
-                                columns='${JSON.stringify(tableColumns).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
-                                sortable
-                                searchable
-                                search-placeholder="Search settings..."
-                                pagination
-                                page-size="10"
-                                action
-                                actions="view,edit"                                
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No settings found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="System Settings"
+                            data='${JSON.stringify(tableData).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
+                            columns='${JSON.stringify(tableColumns).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'
+                            sortable
+                            searchable
+                            search-placeholder="Search settings..."
+                            pagination
+                            page-size="10"
+                            action
+                            actions="view,edit"                                
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

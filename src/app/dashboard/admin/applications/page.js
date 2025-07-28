@@ -116,28 +116,22 @@ class ApplicationsPage extends App {
                     </div>
                 ` : `
                     <div class="mb-8">
-                        ${applications && applications.length > 0 ? `
-                            <ui-table 
-                                title="Applications Database"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search applications..."
-                                pagination
-                                page-size="10"
-                                refresh
-                                print
-                                bordered
-                                striped
-                                clickable
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No applications found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Applications Database"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search applications..."
+                            pagination
+                            page-size="10"
+                            refresh
+                            print
+                            bordered
+                            striped
+                            clickable
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

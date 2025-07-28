@@ -299,29 +299,23 @@ class VideoGalleriesPage extends App {
                 ` : `
                     <!-- Video Galleries Table Section -->
                     <div class="mb-8">
-                        ${videoGalleries && videoGalleries.length > 0 ? `
-                            <ui-table 
-                                title="Video Gallery Management"
-                                data='${JSON.stringify(videoTableData)}'
-                                columns='${JSON.stringify(videoTableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search video galleries..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No video galleries found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Video Gallery Management"
+                            data='${JSON.stringify(videoTableData)}'
+                            columns='${JSON.stringify(videoTableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search video galleries..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

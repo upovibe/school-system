@@ -259,29 +259,23 @@ class TeamManagementPage extends App {
                 ` : `
                     <!-- Teams Table Section -->
                     <div class="mb-8">
-                        ${teams && teams.length > 0 ? `
-                            <ui-table 
-                                title="Team Members Database"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search team members..."
-                                pagination
-                                page-size="10"
-                                action
-                                addable
-                                refresh
-                                print
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No team members found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Team Members Database"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search team members..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

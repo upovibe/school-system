@@ -292,29 +292,23 @@ class PageSettingsPage extends App {
                 ` : `
                     <!-- Pages Table Section -->
                     <div class="mb-8">
-                        ${pages && pages.length > 0 ? `
-                            <ui-table 
-                                title="Pages Database"
-                                data='${JSON.stringify(tableData)}'
-                                columns='${JSON.stringify(tableColumns)}'
-                                sortable
-                                searchable
-                                search-placeholder="Search pages..."
-                                pagination
-                                page-size="10"
-                                action
-                                actions="view,edit"
-                                print
-                                refresh
-                                bordered
-                                striped
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No pages found in database</p>
-                            </div>
-                        `}
+                        <ui-table 
+                            title="Pages Database"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search pages..."
+                            pagination
+                            page-size="10"
+                            action
+                            actions="view,edit"
+                            print
+                            refresh
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
                     </div>
                 `}
             </div>

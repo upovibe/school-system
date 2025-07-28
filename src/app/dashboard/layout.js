@@ -15,15 +15,16 @@ import '@/components/layout/authLayout/PasswordChangeDialog.js';
  * This layout provides a consistent structure for all dashboard pages with a responsive sidebar and header.
  */
 class DashboardLayout extends App {
-    constructor() {
-        super();
-        this.pageContent = '';
-        this.currentUser = null;
-        this.unsubscribe = null;
-        this.sidebarOpen = false;
-        this.logoUrl = null;
-        this.brandColor = null;
-    }
+      constructor() {
+    super();
+    this.pageContent = '';
+    this.currentUser = null;
+    this.unsubscribe = null;
+    this.sidebarOpen = false;
+    this.logoUrl = null;
+    this.brandColor = null;
+    this.collapsedGroups = new Set(); // Track which groups are collapsed
+  }
 
     async connectedCallback() {
         super.connectedCallback();
@@ -119,12 +120,19 @@ class DashboardLayout extends App {
                 this.toggleSidebar();
             }
 
-            const logoutButton = e.target.closest('[data-action="logout"]');
-            if (logoutButton) {
-                e.preventDefault();
-                this.handleLogout();
-            }
-        });
+                  const logoutButton = e.target.closest('[data-action="logout"]');
+      if (logoutButton) {
+        e.preventDefault();
+        this.handleLogout();
+      }
+
+      const groupHeader = e.target.closest('[data-group-toggle]');
+      if (groupHeader) {
+        e.preventDefault();
+        const groupName = groupHeader.getAttribute('data-group-name');
+        this.toggleGroup(groupName);
+      }
+    });
 
         document.addEventListener('item-click', (e) => {
             if (e.detail.text === 'Logout') {
@@ -138,14 +146,79 @@ class DashboardLayout extends App {
         this.updateSidebarState();
     }
 
-    updateSidebarState() {
-        const layoutContainer = this.querySelector('[data-layout-container]');
-        if (this.sidebarOpen) {
-            layoutContainer.classList.add('sidebar-open');
-        } else {
-            layoutContainer.classList.remove('sidebar-open');
-        }
+      updateSidebarState() {
+    const layoutContainer = this.querySelector('[data-layout-container]');
+    if (this.sidebarOpen) {
+      layoutContainer.classList.add('sidebar-open');
+    } else {
+      layoutContainer.classList.remove('sidebar-open');
     }
+  }
+
+  toggleGroup(groupName) {
+    if (this.collapsedGroups.has(groupName)) {
+      this.collapsedGroups.delete(groupName);
+    } else {
+      this.collapsedGroups.add(groupName);
+    }
+    this.updateSidebarNavigation();
+  }
+
+  updateSidebarNavigation() {
+    const nav = this.querySelector('nav');
+    if (nav) {
+      const navigationGroups = this.getNavigationItems();
+      const textColor = this.get('text_color');
+      const accentColor = this.get('accent_color');
+      const secondaryColor = this.get('secondary_color');
+
+      nav.innerHTML = navigationGroups
+        .map(
+          (group) => `
+                <div class="mb-4">
+                    <div 
+                        data-group-toggle 
+                        data-group-name="${group.group}"
+                        class="flex items-center justify-between text-xs font-semibold uppercase text-[${
+                          textColor || '#bfdbfe'
+                        }] mb-2 pl-2 tracking-wide cursor-pointer hover:text-white transition-colors"
+                    >
+                        <span>${group.group}</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 ${
+                          this.collapsedGroups.has(group.group)
+                            ? 'rotate-180'
+                            : ''
+                        }"></i>
+                    </div>
+                    <div class="flex flex-col gap-1 ${
+                      this.collapsedGroups.has(group.group) ? 'hidden' : ''
+                    }">
+                        ${group.items
+                          .map(
+                            (item) => `
+                            <ui-link 
+                                href="${item.href}"
+                                class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${
+                                  item.active
+                                    ? `bg-[${accentColor}]`
+                                    : `text-[${textColor}] hover:bg-[${secondaryColor}] hover:bg-opacity-50 hover:text-white`
+                                }"
+                            >
+                                <i class="${
+                                  item.icon
+                                } size-5 flex items-center justify-center"></i>
+                                <span>${item.label}</span>
+                            </ui-link>
+                        `,
+                          )
+                          .join('')}
+                    </div>
+                </div>
+            `,
+        )
+        .join('');
+    }
+  }
 
     async handleLogout() {
         try {
@@ -431,22 +504,51 @@ class DashboardLayout extends App {
                     </div>
 
                     <nav class="flex-1 px-4 py-4 overflow-y-auto flex flex-col gap-2">
-                        ${navigationGroups.map(group => `
+                        ${navigationGroups
+                          .map(
+                            (group) => `
                             <div class="mb-4">
-                                <div class="text-xs font-semibold uppercase text-[${textColor || '#bfdbfe'}] mb-2 pl-2 tracking-wide">${group.group}</div>
-                                <div class="flex flex-col gap-1">
-                                    ${group.items.map(item => `
+                                <div 
+                                    data-group-toggle 
+                                    data-group-name="${group.group}"
+                                    class="flex items-center justify-between text-xs font-semibold uppercase text-[${
+                                      textColor || '#bfdbfe'
+                                    }] mb-2 pl-2 tracking-wide cursor-pointer hover:text-white transition-colors"
+                                >
+                                    <span>${group.group}</span>
+                                    <i class="fas fa-chevron-down text-xs transition-transform duration-200 ${
+                                      this.collapsedGroups.has(group.group)
+                                        ? 'rotate-180'
+                                        : ''
+                                    }"></i>
+                                </div>
+                                <div class="flex flex-col gap-1 ${
+                                  this.collapsedGroups.has(group.group) ? 'hidden' : ''
+                                }">
+                                    ${group.items
+                                      .map(
+                                        (item) => `
                                         <ui-link 
                                             href="${item.href}"
-                                            class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${item.active ? `bg-[${accentColor || '#ffffff'}] text-white` : `text-[${textColor || '#dbeafe'}] hover:bg-[${secondaryColor || '#3b82f6'}] hover:bg-opacity-50 hover:text-white`}"
+                                            class="group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors no-underline ${
+                                              item.active
+                                                ? `bg-[${accentColor}]`
+                                                : `text-[${textColor}] hover:bg-[${secondaryColor}] hover:bg-opacity-50 hover:text-white`
+                                            }"
                                         >
-                                            <i class="${item.icon} size-5 flex items-center justify-center"></i>
+                                            <i class="${
+                                              item.icon
+                                            } size-5 flex items-center justify-center"></i>
                                             <span>${item.label}</span>
                                         </ui-link>
-                                    `).join('')}
+                                    `,
+                                      )
+                                      .join('')}
                                 </div>
                             </div>
-                        `).join('')}
+                        `,
+                          )
+                          .join('')}
                     </nav>
 
                     <div class="p-4 border-t border-[${secondaryColor || '#3b82f6'}] flex-shrink-0">

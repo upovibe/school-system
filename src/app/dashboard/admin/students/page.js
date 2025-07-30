@@ -5,6 +5,8 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/StudentDeleteDialog.js';
 import '@/components/layout/adminLayout/StudentAddDialog.js';
+import '@/components/layout/adminLayout/StudentUpdateDialog.js';
+import '@/components/layout/adminLayout/StudentViewDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -17,8 +19,12 @@ class StudentManagementPage extends App {
         super();
         this.students = null;
         this.loading = false;
+        this.showAddModal = false;
+        this.showUpdateModal = false;
+        this.showViewModal = false;
         this.showDeleteDialog = false;
-        this.showAddDialog = false;
+        this.updateStudentData = null;
+        this.viewStudentData = null;
         this.deleteStudentData = null;
     }
 
@@ -48,13 +54,37 @@ class StudentManagementPage extends App {
 
         // Listen for student-saved event to add new student to the list
         this.addEventListener('student-saved', (event) => {
+            // Close the add modal first
+            this.set('showAddModal', false);
+
+            // Add the new student to the existing data
             const newStudent = event.detail.student;
-            const currentStudents = this.get('students') || [];
-            this.set('students', [...currentStudents, newStudent]);
-            this.updateTableData();
-            
-            // Close the add dialog
-            this.set('showAddDialog', false);
+            if (newStudent) {
+                const currentStudents = this.get('students') || [];
+                this.set('students', [...currentStudents, newStudent]);
+                this.updateTableData();
+            } else {
+                this.loadData();
+            }
+        });
+
+        // Listen for student-updated event to update student in the list
+        this.addEventListener('student-updated', (event) => {
+            // Close the update modal first
+            this.set('showUpdateModal', false);
+
+            // Update the existing student in the data
+            const updatedStudent = event.detail.student;
+            if (updatedStudent) {
+                const currentStudents = this.get('students') || [];
+                const updatedStudents = currentStudents.map(student => 
+                    student.id === updatedStudent.id ? updatedStudent : student
+                );
+                this.set('students', updatedStudents);
+                this.updateTableData();
+            } else {
+                this.loadData();
+            }
         });
     }
 
@@ -97,13 +127,15 @@ class StudentManagementPage extends App {
         const { detail } = event;
         const viewStudent = this.get('students').find(student => student.id === detail.row.id);
         if (viewStudent) {
-            // Navigate to view page
-            const viewUrl = `/dashboard/admin/students/${viewStudent.id}`;
-            if (window.router) {
-                window.router.navigate(viewUrl);
-            } else {
-                window.location.href = viewUrl;
-            }
+            this.closeAllModals();
+            this.set('viewStudentData', viewStudent);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewDialog = this.querySelector('student-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setStudentData(viewStudent);
+                }
+            }, 0);
         }
     }
 
@@ -111,13 +143,16 @@ class StudentManagementPage extends App {
         const { detail } = event;
         const editStudent = this.get('students').find(student => student.id === detail.row.id);
         if (editStudent) {
-            // Navigate to edit page
-            const editUrl = `/dashboard/admin/students/${editStudent.id}/edit`;
-            if (window.router) {
-                window.router.navigate(editUrl);
-            } else {
-                window.location.href = editUrl;
-            }
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('updateStudentData', editStudent);
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('student-update-dialog');
+                if (updateModal) {
+                    updateModal.setStudentData(editStudent);
+                }
+            }, 0);
         }
     }
 
@@ -125,7 +160,8 @@ class StudentManagementPage extends App {
         const { detail } = event;
         const deleteStudent = this.get('students').find(student => student.id === detail.row.id);
         if (deleteStudent) {
-            // Show delete dialog
+            // Close any open modals first
+            this.closeAllModals();
             this.set('deleteStudentData', deleteStudent);
             this.set('showDeleteDialog', true);
             setTimeout(() => {
@@ -138,8 +174,9 @@ class StudentManagementPage extends App {
     }
 
     onAdd(event) {
-        // Show add student dialog
-        this.set('showAddDialog', true);
+        // Close any open modals first
+        this.closeAllModals();
+        this.set('showAddModal', true);
     }
 
     updateTableData() {
@@ -169,13 +206,21 @@ class StudentManagementPage extends App {
     }
 
     closeAllModals() {
+        this.set('showAddModal', false);
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
+        this.set('updateStudentData', null);
+        this.set('viewStudentData', null);
         this.set('deleteStudentData', null);
     }
 
     render() {
         const students = this.get('students');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
+        const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
         // Prepare table data and columns for students
@@ -238,11 +283,17 @@ class StudentManagementPage extends App {
                 `}
             </div>
             
+            <!-- Add Student Dialog -->
+            <student-add-dialog ${showAddModal ? 'open' : ''}></student-add-dialog>
+            
+            <!-- Update Student Dialog -->
+            <student-update-dialog ${showUpdateModal ? 'open' : ''}></student-update-dialog>
+            
+            <!-- View Student Dialog -->
+            <student-view-dialog id="view-modal" ${showViewModal ? 'open' : ''}></student-view-dialog>
+            
             <!-- Delete Student Dialog -->
             <student-delete-dialog ${showDeleteDialog ? 'open' : ''}></student-delete-dialog>
-
-            <!-- Add Student Dialog -->
-            <student-add-dialog ${this.get('showAddDialog') ? 'open' : ''}></student-add-dialog>
         `;
     }
 }

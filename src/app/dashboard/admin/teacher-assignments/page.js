@@ -218,17 +218,39 @@ class TeacherAssignmentManagementPage extends App {
                 grouped[key] = {
                     teacherName: `${assignment.teacher_first_name} ${assignment.teacher_last_name}`,
                     employeeId: assignment.employee_id,
-                    assignments: []
+                    classes: {}
                 };
             }
-            grouped[key].assignments.push({
-                className: assignment.class_name,
-                classSection: assignment.class_section,
+            
+            // Group by class
+            const classKey = `${assignment.class_name}-${assignment.class_section}`;
+            if (!grouped[key].classes[classKey]) {
+                grouped[key].classes[classKey] = {
+                    className: assignment.class_name,
+                    classSection: assignment.class_section,
+                    subjects: []
+                };
+            }
+            
+            // Add subject to the class
+            grouped[key].classes[classKey].subjects.push({
                 subjectName: assignment.subject_name,
                 subjectCode: assignment.subject_code
             });
         });
-        return Object.values(grouped);
+        
+        // Convert to array format and sort
+        return Object.values(grouped).map(teacher => ({
+            teacherName: teacher.teacherName,
+            employeeId: teacher.employeeId,
+            classes: Object.values(teacher.classes).sort((a, b) => {
+                // Sort by class name, then by section
+                if (a.className !== b.className) {
+                    return a.className.localeCompare(b.className);
+                }
+                return a.classSection.localeCompare(b.classSection);
+            })
+        }));
     }
 
     render() {
@@ -334,37 +356,55 @@ class TeacherAssignmentManagementPage extends App {
                                                         </div>
                                                         <div class="flex items-center space-x-2">
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                                ${teacherGroup.assignments.length} assignment${teacherGroup.assignments.length !== 1 ? 's' : ''}
+                                                                ${teacherGroup.classes.length} class${teacherGroup.classes.length !== 1 ? 'es' : ''}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- Assignments List -->
+                                                <!-- Classes and Subjects Hierarchy -->
                                                 <div class="p-6">
-                                                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                                        ${teacherGroup.assignments.map(assignment => `
-                                                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                                                                <div class="flex items-start justify-between">
-                                                                    <div class="flex-1">
-                                                                        <div class="flex items-center space-x-2 mb-2">
+                                                    <div class="space-y-4">
+                                                        ${teacherGroup.classes.map(classGroup => `
+                                                            <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                                                                <!-- Class Header -->
+                                                                <div class="bg-blue-50 px-4 py-3 border-b border-gray-200">
+                                                                    <div class="flex items-center justify-between">
+                                                                        <div class="flex items-center space-x-2">
                                                                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                                                                                 <i class="fas fa-chalkboard text-blue-600 text-xs"></i>
                                                                             </div>
-                                                                            <h5 class="text-sm font-medium text-gray-900">${assignment.className} - ${assignment.classSection}</h5>
+                                                                            <h5 class="text-sm font-semibold text-gray-900">${classGroup.className} - ${classGroup.classSection}</h5>
                                                                         </div>
-                                                                        <div class="flex items-center space-x-2 mb-2">
-                                                                            <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                                                                                <i class="fas fa-book text-green-600 text-xs"></i>
-                                                                            </div>
-                                                                            <h5 class="text-sm font-medium text-gray-900">${assignment.subjectName}</h5>
-                                                                        </div>
-                                                                        <p class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">${assignment.subjectCode}</p>
-                                                                    </div>
-                                                                    <div class="flex items-center space-x-1">
-                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                            Active
+                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                            ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
                                                                         </span>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <!-- Subjects List -->
+                                                                <div class="p-4">
+                                                                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                                                        ${classGroup.subjects.map(subject => `
+                                                                            <div class="bg-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
+                                                                                <div class="flex items-center justify-between">
+                                                                                    <div class="flex-1">
+                                                                                        <div class="flex items-center space-x-2 mb-1">
+                                                                                            <div class="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+                                                                                                <i class="fas fa-book text-green-600 text-xs"></i>
+                                                                                            </div>
+                                                                                            <h6 class="text-sm font-medium text-gray-900">${subject.subjectName}</h6>
+                                                                                        </div>
+                                                                                        <span class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded wi-fit">${subject.subjectCode}</span>
+                                                                                    </div>
+                                                                                    <div class="flex items-center space-x-1">
+                                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                                            Active
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        `).join('')}
                                                                     </div>
                                                                 </div>
                                                             </div>

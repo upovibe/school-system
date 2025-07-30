@@ -10,9 +10,7 @@ class ClassSubjectModel extends BaseModel {
     protected static $fillable = [
         'class_id',
         'subject_id',
-        'academic_year',
-        'term',
-        'teaching_hours'
+        'term'
     ];
     
     // Fields that should be cast to specific types
@@ -20,7 +18,6 @@ class ClassSubjectModel extends BaseModel {
         'id' => 'integer',
         'class_id' => 'integer',
         'subject_id' => 'integer',
-        'teaching_hours' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -35,13 +32,13 @@ class ClassSubjectModel extends BaseModel {
     /**
      * Find class subject by unique combination
      */
-    public function findByUniqueKey($classId, $subjectId, $academicYear) {
+    public function findByUniqueKey($classId, $subjectId) {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT * FROM {$this->getTableName()} 
-                WHERE class_id = ? AND subject_id = ? AND academic_year = ?
+                WHERE class_id = ? AND subject_id = ?
             ");
-            $stmt->execute([$classId, $subjectId, $academicYear]);
+            $stmt->execute([$classId, $subjectId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($result) {
@@ -81,10 +78,7 @@ class ClassSubjectModel extends BaseModel {
                 $params[] = $filters['subject_id'];
             }
             
-            if (!empty($filters['academic_year'])) {
-                $sql .= " AND cs.academic_year = ?";
-                $params[] = $filters['academic_year'];
-            }
+
             
             if (!empty($filters['term'])) {
                 $sql .= " AND cs.term = ?";

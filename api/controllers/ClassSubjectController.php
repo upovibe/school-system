@@ -90,20 +90,10 @@ class ClassSubjectController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
-
             // Check if class subject already exists with same combination
             $existingClassSubject = $this->classSubjectModel->findByUniqueKey(
                 $data['class_id'], 
-                $data['subject_id'], 
-                $data['academic_year']
+                $data['subject_id']
             );
             
             if ($existingClassSubject) {
@@ -120,10 +110,6 @@ class ClassSubjectController {
                 $data['term'] = 'full_year';
             }
 
-            if (!isset($data['teaching_hours'])) {
-                $data['teaching_hours'] = 0;
-            }
-
             // Create the class subject
             $classSubjectId = $this->classSubjectModel->create($data);
             
@@ -132,15 +118,13 @@ class ClassSubjectController {
                 $this->logAction('create', "Created class subject assignment", [
                     'class_subject_id' => $classSubjectId,
                     'class_id' => $data['class_id'],
-                    'subject_id' => $data['subject_id'],
-                    'academic_year' => $data['academic_year']
+                    'subject_id' => $data['subject_id']
                 ]);
                 
                 // Get the created class subject with details
                 $classSubject = $this->classSubjectModel->getWithDetails([
                     'class_id' => $data['class_id'],
-                    'subject_id' => $data['subject_id'],
-                    'academic_year' => $data['academic_year']
+                    'subject_id' => $data['subject_id']
                 ]);
                 
                 http_response_code(201);
@@ -250,20 +234,10 @@ class ClassSubjectController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
-
             // Check if the new combination already exists (excluding current record)
             $existingWithNewKey = $this->classSubjectModel->findByUniqueKey(
                 $data['class_id'], 
-                $data['subject_id'], 
-                $data['academic_year']
+                $data['subject_id']
             );
             
             if ($existingWithNewKey && $existingWithNewKey['id'] != $id) {
@@ -283,15 +257,13 @@ class ClassSubjectController {
                 $this->logAction('update', "Updated class subject assignment", [
                     'class_subject_id' => $id,
                     'class_id' => $data['class_id'],
-                    'subject_id' => $data['subject_id'],
-                    'academic_year' => $data['academic_year']
+                    'subject_id' => $data['subject_id']
                 ]);
                 
                 // Get the updated class subject with details
                 $classSubjects = $this->classSubjectModel->getWithDetails([
                     'class_id' => $data['class_id'],
-                    'subject_id' => $data['subject_id'],
-                    'academic_year' => $data['academic_year']
+                    'subject_id' => $data['subject_id']
                 ]);
                 
                 http_response_code(200);

@@ -14,7 +14,6 @@ class ClassSubjectAddDialog extends HTMLElement {
         super();
         this.classes = [];
         this.subjects = [];
-        this.academicYears = [];
         this.terms = ['full_year', 'first_term', 'second_term', 'third_term'];
         this.loading = false;
     }
@@ -33,7 +32,6 @@ class ClassSubjectAddDialog extends HTMLElement {
         this.render();
         this.loadClasses();
         this.loadSubjects();
-        this.loadAcademicYears();
         this.setupEventListeners();
     }
 
@@ -71,22 +69,7 @@ class ClassSubjectAddDialog extends HTMLElement {
         }
     }
 
-    async loadAcademicYears() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
 
-            const response = await api.withToken(token).get('/classes/academic-years');
-            
-            if (response.status === 200 && response.data.success) {
-                this.academicYears = response.data.data; // Academic years array is in response.data.data
-                // Re-render to update the dropdown with academic years
-                this.render();
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
 
     setupEventListeners() {
         // Listen for dialog events
@@ -120,51 +103,37 @@ class ClassSubjectAddDialog extends HTMLElement {
             const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
             const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
 
-            const classId = classDropdown ? classDropdown.value : '';
-            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
-            const academicYear = academicYearDropdown ? academicYearDropdown.value : '';
-            const term = termDropdown ? termDropdown.value : 'full_year';
-            const teachingHours = teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0;
+                               const classId = classDropdown ? classDropdown.value : '';
+                   const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+                   const term = termDropdown ? termDropdown.value : 'full_year';
 
-            // Debug logging
-            console.log('Form Data:', {
-                classId,
-                subjectIds,
-                academicYear,
-                term,
-                teachingHours
-            });
+                   // Debug logging
+                   console.log('Form Data:', {
+                       classId,
+                       subjectIds,
+                       term
+                   });
 
-            // Validation
-            if (!classId) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select a class',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
+                   // Validation
+                   if (!classId) {
+                       Toast.show({
+                           title: 'Validation Error',
+                           message: 'Please select a class',
+                           variant: 'error',
+                           duration: 3000
+                       });
+                       return;
+                   }
 
-            if (!subjectIds || !Array.isArray(subjectIds) || subjectIds.length === 0) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select at least one subject',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!academicYear) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please enter academic year',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
+                   if (!subjectIds || !Array.isArray(subjectIds) || subjectIds.length === 0) {
+                       Toast.show({
+                           title: 'Validation Error',
+                           message: 'Please select at least one subject',
+                           variant: 'error',
+                           duration: 3000
+                       });
+                       return;
+                   }
 
             const token = localStorage.getItem('token');
             if (!token) {
@@ -194,17 +163,15 @@ class ClassSubjectAddDialog extends HTMLElement {
                 return;
             }
             
-            const promises = validSubjectIds.map(subjectId => {
-                const classSubjectData = {
-                    class_id: parseInt(classId),
-                    subject_id: parseInt(subjectId),
-                    academic_year: academicYear,
-                    term: term,
-                    teaching_hours: teachingHours
-                };
-                console.log('Creating assignment:', classSubjectData);
-                return api.withToken(token).post('/class-subjects', classSubjectData);
-            });
+                               const promises = validSubjectIds.map(subjectId => {
+                       const classSubjectData = {
+                           class_id: parseInt(classId),
+                           subject_id: parseInt(subjectId),
+                           term: term
+                       };
+                       console.log('Creating assignment:', classSubjectData);
+                       return api.withToken(token).post('/class-subjects', classSubjectData);
+                   });
 
             const responses = await Promise.all(promises);
             console.log('API Responses:', responses);
@@ -311,48 +278,18 @@ class ClassSubjectAddDialog extends HTMLElement {
                             `}
                         </div>
 
-                        <!-- Academic Year -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-                            ${this.academicYears.length > 0 ? `
-                                <ui-search-dropdown 
-                                    data-field="academic_year" 
-                                    placeholder="Select academic year..."
-                                    class="w-full">
-                                    ${this.academicYears.map(year => `
-                                        <ui-option value="${year}">${year}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-
-                        <!-- Term -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                            <ui-search-dropdown 
-                                data-field="term" 
-                                placeholder="Select term..."
-                                class="w-full">
-                                ${this.terms.map(term => `
-                                    <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
-                        </div>
-
-                        <!-- Teaching Hours -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Teaching Hours</label>
-                            <ui-input 
-                                type="number" 
-                                data-field="teaching_hours" 
-                                placeholder="Enter teaching hours"
-                                min="0"
-                                value="0"
-                                class="w-full">
-                            </ui-input>
-                        </div>
+                                                       <!-- Term -->
+                               <div>
+                                   <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                   <ui-search-dropdown 
+                                       data-field="term" 
+                                       placeholder="Select term..."
+                                       class="w-full">
+                                       ${this.terms.map(term => `
+                                           <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
+                                       `).join('')}
+                                   </ui-search-dropdown>
+                               </div>
                     </div>
                 </div>
             </ui-dialog>

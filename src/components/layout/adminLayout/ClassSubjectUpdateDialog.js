@@ -15,7 +15,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         this.classSubjectData = null;
         this.classes = [];
         this.subjects = [];
-        this.academicYears = [];
         this.terms = ['full_year', 'first_term', 'second_term', 'third_term'];
         this.loading = false;
     }
@@ -34,7 +33,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         this.render();
         this.loadClasses();
         this.loadSubjects();
-        this.loadAcademicYears();
         this.setupEventListeners();
     }
 
@@ -72,22 +70,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         }
     }
 
-    async loadAcademicYears() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
 
-            const response = await api.withToken(token).get('/classes/academic-years');
-            
-            if (response.status === 200 && response.data.success) {
-                this.academicYears = response.data.data; // Academic years array is in response.data.data
-                // Re-render to update the dropdown with academic years
-                this.render();
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
 
     setupEventListeners() {
         // Listen for dialog events
@@ -102,9 +85,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         setTimeout(() => {
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-            const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
             const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
-            const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
             
             if (classDropdown && classSubject?.class_id) {
                 // Find the class option and set its text as the display value
@@ -124,16 +105,8 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                 }
             }
             
-            if (academicYearDropdown && classSubject?.academic_year) {
-                academicYearDropdown.value = classSubject.academic_year;
-            }
-            
             if (termDropdown && classSubject?.term) {
                 termDropdown.value = classSubject.term || 'full_year';
-            }
-            
-            if (teachingHoursInput && classSubject?.teaching_hours !== undefined) {
-                teachingHoursInput.value = classSubject.teaching_hours || 0;
             }
         }, 200);
     }
@@ -147,16 +120,12 @@ class ClassSubjectUpdateDialog extends HTMLElement {
             // Get form data using the data-field attributes for reliable selection
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-            const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
             const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
-            const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
 
             const classSubjectData = {
                 class_id: classDropdown ? classDropdown.value : '',
                 subject_id: subjectDropdown ? subjectDropdown.value : '',
-                academic_year: academicYearDropdown ? academicYearDropdown.value : '',
-                term: termDropdown ? termDropdown.value : 'full_year',
-                teaching_hours: teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0
+                term: termDropdown ? termDropdown.value : 'full_year'
             };
 
             // Validation
@@ -174,16 +143,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select a subject',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!classSubjectData.academic_year) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please enter academic year',
                     variant: 'error',
                     duration: 3000
                 });
@@ -291,63 +250,32 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                     data-field="subject_id" 
                                     placeholder="Search subjects..."
                                     value="${classSubject?.subject_id || ''}"
-                                    display-value="${classSubject && classSubject.subject_id ? 
-                                        (this.subjects.find(subject => subject.id == classSubject.subject_id)?.name + ' (' + 
-                                        this.subjects.find(subject => subject.id == classSubject.subject_id)?.code + ')') || '' : ''}"
-                                    class="w-full">
-                                    ${this.subjects.map(subject => `
-                                        <ui-option value="${subject.id}" ${classSubject && classSubject.subject_id == subject.id ? 'selected' : ''}>${subject.name} (${subject.code})</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
+                                                                         display-value="${classSubject && classSubject.subject_id ? 
+                                         (this.subjects.find(subject => subject.id == classSubject.subject_id)?.name + ' (' + 
+                                         this.subjects.find(subject => subject.id == classSubject.subject_id)?.code + ')') || '' : ''}"
+                                     class="w-full">
+                                     ${this.subjects.map(subject => `
+                                         <ui-option value="${subject.id}" ${classSubject && classSubject.subject_id == subject.id ? 'selected' : ''}>${subject.name} (${subject.code})</ui-option>
+                                     `).join('')}
+                                 </ui-search-dropdown>
+                             ` : `
+                                 <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                             `}
+                         </div>
 
-                        <!-- Academic Year -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-                            ${this.academicYears.length > 0 ? `
-                                <ui-search-dropdown 
-                                    data-field="academic_year" 
-                                    placeholder="Select academic year..."
-                                    value="${classSubject?.academic_year || ''}"
-                                    class="w-full">
-                                    ${this.academicYears.map(year => `
-                                        <ui-option value="${year}" ${classSubject && classSubject.academic_year == year ? 'selected' : ''}>${year}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-
-                        <!-- Term -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                            <ui-search-dropdown 
-                                data-field="term" 
-                                placeholder="Select term..."
-                                value="${classSubject?.term || 'full_year'}"
-                                class="w-full">
-                                ${this.terms.map(term => `
-                                    <ui-option value="${term}" ${classSubject && classSubject.term == term ? 'selected' : ''}>${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
-                        </div>
-
-                        <!-- Teaching Hours -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Teaching Hours</label>
-                            <ui-input 
-                                type="number" 
-                                data-field="teaching_hours" 
-                                placeholder="Enter teaching hours"
-                                min="0"
-                                value="${classSubject?.teaching_hours || 0}"
-                                class="w-full">
-                            </ui-input>
-                        </div>
+                         <!-- Term -->
+                         <div>
+                             <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                             <ui-search-dropdown 
+                                 data-field="term" 
+                                 placeholder="Select term..."
+                                 value="${classSubject?.term || 'full_year'}"
+                                 class="w-full">
+                                 ${this.terms.map(term => `
+                                     <ui-option value="${term}" ${classSubject && classSubject.term == term ? 'selected' : ''}>${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
+                                 `).join('')}
+                             </ui-search-dropdown>
+                         </div>
                     </div>
                 </div>
             </ui-dialog>

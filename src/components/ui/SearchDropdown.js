@@ -1,8 +1,7 @@
-import '@/components/ui/Toast.js';
-
 /**
- * Search Dropdown Component (V2)
+ * Search Dropdown Component (V4 - Robust)
  * A robust, encapsulated, searchable dropdown using a Shadow DOM to prevent style and event conflicts.
+ * This version correctly handles the web component lifecycle to prevent race conditions.
  */
 class SearchDropdown extends HTMLElement {
     constructor() {
@@ -10,6 +9,7 @@ class SearchDropdown extends HTMLElement {
         this.attachShadow({ mode: 'open' });
 
         // --- State ---
+        this.isInitialized = false;
         this.isOpen = false;
         this.selectedValues = new Set();
         this.searchTerm = '';
@@ -23,62 +23,39 @@ class SearchDropdown extends HTMLElement {
 
     // --- Lifecycle Callbacks ---
     connectedCallback() {
-        // Only render the component's structure once.
-        if (!this.shadowRoot.firstChild) {
-            this.shadowRoot.innerHTML = this.render();
-        }
+        if (this.isInitialized) return;
+
+        this.shadowRoot.innerHTML = this._renderTemplate();
 
         // --- Element References ---
-        // It's best practice to query for elements in connectedCallback.
-        this.container = this.shadowRoot.querySelector('.search-dropdown');
-        this.trigger = this.shadowRoot.querySelector('.search-dropdown__trigger');
-        this.selection = this.shadowRoot.querySelector('.search-dropdown__selection');
-        this.searchInput = this.shadowRoot.querySelector('.search-dropdown__search-input');
-        this.optionsContainer = this.shadowRoot.querySelector('.search-dropdown__options');
+        this.container = this.shadowRoot.querySelector('.UpoSearchDropdown');
+        this.trigger = this.shadowRoot.querySelector('.UpoSearchDropdown__trigger');
+        this.selection = this.shadowRoot.querySelector('.UpoSearchDropdown__selection');
+        this.searchInput = this.shadowRoot.querySelector('.UpoSearchDropdown__searchInput');
+        this.optionsContainer = this.shadowRoot.querySelector('.UpoSearchDropdown__options');
         this.slotEl = this.shadowRoot.querySelector('slot');
 
-        // --- Initial Setup ---
         this._setupEventListeners();
-        this._onSlotChange(); // Manually trigger to process initial options
-        this._updateFromAttributes();
+        this._onSlotChange(); // Process initial options
+        this._updateFromAttributes(); // Sync with initial attributes
+        
+        this.isInitialized = true;
     }
 
-    // Ensure element references are available
-    _ensureElements() {
-        if (!this.selection) {
-            this.selection = this.shadowRoot.querySelector('.search-dropdown__selection');
+    attributeChangedCallback() {
+        // Defer attribute updates until the component is fully initialized.
+        if (this.isInitialized) {
+            this._updateFromAttributes();
         }
-        if (!this.optionsContainer) {
-            this.optionsContainer = this.shadowRoot.querySelector('.search-dropdown__options');
-        }
-        if (!this.searchInput) {
-            this.searchInput = this.shadowRoot.querySelector('.search-dropdown__search-input');
-        }
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue === newValue) return;
-        this._updateFromAttributes();
     }
 
     // --- Event Setup ---
     _setupEventListeners() {
-        this._ensureElements();
+        this.trigger.addEventListener('click', () => this.toggleDropdown());
+        this.searchInput.addEventListener('input', (e) => this._onSearch(e));
+        this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
+        this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
         
-        if (this.trigger) {
-            this.trigger.addEventListener('click', () => this.toggleDropdown());
-        }
-        
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => this._onSearch(e));
-            this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
-        }
-        
-        if (this.slotEl) {
-            this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
-        }
-        
-        // Close dropdown if clicking outside of the component
         document.addEventListener('click', (e) => {
             if (!e.composedPath().includes(this)) {
                 this.closeDropdown();
@@ -94,18 +71,21 @@ class SearchDropdown extends HTMLElement {
 
     _updateValueFromAttribute() {
         const valueAttr = this.getAttribute('value');
-        this.selectedValues.clear();
-        if (valueAttr && valueAttr !== '') {
+        const currentValues = new Set();
+        if (valueAttr) {
             try {
                 const values = this.hasAttribute('multiple') ? JSON.parse(valueAttr) : [valueAttr];
                 if (Array.isArray(values)) {
-                    values.forEach(v => this.selectedValues.add(String(v)));
+                    values.forEach(v => currentValues.add(String(v)));
                 }
-            } catch (e) { 
-                console.error('SearchDropdown: Invalid value attribute format.', e);
-            }
+            } catch (e) { /* Ignore malformed attribute */ }
         }
-        this._renderSelection();
+
+        // Avoid re-rendering if the values haven't actually changed.
+        if (!this._areSetsEqual(this.selectedValues, currentValues)) {
+            this.selectedValues = currentValues;
+            this._renderSelection();
+        }
     }
 
     _updateDisabled() {
@@ -124,10 +104,7 @@ class SearchDropdown extends HTMLElement {
         this.isOpen = true;
         this.container.classList.add('open');
         this._renderOptions();
-        this._ensureElements();
-        if (this.searchInput) {
-            this.searchInput.focus();
-        }
+        this.searchInput.focus();
     }
 
     closeDropdown() {
@@ -140,11 +117,9 @@ class SearchDropdown extends HTMLElement {
     }
 
     _onSearch(e) {
-        this._ensureElements();
         this.searchTerm = e.target.value;
         this.focusedIndex = -1;
         this._renderOptions();
-        this.dispatchEvent(new CustomEvent('search', { detail: { term: this.searchTerm } }));
     }
 
     _onSearchKeydown(e) {
@@ -152,13 +127,11 @@ class SearchDropdown extends HTMLElement {
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                this.focusedIndex = Math.min(this.focusedIndex + 1, options.length - 1);
-                this._renderOptions();
+                this.focusedIndex = (this.focusedIndex + 1) % options.length;
                 break;
             case 'ArrowUp':
                 e.preventDefault();
-                this.focusedIndex = Math.max(this.focusedIndex - 1, 0);
-                this._renderOptions();
+                this.focusedIndex = (this.focusedIndex - 1 + options.length) % options.length;
                 break;
             case 'Enter':
                 e.preventDefault();
@@ -166,10 +139,9 @@ class SearchDropdown extends HTMLElement {
                     this._selectOption(options[this.focusedIndex]);
                 }
                 break;
-            case 'Escape':
-                this.closeDropdown();
-                break;
+            case 'Escape': this.closeDropdown(); break;
         }
+        this._renderOptions();
     }
 
     _onSlotChange() {
@@ -197,23 +169,13 @@ class SearchDropdown extends HTMLElement {
     _dispatchChangeEvent() {
         const value = this.hasAttribute('multiple') 
             ? JSON.stringify(Array.from(this.selectedValues)) 
-            : (this.selectedValues.values().next().value || '');
+            : (this.selectedValues.values().next().value || null);
         
-        this.setAttribute('value', value);
+        if (this.getAttribute('value') !== value) {
+            this.setAttribute('value', value);
+        }
 
-        this.dispatchEvent(new CustomEvent('change', {
-            detail: { value },
-            bubbles: true,
-            composed: true
-        }));
-    }
-
-    get value() {
-        return this.getAttribute('value') || '';
-    }
-
-    set value(val) {
-        this.setAttribute('value', val);
+        this.dispatchEvent(new CustomEvent('change', { detail: { value }, bubbles: true, composed: true }));
     }
 
     // --- Rendering ---
@@ -227,11 +189,8 @@ class SearchDropdown extends HTMLElement {
     }
 
     _renderSelection() {
-        this._ensureElements();
-        if (!this.selection) return;
-
         if (this.selectedValues.size === 0) {
-            this.selection.innerHTML = `<span class="search-dropdown__placeholder">${this.getAttribute('placeholder') || 'Select an option'}</span>`;
+            this.selection.innerHTML = `<span class="UpoSearchDropdown__placeholder">${this.getAttribute('placeholder') || 'Select an option'}</span>`;
             return;
         }
 
@@ -239,13 +198,13 @@ class SearchDropdown extends HTMLElement {
             this.selection.innerHTML = Array.from(this.selectedValues).map(value => {
                 const option = this._options.find(opt => opt.getAttribute('value') === value);
                 return `
-                    <span class="search-dropdown__tag" data-value="${value}">
+                    <span class="UpoSearchDropdown__tag" data-value="${value}">
                         ${option ? option.textContent.trim() : value}
-                        <button class="search-dropdown__tag-remove" aria-label="Remove">×</button>
+                        <button class="UpoSearchDropdown__tagRemove" aria-label="Remove">×</button>
                     </span>
                 `;
             }).join('');
-            this.selection.querySelectorAll('.search-dropdown__tag-remove').forEach(btn => {
+            this.selection.querySelectorAll('.UpoSearchDropdown__tagRemove').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const value = e.currentTarget.parentElement.dataset.value;
@@ -263,12 +222,9 @@ class SearchDropdown extends HTMLElement {
     }
 
     _renderOptions() {
-        this._ensureElements();
-        if (!this.optionsContainer) return;
-
         const options = this._getFilteredOptions();
         if (options.length === 0) {
-            this.optionsContainer.innerHTML = `<div class="search-dropdown__empty">No results found</div>`;
+            this.optionsContainer.innerHTML = `<div class="UpoSearchDropdown__empty">No results found</div>`;
             return;
         }
 
@@ -279,20 +235,20 @@ class SearchDropdown extends HTMLElement {
             const isFocused = this.focusedIndex === index;
             const isDisabled = option.hasAttribute('disabled');
             
-            let classes = 'search-dropdown__option';
+            let classes = 'UpoSearchDropdown__option';
             if (isSelected) classes += ' selected';
             if (isFocused) classes += ' focused';
             if (isDisabled) classes += ' disabled';
 
             return `
                 <div class="${classes}" data-value="${value}" role="option" aria-selected="${isSelected}">
-                    ${this.hasAttribute('multiple') ? `<div class="search-dropdown__option-checkbox">${isSelected ? '✓' : ''}</div>` : ''}
-                    <span class="search-dropdown__option-text">${text}</span>
+                    ${this.hasAttribute('multiple') ? `<div class="UpoSearchDropdown__optionCheckbox">${isSelected ? '✓' : ''}</div>` : ''}
+                    <span class="UpoSearchDropdown__optionText">${text}</span>
                 </div>
             `;
         }).join('');
 
-        this.optionsContainer.querySelectorAll('.search-dropdown__option').forEach(el => {
+        this.optionsContainer.querySelectorAll('.UpoSearchDropdown__option').forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const option = this._options.find(o => o.getAttribute('value') === el.dataset.value);
@@ -301,50 +257,59 @@ class SearchDropdown extends HTMLElement {
         });
     }
 
-    render() {
+    // --- Template & Styles ---
+    _renderTemplate() {
         return `
             <style>
-                /* The component uses standard, self-contained CSS. It does not use Tailwind or any external framework. */
                 :host { display: inline-block; width: 100%; position: relative; font-family: sans-serif; }
-                .search-dropdown { position: relative; }
-                .search-dropdown__trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; cursor: pointer; min-height: 38px; box-sizing: border-box; }
-                .search-dropdown__trigger.disabled { background-color: #f5f5f5; color: #999; cursor: not-allowed; }
-                .search-dropdown__selection { flex: 1; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 20px; }
-                .search-dropdown__placeholder { color: #999; }
-                .search-dropdown__tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background-color: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; }
-                .search-dropdown__tag-remove { cursor: pointer; background: none; border: none; font-size: 16px; color: #6b7280; padding: 0; line-height: 1; }
-                .search-dropdown__arrow { display: flex; align-items: center; color: #6b7280; transition: transform 0.2s; }
-                .search-dropdown.open .search-dropdown__arrow { transform: rotate(180deg); }
-                .search-dropdown__menu { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 1000; }
-                .search-dropdown.open .search-dropdown__menu { display: block; }
-                .search-dropdown__search-container { padding: 8px; border-bottom: 1px solid #eee; }
-                .search-dropdown__search-input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
-                .search-dropdown__options { max-height: 192px; overflow-y: auto; }
-                .search-dropdown__option { padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-                .search-dropdown__option:hover { background-color: #f0f0f0; }
-                .search-dropdown__option.focused { background-color: #e6f7ff; }
-                .search-dropdown__option.selected { background-color: #dbeafe; color: #1e40af; }
-                .search-dropdown__option.disabled { color: #aaa; cursor: not-allowed; }
-                .search-dropdown__option-checkbox { width: 16px; height: 16px; border: 1px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-                .search-dropdown__option.selected .search-dropdown__option-checkbox { background-color: #3b82f6; border-color: #3b82f6; color: white; }
-                .search-dropdown__empty { padding: 8px 12px; color: #666; text-align: center; }
+                .UpoSearchDropdown { position: relative; }
+                .UpoSearchDropdown__trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; cursor: pointer; min-height: 38px; box-sizing: border-box; }
+                .UpoSearchDropdown__trigger.disabled { background-color: #f5f5f5; color: #999; cursor: not-allowed; }
+                .UpoSearchDropdown__selection { flex: 1; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 20px; }
+                .UpoSearchDropdown__placeholder { color: #999; }
+                .UpoSearchDropdown__tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background-color: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; }
+                .UpoSearchDropdown__tagRemove { cursor: pointer; background: none; border: none; font-size: 16px; color: #6b7280; padding: 0; line-height: 1; }
+                .UpoSearchDropdown__arrow { display: flex; align-items: center; color: #6b7280; transition: transform 0.2s; }
+                .UpoSearchDropdown.open .UpoSearchDropdown__arrow { transform: rotate(180deg); }
+                .UpoSearchDropdown__menu { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 1000; }
+                .UpoSearchDropdown.open .UpoSearchDropdown__menu { display: block; }
+                .UpoSearchDropdown__searchContainer { padding: 8px; border-bottom: 1px solid #eee; }
+                .UpoSearchDropdown__searchInput { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+                .UpoSearchDropdown__options { max-height: 192px; overflow-y: auto; }
+                .UpoSearchDropdown__option { padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+                .UpoSearchDropdown__option:hover { background-color: #f0f0f0; }
+                .UpoSearchDropdown__option.focused { background-color: #e6f7ff; }
+                .UpoSearchDropdown__option.selected { background-color: #dbeafe; color: #1e40af; }
+                .UpoSearchDropdown__option.disabled { color: #aaa; cursor: not-allowed; }
+                .UpoSearchDropdown__optionCheckbox { width: 16px; height: 16px; border: 1px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+                .UpoSearchDropdown__option.selected .UpoSearchDropdown__optionCheckbox { background-color: #3b82f6; border-color: #3b82f6; color: white; }
+                .UpoSearchDropdown__empty { padding: 8px 12px; color: #666; text-align: center; }
             </style>
-            <div class="search-dropdown">
-                <div class="search-dropdown__trigger">
-                    <div class="search-dropdown__selection"></div>
-                    <div class="search-dropdown__arrow">
+            <div class="UpoSearchDropdown">
+                <div class="UpoSearchDropdown__trigger">
+                    <div class="UpoSearchDropdown__selection"></div>
+                    <div class="UpoSearchDropdown__arrow">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                     </div>
                 </div>
-                <div class="search-dropdown__menu">
-                    <div class="search-dropdown__search-container">
-                        <input type="text" class="search-dropdown__search-input" placeholder="Search...">
+                <div class="UpoSearchDropdown__menu">
+                    <div class="UpoSearchDropdown__searchContainer">
+                        <input type="text" class="UpoSearchDropdown__searchInput" placeholder="Search...">
                     </div>
-                    <div class="search-dropdown__options"></div>
+                    <div class="UpoSearchDropdown__options"></div>
                 </div>
             </div>
             <slot style="display: none;"></slot>
         `;
+    }
+
+    // --- Utility ---
+    _areSetsEqual(set1, set2) {
+        if (set1.size !== set2.size) return false;
+        for (const item of set1) {
+            if (!set2.has(item)) return false;
+        }
+        return true;
     }
 }
 

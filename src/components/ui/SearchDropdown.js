@@ -34,7 +34,12 @@ class SearchDropdown extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadOptions();
+        // Load options after a short delay to ensure slot content is available
+        setTimeout(() => {
+            this.loadOptions();
+            this.updateSelectedItems();
+            this.render();
+        }, 0);
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -45,7 +50,8 @@ class SearchDropdown extends HTMLElement {
 
     setupEventListeners() {
         this.shadowRoot.addEventListener('click', (e) => {
-            if (e.target.closest('.search-dropdown')) {
+            // Handle dropdown trigger click
+            if (e.target.closest('.dropdown-trigger')) {
                 this.toggleDropdown();
             }
             
@@ -109,7 +115,7 @@ class SearchDropdown extends HTMLElement {
             const assignedElements = slot.assignedElements();
             this.options = assignedElements.map(el => ({
                 value: el.value,
-                text: el.textContent,
+                text: el.textContent.trim(),
                 selected: el.hasAttribute('selected')
             }));
             this.filteredOptions = [...this.options];
@@ -187,6 +193,9 @@ class SearchDropdown extends HTMLElement {
         } else {
             this.selectedItems = this.options.filter(option => option.value === value);
         }
+        
+        // Re-render to update the display
+        this.render();
     }
 
     dispatchChangeEvent() {

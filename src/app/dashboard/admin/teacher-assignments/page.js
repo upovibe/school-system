@@ -5,6 +5,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Tabs.js';
+import '@/components/layout/adminLayout/TeacherAssignmentAddDialog.js';
 import api from '@/services/api.js';
 
 /**

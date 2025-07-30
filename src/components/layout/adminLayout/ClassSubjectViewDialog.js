@@ -4,12 +4,22 @@ import '@/components/ui/Badge.js';
 /**
  * Class Subject View Dialog Component
  * 
- * Dialog for viewing class subject assignment details
+ * A dialog component for viewing class subject assignment details in the admin panel
+ * 
+ * Attributes:
+ * - open: boolean - controls dialog visibility
+ * 
+ * Events:
+ * - dialog-closed: Fired when dialog is closed
  */
 class ClassSubjectViewDialog extends HTMLElement {
     constructor() {
         super();
         this.classSubjectData = null;
+    }
+
+    static get observedAttributes() {
+        return ['open'];
     }
 
     connectedCallback() {
@@ -18,141 +28,147 @@ class ClassSubjectViewDialog extends HTMLElement {
     }
 
     setupEventListeners() {
-        // No additional event listeners needed for view dialog
+        // Listen for cancel button click (Close dialog)
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
     }
 
-    setClassSubjectData(classSubject) {
-        this.classSubjectData = classSubject;
-        this.render();
-    }
-
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString();
+    open() {
+        this.setAttribute('open', '');
     }
 
     close() {
         this.removeAttribute('open');
     }
 
-    render() {
-        const classSubject = this.classSubjectData;
-        
-        if (!classSubject) {
-            this.innerHTML = `
-                <ui-dialog 
-                    ${this.hasAttribute('open') ? 'open' : ''} 
-                    title="Class Subject Assignment Details">
-                    <div slot="content">
-                        <p class="text-gray-500">No data to display</p>
-                    </div>
-                </ui-dialog>
-            `;
-            return;
-        }
+    // Set class subject data for viewing
+    setClassSubjectData(classSubject) {
+        this.classSubjectData = classSubject;
+        this.render();
+    }
 
+    // Format date for display
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return dateString;
+        }
+    }
+
+    render() {
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Class Subject Assignment Details">
+                title="View Class Subject Assignment">
                 <div slot="content">
-                    <div class="space-y-6">
-                        <!-- Assignment Information -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                Assignment Information
+                    ${this.classSubjectData ? `
+                        <!-- Assignment Header -->
+                        <div class="flex items-center gap-3 border-b pb-4 mb-4">
+                            <h3 class="text-xl font-semibold text-gray-900">
+                                ${this.classSubjectData.class_name || 'N/A'} - ${this.classSubjectData.class_section || 'N/A'}
                             </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Assignment ID</label>
-                                    <p class="text-gray-900">${classSubject.id}</p>
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Academic Year</label>
-                                    <p class="text-gray-900">${classSubject.academic_year || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Term</label>
-                                    <p class="text-gray-900">${classSubject.term ? classSubject.term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Teaching Hours</label>
-                                    <p class="text-gray-900">${classSubject.teaching_hours || 0} hours</p>
-                                </div>
-                            </div>
+                            <ui-badge color="info">
+                                <i class="fas fa-link mr-1"></i>
+                                Assignment
+                            </ui-badge>
                         </div>
 
+
+
                         <!-- Class Information -->
-                        <div class="bg-blue-50 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
-                                Class Information
-                            </h3>
+                        <div class="border-b pb-4 mb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-chalkboard text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Class Information</h4>
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Class Name</label>
-                                    <p class="text-gray-900">${classSubject.class_name || 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-chalkboard mr-1"></i>Class Name
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.classSubjectData.class_name || 'N/A'}</p>
                                 </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Section</label>
-                                    <p class="text-gray-900">${classSubject.class_section || 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-layer-group mr-1"></i>Section
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.classSubjectData.class_section || 'N/A'}</p>
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-medium text-gray-600">Full Class</label>
-                                    <p class="text-gray-900">${classSubject.class_name && classSubject.class_section ? `${classSubject.class_name} - ${classSubject.class_section}` : 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-link mr-1"></i>Full Class
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.classSubjectData.class_name && this.classSubjectData.class_section ? 
+                                        `${this.classSubjectData.class_name} - ${this.classSubjectData.class_section}` : 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Subject Information -->
-                        <div class="bg-green-50 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 5.477 19.246 5 17.5 5c-1.746 0-3.332.477-4.5 1.253"></path>
-                                </svg>
-                                Subject Information
-                            </h3>
+                        <div class="border-b pb-4 mb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-book text-green-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Subject Information</h4>
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Subject Name</label>
-                                    <p class="text-gray-900">${classSubject.subject_name || 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-book mr-1"></i>Subject Name
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.classSubjectData.subject_name || 'N/A'}</p>
                                 </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Subject Code</label>
-                                    <p class="text-gray-900">${classSubject.subject_code || 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-code mr-1"></i>Subject Code
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.classSubjectData.subject_code || 'N/A'}</p>
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-medium text-gray-600">Full Subject</label>
-                                    <p class="text-gray-900">${classSubject.subject_name && classSubject.subject_code ? `${classSubject.subject_name} (${classSubject.subject_code})` : 'N/A'}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-link mr-1"></i>Full Subject
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.classSubjectData.subject_name && this.classSubjectData.subject_code ? 
+                                        `${this.classSubjectData.subject_name} (${this.classSubjectData.subject_code})` : 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Timestamps -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Timestamps
-                            </h3>
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-clock text-orange-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Created At</label>
-                                    <p class="text-gray-900">${this.formatDate(classSubject.created_at)}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-plus mr-1"></i>Created
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.classSubjectData.created_at)}</span>
                                 </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Updated At</label>
-                                    <p class="text-gray-900">${this.formatDate(classSubject.updated_at)}</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-edit mr-1"></i>Updated
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.classSubjectData.updated_at)}</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    ` : `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">No class subject data available</p>
+                        </div>
+                    `}
                 </div>
             </ui-dialog>
         `;

@@ -31,7 +31,6 @@ class Migration_20241001000035createstudentstable {
                 medical_conditions TEXT,
                 password VARCHAR(255) NOT NULL,
                 status ENUM('active', 'inactive', 'graduated', 'transferred') DEFAULT 'active',
-                profile_image VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,

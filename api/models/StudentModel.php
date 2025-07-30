@@ -27,8 +27,7 @@ class StudentModel extends BaseModel {
         'blood_group',
         'medical_conditions',
         'password',
-        'status',
-        'profile_image'
+        'status'
     ];
     
     // Fields that should be cast to specific types

@@ -43,6 +43,19 @@ class SearchDropdown extends HTMLElement {
         this._updateFromAttributes();
     }
 
+    // Ensure element references are available
+    _ensureElements() {
+        if (!this.selection) {
+            this.selection = this.shadowRoot.querySelector('.search-dropdown__selection');
+        }
+        if (!this.optionsContainer) {
+            this.optionsContainer = this.shadowRoot.querySelector('.search-dropdown__options');
+        }
+        if (!this.searchInput) {
+            this.searchInput = this.shadowRoot.querySelector('.search-dropdown__search-input');
+        }
+    }
+
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue === newValue) return;
         this._updateFromAttributes();
@@ -50,10 +63,20 @@ class SearchDropdown extends HTMLElement {
 
     // --- Event Setup ---
     _setupEventListeners() {
-        this.trigger.addEventListener('click', () => this.toggleDropdown());
-        this.searchInput.addEventListener('input', (e) => this._onSearch(e));
-        this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
-        this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
+        this._ensureElements();
+        
+        if (this.trigger) {
+            this.trigger.addEventListener('click', () => this.toggleDropdown());
+        }
+        
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => this._onSearch(e));
+            this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
+        }
+        
+        if (this.slotEl) {
+            this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
+        }
         
         // Close dropdown if clicking outside of the component
         document.addEventListener('click', (e) => {
@@ -101,7 +124,10 @@ class SearchDropdown extends HTMLElement {
         this.isOpen = true;
         this.container.classList.add('open');
         this._renderOptions();
-        this.searchInput.focus();
+        this._ensureElements();
+        if (this.searchInput) {
+            this.searchInput.focus();
+        }
     }
 
     closeDropdown() {
@@ -114,6 +140,7 @@ class SearchDropdown extends HTMLElement {
     }
 
     _onSearch(e) {
+        this._ensureElements();
         this.searchTerm = e.target.value;
         this.focusedIndex = -1;
         this._renderOptions();
@@ -200,6 +227,9 @@ class SearchDropdown extends HTMLElement {
     }
 
     _renderSelection() {
+        this._ensureElements();
+        if (!this.selection) return;
+
         if (this.selectedValues.size === 0) {
             this.selection.innerHTML = `<span class="search-dropdown__placeholder">${this.getAttribute('placeholder') || 'Select an option'}</span>`;
             return;
@@ -233,6 +263,9 @@ class SearchDropdown extends HTMLElement {
     }
 
     _renderOptions() {
+        this._ensureElements();
+        if (!this.optionsContainer) return;
+
         const options = this._getFilteredOptions();
         if (options.length === 0) {
             this.optionsContainer.innerHTML = `<div class="search-dropdown__empty">No results found</div>`;

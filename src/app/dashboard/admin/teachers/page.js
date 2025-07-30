@@ -4,9 +4,9 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
-import '@/components/layout/adminLayout/TeacherAddModal.js';
-import '@/components/layout/adminLayout/TeacherUpdateModal.js';
-import '@/components/layout/adminLayout/TeacherViewModal.js';
+import '@/components/layout/adminLayout/TeacherAddDialog.js';
+import '@/components/layout/adminLayout/TeacherUpdateDialog.js';
+import '@/components/layout/adminLayout/TeacherViewDialog.js';
 import '@/components/layout/adminLayout/TeacherDeleteDialog.js';
 import api from '@/services/api.js';
 
@@ -109,7 +109,6 @@ class TeacherManagementPage extends App {
             this.set('loading', false);
             
         } catch (error) {
-            console.error('❌ Error loading data:', error);
             this.set('loading', false);
             
             Toast.show({
@@ -129,9 +128,9 @@ class TeacherManagementPage extends App {
             this.set('viewTeacherData', viewTeacher);
             this.set('showViewModal', true);
             setTimeout(() => {
-                const viewModal = this.querySelector('teacher-view-modal');
-                if (viewModal) {
-                    viewModal.setTeacherData(viewTeacher);
+                const viewDialog = this.querySelector('teacher-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setTeacherData(viewTeacher);
                 }
             }, 0);
         }
@@ -146,7 +145,7 @@ class TeacherManagementPage extends App {
             this.set('updateTeacherData', editTeacher);
             this.set('showUpdateModal', true);
             setTimeout(() => {
-                const updateModal = this.querySelector('teacher-update-modal');
+                const updateModal = this.querySelector('teacher-update-dialog');
                 if (updateModal) {
                     updateModal.setTeacherData(editTeacher);
                 }
@@ -284,14 +283,14 @@ class TeacherManagementPage extends App {
                 `}
             </div>
             
-            <!-- Add Teacher Modal -->
-            <teacher-add-modal ${showAddModal ? 'open' : ''}></teacher-add-modal>
+            <!-- Add Teacher Dialog -->
+            <teacher-add-dialog ${showAddModal ? 'open' : ''}></teacher-add-dialog>
             
-            <!-- Update Teacher Modal -->
-            <teacher-update-modal ${showUpdateModal ? 'open' : ''}></teacher-update-modal>
+            <!-- Update Teacher Dialog -->
+            <teacher-update-dialog ${showUpdateModal ? 'open' : ''}></teacher-update-dialog>
             
-            <!-- View Teacher Modal -->
-            <teacher-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></teacher-view-modal>
+            <!-- View Teacher Dialog -->
+            <teacher-view-dialog id="view-modal" ${showViewModal ? 'open' : ''}></teacher-view-dialog>
             
             <!-- Delete Teacher Dialog -->
             <teacher-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-delete-dialog>

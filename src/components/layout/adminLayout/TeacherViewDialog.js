@@ -1,4 +1,4 @@
-import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
 
@@ -13,7 +13,7 @@ import '@/components/ui/Badge.js';
  * Events:
  * - modal-closed: Fired when modal is closed
  */
-class TeacherViewModal extends HTMLElement {
+class TeacherViewDialog extends HTMLElement {
     constructor() {
         super();
         this.teacherData = null;
@@ -73,12 +73,10 @@ class TeacherViewModal extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <ui-modal 
+            <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="right" 
-                size="lg"
-                close-button="true">
-                <div slot="title">View Teacher Details</div>
+                title="View Teacher Details">
+                <div slot="content">
                 
                 <div>
                     ${this.teacherData ? `
@@ -170,10 +168,11 @@ class TeacherViewModal extends HTMLElement {
                         </div>
                     `}
                 </div>
-            </ui-modal>
+                </div>
+            </ui-dialog>
         `;
     }
 }
 
-customElements.define('teacher-view-modal', TeacherViewModal);
-export default TeacherViewModal; 
+customElements.define('teacher-view-dialog', TeacherViewDialog);
+export default TeacherViewDialog; 

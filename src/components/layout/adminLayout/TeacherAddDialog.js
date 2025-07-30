@@ -1,4 +1,4 @@
-import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/ui/Switch.js';
@@ -17,7 +17,7 @@ import api from '@/services/api.js';
  * - teacher-saved: Fired when a teacher is successfully created
  * - modal-closed: Fired when modal is closed
  */
-class TeacherAddModal extends HTMLElement {
+class TeacherAddDialog extends HTMLElement {
     constructor() {
         super();
         this.users = [];
@@ -57,51 +57,35 @@ class TeacherAddModal extends HTMLElement {
     async loadUsers() {
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('No token found for loading users');
-                return;
-            }
+            if (!token) return;
 
-            console.log('Loading users...');
             const response = await api.withToken(token).get('/users');
-            console.log('Users API response:', response);
             
             if (response.status === 200) {
                 // Show all users, not just teachers, so they can be assigned as teachers
                 this.users = response.data; // The users array is directly in response.data
-                console.log('Loaded users:', this.users);
                 // Re-render to update the dropdown with users
                 this.render();
-            } else {
-                console.error('Failed to load users:', response);
             }
         } catch (error) {
-            console.error('Error loading users:', error);
+            // Silent error handling
         }
     }
 
     async loadTeams() {
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('No token found for loading teams');
-                return;
-            }
+            if (!token) return;
 
-            console.log('Loading teams...');
             const response = await api.withToken(token).get('/teams');
-            console.log('Teams API response:', response);
             
             if (response.status === 200 && response.data.success) {
                 this.teams = response.data.data; // Teams array is in response.data.data
-                console.log('Loaded teams:', this.teams);
                 // Re-render to update the dropdown with teams
                 this.render();
-            } else {
-                console.error('Failed to load teams:', response);
             }
         } catch (error) {
-            console.error('Error loading teams:', error);
+            // Silent error handling
         }
     }
 
@@ -143,8 +127,6 @@ class TeacherAddModal extends HTMLElement {
                 salary: salaryInput ? parseFloat(salaryInput.value) || 0 : 0,
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
-
-            console.log('Teacher data being sent:', teacherData); // Debug log
 
             // Validate required fields
             if (!teacherData.team_id) {
@@ -261,8 +243,6 @@ class TeacherAddModal extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error saving teacher:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create teacher',
@@ -276,101 +256,101 @@ class TeacherAddModal extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <ui-modal 
+            <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="right" 
-                close-button="true">
-                <div slot="title">Add New Teacher</div>
-                <form id="teacher-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                        <ui-dropdown 
-                            name="team_id" 
-                            placeholder="Select a team"
-                            class="w-full">
-                            ${this.teams.map(team => `
-                                <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
-                            `).join('')}
-                        </ui-dropdown>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                        <ui-dropdown 
-                            name="user_id" 
-                            placeholder="Select a user"
-                            class="w-full">
-                            ${this.users.map(user => `
-                                <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
-                            `).join('')}
-                        </ui-dropdown>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                        <ui-input 
-                            data-field="employee_id"
-                            type="text" 
-                            placeholder="Enter employee ID"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
-                        <ui-input 
-                            data-field="qualification"
-                            type="text" 
-                            placeholder="e.g., B.Ed, M.Ed, PhD"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                        <ui-input 
-                            data-field="specialization"
-                            type="text" 
-                            placeholder="e.g., Mathematics, Science, English"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                        <ui-input 
-                            data-field="hire_date"
-                            type="date" 
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
-                        <ui-input 
-                            data-field="salary"
-                            type="number" 
-                            placeholder="Enter salary amount"
-                            step="0.01"
-                            min="0"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <ui-switch 
-                            name="status"
-                            checked
-                            class="w-full">
-                            <span slot="label">Active</span>
-                        </ui-switch>
-                    </div>
-                </form>
-            </ui-modal>
+                title="Add New Teacher">
+                <div slot="content">
+                    <form id="teacher-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
+                            <ui-dropdown 
+                                name="team_id" 
+                                placeholder="Select a team"
+                                class="w-full">
+                                ${this.teams.map(team => `
+                                    <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
+                                `).join('')}
+                            </ui-dropdown>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
+                            <ui-dropdown 
+                                name="user_id" 
+                                placeholder="Select a user"
+                                class="w-full">
+                                ${this.users.map(user => `
+                                    <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
+                                `).join('')}
+                            </ui-dropdown>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                            <ui-input 
+                                data-field="employee_id"
+                                type="text" 
+                                placeholder="Enter employee ID"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
+                            <ui-input 
+                                data-field="qualification"
+                                type="text" 
+                                placeholder="e.g., B.Ed, M.Ed, PhD"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                            <ui-input 
+                                data-field="specialization"
+                                type="text" 
+                                placeholder="e.g., Mathematics, Science, English"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
+                            <ui-input 
+                                data-field="hire_date"
+                                type="date" 
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
+                            <ui-input 
+                                data-field="salary"
+                                type="number" 
+                                placeholder="Enter salary amount"
+                                step="0.01"
+                                min="0"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <ui-switch 
+                                name="status"
+                                checked
+                                class="w-full">
+                                <span slot="label">Active</span>
+                            </ui-switch>
+                        </div>
+                    </form>
+                </div>
+            </ui-dialog>
         `;
     }
 }
 
-customElements.define('teacher-add-modal', TeacherAddModal);
-export default TeacherAddModal; 
+customElements.define('teacher-add-dialog', TeacherAddDialog);
+export default TeacherAddDialog; 

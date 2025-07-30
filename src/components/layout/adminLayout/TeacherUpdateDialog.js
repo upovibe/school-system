@@ -5,7 +5,7 @@ import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
-class TeacherUpdateModal extends HTMLElement {
+class TeacherUpdateDialog extends HTMLElement {
     constructor() {
         super();
         this.teacherData = null;
@@ -45,7 +45,7 @@ class TeacherUpdateModal extends HTMLElement {
                 this.render();
             }
         } catch (error) {
-            console.error('Error loading users:', error);
+            // Silent error handling
         }
     }
 
@@ -59,7 +59,7 @@ class TeacherUpdateModal extends HTMLElement {
                 this.render();
             }
         } catch (error) {
-            console.error('Error loading teams:', error);
+            // Silent error handling
         }
     }
 
@@ -133,7 +133,6 @@ class TeacherUpdateModal extends HTMLElement {
                 throw new Error(response.data.message || 'Failed to update teacher');
             }
         } catch (error) {
-            console.error('❌ Error updating teacher:', error);
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Update failed', variant: 'error' });
         }
     }
@@ -143,103 +142,104 @@ class TeacherUpdateModal extends HTMLElement {
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                close-button="true">
-                <div slot="title">Update Teacher</div>
-                <form id="teacher-update-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                        <ui-dropdown 
-                            name="team_id" 
-                            placeholder="Select a team"
-                            class="w-full">
-                            ${this.teams.map(team => `
-                                <ui-option value="${team.id}" ${teacher && teacher.team_id == team.id ? 'selected' : ''}>${team.name} - ${team.position}</ui-option>
-                            `).join('')}
-                        </ui-dropdown>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                        <ui-dropdown 
-                            name="user_id" 
-                            placeholder="Select a user"
-                            class="w-full">
-                            ${this.users.map(user => `
-                                <ui-option value="${user.id}" ${teacher && teacher.user_id == user.id ? 'selected' : ''}>${user.name} (${user.email})</ui-option>
-                            `).join('')}
-                        </ui-dropdown>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                        <ui-input 
-                            data-field="employee_id"
-                            type="text" 
-                            placeholder="Enter employee ID"
-                            value="${teacher?.employee_id || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
-                        <ui-input 
-                            data-field="qualification"
-                            type="text" 
-                            placeholder="e.g., B.Ed, M.Ed, PhD"
-                            value="${teacher?.qualification || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                        <ui-input 
-                            data-field="specialization"
-                            type="text" 
-                            placeholder="e.g., Mathematics, Science, English"
-                            value="${teacher?.specialization || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                        <ui-input 
-                            data-field="hire_date"
-                            type="date"
-                            value="${teacher?.hire_date || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
-                        <ui-input 
-                            data-field="salary"
-                            type="number" 
-                            placeholder="Enter salary amount"
-                            step="0.01"
-                            min="0"
-                            value="${teacher?.salary || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <ui-switch 
-                            name="status"
-                            ${teacher?.status === 'active' ? 'checked' : ''}
-                            class="w-full">
-                            <span slot="label">Active</span>
-                        </ui-switch>
-                    </div>
-                </form>
+                title="Update Teacher">
+                <div slot="content">
+                    <form id="teacher-update-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
+                            <ui-dropdown 
+                                name="team_id" 
+                                placeholder="Select a team"
+                                class="w-full">
+                                ${this.teams.map(team => `
+                                    <ui-option value="${team.id}" ${teacher && teacher.team_id == team.id ? 'selected' : ''}>${team.name} - ${team.position}</ui-option>
+                                `).join('')}
+                            </ui-dropdown>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
+                            <ui-dropdown 
+                                name="user_id" 
+                                placeholder="Select a user"
+                                class="w-full">
+                                ${this.users.map(user => `
+                                    <ui-option value="${user.id}" ${teacher && teacher.user_id == user.id ? 'selected' : ''}>${user.name} (${user.email})</ui-option>
+                                `).join('')}
+                            </ui-dropdown>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                            <ui-input 
+                                data-field="employee_id"
+                                type="text" 
+                                placeholder="Enter employee ID"
+                                value="${teacher?.employee_id || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
+                            <ui-input 
+                                data-field="qualification"
+                                type="text" 
+                                placeholder="e.g., B.Ed, M.Ed, PhD"
+                                value="${teacher?.qualification || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                            <ui-input 
+                                data-field="specialization"
+                                type="text" 
+                                placeholder="e.g., Mathematics, Science, English"
+                                value="${teacher?.specialization || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
+                            <ui-input 
+                                data-field="hire_date"
+                                type="date"
+                                value="${teacher?.hire_date || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
+                            <ui-input 
+                                data-field="salary"
+                                type="number" 
+                                placeholder="Enter salary amount"
+                                step="0.01"
+                                min="0"
+                                value="${teacher?.salary || ''}"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <ui-switch 
+                                name="status"
+                                ${teacher?.status === 'active' ? 'checked' : ''}
+                                class="w-full">
+                                <span slot="label">Active</span>
+                            </ui-switch>
+                        </div>
+                    </form>
+                </div>
             </ui-dialog>
         `;
     }
 }
 
-customElements.define('teacher-update-modal', TeacherUpdateModal);
-export default TeacherUpdateModal;
+customElements.define('teacher-update-dialog', TeacherUpdateDialog);
+export default TeacherUpdateDialog;

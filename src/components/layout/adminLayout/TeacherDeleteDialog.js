@@ -110,8 +110,6 @@ class TeacherDeleteDialog extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error deleting teacher:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to delete teacher',

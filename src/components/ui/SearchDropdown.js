@@ -72,7 +72,7 @@ class SearchDropdown extends HTMLElement {
     _updateValueFromAttribute() {
         const valueAttr = this.getAttribute('value');
         this.selectedValues.clear();
-        if (valueAttr) {
+        if (valueAttr && valueAttr !== '') {
             try {
                 const values = this.hasAttribute('multiple') ? JSON.parse(valueAttr) : [valueAttr];
                 if (Array.isArray(values)) {
@@ -170,17 +170,23 @@ class SearchDropdown extends HTMLElement {
     _dispatchChangeEvent() {
         const value = this.hasAttribute('multiple') 
             ? JSON.stringify(Array.from(this.selectedValues)) 
-            : (this.selectedValues.values().next().value || null);
+            : (this.selectedValues.values().next().value || '');
         
-        if (this.getAttribute('value') !== value) {
-            this.setAttribute('value', value);
-        }
+        this.setAttribute('value', value);
 
         this.dispatchEvent(new CustomEvent('change', {
             detail: { value },
             bubbles: true,
             composed: true
         }));
+    }
+
+    get value() {
+        return this.getAttribute('value') || '';
+    }
+
+    set value(val) {
+        this.setAttribute('value', val);
     }
 
     // --- Rendering ---

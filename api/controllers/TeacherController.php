@@ -56,24 +56,6 @@ class TeacherController {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // Validate required fields
-            if (empty($data['team_id'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Team ID is required'
-                ]);
-                return;
-            }
-
-            if (empty($data['user_id'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'User ID is required'
-                ]);
-                return;
-            }
-
             if (empty($data['employee_id'])) {
                 http_response_code(400);
                 echo json_encode([
@@ -83,35 +65,67 @@ class TeacherController {
                 return;
             }
 
-            // Check if user exists
-            $user = $this->userModel->findById($data['user_id']);
-            if (!$user) {
+            if (empty($data['first_name'])) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'First name is required'
                 ]);
                 return;
             }
 
-            // Check if teacher already exists for this user
-            $existingTeacher = $this->teacherModel->findByUserId($data['user_id']);
-            if ($existingTeacher) {
+            if (empty($data['last_name'])) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Teacher already exists for this user'
+                    'message' => 'Last name is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['email'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['password'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Password is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['hire_date'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Hire date is required'
                 ]);
                 return;
             }
 
             // Check if employee ID already exists
-            $existingTeacherByEmployeeId = $this->teacherModel->findByEmployeeId($data['employee_id']);
-            if ($existingTeacherByEmployeeId) {
+            if ($this->teacherModel->employeeIdExists($data['employee_id'])) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
                     'message' => 'Employee ID already exists'
+                ]);
+                return;
+            }
+
+            // Check if email already exists
+            if ($this->teacherModel->emailExists($data['email'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email already exists'
                 ]);
                 return;
             }
@@ -121,12 +135,8 @@ class TeacherController {
                 $data['status'] = 'active';
             }
 
-            if (!isset($data['hire_date'])) {
-                $data['hire_date'] = date('Y-m-d');
-            }
-
-            // Create teacher
-            $teacherId = $this->teacherModel->create($data);
+            // Create teacher with user account
+            $result = $this->teacherModel->createTeacherWithUser($data);
             
             // Log teacher creation
             $this->logAction('teacher_created', 'New teacher created', $data);
@@ -134,7 +144,7 @@ class TeacherController {
             http_response_code(201);
             echo json_encode([
                 'success' => true,
-                'data' => ['id' => $teacherId],
+                'data' => $result,
                 'message' => 'Teacher created successfully'
             ]);
         } catch (Exception $e) {
@@ -208,15 +218,6 @@ class TeacherController {
             }
 
             // Validate required fields
-            if (empty($data['team_id'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Team ID is required'
-                ]);
-                return;
-            }
-
             if (empty($data['employee_id'])) {
                 http_response_code(400);
                 echo json_encode([
@@ -226,9 +227,44 @@ class TeacherController {
                 return;
             }
 
+            if (empty($data['first_name'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'First name is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['last_name'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Last name is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['email'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['hire_date'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Hire date is required'
+                ]);
+                return;
+            }
+
             // Check if employee ID already exists for different teacher
-            $existingTeacherByEmployeeId = $this->teacherModel->findByEmployeeId($data['employee_id']);
-            if ($existingTeacherByEmployeeId && $existingTeacherByEmployeeId['id'] != $id) {
+            if ($this->teacherModel->employeeIdExists($data['employee_id'], $id)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -237,8 +273,18 @@ class TeacherController {
                 return;
             }
 
-            // Update teacher
-            $this->teacherModel->update($id, $data);
+            // Check if email already exists for different teacher
+            if ($this->teacherModel->emailExists($data['email'], $id)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email already exists'
+                ]);
+                return;
+            }
+
+            // Update teacher with user account
+            $this->teacherModel->updateTeacherWithUser($id, $data);
             
             // Log teacher update
             $this->logAction('teacher_updated', 'Teacher updated', $data);

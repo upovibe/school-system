@@ -9,18 +9,30 @@ class TeacherModel extends BaseModel {
     // Fields that can be mass assigned
     protected static $fillable = [
         'user_id',
+        'team_id',
         'employee_id',
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'address',
+        'date_of_birth',
+        'gender',
         'qualification',
         'specialization',
         'hire_date',
         'salary',
+        'password',
         'status'
     ];
     
     // Fields that should be cast to specific types
     protected static $casts = [
-        'salary' => 'float',
+        'user_id' => 'integer',
+        'team_id' => 'integer',
+        'date_of_birth' => 'date',
         'hire_date' => 'date',
+        'salary' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -248,6 +260,215 @@ class TeacherModel extends BaseModel {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception('Error fetching teacher statistics: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if employee_id already exists
+     */
+    public function employeeIdExists($employeeId, $excludeId = null) {
+        try {
+            $sql = "SELECT COUNT(*) FROM {$this->getTableName()} WHERE employee_id = ?";
+            $params = [$employeeId];
+            
+            if ($excludeId) {
+                $sql .= " AND id != ?";
+                $params[] = $excludeId;
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            throw new Exception('Error checking employee ID: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if email already exists
+     */
+    public function emailExists($email, $excludeId = null) {
+        try {
+            $sql = "SELECT COUNT(*) FROM {$this->getTableName()} WHERE email = ?";
+            $params = [$email];
+            
+            if ($excludeId) {
+                $sql .= " AND id != ?";
+                $params[] = $excludeId;
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            throw new Exception('Error checking email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create teacher with user account and role assignment
+     */
+    public function createTeacherWithUser($data) {
+        try {
+            $this->pdo->beginTransaction();
+
+            // Hash the password
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            
+            // Set default values
+            $data['status'] = $data['status'] ?? 'active';
+            $data['created_at'] = date('Y-m-d H:i:s');
+            $data['updated_at'] = date('Y-m-d H:i:s');
+
+            // Insert teacher record
+            $teacherSql = "INSERT INTO teachers (
+                employee_id, first_name, last_name, email, phone, address,
+                date_of_birth, gender, qualification, specialization, hire_date,
+                salary, password, status, created_at, updated_at
+            ) VALUES (
+                :employee_id, :first_name, :last_name, :email, :phone, :address,
+                :date_of_birth, :gender, :qualification, :specialization, :hire_date,
+                :salary, :password, :status, :created_at, :updated_at
+            )";
+
+            $teacherStmt = $this->pdo->prepare($teacherSql);
+            $teacherStmt->execute($data);
+            $teacherId = $this->pdo->lastInsertId();
+
+            // Get teacher role ID
+            $roleSql = "SELECT id FROM roles WHERE name = 'teacher' LIMIT 1";
+            $roleStmt = $this->pdo->prepare($roleSql);
+            $roleStmt->execute();
+            $role = $roleStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$role) {
+                throw new Exception('Teacher role not found in roles table');
+            }
+
+            // Create user account with teacher role
+            $userData = [
+                'name' => $data['first_name'] . ' ' . $data['last_name'],
+                'email' => $data['email'],
+                'password' => $data['password'], // Already hashed
+                'phone' => $data['phone'] ?? null,
+                'role_id' => $role['id'],
+                'gender' => $data['gender'] ?? null,
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            $userSql = "INSERT INTO users (
+                name, email, password, phone, role_id, gender,
+                status, created_at, updated_at
+            ) VALUES (
+                :name, :email, :password, :phone, :role_id, :gender,
+                :status, :created_at, :updated_at
+            )";
+
+            $userStmt = $this->pdo->prepare($userSql);
+            $userStmt->execute($userData);
+            $userId = $this->pdo->lastInsertId();
+
+            // Update teacher record with user_id
+            $updateSql = "UPDATE teachers SET user_id = ? WHERE id = ?";
+            $updateStmt = $this->pdo->prepare($updateSql);
+            $updateStmt->execute([$userId, $teacherId]);
+
+            $this->pdo->commit();
+
+            return [
+                'teacher_id' => $teacherId,
+                'user_id' => $userId,
+                'teacher_data' => $data
+            ];
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            throw new Exception('Error creating teacher with user account: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update teacher and corresponding user account
+     */
+    public function updateTeacherWithUser($id, $data) {
+        try {
+            $this->pdo->beginTransaction();
+
+            // Get current teacher data to find user_id
+            $teacherSql = "SELECT user_id FROM teachers WHERE id = ?";
+            $teacherStmt = $this->pdo->prepare($teacherSql);
+            $teacherStmt->execute([$id]);
+            $currentTeacher = $teacherStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$currentTeacher) {
+                throw new Exception('Teacher not found');
+            }
+
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            
+            // If password is provided, hash it
+            if (isset($data['password']) && !empty($data['password'])) {
+                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            } else {
+                unset($data['password']); // Don't update password if not provided
+            }
+
+            // Update teacher record
+            $setClause = [];
+            $params = [];
+            
+            foreach ($data as $key => $value) {
+                $setClause[] = "$key = :$key";
+                $params[":$key"] = $value;
+            }
+            
+            $params[':id'] = $id;
+
+            $updateTeacherSql = "UPDATE teachers SET " . implode(', ', $setClause) . " WHERE id = :id";
+            $updateTeacherStmt = $this->pdo->prepare($updateTeacherSql);
+            $updateTeacherStmt->execute($params);
+
+            // Update corresponding user account
+            $userData = [
+                'name' => ($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''),
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Add password to user update if provided
+            if (isset($data['password'])) {
+                $userData['password'] = $data['password'];
+            }
+
+            $userSetClause = [];
+            $userParams = [];
+            
+            foreach ($userData as $key => $value) {
+                if ($value !== null) {
+                    $userSetClause[] = "$key = :$key";
+                    $userParams[":$key"] = $value;
+                }
+            }
+            
+            $userParams[':user_id'] = $currentTeacher['user_id'];
+
+            $updateUserSql = "UPDATE users SET " . implode(', ', $userSetClause) . " WHERE id = :user_id";
+            $updateUserStmt = $this->pdo->prepare($updateUserSql);
+            $updateUserStmt->execute($userParams);
+
+            $this->pdo->commit();
+
+            return true;
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            throw new Exception('Error updating teacher with user account: ' . $e->getMessage());
         }
     }
 }

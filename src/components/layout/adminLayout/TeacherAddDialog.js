@@ -20,7 +20,6 @@ import api from '@/services/api.js';
 class TeacherAddDialog extends HTMLElement {
     constructor() {
         super();
-        this.users = [];
         this.teams = [];
         this.loading = false;
     }
@@ -38,7 +37,6 @@ class TeacherAddDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadUsers();
         this.loadTeams();
     }
 
@@ -54,23 +52,7 @@ class TeacherAddDialog extends HTMLElement {
         });
     }
 
-    async loadUsers() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
 
-            const response = await api.withToken(token).get('/users');
-            
-            if (response.status === 200) {
-                // Show all users, not just teachers, so they can be assigned as teachers
-                this.users = response.data; // The users array is directly in response.data
-                // Re-render to update the dropdown with users
-                this.render();
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
 
     async loadTeams() {
         try {
@@ -108,47 +90,41 @@ class TeacherAddDialog extends HTMLElement {
     async saveTeacher() {
         try {
             // Get form data using the data-field attributes for reliable selection
-            const userDropdown = this.querySelector('ui-search-dropdown[name="user_id"]');
             const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const employeeIdInput = this.querySelector('ui-input[data-field="employee_id"]');
+            const firstNameInput = this.querySelector('ui-input[data-field="first_name"]');
+            const lastNameInput = this.querySelector('ui-input[data-field="last_name"]');
+            const emailInput = this.querySelector('ui-input[data-field="email"]');
+            const phoneInput = this.querySelector('ui-input[data-field="phone"]');
+            const addressInput = this.querySelector('ui-input[data-field="address"]');
+            const dateOfBirthInput = this.querySelector('ui-input[data-field="date_of_birth"]');
+            const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
             const qualificationInput = this.querySelector('ui-input[data-field="qualification"]');
             const specializationInput = this.querySelector('ui-input[data-field="specialization"]');
             const hireDateInput = this.querySelector('ui-input[data-field="hire_date"]');
             const salaryInput = this.querySelector('ui-input[data-field="salary"]');
+            const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
             const teacherData = {
                 team_id: teamDropdown ? teamDropdown.value : '',
-                user_id: userDropdown ? userDropdown.value : '',
                 employee_id: employeeIdInput ? employeeIdInput.value : '',
+                first_name: firstNameInput ? firstNameInput.value : '',
+                last_name: lastNameInput ? lastNameInput.value : '',
+                email: emailInput ? emailInput.value : '',
+                phone: phoneInput ? phoneInput.value : '',
+                address: addressInput ? addressInput.value : '',
+                date_of_birth: dateOfBirthInput ? dateOfBirthInput.value : '',
+                gender: genderDropdown ? genderDropdown.value : '',
                 qualification: qualificationInput ? qualificationInput.value : '',
                 specialization: specializationInput ? specializationInput.value : '',
                 hire_date: hireDateInput ? hireDateInput.value : '',
                 salary: salaryInput ? parseFloat(salaryInput.value) || 0 : 0,
+                password: passwordInput ? passwordInput.value : '',
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
             // Validate required fields
-            if (!teacherData.team_id) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select a team',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!teacherData.user_id) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select a user',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
             if (!teacherData.employee_id) {
                 Toast.show({
                     title: 'Validation Error',
@@ -159,20 +135,40 @@ class TeacherAddDialog extends HTMLElement {
                 return;
             }
 
-            if (!teacherData.qualification) {
+            if (!teacherData.first_name) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please enter qualification',
+                    message: 'Please enter first name',
                     variant: 'error',
                     duration: 3000
                 });
                 return;
             }
 
-            if (!teacherData.specialization) {
+            if (!teacherData.last_name) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please enter specialization',
+                    message: 'Please enter last name',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!teacherData.email) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter email',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!teacherData.password) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter password',
                     variant: 'error',
                     duration: 3000
                 });
@@ -212,16 +208,19 @@ class TeacherAddDialog extends HTMLElement {
                     duration: 3000
                 });
 
-                // Find the selected user to get name and email
-                const selectedUser = this.users.find(user => user.id == teacherData.user_id);
-
                 // Construct the new teacher data from response
                 const newTeacher = {
-                    id: response.data.data.id,
-                    user_id: teacherData.user_id,
-                    name: selectedUser ? selectedUser.name : 'N/A',
-                    email: selectedUser ? selectedUser.email : 'N/A',
+                    id: response.data.data.teacher_id,
+                    user_id: response.data.data.user_id,
                     employee_id: teacherData.employee_id,
+                    first_name: teacherData.first_name,
+                    last_name: teacherData.last_name,
+                    name: `${teacherData.first_name} ${teacherData.last_name}`,
+                    email: teacherData.email,
+                    phone: teacherData.phone,
+                    address: teacherData.address,
+                    date_of_birth: teacherData.date_of_birth,
+                    gender: teacherData.gender,
                     qualification: teacherData.qualification,
                     specialization: teacherData.specialization,
                     hire_date: teacherData.hire_date,
@@ -278,22 +277,6 @@ class TeacherAddDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                            ${this.users.length > 0 ? `
-                                <ui-search-dropdown 
-                                    name="user_id" 
-                                    placeholder="Search users..."
-                                    class="w-full">
-                                    ${this.users.map(user => `
-                                        <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-                        
-                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
                             <ui-input 
                                 data-field="employee_id"
@@ -301,6 +284,83 @@ class TeacherAddDialog extends HTMLElement {
                                 placeholder="Enter employee ID"
                                 class="w-full">
                             </ui-input>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <ui-input 
+                                    data-field="first_name"
+                                    type="text" 
+                                    placeholder="Enter first name"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <ui-input 
+                                    data-field="last_name"
+                                    type="text" 
+                                    placeholder="Enter last name"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <ui-input 
+                                    data-field="email"
+                                    type="email" 
+                                    placeholder="Enter email address"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <ui-input 
+                                    data-field="phone"
+                                    type="tel" 
+                                    placeholder="Enter phone number"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <ui-input 
+                                data-field="address"
+                                type="text" 
+                                placeholder="Enter address"
+                                class="w-full">
+                            </ui-input>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                <ui-input 
+                                    data-field="date_of_birth"
+                                    type="date" 
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <ui-search-dropdown 
+                                    name="gender" 
+                                    placeholder="Select gender"
+                                    class="w-full">
+                                    <ui-option value="male">Male</ui-option>
+                                    <ui-option value="female">Female</ui-option>
+                                    <ui-option value="other">Other</ui-option>
+                                </ui-search-dropdown>
+                            </div>
                         </div>
                         
                         <div>
@@ -323,23 +383,35 @@ class TeacherAddDialog extends HTMLElement {
                             </ui-input>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                            <ui-input 
-                                data-field="hire_date"
-                                type="date" 
-                                class="w-full">
-                            </ui-input>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
+                                <ui-input 
+                                    data-field="hire_date"
+                                    type="date" 
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
+                                <ui-input 
+                                    data-field="salary"
+                                    type="number" 
+                                    placeholder="Enter salary amount"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                             <ui-input 
-                                data-field="salary"
-                                type="number" 
-                                placeholder="Enter salary amount"
-                                step="0.01"
-                                min="0"
+                                data-field="password"
+                                type="password" 
+                                placeholder="Enter password"
                                 class="w-full">
                             </ui-input>
                         </div>

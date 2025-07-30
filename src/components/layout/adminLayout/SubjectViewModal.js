@@ -1,5 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
+import '@/components/ui/Toast.js';
 
 /**
  * Subject View Modal Component
@@ -45,32 +47,24 @@ class SubjectViewModal extends HTMLElement {
     // Set subject data for viewing
     setSubjectData(subject) {
         this.subjectData = subject;
-        this.populateView();
+        this.render();
     }
 
-    // Populate view with subject data
-    populateView() {
-        if (!this.subjectData) return;
-
-        // Update the view content
-        const nameElement = this.querySelector('[data-field="name"]');
-        const codeElement = this.querySelector('[data-field="code"]');
-        const descriptionElement = this.querySelector('[data-field="description"]');
-        const statusElement = this.querySelector('[data-field="status"]');
-        const createdElement = this.querySelector('[data-field="created"]');
-        const updatedElement = this.querySelector('[data-field="updated"]');
-
-        if (nameElement) nameElement.textContent = this.subjectData.name || 'N/A';
-        if (codeElement) codeElement.textContent = this.subjectData.code || 'N/A';
-        if (descriptionElement) descriptionElement.textContent = this.subjectData.description || 'No description available';
-        if (statusElement) {
-            statusElement.textContent = this.subjectData.status === 'active' ? 'Active' : 'Inactive';
-            statusElement.className = this.subjectData.status === 'active' 
-                ? 'px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'
-                : 'px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800';
+    // Format date for display
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return dateString;
         }
-        if (createdElement) createdElement.textContent = this.subjectData.created_at || 'N/A';
-        if (updatedElement) updatedElement.textContent = this.subjectData.updated_at || 'N/A';
     }
 
     render() {
@@ -78,52 +72,75 @@ class SubjectViewModal extends HTMLElement {
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 position="right" 
+                size="lg"
                 close-button="true">
-                <div slot="title">Subject Details</div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
-                            <div data-field="name" class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                                Loading...
+                <div slot="title">View Subject Details</div>
+                
+                <div>
+                    ${this.subjectData ? `
+                        <!-- Subject Header -->
+                        <div class="flex items-center gap-3 border-b pb-4">
+                            <h3 class="text-xl font-semibold text-gray-900">${this.subjectData.name || 'N/A'}</h3>
+                            <ui-badge color="${this.subjectData.status === 'active' ? 'success' : 'error'}">
+                                <i class="fas fa-${this.subjectData.status === 'active' ? 'check' : 'times'} mr-1"></i>
+                                ${this.subjectData.status === 'active' ? 'Active' : 'Inactive'}
+                            </ui-badge>
+                        </div>
+
+                        <!-- Subject Information -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Subject Information</h4>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-book mr-1"></i>Subject Name
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.subjectData.name || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-code mr-1"></i>Subject Code
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.subjectData.code || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-align-left mr-1"></i>Description
+                                    </label>
+                                    <p class="text-gray-900 text-sm leading-relaxed">${this.subjectData.description || 'No description available'}</p>
+                                </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Timestamps -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject Code</label>
-                            <div data-field="code" class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                                Loading...
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-clock text-orange-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-plus mr-1"></i>Created
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.subjectData.created_at)}</span>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-edit mr-1"></i>Updated
+                                    </label>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.subjectData.updated_at)}</span>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <div data-field="description" class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md min-h-[60px]">
-                                Loading...
-                            </div>
+                    ` : `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">No subject data available</p>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <div data-field="status" class="inline-block px-2 py-1 text-xs font-medium rounded-full">
-                                Loading...
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Created At</label>
-                            <div data-field="created" class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                                Loading...
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Updated At</label>
-                            <div data-field="updated" class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                                Loading...
-                            </div>
-                        </div>
-                    </div>
+                    `}
                 </div>
             </ui-modal>
         `;

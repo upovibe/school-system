@@ -3,9 +3,9 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
 
 /**
- * Class View Modal Component
+ * Teacher View Modal Component
  * 
- * A modal component for viewing class details in the admin panel
+ * A modal component for viewing teacher details in the admin panel
  * 
  * Attributes:
  * - open: boolean - controls modal visibility
@@ -13,10 +13,10 @@ import '@/components/ui/Badge.js';
  * Events:
  * - modal-closed: Fired when modal is closed
  */
-class ClassViewModal extends HTMLElement {
+class TeacherViewModal extends HTMLElement {
     constructor() {
         super();
-        this.classData = null;
+        this.teacherData = null;
     }
 
     static get observedAttributes() {
@@ -43,9 +43,8 @@ class ClassViewModal extends HTMLElement {
         this.removeAttribute('open');
     }
 
-    // Set class data for viewing
-    setClassData(classItem) {
-        this.classData = classItem;
+    setTeacherData(teacher) {
+        this.teacherData = teacher;
         this.render();
     }
 
@@ -73,49 +72,67 @@ class ClassViewModal extends HTMLElement {
                 position="right" 
                 size="lg"
                 close-button="true">
-                <div slot="title">View Class Details</div>
+                <div slot="title">View Teacher Details</div>
                 
                 <div>
-                    ${this.classData ? `
-                        <!-- Class Header -->
+                    ${this.teacherData ? `
+                        <!-- Teacher Header -->
                         <div class="flex items-center gap-3 border-b pb-4">
-                            <h3 class="text-xl font-semibold text-gray-900">${this.classData.name || 'N/A'} - Section ${this.classData.section || 'N/A'}</h3>
-                            <ui-badge color="${this.classData.status === 'active' ? 'success' : 'error'}">
-                                <i class="fas fa-${this.classData.status === 'active' ? 'check' : 'times'} mr-1"></i>
-                                ${this.classData.status === 'active' ? 'Active' : 'Inactive'}
+                            <h3 class="text-xl font-semibold text-gray-900">${this.teacherData.name || 'N/A'}</h3>
+                            <ui-badge color="${this.teacherData.status === 'active' ? 'success' : 'error'}">
+                                <i class="fas fa-${this.teacherData.status === 'active' ? 'check' : 'times'} mr-1"></i>
+                                ${this.teacherData.status === 'active' ? 'Active' : 'Inactive'}
                             </ui-badge>
                         </div>
 
-                        <!-- Class Information -->
+                        <!-- Teacher Information -->
                         <div class="border-b pb-4">
                             <div class="flex items-center gap-2 mb-3">
                                 <i class="fas fa-info-circle text-blue-500"></i>
-                                <h4 class="text-md font-semibold text-gray-800">Class Information</h4>
+                                <h4 class="text-md font-semibold text-gray-800">Teacher Information</h4>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-chalkboard mr-1"></i>Class Name
+                                        <i class="fas fa-user mr-1"></i>Full Name
                                     </label>
-                                    <p class="text-gray-900 text-sm font-medium">${this.classData.name || 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm font-medium">${this.teacherData.name || 'N/A'}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-layer-group mr-1"></i>Section
+                                        <i class="fas fa-envelope mr-1"></i>Email Address
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.classData.section || 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.email || 'N/A'}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-calendar-alt mr-1"></i>Academic Year
+                                        <i class="fas fa-id-card mr-1"></i>Employee ID
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.classData.academic_year || 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.employee_id || 'N/A'}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-users mr-1"></i>Capacity
+                                        <i class="fas fa-graduation-cap mr-1"></i>Qualification
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.classData.capacity ? `${this.classData.capacity} students` : 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.qualification || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-book-open mr-1"></i>Specialization
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.specialization || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-calendar-day mr-1"></i>Hire Date
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.hire_date ? new Date(this.teacherData.hire_date).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-money-bill-wave mr-1"></i>Salary
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.teacherData.salary ? `₵${parseFloat(this.teacherData.salary).toLocaleString()}` : 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
@@ -131,19 +148,19 @@ class ClassViewModal extends HTMLElement {
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-plus mr-1"></i>Created
                                     </label>
-                                    <span class="text-gray-900 text-sm">${this.formatDate(this.classData.created_at)}</span>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.teacherData.created_at)}</span>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-edit mr-1"></i>Updated
                                     </label>
-                                    <span class="text-gray-900 text-sm">${this.formatDate(this.classData.updated_at)}</span>
+                                    <span class="text-gray-900 text-sm">${this.formatDate(this.teacherData.updated_at)}</span>
                                 </div>
                             </div>
                         </div>
                     ` : `
                         <div class="text-center py-8">
-                            <p class="text-gray-500">No class data available</p>
+                            <p class="text-gray-500">No teacher data available</p>
                         </div>
                     `}
                 </div>
@@ -152,5 +169,5 @@ class ClassViewModal extends HTMLElement {
     }
 }
 
-customElements.define('class-view-modal', ClassViewModal);
-export default ClassViewModal; 
+customElements.define('teacher-view-modal', TeacherViewModal);
+export default TeacherViewModal; 

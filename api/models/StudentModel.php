@@ -76,7 +76,7 @@ class StudentModel extends BaseModel {
     public function getActiveStudents() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.*, cs.name as class_name, cs.grade_level
+                SELECT s.*, cs.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes cs ON s.current_class_id = cs.id
                 WHERE s.status = 'active'
@@ -102,7 +102,7 @@ class StudentModel extends BaseModel {
     public function getStudentsWithClassInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.*, c.name as class_name, c.grade_level
+                SELECT s.*, c.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 ORDER BY s.first_name ASC, s.last_name ASC
@@ -127,7 +127,7 @@ class StudentModel extends BaseModel {
     public function searchStudents($query, $limit = null) {
         try {
             $sql = "
-                SELECT s.*, c.name as class_name, c.grade_level
+                SELECT s.*, c.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.student_id LIKE ? OR s.email LIKE ?

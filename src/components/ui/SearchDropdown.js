@@ -48,6 +48,26 @@ class SearchDropdown extends HTMLElement {
             if (e.target.closest('.search-dropdown')) {
                 this.toggleDropdown();
             }
+            
+            // Handle option selection
+            if (e.target.closest('.option-item')) {
+                const optionItem = e.target.closest('.option-item');
+                const value = optionItem.dataset.value;
+                const option = this.options.find(opt => opt.value === value);
+                if (option) {
+                    this.selectOption(option);
+                }
+            }
+            
+            // Handle remove item
+            if (e.target.closest('.remove-item')) {
+                const removeBtn = e.target.closest('.remove-item');
+                const value = removeBtn.dataset.value;
+                const item = this.selectedItems.find(item => item.value === value);
+                if (item) {
+                    this.removeSelectedItem(item);
+                }
+            }
         });
 
         // Search input
@@ -428,7 +448,9 @@ class SearchDropdown extends HTMLElement {
                 </div>
             </div>
 
-            <slot></slot>
+            <div style="display: none;">
+                <slot></slot>
+            </div>
         `;
     }
 

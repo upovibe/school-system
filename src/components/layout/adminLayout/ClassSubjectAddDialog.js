@@ -96,13 +96,13 @@ class ClassSubjectAddDialog extends HTMLElement {
 
     resetForm() {
         const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
-        const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
+        const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_ids"]');
         const academicYearDropdown = this.querySelector('ui-search-dropdown[name="academic_year"]');
         const termDropdown = this.querySelector('ui-search-dropdown[name="term"]');
         const teachingHoursInput = this.querySelector('ui-input[name="teaching_hours"]');
 
         if (classDropdown) classDropdown.value = '';
-        if (subjectDropdown) subjectDropdown.value = '';
+        if (subjectDropdown) subjectDropdown.value = [];
         if (academicYearDropdown) academicYearDropdown.value = '';
         if (termDropdown) termDropdown.value = 'full_year';
         if (teachingHoursInput) teachingHoursInput.value = '0';
@@ -116,21 +116,19 @@ class ClassSubjectAddDialog extends HTMLElement {
             
             // Get form data using direct element selection
             const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_ids"]');
             const academicYearDropdown = this.querySelector('ui-search-dropdown[name="academic_year"]');
             const termDropdown = this.querySelector('ui-search-dropdown[name="term"]');
             const teachingHoursInput = this.querySelector('ui-input[name="teaching_hours"]');
 
-            const classSubjectData = {
-                class_id: classDropdown ? classDropdown.value : '',
-                subject_id: subjectDropdown ? subjectDropdown.value : '',
-                academic_year: academicYearDropdown ? academicYearDropdown.value : '',
-                term: termDropdown ? termDropdown.value : 'full_year',
-                teaching_hours: teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0
-            };
+            const classId = classDropdown ? classDropdown.value : '';
+            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+            const academicYear = academicYearDropdown ? academicYearDropdown.value : '';
+            const term = termDropdown ? termDropdown.value : 'full_year';
+            const teachingHours = teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0;
 
             // Validation
-            if (!classSubjectData.class_id) {
+            if (!classId) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select a class',
@@ -140,17 +138,17 @@ class ClassSubjectAddDialog extends HTMLElement {
                 return;
             }
 
-            if (!classSubjectData.subject_id) {
+            if (!subjectIds || subjectIds.length === 0) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please select a subject',
+                    message: 'Please select at least one subject',
                     variant: 'error',
                     duration: 3000
                 });
                 return;
             }
 
-            if (!classSubjectData.academic_year) {
+            if (!academicYear) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please enter academic year',
@@ -171,20 +169,36 @@ class ClassSubjectAddDialog extends HTMLElement {
                 return;
             }
 
-            const response = await api.withToken(token).post('/class-subjects', classSubjectData);
+            // Create multiple class-subject assignments
+            const promises = subjectIds.map(subjectId => {
+                const classSubjectData = {
+                    class_id: classId,
+                    subject_id: subjectId,
+                    academic_year: academicYear,
+                    term: term,
+                    teaching_hours: teachingHours
+                };
+                return api.withToken(token).post('/class-subjects', classSubjectData);
+            });
+
+            const responses = await Promise.all(promises);
             
-            if (response.data.success) {
+            // Check if all responses were successful
+            const allSuccessful = responses.every(response => response.data.success);
+            
+            if (allSuccessful) {
                 Toast.show({
                     title: 'Success',
-                    message: 'Class subject assignment created successfully',
+                    message: `${subjectIds.length} class subject assignment(s) created successfully`,
                     variant: 'success',
                     duration: 3000
                 });
 
-                // Dispatch event with the new class subject data
+                // Dispatch event with all the new class subject data
+                const createdAssignments = responses.map(response => response.data.data);
                 this.dispatchEvent(new CustomEvent('class-subject-saved', {
                     detail: {
-                        classSubject: response.data.data
+                        classSubjects: createdAssignments
                     }
                 }));
 
@@ -193,16 +207,16 @@ class ClassSubjectAddDialog extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.data.message || 'Failed to create class subject assignment',
+                    message: 'Some class subject assignments failed to create',
                     variant: 'error',
                     duration: 3000
                 });
             }
         } catch (error) {
-            console.error('Error creating class subject:', error);
+            console.error('Error creating class subjects:', error);
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to create class subject assignment',
+                message: error.response?.data?.message || 'Failed to create class subject assignments',
                 variant: 'error',
                 duration: 3000
             });
@@ -250,11 +264,12 @@ class ClassSubjectAddDialog extends HTMLElement {
 
                         <!-- Subject Selection -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
                             ${this.subjects.length > 0 ? `
                                 <ui-search-dropdown 
-                                    name="subject_id" 
-                                    placeholder="Search subjects..."
+                                    name="subject_ids" 
+                                    placeholder="Search and select multiple subjects..."
+                                    multiple
                                     class="w-full">
                                     ${this.subjects.map(subject => `
                                         <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>

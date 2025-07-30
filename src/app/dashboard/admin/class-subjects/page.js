@@ -56,11 +56,11 @@ class ClassSubjectManagementPage extends App {
             // Close the add modal first
             this.set('showAddModal', false);
 
-            // Add the new class subject to the existing data
-            const newClassSubject = event.detail.classSubject;
-            if (newClassSubject) {
+            // Add the new class subjects to the existing data
+            const newClassSubjects = event.detail.classSubjects;
+            if (newClassSubjects && newClassSubjects.length > 0) {
                 const currentClassSubjects = this.get('classSubjects') || [];
-                this.set('classSubjects', [...currentClassSubjects, newClassSubject]);
+                this.set('classSubjects', [...currentClassSubjects, ...newClassSubjects]);
                 this.updateTableData();
             } else {
                 this.loadData();

@@ -69,7 +69,12 @@ class StudentUpdateDialog extends HTMLElement {
             const medicalConditionsDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
             
             if (classDropdown && student?.current_class_id) {
-                classDropdown.value = student.current_class_id;
+                // Find the class option and set its text as the display value
+                const selectedClass = this.classes.find(cls => cls.id == student.current_class_id);
+                if (selectedClass) {
+                    classDropdown.setAttribute('value', student.current_class_id);
+                    classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
+                }
             }
             
             if (genderDropdown && student?.gender) {
@@ -215,6 +220,9 @@ class StudentUpdateDialog extends HTMLElement {
                                     name="current_class_id" 
                                     placeholder="Search classes..."
                                     value="${student?.current_class_id || ''}"
+                                    display-value="${student && student.current_class_id ? 
+                                        (this.classes.find(cls => cls.id == student.current_class_id)?.name + '-' + 
+                                        this.classes.find(cls => cls.id == student.current_class_id)?.section) || '' : ''}"
                                     class="w-full">
                                     ${this.classes.map(cls => `
                                         <ui-option value="${cls.id}" ${student && student.current_class_id == cls.id ? 'selected' : ''}>${cls.name}-${cls.section}</ui-option>

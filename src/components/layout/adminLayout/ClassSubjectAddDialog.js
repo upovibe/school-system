@@ -1,7 +1,6 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
-import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
@@ -95,11 +94,11 @@ class ClassSubjectAddDialog extends HTMLElement {
     }
 
     resetForm() {
-        const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
-        const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_ids"]');
-        const academicYearDropdown = this.querySelector('ui-search-dropdown[name="academic_year"]');
-        const termDropdown = this.querySelector('ui-search-dropdown[name="term"]');
-        const teachingHoursInput = this.querySelector('ui-input[name="teaching_hours"]');
+        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+        const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+        const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
+        const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
+        const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
 
         if (classDropdown) classDropdown.value = '';
         if (subjectDropdown) subjectDropdown.value = [];
@@ -114,18 +113,27 @@ class ClassSubjectAddDialog extends HTMLElement {
         try {
             this.setLoading(true);
             
-            // Get form data using direct element selection
-            const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_ids"]');
-            const academicYearDropdown = this.querySelector('ui-search-dropdown[name="academic_year"]');
-            const termDropdown = this.querySelector('ui-search-dropdown[name="term"]');
-            const teachingHoursInput = this.querySelector('ui-input[name="teaching_hours"]');
+            // Get form data using the data-field attributes for reliable selection
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+            const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
+            const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
+            const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
 
             const classId = classDropdown ? classDropdown.value : '';
             const subjectIds = subjectDropdown ? subjectDropdown.value : [];
             const academicYear = academicYearDropdown ? academicYearDropdown.value : '';
             const term = termDropdown ? termDropdown.value : 'full_year';
             const teachingHours = teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0;
+
+            // Debug logging
+            console.log('Form Data:', {
+                classId,
+                subjectIds,
+                academicYear,
+                term,
+                teachingHours
+            });
 
             // Validation
             if (!classId) {
@@ -138,7 +146,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                 return;
             }
 
-            if (!subjectIds || subjectIds.length === 0) {
+            if (!subjectIds || !Array.isArray(subjectIds) || subjectIds.length === 0) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select at least one subject',
@@ -170,18 +178,36 @@ class ClassSubjectAddDialog extends HTMLElement {
             }
 
             // Create multiple class-subject assignments
-            const promises = subjectIds.map(subjectId => {
+            console.log('Creating assignments for subject IDs:', subjectIds);
+            
+            // Filter out any invalid subject IDs
+            const validSubjectIds = subjectIds.filter(id => id && id !== '' && !isNaN(id));
+            console.log('Valid subject IDs:', validSubjectIds);
+            
+            if (validSubjectIds.length === 0) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'No valid subjects selected',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            
+            const promises = validSubjectIds.map(subjectId => {
                 const classSubjectData = {
-                    class_id: classId,
-                    subject_id: subjectId,
+                    class_id: parseInt(classId),
+                    subject_id: parseInt(subjectId),
                     academic_year: academicYear,
                     term: term,
                     teaching_hours: teachingHours
                 };
+                console.log('Creating assignment:', classSubjectData);
                 return api.withToken(token).post('/class-subjects', classSubjectData);
             });
 
             const responses = await Promise.all(promises);
+            console.log('API Responses:', responses);
             
             // Check if all responses were successful
             const allSuccessful = responses.every(response => response.data.success);
@@ -189,21 +215,21 @@ class ClassSubjectAddDialog extends HTMLElement {
             if (allSuccessful) {
                 Toast.show({
                     title: 'Success',
-                    message: `${subjectIds.length} class subject assignment(s) created successfully`,
+                    message: `${validSubjectIds.length} class subject assignment(s) created successfully`,
                     variant: 'success',
                     duration: 3000
                 });
 
-                // Dispatch event with all the new class subject data
+                // Close modal and dispatch event
                 const createdAssignments = responses.map(response => response.data.data);
+                this.close();
                 this.dispatchEvent(new CustomEvent('class-subject-saved', {
                     detail: {
                         classSubjects: createdAssignments
-                    }
+                    },
+                    bubbles: true,
+                    composed: true
                 }));
-
-                this.close();
-                this.resetForm();
             } else {
                 Toast.show({
                     title: 'Error',
@@ -214,6 +240,11 @@ class ClassSubjectAddDialog extends HTMLElement {
             }
         } catch (error) {
             console.error('Error creating class subjects:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create class subject assignments',
@@ -250,7 +281,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
                             ${this.classes.length > 0 ? `
                                 <ui-search-dropdown 
-                                    name="class_id" 
+                                    data-field="class_id" 
                                     placeholder="Search classes..."
                                     class="w-full">
                                     ${this.classes.map(cls => `
@@ -267,7 +298,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
                             ${this.subjects.length > 0 ? `
                                 <ui-search-dropdown 
-                                    name="subject_ids" 
+                                    data-field="subject_ids" 
                                     placeholder="Search and select multiple subjects..."
                                     multiple
                                     class="w-full">
@@ -285,7 +316,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
                             ${this.academicYears.length > 0 ? `
                                 <ui-search-dropdown 
-                                    name="academic_year" 
+                                    data-field="academic_year" 
                                     placeholder="Select academic year..."
                                     class="w-full">
                                     ${this.academicYears.map(year => `
@@ -301,7 +332,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
                             <ui-search-dropdown 
-                                name="term" 
+                                data-field="term" 
                                 placeholder="Select term..."
                                 class="w-full">
                                 ${this.terms.map(term => `
@@ -315,7 +346,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Teaching Hours</label>
                             <ui-input 
                                 type="number" 
-                                name="teaching_hours" 
+                                data-field="teaching_hours" 
                                 placeholder="Enter teaching hours"
                                 min="0"
                                 value="0"

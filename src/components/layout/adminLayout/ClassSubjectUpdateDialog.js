@@ -239,73 +239,69 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 title="Update Class Subject Assignment">
                 <div slot="content">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Class Selection -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                                ${this.classes.length > 0 ? `
-                                    <ui-search-dropdown 
-                                        name="class_id" 
-                                        placeholder="Search classes..."
-                                        class="w-full">
-                                        ${this.classes.map(cls => `
-                                            <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
-                                        `).join('')}
-                                    </ui-search-dropdown>
-                                ` : `
-                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                                `}
-                            </div>
-
-                            <!-- Subject Selection -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                                ${this.subjects.length > 0 ? `
-                                    <ui-search-dropdown 
-                                        name="subject_id" 
-                                        placeholder="Search subjects..."
-                                        class="w-full">
-                                        ${this.subjects.map(subject => `
-                                            <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
-                                        `).join('')}
-                                    </ui-search-dropdown>
-                                ` : `
-                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                                `}
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Academic Year -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-                                ${this.academicYears.length > 0 ? `
-                                    <ui-search-dropdown 
-                                        name="academic_year" 
-                                        placeholder="Select academic year..."
-                                        class="w-full">
-                                        ${this.academicYears.map(year => `
-                                            <ui-option value="${year}">${year}</ui-option>
-                                        `).join('')}
-                                    </ui-search-dropdown>
-                                ` : `
-                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                                `}
-                            </div>
-
-                            <!-- Term -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                    <div class="flex flex-col space-y-4">
+                        <!-- Class Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
+                            ${this.classes.length > 0 ? `
                                 <ui-search-dropdown 
-                                    name="term" 
-                                    placeholder="Select term..."
+                                    name="class_id" 
+                                    placeholder="Search classes..."
                                     class="w-full">
-                                    ${this.terms.map(term => `
-                                        <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
+                                    ${this.classes.map(cls => `
+                                        <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
-                            </div>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
+                        </div>
+
+                        <!-- Subject Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                            ${this.subjects.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="subject_id" 
+                                    placeholder="Search subjects..."
+                                    class="w-full">
+                                    ${this.subjects.map(subject => `
+                                        <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
+                        </div>
+
+                        <!-- Academic Year -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
+                            ${this.academicYears.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="academic_year" 
+                                    placeholder="Select academic year..."
+                                    class="w-full">
+                                    ${this.academicYears.map(year => `
+                                        <ui-option value="${year}">${year}</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
+                        </div>
+
+                        <!-- Term -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                            <ui-search-dropdown 
+                                name="term" 
+                                placeholder="Select term..."
+                                class="w-full">
+                                ${this.terms.map(term => `
+                                    <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
+                                `).join('')}
+                            </ui-search-dropdown>
                         </div>
 
                         <!-- Teaching Hours -->

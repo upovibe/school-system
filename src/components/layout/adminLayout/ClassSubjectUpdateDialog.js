@@ -96,27 +96,46 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
     setClassSubjectData(classSubject) {
         this.classSubjectData = classSubject;
-        // Use setTimeout to ensure components are rendered before populating
+        this.render();
+        
+        // Force update dropdowns after render to ensure values are displayed
         setTimeout(() => {
-            this.populateForm();
-        }, 50);
-    }
-
-    // Populate form with existing class subject data
-    populateForm() {
-        if (!this.classSubjectData) return;
-
-        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-        const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-        const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
-        const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
-        const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
-
-        if (classDropdown) classDropdown.value = this.classSubjectData.class_id;
-        if (subjectDropdown) subjectDropdown.value = this.classSubjectData.subject_id;
-        if (academicYearDropdown) academicYearDropdown.value = this.classSubjectData.academic_year;
-        if (termDropdown) termDropdown.value = this.classSubjectData.term || 'full_year';
-        if (teachingHoursInput) teachingHoursInput.value = this.classSubjectData.teaching_hours || 0;
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
+            const academicYearDropdown = this.querySelector('ui-search-dropdown[data-field="academic_year"]');
+            const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
+            const teachingHoursInput = this.querySelector('ui-input[data-field="teaching_hours"]');
+            
+            if (classDropdown && classSubject?.class_id) {
+                // Find the class option and set its text as the display value
+                const selectedClass = this.classes.find(cls => cls.id == classSubject.class_id);
+                if (selectedClass) {
+                    classDropdown.setAttribute('value', classSubject.class_id);
+                    classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
+                }
+            }
+            
+            if (subjectDropdown && classSubject?.subject_id) {
+                // Find the subject option and set its text as the display value
+                const selectedSubject = this.subjects.find(subject => subject.id == classSubject.subject_id);
+                if (selectedSubject) {
+                    subjectDropdown.setAttribute('value', classSubject.subject_id);
+                    subjectDropdown.setAttribute('display-value', `${selectedSubject.name} (${selectedSubject.code})`);
+                }
+            }
+            
+            if (academicYearDropdown && classSubject?.academic_year) {
+                academicYearDropdown.value = classSubject.academic_year;
+            }
+            
+            if (termDropdown && classSubject?.term) {
+                termDropdown.value = classSubject.term || 'full_year';
+            }
+            
+            if (teachingHoursInput && classSubject?.teaching_hours !== undefined) {
+                teachingHoursInput.value = classSubject.teaching_hours || 0;
+            }
+        }, 200);
     }
 
     async updateClassSubject() {
@@ -236,6 +255,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
     }
 
     render() {
+        const classSubject = this.classSubjectData;
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -249,9 +269,13 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                 <ui-search-dropdown 
                                     data-field="class_id" 
                                     placeholder="Search classes..."
+                                    value="${classSubject?.class_id || ''}"
+                                    display-value="${classSubject && classSubject.class_id ? 
+                                        (this.classes.find(cls => cls.id == classSubject.class_id)?.name + '-' + 
+                                        this.classes.find(cls => cls.id == classSubject.class_id)?.section) || '' : ''}"
                                     class="w-full">
                                     ${this.classes.map(cls => `
-                                        <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                                        <ui-option value="${cls.id}" ${classSubject && classSubject.class_id == cls.id ? 'selected' : ''}>${cls.name}-${cls.section}</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `
@@ -266,9 +290,13 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                 <ui-search-dropdown 
                                     data-field="subject_id" 
                                     placeholder="Search subjects..."
+                                    value="${classSubject?.subject_id || ''}"
+                                    display-value="${classSubject && classSubject.subject_id ? 
+                                        (this.subjects.find(subject => subject.id == classSubject.subject_id)?.name + ' (' + 
+                                        this.subjects.find(subject => subject.id == classSubject.subject_id)?.code + ')') || '' : ''}"
                                     class="w-full">
                                     ${this.subjects.map(subject => `
-                                        <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
+                                        <ui-option value="${subject.id}" ${classSubject && classSubject.subject_id == subject.id ? 'selected' : ''}>${subject.name} (${subject.code})</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `
@@ -283,9 +311,10 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                 <ui-search-dropdown 
                                     data-field="academic_year" 
                                     placeholder="Select academic year..."
+                                    value="${classSubject?.academic_year || ''}"
                                     class="w-full">
                                     ${this.academicYears.map(year => `
-                                        <ui-option value="${year}">${year}</ui-option>
+                                        <ui-option value="${year}" ${classSubject && classSubject.academic_year == year ? 'selected' : ''}>${year}</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `
@@ -299,9 +328,10 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                             <ui-search-dropdown 
                                 data-field="term" 
                                 placeholder="Select term..."
+                                value="${classSubject?.term || 'full_year'}"
                                 class="w-full">
                                 ${this.terms.map(term => `
-                                    <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
+                                    <ui-option value="${term}" ${classSubject && classSubject.term == term ? 'selected' : ''}>${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
                                 `).join('')}
                             </ui-search-dropdown>
                         </div>
@@ -314,7 +344,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                 data-field="teaching_hours" 
                                 placeholder="Enter teaching hours"
                                 min="0"
-                                value="0"
+                                value="${classSubject?.teaching_hours || 0}"
                                 class="w-full">
                             </ui-input>
                         </div>

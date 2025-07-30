@@ -4,6 +4,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/StudentDeleteDialog.js';
+import '@/components/layout/adminLayout/StudentAddDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -17,6 +18,7 @@ class StudentManagementPage extends App {
         this.students = null;
         this.loading = false;
         this.showDeleteDialog = false;
+        this.showAddDialog = false;
         this.deleteStudentData = null;
     }
 
@@ -42,6 +44,17 @@ class StudentManagementPage extends App {
             
             // Close the delete dialog
             this.set('showDeleteDialog', false);
+        });
+
+        // Listen for student-saved event to add new student to the list
+        this.addEventListener('student-saved', (event) => {
+            const newStudent = event.detail.student;
+            const currentStudents = this.get('students') || [];
+            this.set('students', [...currentStudents, newStudent]);
+            this.updateTableData();
+            
+            // Close the add dialog
+            this.set('showAddDialog', false);
         });
     }
 
@@ -125,13 +138,8 @@ class StudentManagementPage extends App {
     }
 
     onAdd(event) {
-        // Navigate to add page
-        const addUrl = '/dashboard/admin/students/add';
-        if (window.router) {
-            window.router.navigate(addUrl);
-        } else {
-            window.location.href = addUrl;
-        }
+        // Show add student dialog
+        this.set('showAddDialog', true);
     }
 
     updateTableData() {
@@ -232,6 +240,9 @@ class StudentManagementPage extends App {
             
             <!-- Delete Student Dialog -->
             <student-delete-dialog ${showDeleteDialog ? 'open' : ''}></student-delete-dialog>
+
+            <!-- Add Student Dialog -->
+            <student-add-dialog ${this.get('showAddDialog') ? 'open' : ''}></student-add-dialog>
         `;
     }
 }

@@ -68,6 +68,9 @@ class TeacherManagementPage extends App {
         });
         
         this.addEventListener('teacher-updated', (event) => {
+            // Close the update modal first
+            this.set('showUpdateModal', false);
+
             // Update the existing teacher in the data
             const updatedTeacher = event.detail.teacher;
             if (updatedTeacher) {
@@ -77,8 +80,6 @@ class TeacherManagementPage extends App {
                 );
                 this.set('teachers', updatedTeachers);
                 this.updateTableData();
-                // Close the update modal
-                this.set('showUpdateModal', false);
             } else {
                 this.loadData();
             }

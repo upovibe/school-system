@@ -176,6 +176,20 @@ Router::post('/students/change-password', 'StudentController@changePassword');
 Router::get('/students/profile', 'StudentController@getProfile');
 Router::put('/students/profile', 'StudentController@updateProfile');
 
+// Class Subject Management Routes (admin only for create/update/delete, public for view)
+Router::get('/class-subjects', 'ClassSubjectController@index');
+Router::post('/class-subjects', 'ClassSubjectController@store');
+Router::get('/class-subjects/search', 'ClassSubjectController@search');
+Router::get('/class-subjects/by-class', 'ClassSubjectController@getByClass');
+Router::get('/class-subjects/by-subject', 'ClassSubjectController@getBySubject');
+Router::get('/class-subjects/by-academic-year', 'ClassSubjectController@getByAcademicYear');
+Router::get('/class-subjects/academic-years', 'ClassSubjectController@getAcademicYears');
+Router::get('/class-subjects/terms', 'ClassSubjectController@getTerms');
+Router::get('/class-subjects/statistics', 'ClassSubjectController@getStatistics');
+Router::get('/class-subjects/{id}', 'ClassSubjectController@show');
+Router::put('/class-subjects/{id}', 'ClassSubjectController@update');
+Router::delete('/class-subjects/{id}', 'ClassSubjectController@destroy');
+
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');

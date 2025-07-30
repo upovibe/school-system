@@ -160,6 +160,22 @@ Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');
 
+// Student Management Routes (admin only for create/update/delete, student auth for profile)
+Router::get('/students', 'StudentController@index');
+Router::post('/students', 'StudentController@store');
+Router::get('/students/active', 'StudentController@getActive');
+Router::get('/students/search', 'StudentController@search');
+Router::get('/students/by-class', 'StudentController@getByClass');
+Router::get('/students/{id}', 'StudentController@show');
+Router::put('/students/{id}', 'StudentController@update');
+Router::delete('/students/{id}', 'StudentController@destroy');
+
+// Student Authentication Routes (public for login, student auth for others)
+Router::post('/students/login', 'StudentController@login');
+Router::post('/students/change-password', 'StudentController@changePassword');
+Router::get('/students/profile', 'StudentController@getProfile');
+Router::put('/students/profile', 'StudentController@updateProfile');
+
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');

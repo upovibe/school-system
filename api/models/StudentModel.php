@@ -296,13 +296,13 @@ class StudentModel extends BaseModel {
                 date_of_birth, gender, admission_date, current_class_id,
                 parent_name, parent_phone, parent_email, emergency_contact,
                 emergency_phone, blood_group, medical_conditions, password,
-                status, profile_image, created_at, updated_at
+                status, created_at, updated_at
             ) VALUES (
                 :student_id, :first_name, :last_name, :email, :phone, :address,
                 :date_of_birth, :gender, :admission_date, :current_class_id,
                 :parent_name, :parent_phone, :parent_email, :emergency_contact,
                 :emergency_phone, :blood_group, :medical_conditions, :password,
-                :status, :profile_image, :created_at, :updated_at
+                :status, :created_at, :updated_at
             )";
 
             $studentStmt = $this->pdo->prepare($studentSql);
@@ -327,7 +327,6 @@ class StudentModel extends BaseModel {
                 'phone' => $data['phone'] ?? null,
                 'role_id' => $role['id'],
                 'gender' => $data['gender'] ?? null,
-                'profile_image' => $data['profile_image'] ?? null,
                 'status' => 'active',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
@@ -335,10 +334,10 @@ class StudentModel extends BaseModel {
 
             $userSql = "INSERT INTO users (
                 name, email, password, phone, role_id, gender, 
-                profile_image, status, created_at, updated_at
+                status, created_at, updated_at
             ) VALUES (
                 :name, :email, :password, :phone, :role_id, :gender,
-                :profile_image, :status, :created_at, :updated_at
+                :status, :created_at, :updated_at
             )";
 
             $userStmt = $this->pdo->prepare($userSql);
@@ -411,7 +410,6 @@ class StudentModel extends BaseModel {
                 'email' => $data['email'] ?? null,
                 'phone' => $data['phone'] ?? null,
                 'gender' => $data['gender'] ?? null,
-                'profile_image' => $data['profile_image'] ?? null,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 

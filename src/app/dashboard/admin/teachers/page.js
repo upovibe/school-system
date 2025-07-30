@@ -1,223 +1,301 @@
 import App from '@/core/App.js';
+import '@/components/ui/Table.js';
+import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
+import '@/components/ui/Toast.js';
+import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/TeacherAddModal.js';
 import '@/components/layout/adminLayout/TeacherUpdateModal.js';
 import '@/components/layout/adminLayout/TeacherViewModal.js';
 import '@/components/layout/adminLayout/TeacherDeleteDialog.js';
-import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
 /**
- * Teacher Management Page Component
+ * Teacher Management Page
  * 
- * A page component for managing teachers in the admin panel
- * 
- * Features:
- * - Display teachers in a table
- * - Add new teachers
- * - Update existing teachers
- * - View teacher details
- * - Delete teachers
- * - Search teachers
- * - Refresh data
+ * Displays teachers data using Table component
  */
-class TeacherManagementPage extends HTMLElement {
+class TeacherManagementPage extends App {
     constructor() {
         super();
         this.teachers = null;
         this.loading = false;
-        this.error = null;
-    }
-
-    static get observedAttributes() {
-        return ['data-page'];
+        this.showAddModal = false;
+        this.showUpdateModal = false;
+        this.showViewModal = false;
+        this.updateTeacherData = null;
+        this.viewTeacherData = null;
+        this.deleteTeacherData = null;
     }
 
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'Teacher Management - Admin Dashboard';
-        this.render();
-        this.setupEventListeners();
+        document.title = 'Teacher Management | School System';
         this.loadData();
-    }
-
-    setupEventListeners() {
-        // Table action events
-        this.addEventListener('table-view', (e) => this.onView(e.detail));
-        this.addEventListener('table-edit', (e) => this.onEdit(e.detail));
-        this.addEventListener('table-delete', (e) => this.onDelete(e.detail));
-        this.addEventListener('table-add', () => this.onAdd());
-        this.addEventListener('table-refresh', () => this.onRefresh());
-
-        // Modal events
-        this.addEventListener('teacher-saved', () => {
-            this.loadData();
-            this.closeAllModals();
+        
+        // Add event listeners for table events
+        this.addEventListener('table-view', this.onView.bind(this));
+        this.addEventListener('table-edit', this.onEdit.bind(this));
+        this.addEventListener('table-delete', this.onDelete.bind(this));
+        this.addEventListener('table-add', this.onAdd.bind(this));
+        
+        // Listen for success events to refresh data
+        this.addEventListener('teacher-deleted', (event) => {
+            // Remove the deleted teacher from the current data
+            const deletedTeacherId = event.detail.teacherId;
+            const currentTeachers = this.get('teachers') || [];
+            const updatedTeachers = currentTeachers.filter(teacher => teacher.id !== deletedTeacherId);
+            this.set('teachers', updatedTeachers);
+            this.updateTableData();
+            
+            // Close the delete dialog
+            this.set('showDeleteDialog', false);
         });
-
-        this.addEventListener('teacher-updated', () => {
-            this.loadData();
-            this.closeAllModals();
+        
+        this.addEventListener('teacher-saved', (event) => {
+            // Add the new teacher to the existing data
+            const newTeacher = event.detail.teacher;
+            if (newTeacher) {
+                const currentTeachers = this.get('teachers') || [];
+                this.set('teachers', [...currentTeachers, newTeacher]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
         });
-
-        this.addEventListener('teacher-deleted', () => {
-            this.loadData();
-            this.closeAllModals();
+        
+        this.addEventListener('teacher-updated', (event) => {
+            // Update the existing teacher in the data
+            const updatedTeacher = event.detail.teacher;
+            if (updatedTeacher) {
+                const currentTeachers = this.get('teachers') || [];
+                const updatedTeachers = currentTeachers.map(teacher => 
+                    teacher.id === updatedTeacher.id ? updatedTeacher : teacher
+                );
+                this.set('teachers', updatedTeachers);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
+            } else {
+                this.loadData();
+            }
         });
     }
 
     async loadData() {
         try {
-            this.loading = true;
-            this.error = null;
-            this.updateTableData();
-
+            this.set('loading', true);
+            
+            // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
-                throw new Error('Authentication required');
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to view data',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
             }
 
-            const response = await api.withToken(token).get('/teachers');
+            // Load teachers data
+            const teachersResponse = await api.withToken(token).get('/teachers');
             
-            if (response.status === 200 && response.data.success) {
-                this.teachers = response.data.data;
-            } else {
-                throw new Error(response.data.message || 'Failed to load teachers');
-            }
+            this.set('teachers', teachersResponse.data.data);
+            this.set('loading', false);
+            
         } catch (error) {
-            console.error('❌ Error loading teachers:', error);
-            this.error = error.message || 'Failed to load teachers';
+            console.error('❌ Error loading data:', error);
+            this.set('loading', false);
+            
             Toast.show({
                 title: 'Error',
-                message: this.error,
+                message: error.response?.data?.message || 'Failed to load teachers data',
                 variant: 'error',
                 duration: 3000
             });
-        } finally {
-            this.loading = false;
-            this.updateTableData();
         }
     }
 
-    onView(teacher) {
-        const viewModal = this.querySelector('teacher-view-modal');
-        if (viewModal) {
-            viewModal.setTeacherData(teacher);
-            viewModal.open();
+    onView(event) {
+        const { detail } = event;
+        const viewTeacher = this.get('teachers').find(teacher => teacher.id === detail.row.id);
+        if (viewTeacher) {
+            this.closeAllModals();
+            this.set('viewTeacherData', viewTeacher);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('teacher-view-modal');
+                if (viewModal) {
+                    viewModal.setTeacherData(viewTeacher);
+                }
+            }, 0);
         }
     }
 
-    onEdit(teacher) {
-        const updateModal = this.querySelector('teacher-update-modal');
-        if (updateModal) {
-            updateModal.setTeacherData(teacher);
-            updateModal.open();
+    onEdit(event) {
+        const { detail } = event;
+        const editTeacher = this.get('teachers').find(teacher => teacher.id === detail.row.id);
+        if (editTeacher) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('updateTeacherData', editTeacher);
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('teacher-update-modal');
+                if (updateModal) {
+                    updateModal.setTeacherData(editTeacher);
+                }
+            }, 0);
         }
     }
 
-    onDelete(teacher) {
-        const deleteDialog = this.querySelector('teacher-delete-dialog');
-        if (deleteDialog) {
-            deleteDialog.setTeacherData(teacher);
-            deleteDialog.open();
+    onDelete(event) {
+        const { detail } = event;
+        const deleteTeacher = this.get('teachers').find(teacher => teacher.id === detail.row.id);
+        if (deleteTeacher) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('deleteTeacherData', deleteTeacher);
+            this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('teacher-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setTeacherData(deleteTeacher);
+                }
+            }, 0);
         }
     }
 
-    onAdd() {
-        const addModal = this.querySelector('teacher-add-modal');
-        if (addModal) {
-            addModal.open();
-        }
-    }
-
-    onRefresh() {
-        this.loadData();
+    onAdd(event) {
+        // Close any open modals first
+        this.closeAllModals();
+        this.set('showAddModal', true);
     }
 
     updateTableData() {
-        const table = this.querySelector('ui-table');
-        if (table) {
-            if (this.loading) {
-                table.setAttribute('loading', '');
-            } else {
-                table.removeAttribute('loading');
-            }
+        const teachers = this.get('teachers');
+        if (!teachers) return;
 
-            if (this.error) {
-                table.setAttribute('error', this.error);
-            } else {
-                table.removeAttribute('error');
-            }
+        // Prepare table data
+        const tableData = teachers.map((teacher, index) => ({
+            id: teacher.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
+            name: teacher.name || 'N/A',
+            email: teacher.email || 'N/A',
+            employee_id: teacher.employee_id || 'N/A',
+            specialization: teacher.specialization || 'N/A',
+            qualification: teacher.qualification || 'N/A',
+            status: teacher.status === 'active' ? 'Active' : 'Inactive',
+            hire_date: teacher.hire_date ? new Date(teacher.hire_date).toLocaleDateString() : 'N/A',
+            salary: teacher.salary ? `₵${parseFloat(teacher.salary).toLocaleString()}` : 'N/A',
+            created: teacher.created_at,
+            updated: teacher.updated_at
+        }));
 
-            if (this.teachers) {
-                const tableData = this.teachers.map(teacher => ({
-                    id: teacher.id,
-                    name: teacher.name || 'N/A',
-                    email: teacher.email || 'N/A',
-                    employee_id: teacher.employee_id || 'N/A',
-                    specialization: teacher.specialization || 'N/A',
-                    qualification: teacher.qualification || 'N/A',
-                    status: teacher.status || 'N/A',
-                    hire_date: teacher.hire_date ? new Date(teacher.hire_date).toLocaleDateString() : 'N/A',
-                    salary: teacher.salary ? `₵${parseFloat(teacher.salary).toLocaleString()}` : 'N/A'
-                }));
-                table.setAttribute('data', JSON.stringify(tableData));
-            }
+        // Find the table component and update its data
+        const tableComponent = this.querySelector('ui-table');
+        if (tableComponent) {
+            tableComponent.setAttribute('data', JSON.stringify(tableData));
         }
     }
 
     closeAllModals() {
-        const modals = this.querySelectorAll('teacher-add-modal, teacher-update-modal, teacher-view-modal, teacher-delete-dialog');
-        modals.forEach(modal => {
-            if (modal.hasAttribute('open')) {
-                modal.removeAttribute('open');
-            }
-        });
+        this.set('showAddModal', false);
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
+        this.set('showDeleteDialog', false);
+        this.set('updateTeacherData', null);
+        this.set('viewTeacherData', null);
+        this.set('deleteTeacherData', null);
     }
 
     render() {
-        this.innerHTML = `
-            <div class="container mx-auto px-4 py-6">
-                <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Teacher Management</h1>
-                    <p class="text-gray-600">Manage teachers, their qualifications, and assignments</p>
-                </div>
+        const teachers = this.get('teachers');
+        const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
+        const showViewModal = this.get('showViewModal');
+        const showDeleteDialog = this.get('showDeleteDialog');
+        
+        // Prepare table data and columns for teachers
+        const tableData = teachers ? teachers.map((teacher, index) => ({
+            id: teacher.id, // Keep ID for internal use
+            index: index + 1, // Add index number for display
+            name: teacher.name || 'N/A',
+            email: teacher.email || 'N/A',
+            employee_id: teacher.employee_id || 'N/A',
+            specialization: teacher.specialization || 'N/A',
+            qualification: teacher.qualification || 'N/A',
+            status: teacher.status === 'active' ? 'Active' : 'Inactive',
+            hire_date: teacher.hire_date ? new Date(teacher.hire_date).toLocaleDateString() : 'N/A',
+            salary: teacher.salary ? `₵${parseFloat(teacher.salary).toLocaleString()}` : 'N/A',
+            created: teacher.created_at,
+            updated: teacher.updated_at
+        })) : [];
 
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <ui-table 
-                        title="Teachers"
-                        description="Manage all teachers in the system"
-                        :columns='[
-                            {"key": "name", "label": "Name", "sortable": true},
-                            {"key": "email", "label": "Email", "sortable": true},
-                            {"key": "employee_id", "label": "Employee ID", "sortable": true},
-                            {"key": "specialization", "label": "Specialization", "sortable": true},
-                            {"key": "qualification", "label": "Qualification", "sortable": true},
-                            {"key": "status", "label": "Status", "sortable": true},
-                            {"key": "hire_date", "label": "Hire Date", "sortable": true},
-                            {"key": "salary", "label": "Salary", "sortable": true}
-                        ]'
-                        :actions='[
-                            {"key": "view", "label": "View", "icon": "fas fa-eye", "variant": "secondary"},
-                            {"key": "edit", "label": "Edit", "icon": "fas fa-edit", "variant": "primary"},
-                            {"key": "delete", "label": "Delete", "icon": "fas fa-trash", "variant": "danger"}
-                        ]'
-                        :search="true"
-                        :pagination="true"
-                        :refresh="true"
-                        :add="true"
-                        add-label="Add Teacher">
-                    </ui-table>
-                </div>
-
-                <!-- Modals and Dialogs -->
-                <teacher-add-modal></teacher-add-modal>
-                <teacher-update-modal></teacher-update-modal>
-                <teacher-view-modal></teacher-view-modal>
-                <teacher-delete-dialog></teacher-delete-dialog>
+        const tableColumns = [
+            { key: 'index', label: 'No.', html: false },
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'employee_id', label: 'Employee ID' },
+            { key: 'specialization', label: 'Specialization' },
+            { key: 'qualification', label: 'Qualification' },
+            { key: 'status', label: 'Status' },
+            { key: 'hire_date', label: 'Hire Date' },
+            { key: 'salary', label: 'Salary' },
+            { key: 'updated', label: 'Updated' }
+        ];
+        
+        return `
+            <div class="bg-white rounded-lg shadow-lg p-4">
+                ${loading ? `
+                    <!-- Simple Skeleton Loading -->
+                    <div class="space-y-4">
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                    </div>
+                ` : `
+                    <!-- Teachers Table Section -->
+                    <div class="mb-8">
+                        <ui-table 
+                            title="Teachers Database"
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            sortable
+                            searchable
+                            search-placeholder="Search teachers..."
+                            pagination
+                            page-size="10"
+                            action
+                            addable
+                            refresh
+                            print
+                            bordered
+                            striped
+                            class="w-full">
+                        </ui-table>
+                    </div>
+                `}
             </div>
+            
+            <!-- Add Teacher Modal -->
+            <teacher-add-modal ${showAddModal ? 'open' : ''}></teacher-add-modal>
+            
+            <!-- Update Teacher Modal -->
+            <teacher-update-modal ${showUpdateModal ? 'open' : ''}></teacher-update-modal>
+            
+            <!-- View Teacher Modal -->
+            <teacher-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></teacher-view-modal>
+            
+            <!-- Delete Teacher Dialog -->
+            <teacher-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-delete-dialog>
         `;
     }
 }
 
-customElements.define('teacher-management-page', TeacherManagementPage);
+customElements.define('app-teacher-management-page', TeacherManagementPage);
 export default TeacherManagementPage; 

@@ -1,6 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Select.js';
+import '@/components/ui/Dropdown.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
@@ -180,15 +180,14 @@ class TeacherAddModal extends HTMLElement {
                                 <label for="user_id" class="block text-sm font-medium text-gray-700 mb-1">
                                     User <span class="text-red-500">*</span>
                                 </label>
-                                <ui-select 
+                                <ui-dropdown 
                                     name="user_id" 
                                     id="user_id" 
-                                    required
                                     placeholder="Select a user">
                                     ${this.users.map(user => `
-                                        <option value="${user.id}">${user.name} (${user.email})</option>
+                                        <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
                                     `).join('')}
-                                </ui-select>
+                                </ui-dropdown>
                             </div>
 
                             <div>

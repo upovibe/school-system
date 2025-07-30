@@ -429,7 +429,7 @@ class StudentAddDialog extends HTMLElement {
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label>
                                 <ui-input 
                                     data-field="emergency_contact"
                                     type="text" 

@@ -38,7 +38,7 @@ class SearchDropdown extends HTMLElement {
         this._setupEventListeners();
         this._onSlotChange(); // Process initial options
         this._updateFromAttributes(); // Sync with initial attributes
-        
+
         this.isInitialized = true;
     }
 
@@ -55,7 +55,7 @@ class SearchDropdown extends HTMLElement {
         this.searchInput.addEventListener('input', (e) => this._onSearch(e));
         this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
         this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
-        
+
         document.addEventListener('click', (e) => {
             if (!e.composedPath().includes(this)) {
                 this.closeDropdown();
@@ -153,7 +153,7 @@ class SearchDropdown extends HTMLElement {
     _selectOption(option) {
         if (option.hasAttribute('disabled')) return;
         const value = option.getAttribute('value');
-        
+
         if (this.hasAttribute('multiple')) {
             this.selectedValues.has(value) ? this.selectedValues.delete(value) : this.selectedValues.add(value);
         } else {
@@ -167,10 +167,10 @@ class SearchDropdown extends HTMLElement {
     }
 
     _dispatchChangeEvent() {
-        const value = this.hasAttribute('multiple') 
-            ? JSON.stringify(Array.from(this.selectedValues)) 
+        const value = this.hasAttribute('multiple')
+            ? JSON.stringify(Array.from(this.selectedValues))
             : (this.selectedValues.values().next().value || null);
-        
+
         if (this.getAttribute('value') !== value) {
             this.setAttribute('value', value);
         }
@@ -182,8 +182,8 @@ class SearchDropdown extends HTMLElement {
     _getFilteredOptions() {
         if (!this.searchTerm) return this._options;
         const term = this.searchTerm.toLowerCase();
-        return this._options.filter(option => 
-            option.textContent.toLowerCase().includes(term) || 
+        return this._options.filter(option =>
+            option.textContent.toLowerCase().includes(term) ||
             (option.getAttribute('value') || '').toLowerCase().includes(term)
         );
     }
@@ -234,7 +234,7 @@ class SearchDropdown extends HTMLElement {
             const isSelected = this.selectedValues.has(value);
             const isFocused = this.focusedIndex === index;
             const isDisabled = option.hasAttribute('disabled');
-            
+
             let classes = 'UpoSearchDropdown__option';
             if (isSelected) classes += ' selected';
             if (isFocused) classes += ' focused';
@@ -263,18 +263,76 @@ class SearchDropdown extends HTMLElement {
             <style>
                 :host { display: inline-block; width: 100%; position: relative; font-family: sans-serif; }
                 .UpoSearchDropdown { position: relative; }
-                .UpoSearchDropdown__trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; cursor: pointer; min-height: 38px; box-sizing: border-box; }
-                .UpoSearchDropdown__trigger.disabled { background-color: #f5f5f5; color: #999; cursor: not-allowed; }
+                .UpoSearchDropdown__trigger { 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: space-between; 
+                    width: 100%; 
+                    padding: 0.375rem 0.5rem; 
+                    border: 1px solid #d1d5db; 
+                    border-radius: 0.35rem; 
+                    background-color: #ffffff; 
+                    cursor: pointer; 
+                    min-height: 2rem; 
+                    box-sizing: border-box;
+                    font-size: 0.75rem;
+                    line-height: 1.25;
+                    color: #374151;
+                    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                }
+                
+                .UpoSearchDropdown__trigger:hover,
+.UpoSearchDropdown__trigger:active {
+    border-color: #0d53df;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+                
+                .UpoSearchDropdown__trigger:hover,
+.UpoSearchDropdown__trigger:focus,
+.UpoSearchDropdown__trigger:active {
+    border-color: #0d53df;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+                .UpoSearchDropdown__trigger.disabled { 
+                    background-color: #f9fafb; 
+                    color: #9ca3af; 
+                    cursor: not-allowed; 
+                    border-color: #e5e7eb;
+                }
                 .UpoSearchDropdown__selection { flex: 1; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 20px; }
-                .UpoSearchDropdown__placeholder { color: #999; }
+                .UpoSearchDropdown__placeholder { color: #9ca3af; }
                 .UpoSearchDropdown__tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background-color: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; }
                 .UpoSearchDropdown__tagRemove { cursor: pointer; background: none; border: none; font-size: 16px; color: #6b7280; padding: 0; line-height: 1; }
                 .UpoSearchDropdown__arrow { display: flex; align-items: center; color: #6b7280; transition: transform 0.2s; }
                 .UpoSearchDropdown.open .UpoSearchDropdown__arrow { transform: rotate(180deg); }
                 .UpoSearchDropdown__menu { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 1000; }
                 .UpoSearchDropdown.open .UpoSearchDropdown__menu { display: block; }
-                .UpoSearchDropdown__searchContainer { padding: 8px; border-bottom: 1px solid #eee; }
-                .UpoSearchDropdown__searchInput { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+                .UpoSearchDropdown__searchContainer { 
+                    padding: 0.375rem; 
+                    border-bottom: 1px solid #e5e7eb; 
+                }
+                .UpoSearchDropdown__searchInput { 
+                    width: 100%; 
+                    padding: 0.375rem 0.5rem; 
+                    border: 1px solid #d1d5db; 
+                    border-radius: 0.25rem; 
+                    font-size: 0.75rem; 
+                    line-height: 1.25;
+                    color: #374151;
+                    background-color: #ffffff;
+                    box-sizing: border-box;
+                    outline: none;
+                    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                }
+                
+                .UpoSearchDropdown__searchInput:focus {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+                }
+                
+                .UpoSearchDropdown__searchInput::placeholder {
+                    color: #9ca3af;
+                }
                 .UpoSearchDropdown__options { max-height: 192px; overflow-y: auto; }
                 .UpoSearchDropdown__option { padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
                 .UpoSearchDropdown__option:hover { background-color: #f0f0f0; }

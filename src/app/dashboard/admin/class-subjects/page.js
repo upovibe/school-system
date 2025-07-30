@@ -211,6 +211,25 @@ class ClassSubjectManagementPage extends App {
         this.set('deleteClassSubjectData', null);
     }
 
+    groupClassSubjects(classSubjects) {
+        const grouped = {};
+        classSubjects.forEach(assignment => {
+            const key = `${assignment.class_name}-${assignment.class_section}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    className: assignment.class_name,
+                    classSection: assignment.class_section,
+                    subjects: []
+                };
+            }
+            grouped[key].subjects.push({
+                subjectName: assignment.subject_name,
+                subjectCode: assignment.subject_code
+            });
+        });
+        return Object.values(grouped);
+    }
+
     render() {
         const classSubjects = this.get('classSubjects');
         const loading = this.get('loading');
@@ -282,16 +301,79 @@ class ClassSubjectManagementPage extends App {
                         
                         <!-- Preview Tab Panel -->
                         <ui-tab-panel value="preview">
-                            <div class="text-center py-12">
-                                <div class="max-w-md mx-auto">
-                                    <div class="text-gray-400 mb-4">
-                                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Class Subject Assignments Preview</h3>
+                                    <div class="text-sm text-gray-500">
+                                        ${classSubjects ? `${classSubjects.length} assignments` : '0 assignments'}
                                     </div>
-                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Preview Mode</h3>
-                                    <p class="text-gray-500">This is the preview tab. Here you can see a preview of the class subject assignments.</p>
                                 </div>
+                                
+                                ${classSubjects && classSubjects.length > 0 ? `
+                                    <div class="grid gap-6">
+                                        ${this.groupClassSubjects(classSubjects).map(classGroup => `
+                                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                                                <!-- Class Header -->
+                                                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center space-x-3">
+                                                            <div class="flex-shrink-0">
+                                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                                    <i class="fas fa-chalkboard-teacher text-blue-600 text-lg"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <h4 class="text-lg font-semibold text-gray-900">${classGroup.className}</h4>
+                                                                <p class="text-sm text-gray-600">Section ${classGroup.classSection}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Subjects List -->
+                                                <div class="p-6">
+                                                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                                        ${classGroup.subjects.map(subject => `
+                                                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
+                                                                <div class="flex items-start justify-between">
+                                                                    <div class="flex-1">
+                                                                        <div class="flex items-center space-x-2 mb-2">
+                                                                            <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                                                                <i class="fas fa-book text-green-600 text-xs"></i>
+                                                                            </div>
+                                                                            <h5 class="text-sm font-medium text-gray-900">${subject.subjectName}</h5>
+                                                                        </div>
+                                                                        <p class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">${subject.subjectCode}</p>
+                                                                    </div>
+                                                                    <div class="flex items-center space-x-1">
+                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                            Active
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <div class="text-center py-12">
+                                        <div class="max-w-md mx-auto">
+                                                                                <div class="text-gray-400 mb-4">
+                                        <i class="fas fa-chalkboard-teacher text-6xl"></i>
+                                    </div>
+                                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Class Subject Assignments</h3>
+                                            <p class="text-gray-500">No class subject assignments have been created yet. Use the Table tab to add new assignments.</p>
+                                        </div>
+                                    </div>
+                                `}
                             </div>
                         </ui-tab-panel>
                     </ui-tabs>

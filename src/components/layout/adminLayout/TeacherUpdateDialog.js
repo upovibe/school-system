@@ -76,6 +76,7 @@ class TeacherUpdateDialog extends HTMLElement {
         this.render();
         
         // Force update dropdowns after render to ensure values are displayed
+        // Use a longer timeout to ensure data is loaded
         setTimeout(() => {
             const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const userDropdown = this.querySelector('ui-search-dropdown[name="user_id"]');
@@ -87,7 +88,7 @@ class TeacherUpdateDialog extends HTMLElement {
             if (userDropdown && teacher?.user_id) {
                 userDropdown.value = teacher.user_id;
             }
-        },0);
+        }, 200);
     }
 
     async updateTeacher() {
@@ -161,28 +162,36 @@ class TeacherUpdateDialog extends HTMLElement {
                     <form id="teacher-update-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                            <ui-search-dropdown 
-                                name="team_id" 
-                                placeholder="Search teams..."
-                                value="${teacher?.team_id || ''}"
-                                class="w-full">
-                                ${this.teams.map(team => `
-                                    <ui-option value="${team.id}" ${teacher && teacher.team_id == team.id ? 'selected' : ''}>${team.name} - ${team.position}</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
+                            ${this.teams.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="team_id" 
+                                    placeholder="Search teams..."
+                                    value="${teacher?.team_id || ''}"
+                                    class="w-full">
+                                    ${this.teams.map(team => `
+                                        <ui-option value="${team.id}" ${teacher && teacher.team_id == team.id ? 'selected' : ''}>${team.name} - ${team.position}</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                            <ui-search-dropdown 
-                                name="user_id" 
-                                placeholder="Search users..."
-                                value="${teacher?.user_id || ''}"
-                                class="w-full">
-                                ${this.users.map(user => `
-                                    <ui-option value="${user.id}" ${teacher && teacher.user_id == user.id ? 'selected' : ''}>${user.name} (${user.email})</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
+                            ${this.users.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="user_id" 
+                                    placeholder="Search users..."
+                                    value="${teacher?.user_id || ''}"
+                                    class="w-full">
+                                    ${this.users.map(user => `
+                                        <ui-option value="${user.id}" ${teacher && teacher.user_id == user.id ? 'selected' : ''}>${user.name} (${user.email})</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
                         </div>
                         
                         <div>

@@ -35,13 +35,9 @@ class ClassSubjectController {
                 $filters['subject_id'] = $_GET['subject_id'];
             }
             
-            if (isset($_GET['academic_year'])) {
-                $filters['academic_year'] = $_GET['academic_year'];
-            }
+
             
-            if (isset($_GET['term'])) {
-                $filters['term'] = $_GET['term'];
-            }
+
             
             $classSubjects = $this->classSubjectModel->getWithDetails($filters);
             
@@ -105,10 +101,7 @@ class ClassSubjectController {
                 return;
             }
 
-            // Set default values if not provided
-            if (!isset($data['term'])) {
-                $data['term'] = 'full_year';
-            }
+
 
             // Create the class subject
             $classSubjectId = $this->classSubjectModel->create($data);
@@ -169,12 +162,11 @@ class ClassSubjectController {
                 return;
             }
             
-            // Get with details
-            $classSubjects = $this->classSubjectModel->getWithDetails([
-                'class_id' => $classSubject['class_id'],
-                'subject_id' => $classSubject['subject_id'],
-                'academic_year' => $classSubject['academic_year']
-            ]);
+                         // Get with details
+             $classSubjects = $this->classSubjectModel->getWithDetails([
+                 'class_id' => $classSubject['class_id'],
+                 'subject_id' => $classSubject['subject_id']
+             ]);
             
             $classSubjectWithDetails = $classSubjects[0] ?? $classSubject;
             
@@ -312,13 +304,12 @@ class ClassSubjectController {
             $success = $this->classSubjectModel->delete($id);
             
             if ($success) {
-                // Log the action
-                $this->logAction('delete', "Deleted class subject assignment", [
-                    'class_subject_id' => $id,
-                    'class_id' => $classSubject['class_id'],
-                    'subject_id' => $classSubject['subject_id'],
-                    'academic_year' => $classSubject['academic_year']
-                ]);
+                                 // Log the action
+                 $this->logAction('delete', "Deleted class subject assignment", [
+                     'class_subject_id' => $id,
+                     'class_id' => $classSubject['class_id'],
+                     'subject_id' => $classSubject['subject_id']
+                 ]);
                 
                 http_response_code(200);
                 echo json_encode([
@@ -415,42 +406,7 @@ class ClassSubjectController {
         }
     }
 
-    /**
-     * Get class subjects by academic year (admin only)
-     */
-    public function getByAcademicYear() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            $academicYear = $_GET['academic_year'] ?? null;
-            
-            if (!$academicYear) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
-            
-            $classSubjects = $this->classSubjectModel->getByAcademicYear($academicYear);
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => $classSubjects,
-                'message' => 'Class subjects retrieved successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving class subjects: ' . $e->getMessage()
-            ]);
-        }
-    }
+
 
     /**
      * Search class subjects (admin only)
@@ -490,57 +446,7 @@ class ClassSubjectController {
         }
     }
 
-    /**
-     * Get available academic years (admin only)
-     */
-    public function getAcademicYears() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            $academicYears = $this->classSubjectModel->getAvailableAcademicYears();
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => $academicYears,
-                'message' => 'Academic years retrieved successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving academic years: ' . $e->getMessage()
-            ]);
-        }
-    }
 
-    /**
-     * Get available terms (admin only)
-     */
-    public function getTerms() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            $terms = $this->classSubjectModel->getAvailableTerms();
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => $terms,
-                'message' => 'Terms retrieved successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving terms: ' . $e->getMessage()
-            ]);
-        }
-    }
 
     /**
      * Get statistics (admin only)

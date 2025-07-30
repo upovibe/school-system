@@ -15,7 +15,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         this.classSubjectData = null;
         this.classes = [];
         this.subjects = [];
-        this.terms = ['full_year', 'first_term', 'second_term', 'third_term'];
         this.loading = false;
     }
 
@@ -74,7 +73,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
     setupEventListeners() {
         // Listen for dialog events
-        this.addEventListener('dialog-save', this.updateClassSubject.bind(this));
+        this.addEventListener('confirm', this.updateClassSubject.bind(this));
     }
 
     setClassSubjectData(classSubject) {
@@ -85,7 +84,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         setTimeout(() => {
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-            const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
             
             if (classDropdown && classSubject?.class_id) {
                 // Find the class option and set its text as the display value
@@ -104,10 +102,6 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                     subjectDropdown.setAttribute('display-value', `${selectedSubject.name} (${selectedSubject.code})`);
                 }
             }
-            
-            if (termDropdown && classSubject?.term) {
-                termDropdown.value = classSubject.term || 'full_year';
-            }
         }, 200);
     }
 
@@ -120,12 +114,10 @@ class ClassSubjectUpdateDialog extends HTMLElement {
             // Get form data using the data-field attributes for reliable selection
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-            const termDropdown = this.querySelector('ui-search-dropdown[data-field="term"]');
 
             const classSubjectData = {
                 class_id: classDropdown ? classDropdown.value : '',
-                subject_id: subjectDropdown ? subjectDropdown.value : '',
-                term: termDropdown ? termDropdown.value : 'full_year'
+                subject_id: subjectDropdown ? subjectDropdown.value : ''
             };
 
             // Validation
@@ -263,19 +255,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                              `}
                          </div>
 
-                         <!-- Term -->
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                             <ui-search-dropdown 
-                                 data-field="term" 
-                                 placeholder="Select term..."
-                                 value="${classSubject?.term || 'full_year'}"
-                                 class="w-full">
-                                 ${this.terms.map(term => `
-                                     <ui-option value="${term}" ${classSubject && classSubject.term == term ? 'selected' : ''}>${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
-                                 `).join('')}
-                             </ui-search-dropdown>
-                         </div>
+                         
                     </div>
                 </div>
             </ui-dialog>

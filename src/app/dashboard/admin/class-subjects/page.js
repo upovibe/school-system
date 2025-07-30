@@ -188,9 +188,6 @@ class ClassSubjectManagementPage extends App {
             class_section: classSubject.class_section || 'N/A',
             subject_name: classSubject.subject_name || 'N/A',
             subject_code: classSubject.subject_code || 'N/A',
-            academic_year: classSubject.academic_year || 'N/A',
-            term: classSubject.term || 'N/A',
-            teaching_hours: classSubject.teaching_hours || 0,
             created: classSubject.created_at,
             updated: classSubject.updated_at
         }));
@@ -228,9 +225,6 @@ class ClassSubjectManagementPage extends App {
             class_section: classSubject.class_section || 'N/A',
             subject_name: classSubject.subject_name || 'N/A',
             subject_code: classSubject.subject_code || 'N/A',
-            academic_year: classSubject.academic_year || 'N/A',
-            term: classSubject.term || 'N/A',
-            teaching_hours: classSubject.teaching_hours || 0,
             created: classSubject.created_at,
             updated: classSubject.updated_at
         })) : [];
@@ -241,9 +235,6 @@ class ClassSubjectManagementPage extends App {
             { key: 'class_section', label: 'Section' },
             { key: 'subject_name', label: 'Subject' },
             { key: 'subject_code', label: 'Subject Code' },
-            { key: 'academic_year', label: 'Academic Year' },
-            { key: 'term', label: 'Term' },
-            { key: 'teaching_hours', label: 'Teaching Hours' },
             { key: 'updated', label: 'Updated' }
         ];
         

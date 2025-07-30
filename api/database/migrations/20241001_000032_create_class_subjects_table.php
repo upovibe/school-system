@@ -13,18 +13,13 @@ class Migration_20241001000032createclasssubjectstable {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 class_id INT NOT NULL,
                 subject_id INT NOT NULL,
-                academic_year VARCHAR(20) NOT NULL,
-                term VARCHAR(20) DEFAULT 'full_year',
-                teaching_hours INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
                 FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-                UNIQUE KEY unique_class_subject_year (class_id, subject_id, academic_year),
+                UNIQUE KEY unique_class_subject (class_id, subject_id),
                 INDEX idx_class_id (class_id),
-                INDEX idx_subject_id (subject_id),
-                INDEX idx_academic_year (academic_year),
-                INDEX idx_term (term)
+                INDEX idx_subject_id (subject_id)
             )
         ");
     }

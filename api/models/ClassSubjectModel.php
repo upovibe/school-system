@@ -9,8 +9,7 @@ class ClassSubjectModel extends BaseModel {
     // Fields that can be mass assigned
     protected static $fillable = [
         'class_id',
-        'subject_id',
-        'term'
+        'subject_id'
     ];
     
     // Fields that should be cast to specific types
@@ -80,10 +79,7 @@ class ClassSubjectModel extends BaseModel {
             
 
             
-            if (!empty($filters['term'])) {
-                $sql .= " AND cs.term = ?";
-                $params[] = $filters['term'];
-            }
+
             
             $sql .= " ORDER BY c.name ASC, c.section ASC, s.name ASC";
             
@@ -156,34 +152,7 @@ class ClassSubjectModel extends BaseModel {
         }
     }
     
-    /**
-     * Get class subjects by academic year
-     */
-    public function getByAcademicYear($academicYear) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT cs.*, 
-                       c.name as class_name, c.section as class_section,
-                       s.name as subject_name, s.code as subject_code
-                FROM {$this->getTableName()} cs
-                LEFT JOIN classes c ON cs.class_id = c.id
-                LEFT JOIN subjects s ON cs.subject_id = s.id
-                WHERE cs.academic_year = ?
-                ORDER BY c.name ASC, c.section ASC, s.name ASC
-            ");
-            $stmt->execute([$academicYear]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Apply casts to each result
-            foreach ($results as &$result) {
-                $result = $this->applyCasts($result);
-            }
-            
-            return $results;
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching class subjects by academic year: ' . $e->getMessage());
-        }
-    }
+
     
     /**
      * Search class subjects
@@ -227,39 +196,7 @@ class ClassSubjectModel extends BaseModel {
         }
     }
     
-    /**
-     * Get available academic years
-     */
-    public function getAvailableAcademicYears() {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT DISTINCT academic_year 
-                FROM {$this->getTableName()} 
-                ORDER BY academic_year DESC
-            ");
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_COLUMN);
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching available academic years: ' . $e->getMessage());
-        }
-    }
-    
-    /**
-     * Get available terms
-     */
-    public function getAvailableTerms() {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT DISTINCT term 
-                FROM {$this->getTableName()} 
-                ORDER BY term ASC
-            ");
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_COLUMN);
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching available terms: ' . $e->getMessage());
-        }
-    }
+
     
     /**
      * Get statistics
@@ -270,8 +207,7 @@ class ClassSubjectModel extends BaseModel {
                 SELECT 
                     COUNT(*) as total_assignments,
                     COUNT(DISTINCT class_id) as total_classes,
-                    COUNT(DISTINCT subject_id) as total_subjects,
-                    COUNT(DISTINCT academic_year) as total_academic_years
+                    COUNT(DISTINCT subject_id) as total_subjects
                 FROM {$this->getTableName()}
             ");
             $stmt->execute();

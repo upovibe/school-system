@@ -164,10 +164,7 @@ class ClassSubjectDeleteDialog extends HTMLElement {
                                 <span class="font-medium text-gray-700">Subject:</span>
                                 <span class="text-gray-900 ml-2">${classSubject.subject_name || 'N/A'} (${classSubject.subject_code || 'N/A'})</span>
                             </div>
-                            <div>
-                                <span class="font-medium text-gray-700">Term:</span>
-                                <span class="text-gray-900 ml-2">${classSubject.term ? classSubject.term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}</span>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>

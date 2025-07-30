@@ -14,7 +14,6 @@ class ClassSubjectAddDialog extends HTMLElement {
         super();
         this.classes = [];
         this.subjects = [];
-        this.terms = ['full_year', 'first_term', 'second_term', 'third_term'];
         this.loading = false;
     }
 
@@ -73,7 +72,7 @@ class ClassSubjectAddDialog extends HTMLElement {
 
     setupEventListeners() {
         // Listen for dialog events
-        this.addEventListener('dialog-save', this.saveClassSubject.bind(this));
+        this.addEventListener('confirm', this.saveClassSubject.bind(this));
     }
 
     resetForm() {
@@ -105,13 +104,11 @@ class ClassSubjectAddDialog extends HTMLElement {
 
                                const classId = classDropdown ? classDropdown.value : '';
                    const subjectIds = subjectDropdown ? subjectDropdown.value : [];
-                   const term = termDropdown ? termDropdown.value : 'full_year';
 
                    // Debug logging
                    console.log('Form Data:', {
                        classId,
-                       subjectIds,
-                       term
+                       subjectIds
                    });
 
                    // Validation
@@ -166,8 +163,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                                const promises = validSubjectIds.map(subjectId => {
                        const classSubjectData = {
                            class_id: parseInt(classId),
-                           subject_id: parseInt(subjectId),
-                           term: term
+                           subject_id: parseInt(subjectId)
                        };
                        console.log('Creating assignment:', classSubjectData);
                        return api.withToken(token).post('/class-subjects', classSubjectData);
@@ -278,18 +274,7 @@ class ClassSubjectAddDialog extends HTMLElement {
                             `}
                         </div>
 
-                                                       <!-- Term -->
-                               <div>
-                                   <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                                   <ui-search-dropdown 
-                                       data-field="term" 
-                                       placeholder="Select term..."
-                                       class="w-full">
-                                       ${this.terms.map(term => `
-                                           <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
-                                       `).join('')}
-                                   </ui-search-dropdown>
-                               </div>
+                        
                     </div>
                 </div>
             </ui-dialog>

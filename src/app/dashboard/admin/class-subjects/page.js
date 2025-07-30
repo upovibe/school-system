@@ -4,6 +4,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/ClassSubjectAddDialog.js';
 import '@/components/layout/adminLayout/ClassSubjectUpdateDialog.js';
 import '@/components/layout/adminLayout/ClassSubjectViewDialog.js';
@@ -13,7 +14,7 @@ import api from '@/services/api.js';
 /**
  * Class Subject Management Page
  * 
- * Displays class subjects data using Table component
+ * Displays class subjects data using Table component with tabs
  */
 class ClassSubjectManagementPage extends App {
     constructor() {
@@ -26,6 +27,7 @@ class ClassSubjectManagementPage extends App {
         this.updateClassSubjectData = null;
         this.viewClassSubjectData = null;
         this.deleteClassSubjectData = null;
+        this.activeTab = 'table'; // Default to table tab
     }
 
     connectedCallback() {
@@ -248,26 +250,51 @@ class ClassSubjectManagementPage extends App {
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
                     </div>
                 ` : `
-                    <!-- Class Subjects Table Section -->
-                    <div class="mb-8">
-                        <ui-table 
-                            title="Class Subject Assignments"
-                            data='${JSON.stringify(tableData)}'
-                            columns='${JSON.stringify(tableColumns)}'
-                            sortable
-                            searchable
-                            search-placeholder="Search class subjects..."
-                            pagination
-                            page-size="10"
-                            action
-                            addable
-                            refresh
-                            print
-                            bordered
-                            striped
-                            class="w-full">
-                        </ui-table>
-                    </div>
+                    <!-- Tabs Section -->
+                    <ui-tabs>
+                        <ui-tab-list>
+                            <ui-tab value="table">Table</ui-tab>
+                            <ui-tab value="preview">Preview</ui-tab>
+                        </ui-tab-list>
+                        
+                        <!-- Table Tab Panel -->
+                        <ui-tab-panel value="table">
+                            <div class="mb-8">
+                                <ui-table 
+                                    title="Class Subject Assignments"
+                                    data='${JSON.stringify(tableData)}'
+                                    columns='${JSON.stringify(tableColumns)}'
+                                    sortable
+                                    searchable
+                                    search-placeholder="Search class subjects..."
+                                    pagination
+                                    page-size="10"
+                                    action
+                                    addable
+                                    refresh
+                                    print
+                                    bordered
+                                    striped
+                                    class="w-full">
+                                </ui-table>
+                            </div>
+                        </ui-tab-panel>
+                        
+                        <!-- Preview Tab Panel -->
+                        <ui-tab-panel value="preview">
+                            <div class="text-center py-12">
+                                <div class="max-w-md mx-auto">
+                                    <div class="text-gray-400 mb-4">
+                                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Preview Mode</h3>
+                                    <p class="text-gray-500">This is the preview tab. Here you can see a preview of the class subject assignments.</p>
+                                </div>
+                            </div>
+                        </ui-tab-panel>
+                    </ui-tabs>
                 `}
             </div>
             

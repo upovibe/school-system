@@ -74,6 +74,20 @@ class TeacherUpdateDialog extends HTMLElement {
     setTeacherData(teacher) {
         this.teacherData = teacher;
         this.render();
+        
+        // Force update dropdowns after render to ensure values are displayed
+        setTimeout(() => {
+            const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
+            const userDropdown = this.querySelector('ui-search-dropdown[name="user_id"]');
+            
+            if (teamDropdown && teacher?.team_id) {
+                teamDropdown.value = teacher.team_id;
+            }
+            
+            if (userDropdown && teacher?.user_id) {
+                userDropdown.value = teacher.user_id;
+            }
+        },0);
     }
 
     async updateTeacher() {

@@ -22,7 +22,7 @@ class SearchDropdown extends HTMLElement {
     }
 
     // --- Lifecycle Callbacks ---
-    connectedCallback() {
+        connectedCallback() {
         if (this.isInitialized) return;
 
         this.shadowRoot.innerHTML = this._renderTemplate();
@@ -38,11 +38,19 @@ class SearchDropdown extends HTMLElement {
         this._setupEventListeners();
         this._onSlotChange(); // Process initial options
         this._updateFromAttributes(); // Sync with initial attributes
-
+        
         this.isInitialized = true;
+        
+        // Force update after initialization to handle any initial values
+        setTimeout(() => {
+            this._updateFromAttributes();
+        }, 0);
     }
 
-    attributeChangedCallback() {
+    attributeChangedCallback(name, oldValue, newValue) {
+        // Only process if the value actually changed
+        if (oldValue === newValue) return;
+        
         // Defer attribute updates until the component is fully initialized.
         if (this.isInitialized) {
             this._updateFromAttributes();

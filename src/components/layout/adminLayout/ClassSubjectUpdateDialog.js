@@ -21,6 +21,16 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         this.loading = false;
     }
 
+    static get observedAttributes() {
+        return ['open'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null) {
+            this.render();
+        }
+    }
+
     connectedCallback() {
         this.render();
         this.loadClasses();
@@ -34,10 +44,15 @@ class ClassSubjectUpdateDialog extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await api.withToken(token).get('/classes/active');
-            this.classes = response.data.data || [];
+            const response = await api.withToken(token).get('/classes');
+            
+            if (response.status === 200 && response.data.success) {
+                this.classes = response.data.data; // Classes array is in response.data.data
+                // Re-render to update the dropdown with classes
+                this.render();
+            }
         } catch (error) {
-            console.error('Error loading classes:', error);
+            // Silent error handling
         }
     }
 
@@ -46,10 +61,15 @@ class ClassSubjectUpdateDialog extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await api.withToken(token).get('/subjects/active');
-            this.subjects = response.data.data || [];
+            const response = await api.withToken(token).get('/subjects');
+            
+            if (response.status === 200 && response.data.success) {
+                this.subjects = response.data.data; // Subjects array is in response.data.data
+                // Re-render to update the dropdown with subjects
+                this.render();
+            }
         } catch (error) {
-            console.error('Error loading subjects:', error);
+            // Silent error handling
         }
     }
 
@@ -59,17 +79,20 @@ class ClassSubjectUpdateDialog extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/classes/academic-years');
-            this.academicYears = response.data.data || [];
+            
+            if (response.status === 200 && response.data.success) {
+                this.academicYears = response.data.data; // Academic years array is in response.data.data
+                // Re-render to update the dropdown with academic years
+                this.render();
+            }
         } catch (error) {
-            console.error('Error loading academic years:', error);
+            // Silent error handling
         }
     }
 
     setupEventListeners() {
-        const form = this.querySelector('#class-subject-update-form');
-        if (form) {
-            form.addEventListener('submit', this.updateClassSubject.bind(this));
-        }
+        // Listen for dialog events
+        this.addEventListener('dialog-save', this.updateClassSubject.bind(this));
     }
 
     setClassSubjectData(classSubject) {
@@ -95,21 +118,25 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         }
     }
 
-    async updateClassSubject(e) {
-        e.preventDefault();
-        
+    async updateClassSubject() {
         if (this.loading || !this.classSubjectData) return;
         
         try {
             this.setLoading(true);
             
-            const formData = new FormData(e.target);
+            // Get form data using direct element selection
+            const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
+            const academicYearDropdown = this.querySelector('ui-search-dropdown[name="academic_year"]');
+            const termDropdown = this.querySelector('ui-search-dropdown[name="term"]');
+            const teachingHoursInput = this.querySelector('ui-input[name="teaching_hours"]');
+
             const classSubjectData = {
-                class_id: formData.get('class_id'),
-                subject_id: formData.get('subject_id'),
-                academic_year: formData.get('academic_year'),
-                term: formData.get('term'),
-                teaching_hours: parseInt(formData.get('teaching_hours')) || 0
+                class_id: classDropdown ? classDropdown.value : '',
+                subject_id: subjectDropdown ? subjectDropdown.value : '',
+                academic_year: academicYearDropdown ? academicYearDropdown.value : '',
+                term: termDropdown ? termDropdown.value : 'full_year',
+                teaching_hours: teachingHoursInput ? parseInt(teachingHoursInput.value) || 0 : 0
             };
 
             // Validation
@@ -195,11 +222,11 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
     setLoading(loading) {
         this.loading = loading;
-        const submitBtn = this.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = loading;
-            submitBtn.textContent = loading ? 'Updating...' : 'Update Class Subject';
-        }
+        // The ui-dialog component handles the loading state automatically
+    }
+
+    open() {
+        this.setAttribute('open', '');
     }
 
     close() {
@@ -212,26 +239,40 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 title="Update Class Subject Assignment">
                 <div slot="content">
-                    <form id="class-subject-update-form" class="space-y-4">
+                    <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Class Selection -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                                <ui-search-dropdown name="class_id" placeholder="Select a class" required>
-                                    ${this.classes.map(cls => `
-                                        <ui-option value="${cls.id}">${cls.name} - ${cls.section}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
+                                ${this.classes.length > 0 ? `
+                                    <ui-search-dropdown 
+                                        name="class_id" 
+                                        placeholder="Search classes..."
+                                        class="w-full">
+                                        ${this.classes.map(cls => `
+                                            <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                                        `).join('')}
+                                    </ui-search-dropdown>
+                                ` : `
+                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                                `}
                             </div>
 
                             <!-- Subject Selection -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                                <ui-search-dropdown name="subject_id" placeholder="Select a subject" required>
-                                    ${this.subjects.map(subject => `
-                                        <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
+                                ${this.subjects.length > 0 ? `
+                                    <ui-search-dropdown 
+                                        name="subject_id" 
+                                        placeholder="Search subjects..."
+                                        class="w-full">
+                                        ${this.subjects.map(subject => `
+                                            <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
+                                        `).join('')}
+                                    </ui-search-dropdown>
+                                ` : `
+                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                                `}
                             </div>
                         </div>
 
@@ -239,17 +280,27 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                             <!-- Academic Year -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-                                <ui-search-dropdown name="academic_year" placeholder="Select academic year" required>
-                                    ${this.academicYears.map(year => `
-                                        <ui-option value="${year}">${year}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
+                                ${this.academicYears.length > 0 ? `
+                                    <ui-search-dropdown 
+                                        name="academic_year" 
+                                        placeholder="Select academic year..."
+                                        class="w-full">
+                                        ${this.academicYears.map(year => `
+                                            <ui-option value="${year}">${year}</ui-option>
+                                        `).join('')}
+                                    </ui-search-dropdown>
+                                ` : `
+                                    <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                                `}
                             </div>
 
                             <!-- Term -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                                <ui-search-dropdown name="term" placeholder="Select term">
+                                <ui-search-dropdown 
+                                    name="term" 
+                                    placeholder="Select term..."
+                                    class="w-full">
                                     ${this.terms.map(term => `
                                         <ui-option value="${term}">${term.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</ui-option>
                                     `).join('')}
@@ -269,7 +320,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </ui-dialog>
         `;

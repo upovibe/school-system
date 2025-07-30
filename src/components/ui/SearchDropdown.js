@@ -369,6 +369,29 @@ class SearchDropdown extends HTMLElement {
         }
         return true;
     }
+
+    // Public methods
+    get value() {
+        if (this.hasAttribute('multiple')) {
+            return Array.from(this.selectedValues);
+        }
+        return Array.from(this.selectedValues)[0] || '';
+    }
+    
+    set value(val) {
+        this.selectedValues.clear();
+        if (this.hasAttribute('multiple')) {
+            if (Array.isArray(val)) {
+                val.forEach(v => this.selectedValues.add(v));
+            } else if (typeof val === 'string') {
+                val.split(',').forEach(v => this.selectedValues.add(v.trim()));
+            }
+        } else {
+            this.selectedValues.add(val);
+        }
+        this._renderSelection();
+        this._renderOptions();
+    }
 }
 
 customElements.define('ui-search-dropdown', SearchDropdown);

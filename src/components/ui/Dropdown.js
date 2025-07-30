@@ -741,8 +741,8 @@ class DropdownOption extends HTMLElement {
 
     connectedCallback() {
         // Ensure the option is inside a dropdown
-        if (!this.closest('ui-dropdown')) {
-            console.warn('ui-option must be used inside ui-dropdown');
+        if (!this.closest('ui-dropdown') && !this.closest('ui-search-dropdown')) {
+            console.warn('ui-option must be used inside ui-dropdown or ui-search-dropdown');
         }
     }
 }

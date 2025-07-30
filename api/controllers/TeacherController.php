@@ -56,6 +56,15 @@ class TeacherController {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // Validate required fields
+            if (empty($data['team_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Team ID is required'
+                ]);
+                return;
+            }
+
             if (empty($data['user_id'])) {
                 http_response_code(400);
                 echo json_encode([
@@ -199,6 +208,15 @@ class TeacherController {
             }
 
             // Validate required fields
+            if (empty($data['team_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Team ID is required'
+                ]);
+                return;
+            }
+
             if (empty($data['employee_id'])) {
                 http_response_code(400);
                 echo json_encode([

@@ -263,26 +263,34 @@ class TeacherAddDialog extends HTMLElement {
                     <form id="teacher-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                            <ui-search-dropdown 
-                                name="team_id" 
-                                placeholder="Search teams..."
-                                class="w-full">
-                                ${this.teams.map(team => `
-                                    <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
+                            ${this.teams.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="team_id" 
+                                    placeholder="Search teams..."
+                                    class="w-full">
+                                    ${this.teams.map(team => `
+                                        <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                            <ui-search-dropdown 
-                                name="user_id" 
-                                placeholder="Search users..."
-                                class="w-full">
-                                ${this.users.map(user => `
-                                    <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
-                                `).join('')}
-                            </ui-search-dropdown>
+                            ${this.users.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="user_id" 
+                                    placeholder="Search users..."
+                                    class="w-full">
+                                    ${this.users.map(user => `
+                                        <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
                         </div>
                         
                         <div>

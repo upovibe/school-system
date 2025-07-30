@@ -1,6 +1,6 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Dropdown.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
@@ -108,8 +108,8 @@ class TeacherAddDialog extends HTMLElement {
     async saveTeacher() {
         try {
             // Get form data using the data-field attributes for reliable selection
-            const userDropdown = this.querySelector('ui-dropdown[name="user_id"]');
-            const teamDropdown = this.querySelector('ui-dropdown[name="team_id"]');
+            const userDropdown = this.querySelector('ui-search-dropdown[name="user_id"]');
+            const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const employeeIdInput = this.querySelector('ui-input[data-field="employee_id"]');
             const qualificationInput = this.querySelector('ui-input[data-field="qualification"]');
             const specializationInput = this.querySelector('ui-input[data-field="specialization"]');
@@ -263,26 +263,26 @@ class TeacherAddDialog extends HTMLElement {
                     <form id="teacher-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                            <ui-dropdown 
+                            <ui-search-dropdown 
                                 name="team_id" 
-                                placeholder="Select a team"
+                                placeholder="Search teams..."
                                 class="w-full">
                                 ${this.teams.map(team => `
                                     <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
                                 `).join('')}
-                            </ui-dropdown>
+                            </ui-search-dropdown>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
-                            <ui-dropdown 
+                            <ui-search-dropdown 
                                 name="user_id" 
-                                placeholder="Select a user"
+                                placeholder="Search users..."
                                 class="w-full">
                                 ${this.users.map(user => `
                                     <ui-option value="${user.id}">${user.name} (${user.email})</ui-option>
                                 `).join('')}
-                            </ui-dropdown>
+                            </ui-search-dropdown>
                         </div>
                         
                         <div>

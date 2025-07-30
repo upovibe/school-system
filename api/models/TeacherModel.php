@@ -9,7 +9,6 @@ class TeacherModel extends BaseModel {
     // Fields that can be mass assigned
     protected static $fillable = [
         'user_id',
-        'team_id',
         'employee_id',
         'first_name',
         'last_name',
@@ -29,7 +28,6 @@ class TeacherModel extends BaseModel {
     // Fields that should be cast to specific types
     protected static $casts = [
         'user_id' => 'integer',
-        'team_id' => 'integer',
         'date_of_birth' => 'date',
         'hire_date' => 'date',
         'salary' => 'float',
@@ -322,6 +320,26 @@ class TeacherModel extends BaseModel {
             $data['created_at'] = date('Y-m-d H:i:s');
             $data['updated_at'] = date('Y-m-d H:i:s');
 
+            // Prepare teacher data for insertion
+            $teacherData = [
+                'employee_id' => $data['employee_id'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null,
+                'date_of_birth' => $data['date_of_birth'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'qualification' => $data['qualification'] ?? null,
+                'specialization' => $data['specialization'] ?? null,
+                'hire_date' => $data['hire_date'],
+                'salary' => $data['salary'] ?? 0,
+                'password' => $data['password'],
+                'status' => $data['status'],
+                'created_at' => $data['created_at'],
+                'updated_at' => $data['updated_at']
+            ];
+
             // Insert teacher record
             $teacherSql = "INSERT INTO teachers (
                 employee_id, first_name, last_name, email, phone, address,
@@ -334,7 +352,7 @@ class TeacherModel extends BaseModel {
             )";
 
             $teacherStmt = $this->pdo->prepare($teacherSql);
-            $teacherStmt->execute($data);
+            $teacherStmt->execute($teacherData);
             $teacherId = $this->pdo->lastInsertId();
 
             // Get teacher role ID

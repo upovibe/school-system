@@ -12,7 +12,6 @@ class Migration_20241001000033createteacherstable {
             CREATE TABLE IF NOT EXISTS teachers (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT,
-                team_id INT,
                 employee_id VARCHAR(20) UNIQUE NOT NULL,
                 first_name VARCHAR(50) NOT NULL,
                 last_name VARCHAR(50) NOT NULL,
@@ -30,9 +29,7 @@ class Migration_20241001000033createteacherstable {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-                FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
                 INDEX idx_user_id (user_id),
-                INDEX idx_team_id (team_id),
                 INDEX idx_employee_id (employee_id),
                 INDEX idx_email (email),
                 INDEX idx_status (status),

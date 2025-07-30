@@ -145,10 +145,7 @@ class TeacherViewDialog extends HTMLElement {
                                     <label class="text-sm font-medium text-gray-600">Salary</label>
                                     <p class="text-gray-900">${this.teacherData.salary ? `₵${parseFloat(this.teacherData.salary).toLocaleString()}` : 'N/A'}</p>
                                 </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-600">Team</label>
-                                    <p class="text-gray-900">${this.teacherData.team_name || 'N/A'}</p>
-                                </div>
+
                             </div>
                         </div>
                         

@@ -20,7 +20,6 @@ import api from '@/services/api.js';
 class TeacherAddDialog extends HTMLElement {
     constructor() {
         super();
-        this.teams = [];
         this.loading = false;
     }
 
@@ -37,7 +36,6 @@ class TeacherAddDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadTeams();
     }
 
     setupEventListeners() {
@@ -54,22 +52,7 @@ class TeacherAddDialog extends HTMLElement {
 
 
 
-    async loadTeams() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
 
-            const response = await api.withToken(token).get('/teams');
-            
-            if (response.status === 200 && response.data.success) {
-                this.teams = response.data.data; // Teams array is in response.data.data
-                // Re-render to update the dropdown with teams
-                this.render();
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
 
     open() {
         this.setAttribute('open', '');
@@ -90,7 +73,6 @@ class TeacherAddDialog extends HTMLElement {
     async saveTeacher() {
         try {
             // Get form data using the data-field attributes for reliable selection
-            const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const employeeIdInput = this.querySelector('ui-input[data-field="employee_id"]');
             const firstNameInput = this.querySelector('ui-input[data-field="first_name"]');
             const lastNameInput = this.querySelector('ui-input[data-field="last_name"]');
@@ -107,7 +89,6 @@ class TeacherAddDialog extends HTMLElement {
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
             const teacherData = {
-                team_id: teamDropdown ? teamDropdown.value : '',
                 employee_id: employeeIdInput ? employeeIdInput.value : '',
                 first_name: firstNameInput ? firstNameInput.value : '',
                 last_name: lastNameInput ? lastNameInput.value : '',
@@ -260,22 +241,6 @@ class TeacherAddDialog extends HTMLElement {
                 title="Add New Teacher">
                 <div slot="content">
                     <form id="teacher-form" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                            ${this.teams.length > 0 ? `
-                                <ui-search-dropdown 
-                                    name="team_id" 
-                                    placeholder="Search teams..."
-                                    class="w-full">
-                                    ${this.teams.map(team => `
-                                        <ui-option value="${team.id}">${team.name} - ${team.position}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
                             <ui-input 

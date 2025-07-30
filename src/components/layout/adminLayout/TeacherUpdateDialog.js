@@ -9,7 +9,6 @@ class TeacherUpdateDialog extends HTMLElement {
     constructor() {
         super();
         this.teacherData = null;
-        this.teams = [];
     }
 
     static get observedAttributes() {
@@ -25,7 +24,6 @@ class TeacherUpdateDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.loadTeams();
     }
 
     setupEventListeners() {
@@ -35,19 +33,7 @@ class TeacherUpdateDialog extends HTMLElement {
 
 
 
-    async loadTeams() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            const response = await api.withToken(token).get('/teams');
-            if (response.status === 200 && response.data.success) {
-                this.teams = response.data.data;
-                this.render();
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
+
 
     open() {
         this.setAttribute('open', '');
@@ -64,12 +50,7 @@ class TeacherUpdateDialog extends HTMLElement {
         // Force update dropdowns after render to ensure values are displayed
         // Use a longer timeout to ensure data is loaded
         setTimeout(() => {
-            const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
-            
-            if (teamDropdown && teacher?.team_id) {
-                teamDropdown.value = teacher.team_id;
-            }
             
             if (genderDropdown && teacher?.gender) {
                 genderDropdown.value = teacher.gender;
@@ -84,7 +65,6 @@ class TeacherUpdateDialog extends HTMLElement {
         }
 
         try {
-            const teamDropdown = this.querySelector('ui-search-dropdown[name="team_id"]');
             const employeeIdInput = this.querySelector('ui-input[data-field="employee_id"]');
             const firstNameInput = this.querySelector('ui-input[data-field="first_name"]');
             const lastNameInput = this.querySelector('ui-input[data-field="last_name"]');
@@ -101,7 +81,6 @@ class TeacherUpdateDialog extends HTMLElement {
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
             const updatedData = {
-                team_id: teamDropdown ? teamDropdown.value : '',
                 employee_id: employeeIdInput ? employeeIdInput.value : '',
                 first_name: firstNameInput ? firstNameInput.value : '',
                 last_name: lastNameInput ? lastNameInput.value : '',
@@ -184,23 +163,6 @@ class TeacherUpdateDialog extends HTMLElement {
                 title="Update Teacher">
                 <div slot="content">
                     <form id="teacher-update-form" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                            ${this.teams.length > 0 ? `
-                                <ui-search-dropdown 
-                                    name="team_id" 
-                                    placeholder="Search teams..."
-                                    value="${teacher?.team_id || ''}"
-                                    class="w-full">
-                                    ${this.teams.map(team => `
-                                        <ui-option value="${team.id}" ${teacher && teacher.team_id == team.id ? 'selected' : ''}>${team.name} - ${team.position}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
                             <ui-input 

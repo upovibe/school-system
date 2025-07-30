@@ -269,6 +269,17 @@ class DashboardLayout extends App {
                     ]
                 },
                 {
+                    group: 'Academic Management',
+                    items: [
+                        { label: 'Subjects', icon: 'fas fa-book-open', href: '/dashboard/admin/subjects' },
+                        { label: 'Classes', icon: 'fas fa-chalkboard', href: '/dashboard/admin/classes' },
+                        { label: 'Teachers', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/admin/teachers' },
+                        { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
+                        { label: 'Class Subjects', icon: 'fas fa-link', href: '/dashboard/admin/class-subjects' },
+                        { label: 'Teacher Assignments', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
+                    ]
+                },
+                {
                     group: 'Management',
                     items: [
                         { label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role' },
@@ -379,7 +390,9 @@ class DashboardLayout extends App {
             'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
-            'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management'
+            'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
+            'subjects': 'Subject Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
+            'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management'
         };
         return titles[lastSegment] || 'Dashboard';
     }

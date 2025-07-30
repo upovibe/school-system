@@ -124,6 +124,16 @@ Router::get('/applications', 'ApplicationController@index');
 Router::get('/applications/{id}', 'ApplicationController@show');
 Router::post('/applications', 'ApplicationController@store');
 
+// Subject Management Routes (admin only for create/update/delete, public for getActive)
+Router::get('/subjects', 'SubjectController@index');
+Router::post('/subjects', 'SubjectController@store');
+Router::get('/subjects/active', 'SubjectController@getActive');
+Router::get('/subjects/search', 'SubjectController@search');
+Router::get('/subjects/with-class-counts', 'SubjectController@getWithClassCounts');
+Router::get('/subjects/{id}', 'SubjectController@show');
+Router::put('/subjects/{id}', 'SubjectController@update');
+Router::delete('/subjects/{id}', 'SubjectController@destroy');
+
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');

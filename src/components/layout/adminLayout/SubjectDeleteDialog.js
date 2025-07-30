@@ -52,17 +52,7 @@ class SubjectDeleteDialog extends HTMLElement {
     // Set subject data for deletion
     setSubjectData(subject) {
         this.subjectData = subject;
-        this.populateDialog();
-    }
-
-    // Populate dialog with subject data
-    populateDialog() {
-        if (!this.subjectData) return;
-
-        const subjectNameElement = this.querySelector('[data-field="subject-name"]');
-        if (subjectNameElement) {
-            subjectNameElement.textContent = this.subjectData.name || 'Unknown Subject';
-        }
+        this.render();
     }
 
     // Delete the subject
@@ -126,18 +116,19 @@ class SubjectDeleteDialog extends HTMLElement {
     }
 
     render() {
+        const subjectName = this.subjectData ? this.subjectData.name : 'this subject';
+        
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 variant="danger">
                 <div slot="title">Delete Subject</div>
-                <div class="space-y-4">
-                    <p class="text-gray-600">
-                        Are you sure you want to delete the subject 
-                        <strong data-field="subject-name">Loading...</strong>?
+                <div slot="content">
+                    <p class="text-gray-700 mb-4">
+                        Are you sure you want to delete <strong>${subjectName}</strong>?
                     </p>
-                    <p class="text-sm text-red-600">
-                        This action cannot be undone. The subject will be permanently removed from the system.
+                    <p class="text-sm text-gray-500">
+                        This action cannot be undone. If this subject is assigned to any classes, the deletion will be prevented.
                     </p>
                 </div>
             </ui-dialog>

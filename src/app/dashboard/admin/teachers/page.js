@@ -53,14 +53,15 @@ class TeacherManagementPage extends App {
         });
         
         this.addEventListener('teacher-saved', (event) => {
+            // Close the add modal first
+            this.set('showAddModal', false);
+
             // Add the new teacher to the existing data
             const newTeacher = event.detail.teacher;
             if (newTeacher) {
                 const currentTeachers = this.get('teachers') || [];
                 this.set('teachers', [...currentTeachers, newTeacher]);
                 this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
             } else {
                 this.loadData();
             }

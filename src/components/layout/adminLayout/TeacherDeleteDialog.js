@@ -24,6 +24,12 @@ class TeacherDeleteDialog extends HTMLElement {
         return ['open'];
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            this.render();
+        }
+    }
+
     connectedCallback() {
         this.render();
         this.setupEventListeners();

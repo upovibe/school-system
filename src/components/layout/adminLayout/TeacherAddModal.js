@@ -29,6 +29,12 @@ class TeacherAddModal extends HTMLElement {
         return ['open'];
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            this.render();
+        }
+    }
+
     connectedCallback() {
         this.render();
         this.setupEventListeners();
@@ -224,10 +230,15 @@ class TeacherAddModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Find the selected user to get name and email
+                const selectedUser = this.users.find(user => user.id == teacherData.user_id);
+
                 // Construct the new teacher data from response
                 const newTeacher = {
                     id: response.data.data.id,
                     user_id: teacherData.user_id,
+                    name: selectedUser ? selectedUser.name : 'N/A',
+                    email: selectedUser ? selectedUser.email : 'N/A',
                     employee_id: teacherData.employee_id,
                     qualification: teacherData.qualification,
                     specialization: teacherData.specialization,

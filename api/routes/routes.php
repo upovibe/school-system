@@ -134,6 +134,19 @@ Router::get('/subjects/{id}', 'SubjectController@show');
 Router::put('/subjects/{id}', 'SubjectController@update');
 Router::delete('/subjects/{id}', 'SubjectController@destroy');
 
+// Class Management Routes (admin only for create/update/delete, public for getActive)
+Router::get('/classes', 'ClassController@index');
+Router::post('/classes', 'ClassController@store');
+Router::get('/classes/active', 'ClassController@getActive');
+Router::get('/classes/search', 'ClassController@search');
+Router::get('/classes/with-student-counts', 'ClassController@getWithStudentCounts');
+Router::get('/classes/by-academic-year', 'ClassController@getByAcademicYear');
+Router::get('/classes/academic-years', 'ClassController@getAcademicYears');
+Router::get('/classes/sections', 'ClassController@getSections');
+Router::get('/classes/{id}', 'ClassController@show');
+Router::put('/classes/{id}', 'ClassController@update');
+Router::delete('/classes/{id}', 'ClassController@destroy');
+
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');

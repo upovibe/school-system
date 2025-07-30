@@ -391,7 +391,7 @@ class DashboardLayout extends App {
             'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
-            'subjects': 'Subject Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
+            'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management'
         };
         return titles[lastSegment] || 'Dashboard';

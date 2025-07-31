@@ -754,6 +754,8 @@ class StudentController {
             
             // Extract class information from student data
             $classInfo = null;
+            $subjects = [];
+            
             if (!empty($student['class_id'])) {
                 $classInfo = [
                     'id' => $student['class_id'],
@@ -761,6 +763,11 @@ class StudentController {
                     'section' => $student['class_section'],
                     'academic_year' => $student['class_academic_year']
                 ];
+                
+                // Get subjects for this class using the public endpoint
+                require_once __DIR__ . '/../models/ClassSubjectModel.php';
+                $classSubjectModel = new ClassSubjectModel($pdo);
+                $subjects = $classSubjectModel->getByClassId($student['class_id']);
             }
             
             http_response_code(200);
@@ -768,7 +775,8 @@ class StudentController {
                 'success' => true,
                 'data' => [
                     'class' => $classInfo,
-                    'student' => $student
+                    'student' => $student,
+                    'subjects' => $subjects
                 ],
                 'message' => 'Current class retrieved successfully'
             ]);

@@ -105,7 +105,7 @@ class ClassSubjectModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT cs.*, 
-                       s.name as subject_name, s.code as subject_code
+                       s.name as subject_name, s.code as subject_code, s.category as subject_category
                 FROM {$this->getTableName()} cs
                 LEFT JOIN subjects s ON cs.subject_id = s.id
                 WHERE cs.class_id = ?

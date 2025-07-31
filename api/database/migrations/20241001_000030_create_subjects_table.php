@@ -14,11 +14,13 @@ class Migration_20241001000030createsubjectstable {
                 name VARCHAR(100) NOT NULL,
                 code VARCHAR(20) UNIQUE NOT NULL,
                 description TEXT,
+                category ENUM('core', 'elective', 'optional') DEFAULT 'core',
                 status ENUM('active', 'inactive') DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_code (code),
                 INDEX idx_status (status),
+                INDEX idx_category (category),
                 INDEX idx_created_at (created_at)
             )
         ");

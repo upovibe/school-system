@@ -163,16 +163,19 @@ class StudentClassPage extends App {
                     <div class="bg-white shadow rounded-lg p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">My Subjects</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                         ${subjects.map(subject => `
-                                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                     <div class="flex items-center justify-between mb-2">
-                                         <h3 class="text-lg font-medium text-gray-900">${subject.subject_name}</h3>
-                                         <ui-badge variant="secondary">${subject.term || 'Full Year'}</ui-badge>
-                                     </div>
-                                     ${subject.subject_description ? `<p class="text-sm text-gray-600 mb-3">${subject.subject_description}</p>` : ''}
-                                     <div class="flex items-center justify-between text-sm text-gray-500">
-                                         <span>Code: ${subject.subject_code}</span>
-                                     </div>
+                                                                             ${subjects.map(subject => `
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-medium text-gray-900">${subject.subject_name}</h3>
+                                <div class="flex items-center gap-2">
+                                    <ui-badge variant="${subject.subject_category === 'core' ? 'primary' : subject.subject_category === 'elective' ? 'success' : 'warning'}">${subject.subject_category}</ui-badge>
+                                    <ui-badge variant="secondary">${subject.term || 'Full Year'}</ui-badge>
+                                </div>
+                            </div>
+                            ${subject.subject_description ? `<p class="text-sm text-gray-600 mb-3">${subject.subject_description}</p>` : ''}
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span>Code: ${subject.subject_code}</span>
+                            </div>
                                                          ${subject.teacher ? `
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <div class="flex items-center gap-2">

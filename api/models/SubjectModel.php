@@ -11,6 +11,7 @@ class SubjectModel extends BaseModel {
         'name',
         'code',
         'description',
+        'category',
         'status'
     ];
     
@@ -70,6 +71,49 @@ class SubjectModel extends BaseModel {
             return $results;
         } catch (PDOException $e) {
             throw new Exception('Error fetching active subjects: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get subjects by category
+     */
+    public function getSubjectsByCategory($category) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM {$this->getTableName()} 
+                WHERE category = ? AND status = 'active' 
+                ORDER BY name ASC
+            ");
+            $stmt->execute([$category]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching subjects by category: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get all categories
+     */
+    public function getCategories() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT category FROM {$this->getTableName()} 
+                WHERE status = 'active' 
+                ORDER BY category ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return array_column($results, 'category');
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching categories: ' . $e->getMessage());
         }
     }
     

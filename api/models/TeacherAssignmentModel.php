@@ -321,6 +321,34 @@ class TeacherAssignmentModel extends BaseModel {
     }
 
     /**
+     * Get teacher assignment by class and subject (any teacher)
+     */
+    public function getByClassAndSubject($classId, $subjectId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT ta.*, 
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       c.name as class_name, c.section as class_section,
+                       s.name as subject_name, s.code as subject_code
+                FROM {$this->getTableName()} ta
+                LEFT JOIN teachers t ON ta.teacher_id = t.id
+                LEFT JOIN classes c ON ta.class_id = c.id
+                LEFT JOIN subjects s ON ta.subject_id = s.id
+                WHERE ta.class_id = ? AND ta.subject_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$classId, $subjectId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching assignment by class and subject: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get all subjects for a specific class
      */
     public function getSubjectsForClass($classId) {

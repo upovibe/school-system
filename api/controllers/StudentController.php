@@ -764,10 +764,36 @@ class StudentController {
                     'academic_year' => $student['class_academic_year']
                 ];
                 
-                // Get subjects for this class using the public endpoint
+                // Get subjects for this class with teacher assignments
                 require_once __DIR__ . '/../models/ClassSubjectModel.php';
+                require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+                
                 $classSubjectModel = new ClassSubjectModel($pdo);
-                $subjects = $classSubjectModel->getByClassId($student['class_id']);
+                $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
+                
+                // Get all subjects for this class
+                $classSubjects = $classSubjectModel->getByClassId($student['class_id']);
+                
+                // For each subject, get the assigned teacher
+                foreach ($classSubjects as $subject) {
+                    $teacherAssignment = $teacherAssignmentModel->getByClassAndSubject(
+                        $student['class_id'], 
+                        $subject['subject_id']
+                    );
+                    
+                    // Add teacher information to the subject
+                    if ($teacherAssignment) {
+                        $subject['teacher'] = [
+                            'id' => $teacherAssignment['teacher_id'],
+                            'name' => $teacherAssignment['teacher_first_name'] . ' ' . $teacherAssignment['teacher_last_name'],
+                            'employee_id' => $teacherAssignment['employee_id']
+                        ];
+                    } else {
+                        $subject['teacher'] = null;
+                    }
+                    
+                    $subjects[] = $subject;
+                }
             }
             
             http_response_code(200);

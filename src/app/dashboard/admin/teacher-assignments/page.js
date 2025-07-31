@@ -392,17 +392,17 @@ class TeacherAssignmentManagementPage extends App {
                         <!-- Preview Tab Panel -->
                         <ui-tab-panel value="preview">
                             <div class="space-y-6">
-                                <div class="flex items-center justify-between">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                                     <h3 class="text-lg font-semibold text-gray-900">Teacher Assignments Preview</h3>
-                                    <div class="flex items-center space-x-4">
+                                    <div class="ml-auto flex items-center space-x-4">
                                         <div class="text-sm text-gray-500">
                                             ${teacherAssignments ? `${teacherAssignments.length} assignments` : '0 assignments'}
                                         </div>
                                         <button 
                                             onclick="this.closest('app-teacher-assignment-management-page').onAdd()"
-                                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
-                                            <i class="fas fa-plus mr-2"></i>
-                                            Add Assignment
+                                            class="inline-flex items-center px-2 py-1.5 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                            <i class="fas fa-plus"></i>
+                                            <span class="hidden md:inline">Add Assignment</span>
                                         </button>
                                     </div>
                                 </div>
@@ -413,7 +413,7 @@ class TeacherAssignmentManagementPage extends App {
                                             <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                                                 <!-- Teacher Header -->
                                                 <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-                                                    <div class="flex items-center justify-between">
+                                                    <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                                                         <div class="flex items-center space-x-3">
                                                             <div class="flex-shrink-0">
                                                                 <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -425,7 +425,7 @@ class TeacherAssignmentManagementPage extends App {
                                                                 <p class="text-sm text-gray-600">ID: ${teacherGroup.employeeId}</p>
                                                             </div>
                                                         </div>
-                                                        <div class="flex items-center space-x-3">
+                                                        <div class="ml-auto flex items-center space-x-3">
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                                 ${teacherGroup.classes.length} class${teacherGroup.classes.length !== 1 ? 'es' : ''}
                                                             </span>
@@ -460,7 +460,7 @@ class TeacherAssignmentManagementPage extends App {
                                                             <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
                                                                 <!-- Class Header -->
                                                                 <div class="bg-blue-50 px-4 py-3 border-b border-gray-200">
-                                                                    <div class="flex items-center justify-between">
+                                                                    <div class="flex flex-col md:flex-row items-center justify-between">
                                                                         <div class="flex items-center space-x-2">
                                                                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                                                                                 <i class="fas fa-chalkboard text-blue-600 text-xs"></i>
@@ -475,7 +475,7 @@ class TeacherAssignmentManagementPage extends App {
                                                                 
                                                                 <!-- Subjects List -->
                                                                 <div class="p-4">
-                                                                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                                                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                                                                         ${classGroup.subjects.map(subject => `
                                                                             <div class="bg-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
                                                                                 <div class="flex items-center justify-between">

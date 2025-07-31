@@ -332,6 +332,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Academics',
                     items: [
+                        { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/student/class' },
                         { label: 'Courses', icon: 'fas fa-book-open', href: '/dashboard/student/courses' },
                         { label: 'Assignments', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
                         { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
@@ -392,7 +393,8 @@ class DashboardLayout extends App {
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
             'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
-            'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management'
+            'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
+            'class': 'My Class'
         };
         return titles[lastSegment] || 'Dashboard';
     }

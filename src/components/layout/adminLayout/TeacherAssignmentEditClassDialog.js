@@ -35,7 +35,10 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
     async loadSubjects() {
         try {
             const token = localStorage.getItem('token');
-            if (!token) return;
+            if (!token) {
+                console.warn('No authentication token found for loading subjects');
+                return;
+            }
 
             const response = await api.withToken(token).get('/subjects');
             
@@ -61,9 +64,16 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
                         }
                     }, 100);
                 }
+            } else {
+                console.warn('Failed to load subjects:', response.data?.message || 'Unknown error');
             }
         } catch (error) {
-            console.error('Error loading subjects:', error);
+            // Don't show error to user, just log it and continue with empty subjects list
+            console.warn('Error loading subjects (continuing with empty list):', error.message);
+            
+            // Set empty subjects array so the component can still function
+            this.subjects = [];
+            this.render();
         }
     }
 
@@ -75,6 +85,16 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
     setEditClassData(data) {
         this.editClassData = data;
         this.render();
+        
+        // Create subjects from current assignments as fallback
+        if (this.subjects.length === 0 && data?.assignments) {
+            this.subjects = data.assignments.map(assignment => ({
+                id: assignment.subject_id,
+                name: assignment.subject_name,
+                code: assignment.subject_code
+            }));
+            this.render();
+        }
         
         // Set the selected subjects after render and after subjects are loaded
         const setSelectedSubjects = () => {

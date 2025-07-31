@@ -294,7 +294,8 @@ class ClassSubjectManagementPage extends App {
             setTimeout(() => {
                 const updateModal = this.querySelector('class-subject-update-dialog');
                 if (updateModal) {
-                    updateModal.setClassSubjectData(firstAssignment);
+                    // Pass the first assignment as the main data, but also pass all assignments
+                    updateModal.setClassSubjectData(firstAssignment, classData);
                 }
             }, 0);
         }

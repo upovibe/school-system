@@ -539,7 +539,7 @@ class ClassSubjectManagementPage extends App {
                                                 
                                                 <!-- Subjects List -->
                                                 <div class="p-6">
-                                                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                                                         ${classGroup.subjects.map(subject => `
                                                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
                                                                 <div class="flex items-start justify-between">
@@ -550,7 +550,7 @@ class ClassSubjectManagementPage extends App {
                                                                             </div>
                                                                             <h5 class="text-sm font-medium text-gray-900">${subject.subjectName}</h5>
                                                                         </div>
-                                                                        <p class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">${subject.subjectCode}</p>
+                                                                        <span class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded w-fit">${subject.subjectCode}</span>
                                                                     </div>
                                                                     <div class="flex items-center space-x-1">
                                                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">

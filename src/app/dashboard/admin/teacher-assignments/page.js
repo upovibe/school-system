@@ -176,51 +176,73 @@ class TeacherAssignmentManagementPage extends App {
 
     onView(event) {
         const { detail } = event;
-        const viewTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
-        if (viewTeacherAssignment) {
-            this.closeAllModals();
-            this.set('viewTeacherAssignmentData', viewTeacherAssignment);
-            this.set('showViewModal', true);
-            setTimeout(() => {
-                const viewDialog = this.querySelector('teacher-assignment-view-dialog');
-                if (viewDialog) {
-                    viewDialog.setTeacherAssignmentData(viewTeacherAssignment);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle teacher-level view
+        if (rowData.teacher_employee_id) {
+            this.onViewTeacher(rowData.teacher_employee_id);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const viewTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
+            if (viewTeacherAssignment) {
+                this.closeAllModals();
+                this.set('viewTeacherAssignmentData', viewTeacherAssignment);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewDialog = this.querySelector('teacher-assignment-view-dialog');
+                    if (viewDialog) {
+                        viewDialog.setTeacherAssignmentData(viewTeacherAssignment);
+                    }
+                }, 0);
+            }
         }
     }
 
     onEdit(event) {
         const { detail } = event;
-        const editTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
-        if (editTeacherAssignment) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('updateTeacherAssignmentData', editTeacherAssignment);
-            this.set('showUpdateModal', true);
-            setTimeout(() => {
-                const updateModal = this.querySelector('teacher-assignment-update-dialog');
-                if (updateModal) {
-                    updateModal.setTeacherAssignmentData(editTeacherAssignment);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle teacher-level edit
+        if (rowData.teacher_employee_id) {
+            this.onEditTeacher(rowData.teacher_employee_id);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const editTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
+            if (editTeacherAssignment) {
+                this.closeAllModals();
+                this.set('updateTeacherAssignmentData', editTeacherAssignment);
+                this.set('showUpdateModal', true);
+                setTimeout(() => {
+                    const updateModal = this.querySelector('teacher-assignment-update-dialog');
+                    if (updateModal) {
+                        updateModal.setTeacherAssignmentData(editTeacherAssignment);
+                    }
+                }, 0);
+            }
         }
     }
 
     onDelete(event) {
         const { detail } = event;
-        const deleteTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
-        if (deleteTeacherAssignment) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('deleteTeacherAssignmentData', deleteTeacherAssignment);
-            this.set('showDeleteDialog', true);
-            setTimeout(() => {
-                const deleteDialog = this.querySelector('teacher-assignment-delete-dialog');
-                if (deleteDialog) {
-                    deleteDialog.setTeacherAssignmentData(deleteTeacherAssignment);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle teacher-level delete
+        if (rowData.teacher_employee_id) {
+            this.onDeleteTeacher(rowData.teacher_employee_id);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const deleteTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
+            if (deleteTeacherAssignment) {
+                this.closeAllModals();
+                this.set('deleteTeacherAssignmentData', deleteTeacherAssignment);
+                this.set('showDeleteDialog', true);
+                setTimeout(() => {
+                    const deleteDialog = this.querySelector('teacher-assignment-delete-dialog');
+                    if (deleteDialog) {
+                        deleteDialog.setTeacherAssignmentData(deleteTeacherAssignment);
+                    }
+                }, 0);
+            }
         }
     }
 
@@ -480,19 +502,40 @@ class TeacherAssignmentManagementPage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
-        // Prepare table data and columns for teacher assignments
-        const tableData = teacherAssignments ? teacherAssignments.map((teacherAssignment, index) => ({
-            id: teacherAssignment.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
-            teacher_name: `${teacherAssignment.teacher_first_name || 'N/A'} ${teacherAssignment.teacher_last_name || 'N/A'}`,
-            employee_id: teacherAssignment.employee_id || 'N/A',
-            class_name: teacherAssignment.class_name || 'N/A',
-            class_section: teacherAssignment.class_section || 'N/A',
-            subject_name: teacherAssignment.subject_name || 'N/A',
-            subject_code: teacherAssignment.subject_code || 'N/A',
-            created: teacherAssignment.created_at,
-            updated: teacherAssignment.updated_at
-        })) : [];
+        // Prepare grouped table data for teacher assignments
+        const groupedData = teacherAssignments ? this.groupTeacherAssignments(teacherAssignments) : [];
+        
+        // Convert grouped data to table format with proper row grouping
+        const tableData = [];
+        let rowIndex = 1;
+        
+        groupedData.forEach(teacher => {
+            teacher.classes.forEach((classInfo, classIndex) => {
+                const subjectsText = classInfo.subjects.map(subject => 
+                    `${subject.subjectName} (${subject.subjectCode})`
+                ).join(', ');
+                
+                const isFirstClass = classIndex === 0;
+                
+                tableData.push({
+                    id: `${teacher.employeeId}-${classInfo.className}-${classInfo.classSection}`, // Composite ID
+                    index: rowIndex++,
+                    teacher_name: isFirstClass ? teacher.teacherName : '', // Only show teacher name for first class
+                    employee_id: isFirstClass ? teacher.employeeId : '', // Only show employee ID for first class
+                    class_name: classInfo.className,
+                    class_section: classInfo.classSection,
+                    subjects: subjectsText,
+                    subject_count: classInfo.subjects.length,
+                    updated: new Date().toISOString(), // Placeholder - you might want to track this differently
+                    // Add metadata for styling and actions
+                    teacher_employee_id: teacher.employeeId,
+                    teacher_name_full: teacher.teacherName,
+                    is_first_class: isFirstClass,
+                    class_key: `${classInfo.className}-${classInfo.classSection}`,
+                    subjects_data: classInfo.subjects
+                });
+            });
+        });
 
         const tableColumns = [
             { key: 'index', label: 'No.', html: false },
@@ -500,9 +543,8 @@ class TeacherAssignmentManagementPage extends App {
             { key: 'employee_id', label: 'Employee ID' },
             { key: 'class_name', label: 'Class' },
             { key: 'class_section', label: 'Section' },
-            { key: 'subject_name', label: 'Subject' },
-            { key: 'subject_code', label: 'Subject Code' },
-            { key: 'updated', label: 'Updated' }
+            { key: 'subjects', label: 'Subjects' },
+            { key: 'subject_count', label: 'Subject Count' }
         ];
         
         return `
@@ -527,6 +569,7 @@ class TeacherAssignmentManagementPage extends App {
                             <div class="mb-8">
                                 <ui-table 
                                     title="Teacher Assignments"
+                                    subtitle="Search teacher assignments..."
                                     data='${JSON.stringify(tableData)}'
                                     columns='${JSON.stringify(tableColumns)}'
                                     sortable

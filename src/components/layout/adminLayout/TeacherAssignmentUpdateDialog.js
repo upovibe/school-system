@@ -93,43 +93,211 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         this.addEventListener('confirm', this.updateTeacherAssignment.bind(this));
     }
 
-    setTeacherAssignmentData(teacherAssignment) {
+    setTeacherAssignmentData(teacherAssignment, allAssignments = null) {
+        console.log('🔍 setTeacherAssignmentData called with:', {
+            teacherAssignment,
+            allAssignments: allAssignments?.length || 0
+        });
+        
         this.teacherAssignmentData = teacherAssignment;
+        this.allAssignments = allAssignments;
         this.render();
         
-        // Force update dropdowns after render to ensure values are displayed
+        // If we have all assignments data, use it directly instead of making an API call
+        if (allAssignments && allAssignments.length > 0) {
+            console.log('📊 Using allAssignments data directly');
+            this.setupDropdownsWithData(allAssignments);
+        } else {
+            console.log('🌐 Falling back to API call');
+            // Fallback to API call
+            this.loadTeacherAssignments(teacherAssignment.teacher_id, teacherAssignment.class_id);
+        }
+        
+        // Setup change listeners after render
         setTimeout(() => {
-            const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
-            
-            if (teacherDropdown && teacherAssignment?.teacher_id) {
-                // Find the teacher option and set its text as the display value
-                const selectedTeacher = this.teachers.find(teacher => teacher.id == teacherAssignment.teacher_id);
-                if (selectedTeacher) {
-                    teacherDropdown.setAttribute('value', teacherAssignment.teacher_id);
-                    teacherDropdown.setAttribute('display-value', `${selectedTeacher.first_name} ${selectedTeacher.last_name} (${selectedTeacher.employee_id})`);
-                }
+            console.log('🎧 Setting up change listeners');
+            this.setupTeacherChangeListener();
+            this.setupClassChangeListener();
+        }, 100);
+    }
+
+    setupDropdownsWithData(assignments) {
+        console.log('🔧 setupDropdownsWithData called with:', {
+            assignmentsCount: assignments.length,
+            teacherAssignmentData: this.teacherAssignmentData,
+            teachersCount: this.teachers.length,
+            classesCount: this.classes.length,
+            subjectsCount: this.subjects.length
+        });
+        
+        // Wait for data to be loaded if not available yet
+        const waitForData = () => {
+            if (this.teachers.length === 0 || this.classes.length === 0 || this.subjects.length === 0) {
+                console.log('⏳ Waiting for data to load...');
+                setTimeout(waitForData, 100);
+                return;
             }
             
-            if (classDropdown && teacherAssignment?.class_id) {
-                // Find the class option and set its text as the display value
-                const selectedClass = this.classes.find(cls => cls.id == teacherAssignment.class_id);
-                if (selectedClass) {
-                    classDropdown.setAttribute('value', teacherAssignment.class_id);
-                    classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
-                }
-            }
+            console.log('✅ Data loaded, proceeding with dropdown setup');
             
-            if (subjectDropdown && teacherAssignment?.subject_id) {
-                // Find the subject option and set its text as the display value
-                const selectedSubject = this.subjects.find(subject => subject.id == teacherAssignment.subject_id);
-                if (selectedSubject) {
-                    subjectDropdown.setAttribute('value', teacherAssignment.subject_id);
-                    subjectDropdown.setAttribute('display-value', `${selectedSubject.name} (${selectedSubject.code})`);
+            // Filter assignments for the specific class being edited
+            const classAssignments = assignments.filter(assignment => assignment.class_id == this.teacherAssignmentData.class_id);
+            console.log('📚 Class assignments found:', classAssignments.length);
+            
+            // Extract subject IDs for this specific class
+            const subjectIds = classAssignments.map(assignment => assignment.subject_id);
+            console.log('📖 Subject IDs for class:', subjectIds);
+            
+            // Force update dropdowns after render to ensure values are displayed
+            setTimeout(() => {
+                const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+                const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+                const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+                
+                console.log('🎯 Found dropdowns:', {
+                    teacherDropdown: !!teacherDropdown,
+                    classDropdown: !!classDropdown,
+                    subjectDropdown: !!subjectDropdown
+                });
+                
+                if (teacherDropdown && this.teacherAssignmentData?.teacher_id) {
+                    // Find the teacher option and set its text as the display value
+                    const selectedTeacher = this.teachers.find(teacher => teacher.id == this.teacherAssignmentData.teacher_id);
+                    console.log('👨‍🏫 Selected teacher:', selectedTeacher);
+                    if (selectedTeacher) {
+                        teacherDropdown.setAttribute('value', this.teacherAssignmentData.teacher_id);
+                        teacherDropdown.setAttribute('display-value', `${selectedTeacher.first_name} ${selectedTeacher.last_name} (${selectedTeacher.employee_id})`);
+                        console.log('✅ Teacher dropdown set');
+                    }
                 }
+                
+                if (classDropdown && this.teacherAssignmentData?.class_id) {
+                    const selectedClass = this.classes.find(cls => cls.id == this.teacherAssignmentData.class_id);
+                    console.log('🏫 Selected class:', selectedClass);
+                    if (selectedClass) {
+                        classDropdown.setAttribute('value', this.teacherAssignmentData.class_id);
+                        classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
+                        console.log('✅ Class dropdown set');
+                    }
+                }
+                
+                if (subjectDropdown && subjectIds.length > 0) {
+                    const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
+                    console.log('📚 Selected subjects:', selectedSubjects);
+                    subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
+                    const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
+                    subjectDropdown.setAttribute('display-value', displayValue);
+                    console.log('✅ Subject dropdown set with display value:', displayValue);
+                }
+            }, 200);
+        };
+        
+        waitForData();
+    }
+
+    // Add method to handle teacher change
+    setupTeacherChangeListener() {
+        const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+        if (teacherDropdown) {
+            teacherDropdown.addEventListener('change', (event) => {
+                const teacherId = event.detail.value;
+                if (teacherId) {
+                    // Load assignments for the new teacher
+                    this.loadTeacherAssignments(teacherId);
+                }
+            });
+        }
+    }
+
+    // Add method to handle class change
+    setupClassChangeListener() {
+        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+        if (classDropdown) {
+            classDropdown.addEventListener('change', (event) => {
+                const classId = event.detail.value;
+                if (classId) {
+                    // Update subjects based on the selected class
+                    this.updateSubjectsForClass(classId);
+                }
+            });
+        }
+    }
+
+    async updateSubjectsForClass(classId) {
+        if (!this.allAssignments) return;
+        
+        // Filter assignments for the selected class
+        const classAssignments = this.allAssignments.filter(assignment => assignment.class_id == classId);
+        
+        // Extract subject IDs for this class
+        const subjectIds = classAssignments.map(assignment => assignment.subject_id);
+        
+        // Update the subject dropdown
+        setTimeout(() => {
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+            if (subjectDropdown && subjectIds.length > 0) {
+                subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
+                // Set display value for multiple subjects
+                const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
+                const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
+                subjectDropdown.setAttribute('display-value', displayValue);
             }
-        }, 200);
+        }, 100);
+    }
+
+    async loadTeacherAssignments(teacherId, classId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            // Use the correct endpoint to get assignments for this specific teacher and class
+            const response = await api.withToken(token).get(`/teacher-assignments/by-teacher?teacher_id=${teacherId}`);
+            
+            if (response.status === 200 && response.data.success) {
+                const teacherAssignments = response.data.data;
+                
+                // Filter assignments for the specific class being edited
+                const classAssignments = teacherAssignments.filter(assignment => assignment.class_id == classId);
+                
+                // Extract subject IDs for this specific class
+                const subjectIds = classAssignments.map(assignment => assignment.subject_id);
+                
+                // Force update dropdowns after render to ensure values are displayed
+                setTimeout(() => {
+                    const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+                    const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+                    const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+                    
+                    if (teacherDropdown && this.teacherAssignmentData?.teacher_id) {
+                        // Find the teacher option and set its text as the display value
+                        const selectedTeacher = this.teachers.find(teacher => teacher.id == this.teacherAssignmentData.teacher_id);
+                        if (selectedTeacher) {
+                            teacherDropdown.setAttribute('value', this.teacherAssignmentData.teacher_id);
+                            teacherDropdown.setAttribute('display-value', `${selectedTeacher.first_name} ${selectedTeacher.last_name} (${selectedTeacher.employee_id})`);
+                        }
+                    }
+                    
+                    if (classDropdown && this.teacherAssignmentData?.class_id) {
+                        classDropdown.setAttribute('value', JSON.stringify([this.teacherAssignmentData.class_id]));
+                        // Set display value for the specific class
+                        const selectedClass = this.classes.find(cls => cls.id == this.teacherAssignmentData.class_id);
+                        if (selectedClass) {
+                            classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
+                        }
+                    }
+                    
+                    if (subjectDropdown && subjectIds.length > 0) {
+                        subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
+                        // Set display value for multiple subjects
+                        const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
+                        const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
+                        subjectDropdown.setAttribute('display-value', displayValue);
+                    }
+                }, 200);
+            }
+        } catch (error) {
+            console.error('Error loading teacher assignments:', error);
+        }
     }
 
     async updateTeacherAssignment() {
@@ -140,17 +308,22 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             
             // Get form data using the data-field attributes for reliable selection
             const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_id"]');
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
 
-            const teacherAssignmentData = {
-                teacher_id: teacherDropdown ? teacherDropdown.value : '',
-                class_id: classDropdown ? classDropdown.value : '',
-                subject_id: subjectDropdown ? subjectDropdown.value : ''
-            };
+            const teacherId = teacherDropdown ? teacherDropdown.value : '';
+            const classId = classDropdown ? classDropdown.value : '';
+            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+
+            // Debug logging
+            console.log('Form Data:', {
+                teacherId,
+                classId,
+                subjectIds
+            });
 
             // Validation
-            if (!teacherAssignmentData.teacher_id) {
+            if (!teacherId) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select a teacher',
@@ -160,7 +333,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 return;
             }
 
-            if (!teacherAssignmentData.class_id) {
+            if (!classId) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select a class',
@@ -170,10 +343,10 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 return;
             }
 
-            if (!teacherAssignmentData.subject_id) {
+            if (!subjectIds || !Array.isArray(subjectIds) || subjectIds.length === 0) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please select a subject',
+                    message: 'Please select at least one subject',
                     variant: 'error',
                     duration: 3000
                 });
@@ -191,12 +364,46 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 return;
             }
 
-            const response = await api.withToken(token).put(`/teacher-assignments/${this.teacherAssignmentData.id}`, teacherAssignmentData);
+            // Filter out any invalid subject IDs
+            const validSubjectIds = subjectIds.filter(id => id && id !== '' && !isNaN(id));
+            
+            console.log('Valid class ID:', classId);
+            console.log('Valid subject IDs:', validSubjectIds);
+            
+            if (!classId || isNaN(classId)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'No valid class selected',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            
+            if (validSubjectIds.length === 0) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'No valid subjects selected',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Update the specific class using the existing endpoint
+            // This is similar to how the EditClassDialog works
+            const teacherAssignmentData = {
+                subject_ids: validSubjectIds
+            };
+            console.log('Updating assignments for class:', classId, teacherAssignmentData);
+
+            const response = await api.withToken(token).put(`/teacher-assignments/teacher/${teacherId}/class/${classId}`, teacherAssignmentData);
+            console.log('API Response:', response);
             
             if (response.data.success) {
                 Toast.show({
                     title: 'Success',
-                    message: 'Teacher assignment updated successfully',
+                    message: `Teacher assignments updated successfully`,
                     variant: 'success',
                     duration: 3000
                 });
@@ -205,7 +412,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 this.close();
                 this.dispatchEvent(new CustomEvent('teacher-assignment-updated', {
                     detail: {
-                        teacherAssignment: response.data.data
+                        teacherAssignments: response.data.data.assignments
                     },
                     bubbles: true,
                     composed: true
@@ -213,16 +420,21 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.data.message || 'Failed to update teacher assignment',
+                    message: response.data.message || 'Failed to update teacher assignments',
                     variant: 'error',
                     duration: 3000
                 });
             }
         } catch (error) {
-            console.error('Error updating teacher assignment:', error);
+            console.error('Error updating teacher assignments:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to update teacher assignment',
+                message: error.response?.data?.message || 'Failed to update teacher assignments',
                 variant: 'error',
                 duration: 3000
             });
@@ -259,14 +471,9 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                                 <ui-search-dropdown 
                                     data-field="teacher_id" 
                                     placeholder="Search teachers..."
-                                    value="${teacherAssignment?.teacher_id || ''}"
-                                    display-value="${teacherAssignment && teacherAssignment.teacher_id ? 
-                                        (this.teachers.find(teacher => teacher.id == teacherAssignment.teacher_id)?.first_name + ' ' + 
-                                        this.teachers.find(teacher => teacher.id == teacherAssignment.teacher_id)?.last_name + ' (' +
-                                        this.teachers.find(teacher => teacher.id == teacherAssignment.teacher_id)?.employee_id + ')') || '' : ''}"
                                     class="w-full">
                                     ${this.teachers.map(teacher => `
-                                        <ui-option value="${teacher.id}" ${teacherAssignment && teacherAssignment.teacher_id == teacher.id ? 'selected' : ''}>${teacher.first_name} ${teacher.last_name} (${teacher.employee_id})</ui-option>
+                                        <ui-option value="${teacher.id}">${teacher.first_name} ${teacher.last_name} (${teacher.employee_id})</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `
@@ -279,15 +486,11 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
                             ${this.classes.length > 0 ? `
                                 <ui-search-dropdown 
-                                    data-field="class_id" 
-                                    placeholder="Search classes..."
-                                    value="${teacherAssignment?.class_id || ''}"
-                                    display-value="${teacherAssignment && teacherAssignment.class_id ? 
-                                        (this.classes.find(cls => cls.id == teacherAssignment.class_id)?.name + '-' + 
-                                        this.classes.find(cls => cls.id == teacherAssignment.class_id)?.section) || '' : ''}"
+                                    data-field="class_ids" 
+                                    placeholder="Search and select class..."
                                     class="w-full">
                                     ${this.classes.map(cls => `
-                                        <ui-option value="${cls.id}" ${teacherAssignment && teacherAssignment.class_id == cls.id ? 'selected' : ''}>${cls.name}-${cls.section}</ui-option>
+                                        <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `
@@ -297,18 +500,15 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
 
                         <!-- Subject Selection -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
                             ${this.subjects.length > 0 ? `
                                 <ui-search-dropdown 
-                                    data-field="subject_id" 
-                                    placeholder="Search subjects..."
-                                    value="${teacherAssignment?.subject_id || ''}"
-                                    display-value="${teacherAssignment && teacherAssignment.subject_id ? 
-                                        (this.subjects.find(subject => subject.id == teacherAssignment.subject_id)?.name + ' (' + 
-                                        this.subjects.find(subject => subject.id == teacherAssignment.subject_id)?.code + ')') || '' : ''}"
+                                    data-field="subject_ids" 
+                                    placeholder="Search and select multiple subjects..."
+                                    multiple
                                     class="w-full">
                                     ${this.subjects.map(subject => `
-                                        <ui-option value="${subject.id}" ${teacherAssignment && teacherAssignment.subject_id == subject.id ? 'selected' : ''}>${subject.name} (${subject.code})</ui-option>
+                                        <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `

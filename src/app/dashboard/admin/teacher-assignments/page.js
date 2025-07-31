@@ -284,20 +284,36 @@ class TeacherAssignmentManagementPage extends App {
     }
 
     onEditTeacher(employeeId) {
+        console.log('🔍 onEditTeacher called with employeeId:', employeeId);
+        
         // Find all teacher assignments for this employee
         const teacherAssignments = this.get('teacherAssignments');
         const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
         
+        console.log('📊 Found teacher data:', {
+            totalAssignments: teacherAssignments.length,
+            teacherDataCount: teacherData.length,
+            teacherData: teacherData
+        });
+        
         if (teacherData.length > 0) {
-            // For edit, we'll show the first assignment as representative
-            const editTeacherAssignment = teacherData[0];
+            // For edit, we'll pass all assignments for this teacher
+            const firstAssignment = teacherData[0];
+            console.log('🎯 First assignment:', firstAssignment);
+            
             this.closeAllModals();
-            this.set('updateTeacherAssignmentData', editTeacherAssignment);
+            this.set('updateTeacherAssignmentData', firstAssignment);
             this.set('showUpdateModal', true);
             setTimeout(() => {
                 const updateModal = this.querySelector('teacher-assignment-update-dialog');
+                console.log('🎭 Found update modal:', !!updateModal);
                 if (updateModal) {
-                    updateModal.setTeacherAssignmentData(editTeacherAssignment);
+                    // Pass the first assignment as the main data, but also pass all assignments
+                    console.log('📤 Calling setTeacherAssignmentData with:', {
+                        firstAssignment,
+                        teacherDataCount: teacherData.length
+                    });
+                    updateModal.setTeacherAssignmentData(firstAssignment, teacherData);
                 }
             }, 0);
         }

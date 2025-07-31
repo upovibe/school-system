@@ -94,59 +94,38 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     }
 
     setTeacherAssignmentData(teacherAssignment, allAssignments = null) {
-        console.log('🔍 setTeacherAssignmentData called with:', {
-            teacherAssignment,
-            allAssignments: allAssignments?.length || 0
-        });
-        
         this.teacherAssignmentData = teacherAssignment;
         this.allAssignments = allAssignments;
         this.render();
         
         // If we have all assignments data, use it directly instead of making an API call
         if (allAssignments && allAssignments.length > 0) {
-            console.log('📊 Using allAssignments data directly');
             this.setupDropdownsWithData(allAssignments);
         } else {
-            console.log('🌐 Falling back to API call');
             // Fallback to API call
             this.loadTeacherAssignments(teacherAssignment.teacher_id, teacherAssignment.class_id);
         }
         
         // Setup change listeners after render
         setTimeout(() => {
-            console.log('🎧 Setting up change listeners');
             this.setupTeacherChangeListener();
             this.setupClassChangeListener();
         }, 100);
     }
 
     setupDropdownsWithData(assignments) {
-        console.log('🔧 setupDropdownsWithData called with:', {
-            assignmentsCount: assignments.length,
-            teacherAssignmentData: this.teacherAssignmentData,
-            teachersCount: this.teachers.length,
-            classesCount: this.classes.length,
-            subjectsCount: this.subjects.length
-        });
-        
         // Wait for data to be loaded if not available yet
         const waitForData = () => {
             if (this.teachers.length === 0 || this.classes.length === 0 || this.subjects.length === 0) {
-                console.log('⏳ Waiting for data to load...');
                 setTimeout(waitForData, 100);
                 return;
             }
             
-            console.log('✅ Data loaded, proceeding with dropdown setup');
-            
             // Filter assignments for the specific class being edited
             const classAssignments = assignments.filter(assignment => assignment.class_id == this.teacherAssignmentData.class_id);
-            console.log('📚 Class assignments found:', classAssignments.length);
             
             // Extract subject IDs for this specific class
             const subjectIds = classAssignments.map(assignment => assignment.subject_id);
-            console.log('📖 Subject IDs for class:', subjectIds);
             
             // Force update dropdowns after render to ensure values are displayed
             setTimeout(() => {
@@ -154,40 +133,28 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
                 const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
                 
-                console.log('🎯 Found dropdowns:', {
-                    teacherDropdown: !!teacherDropdown,
-                    classDropdown: !!classDropdown,
-                    subjectDropdown: !!subjectDropdown
-                });
-                
                 if (teacherDropdown && this.teacherAssignmentData?.teacher_id) {
                     // Find the teacher option and set its text as the display value
                     const selectedTeacher = this.teachers.find(teacher => teacher.id == this.teacherAssignmentData.teacher_id);
-                    console.log('👨‍🏫 Selected teacher:', selectedTeacher);
                     if (selectedTeacher) {
                         teacherDropdown.setAttribute('value', this.teacherAssignmentData.teacher_id);
                         teacherDropdown.setAttribute('display-value', `${selectedTeacher.first_name} ${selectedTeacher.last_name} (${selectedTeacher.employee_id})`);
-                        console.log('✅ Teacher dropdown set');
                     }
                 }
                 
                 if (classDropdown && this.teacherAssignmentData?.class_id) {
                     const selectedClass = this.classes.find(cls => cls.id == this.teacherAssignmentData.class_id);
-                    console.log('🏫 Selected class:', selectedClass);
                     if (selectedClass) {
                         classDropdown.setAttribute('value', this.teacherAssignmentData.class_id);
                         classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
-                        console.log('✅ Class dropdown set');
                     }
                 }
                 
                 if (subjectDropdown && subjectIds.length > 0) {
                     const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
-                    console.log('📚 Selected subjects:', selectedSubjects);
                     subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
                     const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
                     subjectDropdown.setAttribute('display-value', displayValue);
-                    console.log('✅ Subject dropdown set with display value:', displayValue);
                 }
             }, 200);
         };
@@ -315,13 +282,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             const classId = classDropdown ? classDropdown.value : '';
             const subjectIds = subjectDropdown ? subjectDropdown.value : [];
 
-            // Debug logging
-            console.log('Form Data:', {
-                teacherId,
-                classId,
-                subjectIds
-            });
-
             // Validation
             if (!teacherId) {
                 Toast.show({
@@ -367,9 +327,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             // Filter out any invalid subject IDs
             const validSubjectIds = subjectIds.filter(id => id && id !== '' && !isNaN(id));
             
-            console.log('Valid class ID:', classId);
-            console.log('Valid subject IDs:', validSubjectIds);
-            
             if (!classId || isNaN(classId)) {
                 Toast.show({
                     title: 'Validation Error',
@@ -395,10 +352,8 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             const teacherAssignmentData = {
                 subject_ids: validSubjectIds
             };
-            console.log('Updating assignments for class:', classId, teacherAssignmentData);
 
             const response = await api.withToken(token).put(`/teacher-assignments/teacher/${teacherId}/class/${classId}`, teacherAssignmentData);
-            console.log('API Response:', response);
             
             if (response.data.success) {
                 Toast.show({
@@ -427,11 +382,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             }
         } catch (error) {
             console.error('Error updating teacher assignments:', error);
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-            });
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update teacher assignments',

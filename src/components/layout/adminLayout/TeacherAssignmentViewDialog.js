@@ -34,6 +34,46 @@ class TeacherAssignmentViewDialog extends HTMLElement {
     setTeacherAssignments(teacherAssignments) {
         this.teacherAssignmentData = teacherAssignments;
         this.render();
+        this.setupEventListeners();
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    setupEventListeners() {
+        // Remove existing listeners to avoid duplicates
+        this.removeEventListener('click', this.handleClick);
+        
+        // Add click listener
+        this.addEventListener('click', this.handleClick.bind(this));
+    }
+
+    handleClick(event) {
+        const target = event.target;
+        
+        // Handle class delete
+        if (target.closest('.delete-class-btn')) {
+            const button = target.closest('.delete-class-btn');
+            const classKey = button.dataset.classKey;
+            const employeeId = button.dataset.employeeId;
+            console.log('Delete class clicked:', { employeeId, classKey });
+            this.onDeleteClass(employeeId, classKey);
+        }
+        
+        // Handle subject delete
+        if (target.closest('.delete-subject-btn')) {
+            const button = target.closest('.delete-subject-btn');
+            const subjectData = button.dataset;
+            console.log('Delete subject clicked:', subjectData);
+            this.onDeleteSubject(
+                subjectData.employeeId,
+                subjectData.className,
+                subjectData.classSection,
+                subjectData.subjectName,
+                subjectData.subjectCode
+            );
+        }
     }
 
     open() {
@@ -98,32 +138,55 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                                 <h4 class="text-lg font-semibold text-gray-900">Class Assignments</h4>
                                 ${groupedAssignments.map(classGroup => `
                                     <div class="bg-white border border-gray-200 rounded-lg p-4">
-                                        <div class="flex items-center space-x-3 mb-3">
-                                            <div class="flex-shrink-0">
-                                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <i class="fas fa-chalkboard text-blue-600 text-sm"></i>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="flex-shrink-0">
+                                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-chalkboard text-blue-600 text-sm"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h5 class="text-md font-semibold text-gray-900">
+                                                        ${classGroup.className} - ${classGroup.classSection}
+                                                    </h5>
+                                                    <p class="text-sm text-gray-600">${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}</p>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h5 class="text-md font-semibold text-gray-900">
-                                                    ${classGroup.className} - ${classGroup.classSection}
-                                                </h5>
-                                                <p class="text-sm text-gray-600">${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}</p>
-                                            </div>
+                                            <button 
+                                                class="delete-class-btn inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                data-teacher-id="${classGroup.teacherId}"
+                                                data-employee-id="${classGroup.employeeId}"
+                                                data-class-key="${classGroup.className}-${classGroup.classSection}"
+                                                title="Delete all subjects for this class">
+                                                <i class="fas fa-trash text-sm"></i>
+                                            </button>
                                         </div>
                                         
                                         <!-- Subjects List -->
                                         <div class="ml-11">
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                 ${classGroup.subjects.map(subject => `
-                                                    <div class="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
-                                                        <div class="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
-                                                            <i class="fas fa-book text-green-600 text-xs"></i>
+                                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                                                        <div class="flex items-center space-x-2">
+                                                            <div class="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
+                                                                <i class="fas fa-book text-green-600 text-xs"></i>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-sm font-medium text-gray-900">${subject.subjectName}</p>
+                                                                <p class="text-xs text-gray-600">${subject.subjectCode}</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p class="text-sm font-medium text-gray-900">${subject.subjectName}</p>
-                                                            <p class="text-xs text-gray-600">${subject.subjectCode}</p>
-                                                        </div>
+                                                        <button 
+                                                            class="delete-subject-btn inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                            data-teacher-id="${classGroup.teacherId}"
+                                                            data-employee-id="${classGroup.employeeId}"
+                                                            data-class-name="${classGroup.className}"
+                                                            data-class-section="${classGroup.classSection}"
+                                                            data-subject-name="${subject.subjectName}"
+                                                            data-subject-code="${subject.subjectCode}"
+                                                            title="Delete this subject">
+                                                            <i class="fas fa-times text-xs"></i>
+                                                        </button>
                                                     </div>
                                                 `).join('')}
                                             </div>
@@ -252,13 +315,16 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                 grouped[classKey] = {
                     className: assignment.class_name,
                     classSection: assignment.class_section,
+                    teacherId: assignment.teacher_id,
+                    employeeId: assignment.employee_id,
                     subjects: []
                 };
             }
             
             grouped[classKey].subjects.push({
                 subjectName: assignment.subject_name,
-                subjectCode: assignment.subject_code
+                subjectCode: assignment.subject_code,
+                subjectId: assignment.subject_id
             });
         });
         
@@ -268,6 +334,46 @@ class TeacherAssignmentViewDialog extends HTMLElement {
             }
             return a.classSection.localeCompare(b.classSection);
         });
+    }
+
+    onDeleteClass(employeeId, classKey) {
+        const [className, classSection] = classKey.split('-');
+        
+        console.log('Dispatching delete-class event:', { employeeId, className, classSection });
+        
+        // Dispatch event to parent component
+        this.dispatchEvent(new CustomEvent('delete-class', {
+            detail: {
+                employeeId: employeeId,
+                className: className,
+                classSection: classSection
+            },
+            bubbles: true,
+            composed: true
+        }));
+        
+        // Close the dialog
+        this.close();
+    }
+
+    onDeleteSubject(employeeId, className, classSection, subjectName, subjectCode) {
+        console.log('Dispatching delete-subject event:', { employeeId, className, classSection, subjectName, subjectCode });
+        
+        // Dispatch event to parent component
+        this.dispatchEvent(new CustomEvent('delete-subject', {
+            detail: {
+                employeeId: employeeId,
+                className: className,
+                classSection: classSection,
+                subjectName: subjectName,
+                subjectCode: subjectCode
+            },
+            bubbles: true,
+            composed: true
+        }));
+        
+        // Close the dialog
+        this.close();
     }
 }
 

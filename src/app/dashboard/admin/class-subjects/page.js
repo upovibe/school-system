@@ -105,6 +105,13 @@ class ClassSubjectManagementPage extends App {
             // Close the delete dialog
             this.set('showDeleteSubjectDialog', false);
         });
+
+        // Listen for delete events from view dialog
+        this.addEventListener('delete-subject', (event) => {
+            console.log('Received delete-subject event from view dialog:', event.detail);
+            const { className, classSection, subjectName, subjectCode } = event.detail;
+            this.onDeleteSubject(className, classSection, subjectName, subjectCode);
+        });
     }
 
     async loadData() {
@@ -241,7 +248,7 @@ class ClassSubjectManagementPage extends App {
             setTimeout(() => {
                 const viewDialog = this.querySelector('class-subject-view-dialog');
                 if (viewDialog) {
-                    viewDialog.setClassSubjectData(classData[0]); // Pass first one for single view
+                    viewDialog.setClassSubjectsData(classData); // Pass all subjects for the class
                 }
             }, 0);
         }

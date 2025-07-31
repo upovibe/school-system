@@ -176,7 +176,7 @@ class StudentClassPage extends App {
                                                          ${subject.teacher ? `
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <div class="flex items-center gap-2">
-                                <i class="fas ${subject.teacher.gender === 'female' ? 'fa-female' : 'fa-male'} text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
+                                <i class="fas ${subject.teacher.gender === 'female' ? 'fa-user-circle' : 'fa-user-circle'} text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
                                 <span class="text-sm font-medium text-gray-700">Teacher:</span>
                                 <span class="text-sm text-gray-600">${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}</span>
                             </div>

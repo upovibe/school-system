@@ -178,6 +178,66 @@ class TeacherAssignmentManagementPage extends App {
         this.set('showAddModal', true);
     }
 
+    onViewTeacher(employeeId) {
+        // Find all teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // For view, we'll show the first assignment as representative
+            const viewTeacherAssignment = teacherData[0];
+            this.closeAllModals();
+            this.set('viewTeacherAssignmentData', viewTeacherAssignment);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewDialog = this.querySelector('teacher-assignment-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setTeacherAssignmentData(viewTeacherAssignment);
+                }
+            }, 0);
+        }
+    }
+
+    onEditTeacher(employeeId) {
+        // Find all teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // For edit, we'll show the first assignment as representative
+            const editTeacherAssignment = teacherData[0];
+            this.closeAllModals();
+            this.set('updateTeacherAssignmentData', editTeacherAssignment);
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('teacher-assignment-update-dialog');
+                if (updateModal) {
+                    updateModal.setTeacherAssignmentData(editTeacherAssignment);
+                }
+            }, 0);
+        }
+    }
+
+    onDeleteTeacher(employeeId) {
+        // Find all teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // For delete, we'll show the first assignment as representative
+            const deleteTeacherAssignment = teacherData[0];
+            this.closeAllModals();
+            this.set('deleteTeacherAssignmentData', deleteTeacherAssignment);
+            this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('teacher-assignment-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setTeacherAssignmentData(deleteTeacherAssignment);
+                }
+            }, 0);
+        }
+    }
+
     updateTableData() {
         const teacherAssignments = this.get('teacherAssignments');
         if (!teacherAssignments) return;
@@ -334,8 +394,16 @@ class TeacherAssignmentManagementPage extends App {
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between">
                                     <h3 class="text-lg font-semibold text-gray-900">Teacher Assignments Preview</h3>
-                                    <div class="text-sm text-gray-500">
-                                        ${teacherAssignments ? `${teacherAssignments.length} assignments` : '0 assignments'}
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-sm text-gray-500">
+                                            ${teacherAssignments ? `${teacherAssignments.length} assignments` : '0 assignments'}
+                                        </div>
+                                        <button 
+                                            onclick="this.closest('app-teacher-assignment-management-page').onAdd()"
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                            <i class="fas fa-plus mr-2"></i>
+                                            Add Assignment
+                                        </button>
                                     </div>
                                 </div>
                                 
@@ -357,10 +425,30 @@ class TeacherAssignmentManagementPage extends App {
                                                                 <p class="text-sm text-gray-600">ID: ${teacherGroup.employeeId}</p>
                                                             </div>
                                                         </div>
-                                                        <div class="flex items-center space-x-2">
+                                                        <div class="flex items-center space-x-3">
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                                 ${teacherGroup.classes.length} class${teacherGroup.classes.length !== 1 ? 'es' : ''}
                                                             </span>
+                                                            <div class="flex items-center space-x-1">
+                                                                <button 
+                                                                    onclick="this.closest('app-teacher-assignment-management-page').onViewTeacher('${teacherGroup.employeeId}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                                                    title="View assignments">
+                                                                    <i class="fas fa-eye text-sm"></i>
+                                                                </button>
+                                                                <button 
+                                                                    onclick="this.closest('app-teacher-assignment-management-page').onEditTeacher('${teacherGroup.employeeId}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                                                                    title="Edit assignments">
+                                                                    <i class="fas fa-edit text-sm"></i>
+                                                                </button>
+                                                                <button 
+                                                                    onclick="this.closest('app-teacher-assignment-management-page').onDeleteTeacher('${teacherGroup.employeeId}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                                    title="Delete assignments">
+                                                                    <i class="fas fa-trash text-sm"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -37,6 +37,7 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) {
                 console.warn('No authentication token found for loading subjects');
+                this.useFallbackSubjects();
                 return;
             }
 
@@ -66,15 +67,39 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
                 }
             } else {
                 console.warn('Failed to load subjects:', response.data?.message || 'Unknown error');
+                this.useFallbackSubjects();
             }
         } catch (error) {
-            // Don't show error to user, just log it and continue with empty subjects list
-            console.warn('Error loading subjects (continuing with empty list):', error.message);
-            
-            // Set empty subjects array so the component can still function
-            this.subjects = [];
-            this.render();
+            console.warn('Error loading subjects (using fallback):', error.message);
+            this.useFallbackSubjects();
         }
+    }
+
+    useFallbackSubjects() {
+        // Use subjects from current assignments as fallback
+        if (this.editClassData?.assignments && this.editClassData.assignments.length > 0) {
+            this.subjects = this.editClassData.assignments.map(assignment => ({
+                id: assignment.subject_id,
+                name: assignment.subject_name || `Subject ${assignment.subject_id}`,
+                code: assignment.subject_code || `SUB${assignment.subject_id}`
+            }));
+            
+            // Set selected subjects immediately since we have the data
+            setTimeout(() => {
+                const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+                if (subjectDropdown && this.editClassData?.assignments) {
+                    const currentSubjectIds = this.editClassData.assignments.map(assignment => assignment.subject_id);
+                    subjectDropdown.setAttribute('value', JSON.stringify(currentSubjectIds));
+                    
+                    const selectedSubjects = this.subjects.filter(subject => currentSubjectIds.includes(subject.id));
+                    const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
+                    subjectDropdown.setAttribute('display-value', displayValue);
+                }
+            }, 100);
+        } else {
+            this.subjects = [];
+        }
+        this.render();
     }
 
     setupEventListeners() {

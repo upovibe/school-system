@@ -114,101 +114,226 @@ class PersonalInfoContent extends App {
 
         return `
             <div class="space-y-6">
-                <!-- Personal Information Header -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
-                        <ui-badge variant="${personalData.status === 'active' ? 'success' : 'warning'}">${personalData.status}</ui-badge>
+                <!-- Student Profile Header -->
+                <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl p-6 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold">Student Profile</h2>
+                                <p class="text-blue-100">Your personal information and details</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <ui-badge variant="${personalData.status === 'active' ? 'success' : 'warning'}" class="text-sm">
+                                <i class="fas fa-circle mr-1"></i>${personalData.status}
+                            </ui-badge>
+                            <p class="text-blue-100 text-sm mt-1">Student ID: ${personalData.student_id}</p>
+                        </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Personal Details -->
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-3">Personal Details</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Student ID:</span>
-                                    <span class="font-medium">${personalData.student_id}</span>
+                </div>
+
+                <!-- Personal Details Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-user-circle text-white text-xl"></i>
+                            <h3 class="text-lg font-semibold text-white">Personal Details</h3>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-id-card text-blue-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Full Name</p>
+                                        <p class="font-semibold text-gray-900">${personalData.first_name} ${personalData.last_name}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Full Name:</span>
-                                    <span class="font-medium">${personalData.first_name} ${personalData.last_name}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-envelope text-green-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                                        <p class="font-semibold text-gray-900">${personalData.email || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Email:</span>
-                                    <span class="font-medium">${personalData.email || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-phone text-purple-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
+                                        <p class="font-semibold text-gray-900">${personalData.phone || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Phone:</span>
-                                    <span class="font-medium">${personalData.phone || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-${personalData.gender === 'female' ? 'venus' : 'mars'} text-${personalData.gender === 'female' ? 'pink' : 'blue'}-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Gender</p>
+                                        <p class="font-semibold text-gray-900 capitalize">${personalData.gender || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Gender:</span>
-                                    <span class="font-medium capitalize">${personalData.gender || 'N/A'}</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-birthday-cake text-orange-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Date of Birth</p>
+                                        <p class="font-semibold text-gray-900">${personalData.date_of_birth ? new Date(personalData.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Date of Birth:</span>
-                                    <span class="font-medium">${personalData.date_of_birth ? new Date(personalData.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-calendar-check text-indigo-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Admission Date</p>
+                                        <p class="font-semibold text-gray-900">${personalData.admission_date ? new Date(personalData.admission_date).toLocaleDateString() : 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Admission Date:</span>
-                                    <span class="font-medium">${personalData.admission_date ? new Date(personalData.admission_date).toLocaleDateString() : 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-map-marker-alt text-red-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Address</p>
+                                        <p class="font-semibold text-gray-900 text-sm">${personalData.address || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-clock text-teal-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Student Since</p>
+                                        <p class="font-semibold text-gray-900">${personalData.admission_date ? Math.floor((new Date() - new Date(personalData.admission_date)) / (1000 * 60 * 60 * 24 * 365)) + ' years' : 'N/A'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Contact Information -->
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-3">Contact Information</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Address:</span>
-                                    <span class="font-medium text-right max-w-xs">${personalData.address || 'N/A'}</span>
+                    </div>
+                </div>
+
+                <!-- Contact Information Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-address-book text-white text-xl"></i>
+                            <h3 class="text-lg font-semibold text-white">Contact Information</h3>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-users text-blue-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Parent Name</p>
+                                        <p class="font-semibold text-gray-900">${personalData.parent_name || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Parent Name:</span>
-                                    <span class="font-medium">${personalData.parent_name || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-phone-alt text-green-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Parent Phone</p>
+                                        <p class="font-semibold text-gray-900">${personalData.parent_phone || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Parent Phone:</span>
-                                    <span class="font-medium">${personalData.parent_phone || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-envelope-open text-purple-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Parent Email</p>
+                                        <p class="font-semibold text-gray-900">${personalData.parent_email || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Parent Email:</span>
-                                    <span class="font-medium">${personalData.parent_email || 'N/A'}</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Emergency Contact</p>
+                                        <p class="font-semibold text-gray-900">${personalData.emergency_contact || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Emergency Contact:</span>
-                                    <span class="font-medium">${personalData.emergency_contact || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-phone-square text-red-500"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Emergency Phone</p>
+                                        <p class="font-semibold text-gray-900">${personalData.emergency_phone || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Emergency Phone:</span>
-                                    <span class="font-medium">${personalData.emergency_phone || 'N/A'}</span>
+                                
+                                <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg border border-yellow-200">
+                                    <i class="fas fa-shield-alt text-yellow-600"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs text-yellow-700 uppercase tracking-wide">Contact Status</p>
+                                        <p class="font-semibold text-yellow-800">${personalData.emergency_contact ? 'Emergency Contact Set' : 'No Emergency Contact'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Medical Information -->
-                    ${personalData.blood_group || personalData.medical_conditions ? `
-                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                            <h4 class="text-sm font-medium text-blue-800 mb-3">Medical Information</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+                
+                <!-- Medical Information Card -->
+                ${personalData.blood_group || personalData.medical_conditions ? `
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-heartbeat text-white text-xl"></i>
+                                <h3 class="text-lg font-semibold text-white">Medical Information</h3>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 ${personalData.blood_group ? `
-                                    <div class="flex justify-between">
-                                        <span class="text-blue-700">Blood Group:</span>
-                                        <span class="font-medium text-blue-900">${personalData.blood_group}</span>
+                                    <div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <i class="fas fa-tint text-red-500"></i>
+                                        <div class="flex-1">
+                                            <p class="text-xs text-red-600 uppercase tracking-wide">Blood Group</p>
+                                            <p class="font-semibold text-red-800">${personalData.blood_group}</p>
+                                        </div>
                                     </div>
                                 ` : ''}
                                 ${personalData.medical_conditions ? `
-                                    <div class="flex justify-between">
-                                        <span class="text-blue-700">Medical Conditions:</span>
-                                        <span class="font-medium text-blue-900 text-right max-w-xs">${personalData.medical_conditions}</span>
+                                    <div class="flex items-center space-x-3 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                                        <i class="fas fa-notes-medical text-pink-500"></i>
+                                        <div class="flex-1">
+                                            <p class="text-xs text-pink-600 uppercase tracking-wide">Medical Conditions</p>
+                                            <p class="font-semibold text-pink-800 text-sm">${personalData.medical_conditions}</p>
+                                        </div>
                                     </div>
                                 ` : ''}
                             </div>
                         </div>
-                    ` : ''}
+                    </div>
+                ` : ''}
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white text-center">
+                        <i class="fas fa-calendar-day text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Days Enrolled</p>
+                        <p class="text-xl font-bold">${personalData.admission_date ? Math.floor((new Date() - new Date(personalData.admission_date)) / (1000 * 60 * 60 * 24)) : 'N/A'}</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white text-center">
+                        <i class="fas fa-user-check text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Status</p>
+                        <p class="text-xl font-bold capitalize">${personalData.status}</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white text-center">
+                        <i class="fas fa-${personalData.gender === 'female' ? 'venus' : 'mars'} text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Gender</p>
+                        <p class="text-xl font-bold capitalize">${personalData.gender || 'N/A'}</p>
+                    </div>
                 </div>
             </div>
         `;

@@ -444,5 +444,49 @@ class StudentModel extends BaseModel {
             throw new Exception('Error updating student with user account: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get student with their class information
+     * @param string $studentId The student ID
+     * @return array|false The student with class information or false if not found
+     */
+    public function getStudentWithClassInfo($studentId) {
+        try {
+            $query = "SELECT s.*, c.* as class_info
+                     FROM students s
+                     LEFT JOIN classes c ON s.current_class_id = c.id
+                     WHERE s.student_id = :student_id
+                     LIMIT 1";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute(['student_id' => $studentId]);
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('Error getting student with class info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Find student by user_id
+     * @param int $userId User ID to search for
+     * @return array|false Student data or false if not found
+     */
+    public function findByUserId($userId) {
+        try {
+            $query = "SELECT s.*, c.* as class_info
+                     FROM students s
+                     LEFT JOIN classes c ON s.current_class_id = c.id
+                     WHERE s.user_id = :user_id
+                     LIMIT 1";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute(['user_id' => $userId]);
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('Error finding student by user ID: ' . $e->getMessage());
+        }
+    }
 }
 ?> 

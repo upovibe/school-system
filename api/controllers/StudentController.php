@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/ClassModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
+require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
 
 class StudentController {
     private $studentModel;
@@ -739,6 +740,39 @@ class StudentController {
         }
     }
 
+    /**
+     * Get current student's class information (student only)
+     */
+    public function getCurrentClass() {
+        try {
+            // Require student authentication and validation
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            // Student info is now available from middleware
+            $student = $_REQUEST['current_student'];
+            
+            // Class info is already included in student data from the join
+            $classInfo = !empty($student['class_info']) ? $student['class_info'] : null;
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'class' => $classInfo,
+                    'student' => $student
+                ],
+                'message' => 'Current class retrieved successfully'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving current class: ' . $e->getMessage()
+            ]);
+        }
+    }
 
 }
 ?> 

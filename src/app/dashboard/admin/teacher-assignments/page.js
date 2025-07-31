@@ -258,15 +258,13 @@ class TeacherAssignmentManagementPage extends App {
         const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
         
         if (teacherData.length > 0) {
-            // For view, we'll show the first assignment as representative
-            const viewTeacherAssignment = teacherData[0];
             this.closeAllModals();
-            this.set('viewTeacherAssignmentData', viewTeacherAssignment);
+            this.set('viewTeacherAssignmentData', teacherData);
             this.set('showViewModal', true);
             setTimeout(() => {
                 const viewDialog = this.querySelector('teacher-assignment-view-dialog');
                 if (viewDialog) {
-                    viewDialog.setTeacherAssignmentData(viewTeacherAssignment);
+                    viewDialog.setTeacherAssignments(teacherData);
                 }
             }, 0);
         }

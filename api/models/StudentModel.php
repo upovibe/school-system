@@ -474,7 +474,7 @@ class StudentModel extends BaseModel {
      */
     public function findByUserId($userId) {
         try {
-            $query = "SELECT s.*, c.* as class_info
+            $query = "SELECT s.*, c.id as class_id, c.name as class_name, c.section as class_section, c.academic_year as class_academic_year
                      FROM students s
                      LEFT JOIN classes c ON s.current_class_id = c.id
                      WHERE s.user_id = :user_id

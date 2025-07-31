@@ -226,6 +226,74 @@ class ClassSubjectManagementPage extends App {
         }
     }
 
+    onViewClass(className, classSection) {
+        // Find all class subjects for this class
+        const classSubjects = this.get('classSubjects');
+        const classData = classSubjects.filter(classSubject => 
+            classSubject.class_name === className && 
+            classSubject.class_section === classSection
+        );
+        
+        if (classData.length > 0) {
+            this.closeAllModals();
+            this.set('viewClassSubjectData', classData);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewDialog = this.querySelector('class-subject-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setClassSubjectData(classData[0]); // Pass first one for single view
+                }
+            }, 0);
+        }
+    }
+
+    onEditClass(className, classSection) {
+        // Find all class subjects for this class
+        const classSubjects = this.get('classSubjects');
+        const classData = classSubjects.filter(classSubject => 
+            classSubject.class_name === className && 
+            classSubject.class_section === classSection
+        );
+        
+        if (classData.length > 0) {
+            // For edit, we'll pass the first assignment as representative
+            const firstAssignment = classData[0];
+            
+            this.closeAllModals();
+            this.set('updateClassSubjectData', firstAssignment);
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('class-subject-update-dialog');
+                if (updateModal) {
+                    updateModal.setClassSubjectData(firstAssignment);
+                }
+            }, 0);
+        }
+    }
+
+    onDeleteClass(className, classSection) {
+        // Find all class subjects for this class
+        const classSubjects = this.get('classSubjects');
+        const classData = classSubjects.filter(classSubject => 
+            classSubject.class_name === className && 
+            classSubject.class_section === classSection
+        );
+        
+        if (classData.length > 0) {
+            // For delete, we'll show the first assignment as representative
+            const deleteClassSubject = classData[0];
+            this.closeAllModals();
+            this.set('deleteClassSubjectData', deleteClassSubject);
+            this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('class-subject-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setClassSubjectData(deleteClassSubject);
+                }
+            }, 0);
+        }
+    }
+
     updateTableData() {
         const classSubjects = this.get('classSubjects');
         if (!classSubjects) return;
@@ -351,10 +419,18 @@ class ClassSubjectManagementPage extends App {
                         <!-- Preview Tab Panel -->
                         <ui-tab-panel value="preview">
                             <div class="space-y-6">
-                                <div class="flex items-center justify-between">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                                     <h3 class="text-lg font-semibold text-gray-900">Class Subject Assignments Preview</h3>
-                                    <div class="text-sm text-gray-500">
-                                        ${classSubjects ? `${classSubjects.length} assignments` : '0 assignments'}
+                                    <div class="ml-auto flex items-center space-x-4">
+                                        <div class="text-sm text-gray-500">
+                                            ${classSubjects ? `${classSubjects.length} assignments` : '0 assignments'}
+                                        </div>
+                                        <button 
+                                            onclick="this.closest('app-class-subject-management-page').onAdd()"
+                                            class="inline-flex items-center px-2 py-1.5 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                            <i class="fas fa-plus"></i>
+                                            <span class="hidden md:inline">Add Assignment</span>
+                                        </button>
                                     </div>
                                 </div>
                                 
@@ -380,6 +456,26 @@ class ClassSubjectManagementPage extends App {
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                                 ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
                                                             </span>
+                                                            <div class="flex items-center space-x-1">
+                                                                <button 
+                                                                    onclick="this.closest('app-class-subject-management-page').onViewClass('${classGroup.className}', '${classGroup.classSection}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                                                    title="View subjects">
+                                                                    <i class="fas fa-eye text-sm"></i>
+                                                                </button>
+                                                                <button 
+                                                                    onclick="this.closest('app-class-subject-management-page').onEditClass('${classGroup.className}', '${classGroup.classSection}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                                                                    title="Edit subjects">
+                                                                    <i class="fas fa-edit text-sm"></i>
+                                                                </button>
+                                                                <button 
+                                                                    onclick="this.closest('app-class-subject-management-page').onDeleteClass('${classGroup.className}', '${classGroup.classSection}')"
+                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                                    title="Delete all subjects">
+                                                                    <i class="fas fa-trash text-sm"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

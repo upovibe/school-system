@@ -167,6 +167,7 @@ Router::get('/students/active', 'StudentController@getActive');
 Router::get('/students/search', 'StudentController@search');
 Router::get('/students/by-class', 'StudentController@getByClass');
 Router::get('/students/current-class', 'StudentController@getCurrentClass');
+Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
 Router::get('/students/{id}', 'StudentController@show');
 Router::put('/students/{id}', 'StudentController@update');
 Router::delete('/students/{id}', 'StudentController@destroy');

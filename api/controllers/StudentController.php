@@ -814,5 +814,54 @@ class StudentController {
         }
     }
 
+    /**
+     * Get current student's personal information (student only)
+     */
+    public function getPersonalInfo() {
+        try {
+            // Require student authentication and validation
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            // Student info is now available from middleware
+            $student = $_REQUEST['current_student'];
+            
+            // Extract personal information from student data
+            $personalInfo = [
+                'student_id' => $student['student_id'],
+                'first_name' => $student['first_name'],
+                'last_name' => $student['last_name'],
+                'email' => $student['email'],
+                'phone' => $student['phone'],
+                'address' => $student['address'],
+                'date_of_birth' => $student['date_of_birth'],
+                'gender' => $student['gender'],
+                'admission_date' => $student['admission_date'],
+                'status' => $student['status'],
+                'parent_name' => $student['parent_name'],
+                'parent_phone' => $student['parent_phone'],
+                'parent_email' => $student['parent_email'],
+                'emergency_contact' => $student['emergency_contact'],
+                'emergency_phone' => $student['emergency_phone'],
+                'blood_group' => $student['blood_group'],
+                'medical_conditions' => $student['medical_conditions']
+            ];
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $personalInfo,
+                'message' => 'Personal information retrieved successfully'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving personal information: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?> 

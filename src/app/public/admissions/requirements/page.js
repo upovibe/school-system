@@ -4,6 +4,7 @@ import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import '@/components/layout/publicLayout/RequirementsSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 /**
  * Admissions Requirements Page Component (/admissions/requirements)
@@ -13,10 +14,10 @@ import { fetchColorSettings } from '@/utils/colorSettings.js';
  * File-based routing: /admissions/requirements → app/public/admissions/requirements/page.js
  */
 class AdmissionsRequirementsPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Admissions Requirements | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Admissions Requirements');
     }
 
     async loadPageData() {

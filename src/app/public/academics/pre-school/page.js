@@ -4,6 +4,7 @@ import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import '@/components/layout/publicLayout/PreSchoolSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 /**
  * Pre School Page Component (/acadamics/pre-school)
@@ -13,10 +14,10 @@ import { fetchColorSettings } from '@/utils/colorSettings.js';
  * File-based routing: /acadamics/pre-school → app/public/acadamics/pre-school/page.js
  */
 class PreSchoolPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Pre School | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Pre School');
     }
 
     async loadPageData() {

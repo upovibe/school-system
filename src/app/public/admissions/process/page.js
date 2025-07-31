@@ -4,6 +4,7 @@ import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import '@/components/layout/publicLayout/ApplicationProcessSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 /**
  * Admissions Process Page Component (/admissions/process)
@@ -13,10 +14,10 @@ import { fetchColorSettings } from '@/utils/colorSettings.js';
  * File-based routing: /admissions/process → app/public/admissions/process/page.js
  */
 class AdmissionsProcessPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Admissions Process | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Admissions Process');
     }
 
     async loadPageData() {

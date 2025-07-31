@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/ContactSectionAlt.js';
 
 /**
@@ -14,10 +15,10 @@ import '@/components/layout/publicLayout/ContactSectionAlt.js';
  * File-based routing: /contact → app/public/contact/page.js
  */
 class ContactPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Contact | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Contact');
     }
 
     async loadAllData() {

@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/MissionVisionSection.js';
 
 /**
@@ -14,10 +15,10 @@ import '@/components/layout/publicLayout/MissionVisionSection.js';
  * File-based routing: /about-us/mission-vision → app/public/about-us/mission-vision/page.js
  */
 class MissionVisionPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Mission & Vision | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Mission & Vision');
     }
 
     async loadAllData() {

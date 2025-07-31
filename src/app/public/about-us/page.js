@@ -3,6 +3,7 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/AboutSection.js';
 
 /**
@@ -13,10 +14,10 @@ import '@/components/layout/publicLayout/AboutSection.js';
  * File-based routing: /about-us → app/public/about-us/page.js
  */
 class AboutUsPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'About Us | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('About Us');
     }
 
     async loadAllData() {

@@ -4,6 +4,7 @@ import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import '@/components/layout/publicLayout/JuniorHighSchoolSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 /**
  * Junior High School Page Component (/acadamics/junior-high-school)
@@ -13,10 +14,10 @@ import { fetchColorSettings } from '@/utils/colorSettings.js';
  * File-based routing: /acadamics/junior-high-school → app/public/acadamics/junior-high-school/page.js
  */
 class JuniorHighSchoolPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Junior High School | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Junior High School');
     }
 
     async loadPageData() {

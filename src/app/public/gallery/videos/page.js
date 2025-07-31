@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/VideoGallerySection.js';
 
 /**
@@ -14,10 +15,10 @@ import '@/components/layout/publicLayout/VideoGallerySection.js';
  * File-based routing: /gallery/videos → app/public/gallery/videos/page.js
  */
 class VideoGalleryPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Video Gallery | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Video Gallery');
     }
 
     async loadAllData() {

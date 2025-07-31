@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/EventView.js';
 
 /**
@@ -12,12 +13,14 @@ class EventPage extends App {
         this.slug = null;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
         
         // Get slug from URL path
         const pathSegments = window.location.pathname.split('/');
         this.slug = pathSegments[pathSegments.length - 1];
+        
+        await setDocumentTitle('Event');
     }
 
     render() {

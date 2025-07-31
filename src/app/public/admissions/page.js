@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import AdmissionsSection from '@/components/layout/publicLayout/AdmissionsSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -21,10 +22,10 @@ if (!document.querySelector('link[href*="quill"]')) {
  * File-based routing: /admissions → app/public/admissions/page.js
  */
 class AdmissionsPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Admissions | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Admissions');
     }
 
     async loadPageData() {

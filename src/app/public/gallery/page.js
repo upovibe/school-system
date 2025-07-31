@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/GallerySection.js';
 
 /**
@@ -14,10 +15,10 @@ import '@/components/layout/publicLayout/GallerySection.js';
  * File-based routing: /gallery → app/public/gallery/page.js
  */
 class GalleryPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Gallery | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Gallery');
     }
 
     async loadAllData() {

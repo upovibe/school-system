@@ -4,6 +4,7 @@ import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/ValuesAimsSection.js';
 
 /**
@@ -14,10 +15,10 @@ import '@/components/layout/publicLayout/ValuesAimsSection.js';
  * File-based routing: /about-us/values-aims → app/public/about-us/values-aims/page.js
  */
 class ValuesAimsPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Values & Aims | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Values & Aims');
     }
 
     async loadAllData() {

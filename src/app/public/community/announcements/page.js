@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import api from '@/services/api.js';
 import PageLoader from '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 // Load Quill CSS for content display
 if (!document.querySelector('link[href*="quill"]')) {
@@ -19,10 +20,10 @@ if (!document.querySelector('link[href*="quill"]')) {
  * File-based routing: /community/announcements → app/public/community/announcements/page.js
  */
 class AnnouncementsPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Announcements | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Announcements');
     }
 
     async loadPageData() {

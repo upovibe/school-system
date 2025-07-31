@@ -4,6 +4,7 @@ import '@/components/common/PageLoader.js';
 import store from '@/core/store.js';
 import '@/components/layout/publicLayout/PrimarySchoolSection.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 
 /**
  * Primary School Page Component (/acadamics/primary-school)
@@ -13,10 +14,10 @@ import { fetchColorSettings } from '@/utils/colorSettings.js';
  * File-based routing: /acadamics/primary-school → app/public/acadamics/primary-school/page.js
  */
 class PrimarySchoolPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Primary School | UPO UI';
-        this.loadPageData();
+        await this.loadPageData();
+        await setDocumentTitle('Primary School');
     }
 
     async loadPageData() {

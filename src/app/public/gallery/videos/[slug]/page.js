@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/VideoGalleryView.js';
 
 /**
@@ -8,15 +9,16 @@ import '@/components/layout/publicLayout/VideoGalleryView.js';
  * File-based routing: /gallery/videos/[slug] → app/public/gallery/videos/[slug]/page.js
  */
 class VideoGallerySlugPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
         
         // Get the slug from the URL
         const slug = this.getSlugFromUrl();
-        document.title = `Video Gallery | UPO UI`;
         
         this.set('slug', slug);
         this.render();
+        
+        await setDocumentTitle('Video Gallery');
     }
 
     getSlugFromUrl() {

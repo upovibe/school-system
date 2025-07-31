@@ -3,6 +3,7 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/HeroSection.js';
 import '@/components/layout/publicLayout/AboutSection.js';
 import '@/components/layout/publicLayout/AcademicsSection.js';
@@ -38,7 +39,10 @@ class RootPage extends App {
             return;
         }
         // 2. If connected, load data as usual
-        this.loadAllData();
+        await this.loadAllData();
+        
+        // 3. Set document title using application name
+        await setDocumentTitle('Home');
     }
 
     async loadAllData() {

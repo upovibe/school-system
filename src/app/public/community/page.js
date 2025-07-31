@@ -3,6 +3,7 @@ import api from '@/services/api.js';
 import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/CommunitySectionAlt.js';
 
 /**
@@ -13,10 +14,10 @@ import '@/components/layout/publicLayout/CommunitySectionAlt.js';
  * File-based routing: /community → app/public/community/page.js
  */
 class CommunityPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
-        document.title = 'Community | UPO UI';
-        this.loadAllData();
+        await this.loadAllData();
+        await setDocumentTitle('Community');
     }
 
     async loadAllData() {

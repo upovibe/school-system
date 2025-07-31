@@ -1,4 +1,5 @@
 import App from '@/core/App.js';
+import { setDocumentTitle } from '@/utils/appSettings.js';
 import '@/components/layout/publicLayout/PhotoGalleryView.js';
 
 /**
@@ -8,15 +9,16 @@ import '@/components/layout/publicLayout/PhotoGalleryView.js';
  * File-based routing: /gallery/photos/[slug] → app/public/gallery/photos/[slug]/page.js
  */
 class PhotoGallerySlugPage extends App {
-    connectedCallback() {
+    async connectedCallback() {
         super.connectedCallback();
         
         // Get the slug from the URL
         const slug = this.getSlugFromUrl();
-        document.title = `Photo Gallery | UPO UI`;
         
         this.set('slug', slug);
         this.render();
+        
+        await setDocumentTitle('Photo Gallery');
     }
 
     getSlugFromUrl() {

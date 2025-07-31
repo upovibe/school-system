@@ -784,9 +784,8 @@ class StudentController {
                     // Add teacher information to the subject
                     if ($teacherAssignment) {
                         $subject['teacher'] = [
-                            'id' => $teacherAssignment['teacher_id'],
                             'name' => $teacherAssignment['teacher_first_name'] . ' ' . $teacherAssignment['teacher_last_name'],
-                            'employee_id' => $teacherAssignment['employee_id']
+                            'gender' => $teacherAssignment['gender']
                         ];
                     } else {
                         $subject['teacher'] = null;

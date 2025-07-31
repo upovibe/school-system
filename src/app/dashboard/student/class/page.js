@@ -173,23 +173,22 @@ class StudentClassPage extends App {
                                      <div class="flex items-center justify-between text-sm text-gray-500">
                                          <span>Code: ${subject.subject_code}</span>
                                      </div>
-                                     ${subject.teacher ? `
-                                         <div class="mt-3 pt-3 border-t border-gray-100">
-                                             <div class="flex items-center gap-2">
-                                                 <i class="fas fa-chalkboard-teacher text-blue-500"></i>
-                                                 <span class="text-sm font-medium text-gray-700">Teacher:</span>
-                                                 <span class="text-sm text-gray-600">${subject.teacher.name}</span>
-                                                 ${subject.teacher.employee_id ? `<span class="text-xs text-gray-400">(${subject.teacher.employee_id})</span>` : ''}
-                                             </div>
-                                         </div>
-                                     ` : `
-                                         <div class="mt-3 pt-3 border-t border-gray-100">
-                                             <div class="flex items-center gap-2">
-                                                 <i class="fas fa-exclamation-triangle text-yellow-500"></i>
-                                                 <span class="text-sm text-gray-500">No teacher assigned</span>
-                                             </div>
-                                         </div>
-                                     `}
+                                                         ${subject.teacher ? `
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <i class="fas ${subject.teacher.gender === 'female' ? 'fa-female' : 'fa-male'} text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
+                                <span class="text-sm font-medium text-gray-700">Teacher:</span>
+                                <span class="text-sm text-gray-600">${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                                <span class="text-sm text-gray-500">No teacher assigned</span>
+                            </div>
+                        </div>
+                    `}
                                  </div>
                              `).join('')}
                         </div>

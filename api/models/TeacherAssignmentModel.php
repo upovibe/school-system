@@ -327,7 +327,7 @@ class TeacherAssignmentModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT ta.*, 
-                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.gender,
                        c.name as class_name, c.section as class_section,
                        s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta

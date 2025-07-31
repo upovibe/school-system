@@ -333,13 +333,13 @@ class ClassSubjectController {
     }
 
     /**
-     * Get class subjects by class ID (admin only)
+     * Get class subjects by class ID (authenticated users only)
      */
     public function getByClass() {
         try {
-            // Require admin authentication
+            // Require general user authentication (any logged-in user)
             global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
+            AuthMiddleware::requireAuth($pdo);
             
             $classId = $_GET['class_id'] ?? null;
             
@@ -406,38 +406,7 @@ class ClassSubjectController {
         }
     }
 
-    /**
-     * Get class subjects by class ID (public - for students)
-     */
-    public function getByClassPublic() {
-        try {
-            $classId = $_GET['class_id'] ?? null;
-            
-            if (!$classId) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Class ID is required'
-                ]);
-                return;
-            }
-            
-            $classSubjects = $this->classSubjectModel->getByClassId($classId);
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => $classSubjects,
-                'message' => 'Class subjects retrieved successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving class subjects: ' . $e->getMessage()
-            ]);
-        }
-    }
+
 
 
 

@@ -26,6 +26,10 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
             this.render();
+            // Re-render after a short delay to ensure data is loaded
+            setTimeout(() => {
+                this.render();
+            }, 100);
         }
     }
 
@@ -37,6 +41,8 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         this.setupEventListeners();
     }
 
+
+
     async loadTeachers() {
         try {
             const token = localStorage.getItem('token');
@@ -45,9 +51,35 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             const response = await api.withToken(token).get('/teachers');
             
             if (response.status === 200 && response.data.success) {
-                this.teachers = response.data.data; // Teachers array is in response.data.data
-                // Re-render to update the dropdown with teachers
+                // Only update if we don't have fallback data yet
+                if (this.teachers.length === 0) {
+                    this.teachers = response.data.data;
+                } else {
+                    // Merge with existing fallback data, keeping fallback for assigned teachers
+                    const apiTeachers = response.data.data;
+                    const fallbackTeachers = this.teachers;
+                    
+                    // Create a map of existing teachers by ID
+                    const existingTeachersMap = new Map(fallbackTeachers.map(teacher => [teacher.id, teacher]));
+                    
+                    // Add new teachers from API that aren't in fallback
+                    apiTeachers.forEach(apiTeacher => {
+                        if (!existingTeachersMap.has(apiTeacher.id)) {
+                            existingTeachersMap.set(apiTeacher.id, apiTeacher);
+                        }
+                    });
+                    
+                    this.teachers = Array.from(existingTeachersMap.values());
+                }
+                
+                // Re-render to update dropdown options
                 this.render();
+                // Re-setup dropdowns if we have teacher assignment data
+                if (this.teacherAssignmentData && this.allAssignments) {
+                    setTimeout(() => {
+                        this.setupDropdownsImmediately(this.allAssignments);
+                    }, 50);
+                }
             }
         } catch (error) {
             // Silent error handling
@@ -62,9 +94,35 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             const response = await api.withToken(token).get('/classes');
             
             if (response.status === 200 && response.data.success) {
-                this.classes = response.data.data; // Classes array is in response.data.data
-                // Re-render to update the dropdown with classes
+                // Only update if we don't have fallback data yet
+                if (this.classes.length === 0) {
+                    this.classes = response.data.data;
+                } else {
+                    // Merge with existing fallback data, keeping fallback for assigned classes
+                    const apiClasses = response.data.data;
+                    const fallbackClasses = this.classes;
+                    
+                    // Create a map of existing classes by ID
+                    const existingClassesMap = new Map(fallbackClasses.map(cls => [cls.id, cls]));
+                    
+                    // Add new classes from API that aren't in fallback
+                    apiClasses.forEach(apiClass => {
+                        if (!existingClassesMap.has(apiClass.id)) {
+                            existingClassesMap.set(apiClass.id, apiClass);
+                        }
+                    });
+                    
+                    this.classes = Array.from(existingClassesMap.values());
+                }
+                
+                // Re-render to update dropdown options
                 this.render();
+                // Re-setup dropdowns if we have teacher assignment data
+                if (this.teacherAssignmentData && this.allAssignments) {
+                    setTimeout(() => {
+                        this.setupDropdownsImmediately(this.allAssignments);
+                    }, 50);
+                }
             }
         } catch (error) {
             // Silent error handling
@@ -79,9 +137,35 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             const response = await api.withToken(token).get('/subjects');
             
             if (response.status === 200 && response.data.success) {
-                this.subjects = response.data.data; // Subjects array is in response.data.data
-                // Re-render to update the dropdown with subjects
+                // Only update if we don't have fallback data yet
+                if (this.subjects.length === 0) {
+                    this.subjects = response.data.data;
+                } else {
+                    // Merge with existing fallback data, keeping fallback for assigned subjects
+                    const apiSubjects = response.data.data;
+                    const fallbackSubjects = this.subjects;
+                    
+                    // Create a map of existing subjects by ID
+                    const existingSubjectsMap = new Map(fallbackSubjects.map(subj => [subj.id, subj]));
+                    
+                    // Add new subjects from API that aren't in fallback
+                    apiSubjects.forEach(apiSubject => {
+                        if (!existingSubjectsMap.has(apiSubject.id)) {
+                            existingSubjectsMap.set(apiSubject.id, apiSubject);
+                        }
+                    });
+                    
+                    this.subjects = Array.from(existingSubjectsMap.values());
+                }
+                
+                // Re-render to update dropdown options
                 this.render();
+                // Re-setup dropdowns if we have teacher assignment data
+                if (this.teacherAssignmentData && this.allAssignments) {
+                    setTimeout(() => {
+                        this.setupDropdownsImmediately(this.allAssignments);
+                    }, 50);
+                }
             }
         } catch (error) {
             // Silent error handling
@@ -96,6 +180,12 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     setTeacherAssignmentData(teacherAssignment, allAssignments = null) {
         this.teacherAssignmentData = teacherAssignment;
         this.allAssignments = allAssignments;
+        
+        // Create fallback data immediately from assignments
+        if (allAssignments && allAssignments.length > 0) {
+            this.createFallbackData(allAssignments);
+        }
+        
         this.render();
         
         // If we have all assignments data, use it directly instead of making an API call
@@ -113,22 +203,56 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         }, 100);
     }
 
+    createFallbackData(assignments) {
+        // Create fallback teachers from assignments
+        const uniqueTeachers = assignments.reduce((acc, assignment) => {
+            if (!acc.find(t => t.id === assignment.teacher_id)) {
+                acc.push({
+                    id: assignment.teacher_id,
+                    first_name: assignment.teacher_name?.split(' ')[0] || 'Teacher',
+                    last_name: assignment.teacher_name?.split(' ').slice(1).join(' ') || '',
+                    employee_id: assignment.employee_id
+                });
+            }
+            return acc;
+        }, []);
+
+        // Create fallback classes from assignments
+        const uniqueClasses = assignments.reduce((acc, assignment) => {
+            if (!acc.find(c => c.id === assignment.class_id)) {
+                acc.push({
+                    id: assignment.class_id,
+                    name: assignment.class_name || 'Class',
+                    section: assignment.class_section || 'N/A'
+                });
+            }
+            return acc;
+        }, []);
+
+        // Create fallback subjects from assignments
+        const uniqueSubjects = assignments.reduce((acc, assignment) => {
+            if (!acc.find(s => s.id === assignment.subject_id)) {
+                acc.push({
+                    id: assignment.subject_id,
+                    name: assignment.subject_name || `Subject ${assignment.subject_id}`,
+                    code: assignment.subject_code || `SUB${assignment.subject_id}`
+                });
+            }
+            return acc;
+        }, []);
+
+        // Set fallback data immediately
+        this.teachers = uniqueTeachers;
+        this.classes = uniqueClasses;
+        this.subjects = uniqueSubjects;
+    }
+
     setupDropdownsWithData(assignments) {
-        // Set up dropdowns immediately with fallback data, then update when API data loads
+        // Set up dropdowns immediately with fallback data
         this.setupDropdownsImmediately(assignments);
         
-        // Also set up a watcher for when API data becomes available
-        const waitForData = () => {
-            if (this.teachers.length === 0 || this.classes.length === 0 || this.subjects.length === 0) {
-                setTimeout(waitForData, 100);
-                return;
-            }
-            
-            // Update dropdowns with full API data
-            this.updateDropdownsWithApiData(assignments);
-        };
-        
-        waitForData();
+        // Don't update with API data at all - fallback data is sufficient
+        // This prevents any flickering or empty fields
     }
 
     setupDropdownsImmediately(assignments) {
@@ -146,53 +270,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             
             // Set teacher dropdown with fallback data
             if (teacherDropdown && this.teacherAssignmentData?.teacher_id) {
-                // Use fallback teacher data from assignments
-                const teacherAssignment = assignments.find(a => a.teacher_id == this.teacherAssignmentData.teacher_id);
-                if (teacherAssignment) {
-                    teacherDropdown.setAttribute('value', this.teacherAssignmentData.teacher_id);
-                    teacherDropdown.setAttribute('display-value', `${teacherAssignment.teacher_name || 'Teacher'} (${teacherAssignment.employee_id || 'N/A'})`);
-                }
-            }
-            
-            // Set class dropdown with fallback data
-            if (classDropdown && this.teacherAssignmentData?.class_id) {
-                const classAssignment = assignments.find(a => a.class_id == this.teacherAssignmentData.class_id);
-                if (classAssignment) {
-                    classDropdown.setAttribute('value', this.teacherAssignmentData.class_id);
-                    classDropdown.setAttribute('display-value', `${classAssignment.class_name || 'Class'} - ${classAssignment.class_section || 'N/A'}`);
-                }
-            }
-            
-            // Set subject dropdown with fallback data
-            if (subjectDropdown && subjectIds.length > 0) {
-                // Create fallback subjects from assignments
-                const fallbackSubjects = classAssignments.map(assignment => ({
-                    id: assignment.subject_id,
-                    name: assignment.subject_name || `Subject ${assignment.subject_id}`,
-                    code: assignment.subject_code || `SUB${assignment.subject_id}`
-                }));
-                
-                subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
-                const displayValue = fallbackSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
-                subjectDropdown.setAttribute('display-value', displayValue);
-            }
-        }, 100);
-    }
-
-    updateDropdownsWithApiData(assignments) {
-        // Filter assignments for the specific class being edited
-        const classAssignments = assignments.filter(assignment => assignment.class_id == this.teacherAssignmentData.class_id);
-        
-        // Extract subject IDs for this specific class
-        const subjectIds = classAssignments.map(assignment => assignment.subject_id);
-        
-        // Update dropdowns with full API data
-        setTimeout(() => {
-            const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-            
-            if (teacherDropdown && this.teacherAssignmentData?.teacher_id) {
                 const selectedTeacher = this.teachers.find(teacher => teacher.id == this.teacherAssignmentData.teacher_id);
                 if (selectedTeacher) {
                     teacherDropdown.setAttribute('value', this.teacherAssignmentData.teacher_id);
@@ -200,6 +277,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 }
             }
             
+            // Set class dropdown with fallback data
             if (classDropdown && this.teacherAssignmentData?.class_id) {
                 const selectedClass = this.classes.find(cls => cls.id == this.teacherAssignmentData.class_id);
                 if (selectedClass) {
@@ -208,6 +286,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 }
             }
             
+            // Set subject dropdown with fallback data
             if (subjectDropdown && subjectIds.length > 0) {
                 const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
                 subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
@@ -216,6 +295,8 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
             }
         }, 100);
     }
+
+
 
     // Add method to handle teacher change
     setupTeacherChangeListener() {

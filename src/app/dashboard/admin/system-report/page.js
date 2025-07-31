@@ -237,7 +237,7 @@ class SystemReportPage extends App {
                             searchable
                             search-placeholder="Search logs..."
                             pagination
-                            page-size="15"
+                            page-size="50"
                             refresh
                             print
                             export

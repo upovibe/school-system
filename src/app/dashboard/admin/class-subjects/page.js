@@ -287,7 +287,7 @@ class ClassSubjectManagementPage extends App {
                                     searchable
                                     search-placeholder="Search class subjects..."
                                     pagination
-                                    page-size="10"
+                                    page-size="50"
                                     action
                                     addable
                                     refresh

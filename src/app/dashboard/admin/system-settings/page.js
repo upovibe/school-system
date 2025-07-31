@@ -283,7 +283,7 @@ class SystemSettingsPage extends App {
                             searchable
                             search-placeholder="Search settings..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             actions="view,edit"                                
                             refresh

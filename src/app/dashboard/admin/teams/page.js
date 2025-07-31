@@ -267,7 +267,7 @@ class TeamManagementPage extends App {
                             searchable
                             search-placeholder="Search team members..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

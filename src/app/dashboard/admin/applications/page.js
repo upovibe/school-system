@@ -124,7 +124,7 @@ class ApplicationsPage extends App {
                             searchable
                             search-placeholder="Search applications..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             refresh
                             print
                             bordered

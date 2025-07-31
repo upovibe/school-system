@@ -260,7 +260,7 @@ class ClassManagementPage extends App {
                             searchable
                             search-placeholder="Search classes..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

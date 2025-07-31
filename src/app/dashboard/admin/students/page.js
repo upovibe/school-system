@@ -270,7 +270,7 @@ class StudentManagementPage extends App {
                             searchable
                             search-placeholder="Search students..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

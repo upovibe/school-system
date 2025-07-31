@@ -286,7 +286,7 @@ class UsersPage extends App {
                             searchable
                             search-placeholder="Search users..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

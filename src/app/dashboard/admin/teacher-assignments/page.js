@@ -317,7 +317,7 @@ class TeacherAssignmentManagementPage extends App {
                                     searchable
                                     search-placeholder="Search teacher assignments..."
                                     pagination
-                                    page-size="10"
+                                    page-size="50"
                                     action
                                     addable
                                     refresh

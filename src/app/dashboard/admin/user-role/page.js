@@ -274,7 +274,7 @@ class UserRolePage extends App {
                             searchable
                             search-placeholder="Search user roles..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

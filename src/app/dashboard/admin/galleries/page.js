@@ -313,7 +313,7 @@ class GalleriesPage extends App {
                             searchable
                             search-placeholder="Search galleries..."
                             pagination
-                            page-size="10"
+                            page-size="50"
                             action
                             addable
                             refresh

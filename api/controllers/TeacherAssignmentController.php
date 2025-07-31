@@ -554,6 +554,171 @@ class TeacherAssignmentController {
     }
 
     /**
+     * Delete all assignments for a teacher and specific class (admin only)
+     */
+    public function deleteByTeacherAndClass($teacherId, $classId) {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Validate parameters
+            if (empty($teacherId) || !is_numeric($teacherId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid teacher ID is required'
+                ]);
+                return;
+            }
+            
+            if (empty($classId) || !is_numeric($classId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid class ID is required'
+                ]);
+                return;
+            }
+            
+            // Get assignments to be deleted for logging
+            $assignmentsToDelete = $this->teacherAssignmentModel->getByTeacherAndClass($teacherId, $classId);
+            
+            // Delete all assignments for this teacher and class
+            $deletedCount = $this->teacherAssignmentModel->deleteByTeacherAndClass($teacherId, $classId);
+            
+            if ($deletedCount > 0) {
+                // Log the action
+                $this->logAction(
+                    'DELETE_TEACHER_CLASS_ASSIGNMENTS',
+                    "Deleted {$deletedCount} teacher assignment(s) for teacher ID {$teacherId} and class ID {$classId}",
+                    [
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId,
+                        'deleted_count' => $deletedCount,
+                        'deleted_assignments' => $assignmentsToDelete
+                    ]
+                );
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Successfully deleted {$deletedCount} teacher assignment(s) for teacher ID {$teacherId} and class ID {$classId}",
+                    'data' => [
+                        'deleted_count' => $deletedCount,
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId
+                    ]
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No teacher assignments found for the specified teacher and class'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting teacher assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete specific assignment for a teacher, class, and subject (admin only)
+     */
+    public function deleteByTeacherClassAndSubject($teacherId, $classId, $subjectId) {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Validate parameters
+            if (empty($teacherId) || !is_numeric($teacherId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid teacher ID is required'
+                ]);
+                return;
+            }
+            
+            if (empty($classId) || !is_numeric($classId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid class ID is required'
+                ]);
+                return;
+            }
+            
+            if (empty($subjectId) || !is_numeric($subjectId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid subject ID is required'
+                ]);
+                return;
+            }
+            
+            // Get the specific assignment to be deleted for logging
+            $assignmentToDelete = $this->teacherAssignmentModel->getByTeacherClassAndSubject($teacherId, $classId, $subjectId);
+            
+            if (!$assignmentToDelete) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No teacher assignment found for the specified teacher, class, and subject'
+                ]);
+                return;
+            }
+            
+            // Delete the specific assignment
+            $deletedCount = $this->teacherAssignmentModel->deleteByTeacherClassAndSubject($teacherId, $classId, $subjectId);
+            
+            if ($deletedCount > 0) {
+                // Log the action
+                $this->logAction(
+                    'DELETE_TEACHER_CLASS_SUBJECT_ASSIGNMENT',
+                    "Deleted teacher assignment for teacher ID {$teacherId}, class ID {$classId}, and subject ID {$subjectId}",
+                    [
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId,
+                        'subject_id' => $subjectId,
+                        'deleted_assignment' => $assignmentToDelete
+                    ]
+                );
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Successfully deleted teacher assignment for teacher ID {$teacherId}, class ID {$classId}, and subject ID {$subjectId}",
+                    'data' => [
+                        'deleted_count' => $deletedCount,
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId,
+                        'subject_id' => $subjectId
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to delete teacher assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting teacher assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get authentication token from headers
      */
     private function getAuthToken() {

@@ -232,5 +232,92 @@ class TeacherAssignmentModel extends BaseModel {
             throw new Exception('Error fetching statistics: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get assignments by teacher and class
+     */
+    public function getByTeacherAndClass($teacherId, $classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT ta.*, 
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       c.name as class_name, c.section as class_section,
+                       s.name as subject_name, s.code as subject_code
+                FROM {$this->getTableName()} ta
+                LEFT JOIN teachers t ON ta.teacher_id = t.id
+                LEFT JOIN classes c ON ta.class_id = c.id
+                LEFT JOIN subjects s ON ta.subject_id = s.id
+                WHERE ta.teacher_id = ? AND ta.class_id = ?
+                ORDER BY s.name ASC
+            ");
+            $stmt->execute([$teacherId, $classId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching assignments by teacher and class: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete assignments by teacher and class
+     */
+    public function deleteByTeacherAndClass($teacherId, $classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM {$this->getTableName()} 
+                WHERE teacher_id = ? AND class_id = ?
+            ");
+            $stmt->execute([$teacherId, $classId]);
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            throw new Exception('Error deleting assignments by teacher and class: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get assignment by teacher, class, and subject
+     */
+    public function getByTeacherClassAndSubject($teacherId, $classId, $subjectId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT ta.*, 
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       c.name as class_name, c.section as class_section,
+                       s.name as subject_name, s.code as subject_code
+                FROM {$this->getTableName()} ta
+                LEFT JOIN teachers t ON ta.teacher_id = t.id
+                LEFT JOIN classes c ON ta.class_id = c.id
+                LEFT JOIN subjects s ON ta.subject_id = s.id
+                WHERE ta.teacher_id = ? AND ta.class_id = ? AND ta.subject_id = ?
+            ");
+            $stmt->execute([$teacherId, $classId, $subjectId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching assignment by teacher, class, and subject: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete assignment by teacher, class, and subject
+     */
+    public function deleteByTeacherClassAndSubject($teacherId, $classId, $subjectId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM {$this->getTableName()} 
+                WHERE teacher_id = ? AND class_id = ? AND subject_id = ?
+            ");
+            $stmt->execute([$teacherId, $classId, $subjectId]);
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            throw new Exception('Error deleting assignment by teacher, class, and subject: ' . $e->getMessage());
+        }
+    }
 }
 ?>

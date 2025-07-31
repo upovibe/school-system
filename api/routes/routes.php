@@ -201,6 +201,8 @@ Router::get('/teacher-assignments/statistics', 'TeacherAssignmentController@getS
 Router::get('/teacher-assignments/{id}', 'TeacherAssignmentController@show');
 Router::put('/teacher-assignments/{id}', 'TeacherAssignmentController@update');
 Router::delete('/teacher-assignments/{id}', 'TeacherAssignmentController@destroy');
+Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}', 'TeacherAssignmentController@deleteByTeacherAndClass');
+Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}/subject/{subjectId}', 'TeacherAssignmentController@deleteByTeacherClassAndSubject');
 
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');

@@ -9,6 +9,8 @@ import '@/components/layout/adminLayout/TeacherAssignmentAddDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentUpdateDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteDialog.js';
+import '@/components/layout/adminLayout/TeacherAssignmentDeleteClassDialog.js';
+import '@/components/layout/adminLayout/TeacherAssignmentDeleteSubjectDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -52,6 +54,34 @@ class TeacherAssignmentManagementPage extends App {
             
             // Close the delete dialog
             this.set('showDeleteDialog', false);
+        });
+        
+        this.addEventListener('teacher-class-assignments-deleted', (event) => {
+            // Remove the deleted class assignments from the current data
+            const deletedAssignments = event.detail.deletedAssignments;
+            const currentTeacherAssignments = this.get('teacherAssignments') || [];
+            const updatedTeacherAssignments = currentTeacherAssignments.filter(assignment => 
+                !deletedAssignments.some(deletedAssignment => deletedAssignment.id === assignment.id)
+            );
+            this.set('teacherAssignments', updatedTeacherAssignments);
+            this.updateTableData();
+            
+            // Close the delete dialog
+            this.set('showDeleteClassDialog', false);
+        });
+        
+        this.addEventListener('teacher-subject-assignment-deleted', (event) => {
+            // Remove the deleted subject assignment from the current data
+            const deletedAssignment = event.detail.deletedAssignment;
+            const currentTeacherAssignments = this.get('teacherAssignments') || [];
+            const updatedTeacherAssignments = currentTeacherAssignments.filter(assignment => 
+                assignment.id !== deletedAssignment.id
+            );
+            this.set('teacherAssignments', updatedTeacherAssignments);
+            this.updateTableData();
+            
+            // Close the delete dialog
+            this.set('showDeleteSubjectDialog', false);
         });
         
         this.addEventListener('teacher-assignment-saved', (event) => {
@@ -238,6 +268,74 @@ class TeacherAssignmentManagementPage extends App {
         }
     }
 
+    onDeleteClass(employeeId, className, classSection) {
+        // Find the teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // Find assignments for this specific class
+            const classAssignments = teacherData.filter(assignment => 
+                assignment.class_name === className && assignment.class_section === classSection
+            );
+            
+            if (classAssignments.length > 0) {
+                const firstAssignment = classAssignments[0];
+                this.closeAllModals();
+                this.set('showDeleteClassDialog', true);
+                setTimeout(() => {
+                    const deleteClassDialog = this.querySelector('teacher-assignment-delete-class-dialog');
+                    if (deleteClassDialog) {
+                        deleteClassDialog.setDeleteClassData({
+                            teacherId: firstAssignment.teacher_id,
+                            employeeId: employeeId,
+                            className: className,
+                            classSection: classSection,
+                            assignments: classAssignments
+                        });
+                    }
+                }, 0);
+            }
+        }
+    }
+
+    onDeleteSubject(employeeId, className, classSection, subjectName, subjectCode) {
+        // Find the teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // Find the specific assignment for this class and subject
+            const subjectAssignment = teacherData.find(assignment => 
+                assignment.class_name === className && 
+                assignment.class_section === classSection &&
+                assignment.subject_name === subjectName &&
+                assignment.subject_code === subjectCode
+            );
+            
+            if (subjectAssignment) {
+                this.closeAllModals();
+                this.set('showDeleteSubjectDialog', true);
+                setTimeout(() => {
+                    const deleteSubjectDialog = this.querySelector('teacher-assignment-delete-subject-dialog');
+                    if (deleteSubjectDialog) {
+                        deleteSubjectDialog.setDeleteSubjectData({
+                            teacherId: subjectAssignment.teacher_id,
+                            employeeId: employeeId,
+                            className: className,
+                            classSection: classSection,
+                            subjectName: subjectName,
+                            subjectCode: subjectCode,
+                            assignment: subjectAssignment
+                        });
+                    }
+                }, 0);
+            }
+        }
+    }
+
+
+
     updateTableData() {
         const teacherAssignments = this.get('teacherAssignments');
         if (!teacherAssignments) return;
@@ -268,6 +366,8 @@ class TeacherAssignmentManagementPage extends App {
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
+        this.set('showDeleteClassDialog', false);
+        this.set('showDeleteSubjectDialog', false);
         this.set('updateTeacherAssignmentData', null);
         this.set('viewTeacherAssignmentData', null);
         this.set('deleteTeacherAssignmentData', null);
@@ -467,9 +567,17 @@ class TeacherAssignmentManagementPage extends App {
                                                                             </div>
                                                                             <h5 class="text-sm font-semibold text-gray-900">${classGroup.className} - ${classGroup.classSection}</h5>
                                                                         </div>
-                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                            ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
-                                                                        </span>
+                                                                        <div class="flex items-center space-x-2">
+                                                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
+                                                                            </span>
+                                                                            <button 
+                                                                                onclick="this.closest('app-teacher-assignment-management-page').onDeleteClass('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}')"
+                                                                                class="inline-flex items-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                                                                                title="Delete all subjects for this class">
+                                                                                <i class="fas fa-trash text-xs"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 
@@ -492,6 +600,12 @@ class TeacherAssignmentManagementPage extends App {
                                                                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                                                             Active
                                                                                         </span>
+                                                                                        <button 
+                                                                                            onclick="this.closest('app-teacher-assignment-management-page').onDeleteSubject('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}', '${subject.subjectName}', '${subject.subjectCode}')"
+                                                                                            class="inline-flex items-center p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                                                                                            title="Delete this subject">
+                                                                                            <i class="fas fa-trash text-xs"></i>
+                                                                                        </button>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -533,6 +647,12 @@ class TeacherAssignmentManagementPage extends App {
             
             <!-- Delete Teacher Assignment Dialog -->
             <teacher-assignment-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-assignment-delete-dialog>
+            
+            <!-- Delete Class Dialog -->
+            <teacher-assignment-delete-class-dialog ${this.get('showDeleteClassDialog') ? 'open' : ''}></teacher-assignment-delete-class-dialog>
+            
+            <!-- Delete Subject Dialog -->
+            <teacher-assignment-delete-subject-dialog ${this.get('showDeleteSubjectDialog') ? 'open' : ''}></teacher-assignment-delete-subject-dialog>
         `;
     }
 }

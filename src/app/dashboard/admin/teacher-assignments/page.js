@@ -86,7 +86,7 @@ class TeacherAssignmentManagementPage extends App {
         });
         
         this.addEventListener('teacher-class-assignments-updated', (event) => {
-            // Update the assignments for the specific class
+            // Update the assignments for the specific class with full details
             const updatedAssignments = event.detail.updatedAssignments;
             const currentTeacherAssignments = this.get('teacherAssignments') || [];
             
@@ -97,7 +97,7 @@ class TeacherAssignmentManagementPage extends App {
                   assignment.class_section === event.detail.classSection)
             );
             
-            // Add the new assignments
+            // Add the new assignments with full details
             const updatedTeacherAssignments = [...filteredAssignments, ...updatedAssignments];
             this.set('teacherAssignments', updatedTeacherAssignments);
             this.updateTableData();

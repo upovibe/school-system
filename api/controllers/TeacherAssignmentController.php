@@ -716,6 +716,9 @@ class TeacherAssignmentController {
             }
             
             if ($allSuccessful) {
+                // Get the updated assignments with full details
+                $updatedAssignments = $this->teacherAssignmentModel->getByTeacherAndClass($teacherId, $classId);
+                
                 // Log the action
                 $this->logAction(
                     'UPDATE_TEACHER_CLASS_ASSIGNMENTS',
@@ -724,7 +727,7 @@ class TeacherAssignmentController {
                         'teacher_id' => $teacherId,
                         'class_id' => $classId,
                         'old_assignments' => $currentAssignments,
-                        'new_assignments' => $createdAssignments,
+                        'new_assignments' => $updatedAssignments,
                         'subject_ids' => $validSubjectIds
                     ]
                 );
@@ -734,11 +737,11 @@ class TeacherAssignmentController {
                     'success' => true,
                     'message' => "Successfully updated assignments for teacher ID {$teacherId} and class ID {$classId}",
                     'data' => [
-                        'created_count' => count($createdAssignments),
+                        'created_count' => count($updatedAssignments),
                         'teacher_id' => $teacherId,
                         'class_id' => $classId,
                         'subject_ids' => $validSubjectIds,
-                        'assignments' => $createdAssignments
+                        'assignments' => $updatedAssignments
                     ]
                 ]);
             } else {

@@ -119,7 +119,7 @@ class StudentClassPage extends App {
             `;
         }
 
-        const { class: classInfo, student, subjects } = classData;
+        const { class: classInfo, subjects } = classData;
 
         return `
             <div class="space-y-6">
@@ -131,7 +131,7 @@ class StudentClassPage extends App {
                     </div>
                     
                     ${classInfo ? `
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                             <div class="bg-blue-50 p-4 rounded-lg">
                                 <h3 class="text-sm font-medium text-blue-600 mb-1">Class Name</h3>
                                 <p class="text-lg font-semibold text-blue-900">${classInfo.name}</p>
@@ -146,11 +146,6 @@ class StudentClassPage extends App {
                                 <h3 class="text-sm font-medium text-purple-600 mb-1">Academic Year</h3>
                                 <p class="text-lg font-semibold text-purple-900">${classInfo.academic_year}</p>
                             </div>
-                            
-                            <div class="bg-orange-50 p-4 rounded-lg">
-                                <h3 class="text-sm font-medium text-orange-600 mb-1">Student ID</h3>
-                                <p class="text-lg font-semibold text-orange-900">${student?.student_id || 'N/A'}</p>
-                            </div>
                         </div>
                     ` : `
                         <ui-alert variant="warning" title="No Class Assigned" message="You are not currently assigned to any class. Please contact your administrator.">
@@ -163,37 +158,37 @@ class StudentClassPage extends App {
                     <div class="bg-white shadow rounded-lg p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">My Subjects</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                                             ${subjects.map(subject => `
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-medium text-gray-900">${subject.subject_name}</h3>
-                                <div class="flex items-center gap-2">
-                                    <ui-badge variant="${subject.subject_category === 'core' ? 'primary' : subject.subject_category === 'elective' ? 'success' : 'warning'}">${subject.subject_category}</ui-badge>
-                                    <ui-badge variant="secondary">${subject.term || 'Full Year'}</ui-badge>
+                            ${subjects.map(subject => `
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="text-lg font-medium text-gray-900">${subject.subject_name}</h3>
+                                        <div class="flex items-center gap-2">
+                                            <ui-badge variant="${subject.subject_category === 'core' ? 'primary' : subject.subject_category === 'elective' ? 'success' : 'warning'}">${subject.subject_category}</ui-badge>
+                                            <ui-badge variant="secondary">${subject.term || 'Full Year'}</ui-badge>
+                                        </div>
+                                    </div>
+                                    ${subject.subject_description ? `<p class="text-sm text-gray-600 mb-3">${subject.subject_description}</p>` : ''}
+                                    <div class="flex items-center justify-between text-sm text-gray-500">
+                                        <span>Code: ${subject.subject_code}</span>
+                                    </div>
+                                    ${subject.teacher ? `
+                                        <div class="mt-3 pt-3 border-t border-gray-100">
+                                            <div class="flex items-center gap-2">
+                                                <i class="fas fa-user-circle text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
+                                                <span class="text-sm font-medium text-gray-700">Teacher:</span>
+                                                <span class="text-sm text-gray-600">${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}</span>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div class="mt-3 pt-3 border-t border-gray-100">
+                                            <div class="flex items-center gap-2">
+                                                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                                                <span class="text-sm text-gray-500">No teacher assigned</span>
+                                            </div>
+                                        </div>
+                                    `}
                                 </div>
-                            </div>
-                            ${subject.subject_description ? `<p class="text-sm text-gray-600 mb-3">${subject.subject_description}</p>` : ''}
-                            <div class="flex items-center justify-between text-sm text-gray-500">
-                                <span>Code: ${subject.subject_code}</span>
-                            </div>
-                                                         ${subject.teacher ? `
-                        <div class="mt-3 pt-3 border-t border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <i class="fas ${subject.teacher.gender === 'female' ? 'fa-user-circle' : 'fa-user-circle'} text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
-                                <span class="text-sm font-medium text-gray-700">Teacher:</span>
-                                <span class="text-sm text-gray-600">${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}</span>
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="mt-3 pt-3 border-t border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
-                                <span class="text-sm text-gray-500">No teacher assigned</span>
-                            </div>
-                        </div>
-                    `}
-                                 </div>
-                             `).join('')}
+                            `).join('')}
                         </div>
                     </div>
                 ` : `
@@ -203,63 +198,6 @@ class StudentClassPage extends App {
                         </ui-alert>
                     </div>
                 `}
-
-                <!-- Student Information -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">My Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-3">Personal Details</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Name:</span>
-                                    <span class="font-medium">${student?.first_name} ${student?.last_name}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Email:</span>
-                                    <span class="font-medium">${student?.email || 'N/A'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Phone:</span>
-                                    <span class="font-medium">${student?.phone || 'N/A'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Status:</span>
-                                    <ui-badge variant="${student?.status === 'active' ? 'success' : 'warning'}">${student?.status || 'Unknown'}</ui-badge>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-3">Contact Information</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Parent Phone:</span>
-                                    <span class="font-medium">${student?.parent_phone || 'N/A'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Parent Email:</span>
-                                    <span class="font-medium">${student?.parent_email || 'N/A'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Emergency Contact:</span>
-                                    <span class="font-medium">${student?.emergency_contact || 'N/A'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Emergency Phone:</span>
-                                    <span class="font-medium">${student?.emergency_phone || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${student?.medical_conditions ? `
-                        <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
-                            <h4 class="text-sm font-medium text-yellow-800 mb-2">Medical Conditions</h4>
-                            <p class="text-sm text-yellow-700">${student.medical_conditions}</p>
-                        </div>
-                    ` : ''}
-                </div>
             </div>
         `;
     }

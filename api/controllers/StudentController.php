@@ -800,7 +800,6 @@ class StudentController {
                 'success' => true,
                 'data' => [
                     'class' => $classInfo,
-                    'student' => $student,
                     'subjects' => $subjects
                 ],
                 'message' => 'Current class retrieved successfully'

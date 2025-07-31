@@ -11,6 +11,7 @@ import '@/components/layout/adminLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteClassDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteSubjectDialog.js';
+import '@/components/layout/adminLayout/TeacherAssignmentEditClassDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -82,6 +83,27 @@ class TeacherAssignmentManagementPage extends App {
             
             // Close the delete dialog
             this.set('showDeleteSubjectDialog', false);
+        });
+        
+        this.addEventListener('teacher-class-assignments-updated', (event) => {
+            // Update the assignments for the specific class
+            const updatedAssignments = event.detail.updatedAssignments;
+            const currentTeacherAssignments = this.get('teacherAssignments') || [];
+            
+            // Remove old assignments for this teacher and class
+            const filteredAssignments = currentTeacherAssignments.filter(assignment => 
+                !(assignment.teacher_id === event.detail.teacherId && 
+                  assignment.class_name === event.detail.className && 
+                  assignment.class_section === event.detail.classSection)
+            );
+            
+            // Add the new assignments
+            const updatedTeacherAssignments = [...filteredAssignments, ...updatedAssignments];
+            this.set('teacherAssignments', updatedTeacherAssignments);
+            this.updateTableData();
+            
+            // Close the edit dialog
+            this.set('showEditClassDialog', false);
         });
         
         this.addEventListener('teacher-assignment-saved', (event) => {
@@ -299,6 +321,39 @@ class TeacherAssignmentManagementPage extends App {
         }
     }
 
+    onEditClass(employeeId, className, classSection) {
+        // Find the teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments');
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // Find assignments for this specific class
+            const classAssignments = teacherData.filter(assignment => 
+                assignment.class_name === className && assignment.class_section === classSection
+            );
+            
+            if (classAssignments.length > 0) {
+                const firstAssignment = classAssignments[0];
+                this.closeAllModals();
+                this.set('showEditClassDialog', true);
+                setTimeout(() => {
+                    const editClassDialog = this.querySelector('teacher-assignment-edit-class-dialog');
+                    if (editClassDialog) {
+                        editClassDialog.setEditClassData({
+                            teacherId: firstAssignment.teacher_id,
+                            employeeId: employeeId,
+                            className: className,
+                            classSection: classSection,
+                            assignments: classAssignments,
+                            teacherName: `${firstAssignment.teacher_first_name} ${firstAssignment.teacher_last_name}`,
+                            teacherEmployeeId: firstAssignment.employee_id
+                        });
+                    }
+                }, 0);
+            }
+        }
+    }
+
     onDeleteSubject(employeeId, className, classSection, subjectName, subjectCode) {
         // Find the teacher assignments for this employee
         const teacherAssignments = this.get('teacherAssignments');
@@ -368,6 +423,7 @@ class TeacherAssignmentManagementPage extends App {
         this.set('showDeleteDialog', false);
         this.set('showDeleteClassDialog', false);
         this.set('showDeleteSubjectDialog', false);
+        this.set('showEditClassDialog', false);
         this.set('updateTeacherAssignmentData', null);
         this.set('viewTeacherAssignmentData', null);
         this.set('deleteTeacherAssignmentData', null);
@@ -572,6 +628,12 @@ class TeacherAssignmentManagementPage extends App {
                                                                                 ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
                                                                             </span>
                                                                             <button 
+                                                                                onclick="this.closest('app-teacher-assignment-management-page').onEditClass('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}')"
+                                                                                class="inline-flex items-center p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition-colors duration-200"
+                                                                                title="Edit subjects for this class">
+                                                                                <i class="fas fa-edit text-xs"></i>
+                                                                            </button>
+                                                                            <button 
                                                                                 onclick="this.closest('app-teacher-assignment-management-page').onDeleteClass('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}')"
                                                                                 class="inline-flex items-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
                                                                                 title="Delete all subjects for this class">
@@ -653,6 +715,9 @@ class TeacherAssignmentManagementPage extends App {
             
             <!-- Delete Subject Dialog -->
             <teacher-assignment-delete-subject-dialog ${this.get('showDeleteSubjectDialog') ? 'open' : ''}></teacher-assignment-delete-subject-dialog>
+            
+            <!-- Edit Class Dialog -->
+            <teacher-assignment-edit-class-dialog ${this.get('showEditClassDialog') ? 'open' : ''}></teacher-assignment-edit-class-dialog>
         `;
     }
 }

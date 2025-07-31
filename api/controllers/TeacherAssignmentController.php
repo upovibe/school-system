@@ -627,6 +627,137 @@ class TeacherAssignmentController {
     }
 
     /**
+     * Update assignments for a teacher and specific class (admin only)
+     */
+    public function updateByTeacherAndClass($teacherId, $classId) {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Validate parameters
+            if (empty($teacherId) || !is_numeric($teacherId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid teacher ID is required'
+                ]);
+                return;
+            }
+            
+            if (empty($classId) || !is_numeric($classId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid class ID is required'
+                ]);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate subject IDs array
+            if (!isset($data['subject_ids']) || !is_array($data['subject_ids'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Subject IDs array is required'
+                ]);
+                return;
+            }
+            
+            // Filter out any invalid subject IDs
+            $validSubjectIds = array_filter($data['subject_ids'], function($id) {
+                return !empty($id) && is_numeric($id);
+            });
+            
+            if (empty($validSubjectIds)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'At least one valid subject ID is required'
+                ]);
+                return;
+            }
+            
+            // Get current assignments for this teacher and class for logging
+            $currentAssignments = $this->teacherAssignmentModel->getByTeacherAndClass($teacherId, $classId);
+            
+            // Delete all existing assignments for this teacher and class
+            $deleteResponse = $this->teacherAssignmentModel->deleteByTeacherAndClass($teacherId, $classId);
+            
+            if ($deleteResponse === false) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to clear existing assignments'
+                ]);
+                return;
+            }
+            
+            // Create new assignments for each subject
+            $createdAssignments = [];
+            $allSuccessful = true;
+            
+            foreach ($validSubjectIds as $subjectId) {
+                $assignmentData = [
+                    'teacher_id' => (int)$teacherId,
+                    'class_id' => (int)$classId,
+                    'subject_id' => (int)$subjectId
+                ];
+                
+                $result = $this->teacherAssignmentModel->create($assignmentData);
+                if ($result) {
+                    $createdAssignments[] = $result;
+                } else {
+                    $allSuccessful = false;
+                    break;
+                }
+            }
+            
+            if ($allSuccessful) {
+                // Log the action
+                $this->logAction(
+                    'UPDATE_TEACHER_CLASS_ASSIGNMENTS',
+                    "Updated assignments for teacher ID {$teacherId} and class ID {$classId}",
+                    [
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId,
+                        'old_assignments' => $currentAssignments,
+                        'new_assignments' => $createdAssignments,
+                        'subject_ids' => $validSubjectIds
+                    ]
+                );
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Successfully updated assignments for teacher ID {$teacherId} and class ID {$classId}",
+                    'data' => [
+                        'created_count' => count($createdAssignments),
+                        'teacher_id' => $teacherId,
+                        'class_id' => $classId,
+                        'subject_ids' => $validSubjectIds,
+                        'assignments' => $createdAssignments
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Some assignments failed to create'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error updating teacher class assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Delete specific assignment for a teacher, class, and subject (admin only)
      */
     public function deleteByTeacherClassAndSubject($teacherId, $classId, $subjectId) {

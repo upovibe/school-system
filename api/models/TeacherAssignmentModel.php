@@ -319,5 +319,31 @@ class TeacherAssignmentModel extends BaseModel {
             throw new Exception('Error deleting assignment by teacher, class, and subject: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get all subjects for a specific class
+     */
+    public function getSubjectsForClass($classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT s.id, s.name, s.code
+                FROM subjects s
+                LEFT JOIN teacher_assignments ta ON s.id = ta.subject_id AND ta.class_id = ?
+                WHERE ta.id IS NOT NULL
+                ORDER BY s.name ASC
+            ");
+            $stmt->execute([$classId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching subjects for class: ' . $e->getMessage());
+        }
+    }
 }
 ?>

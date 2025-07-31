@@ -752,8 +752,16 @@ class StudentController {
             // Student info is now available from middleware
             $student = $_REQUEST['current_student'];
             
-            // Class info is already included in student data from the join
-            $classInfo = !empty($student['class_info']) ? $student['class_info'] : null;
+            // Extract class information from student data
+            $classInfo = null;
+            if (!empty($student['class_id'])) {
+                $classInfo = [
+                    'id' => $student['class_id'],
+                    'name' => $student['class_name'],
+                    'section' => $student['class_section'],
+                    'academic_year' => $student['class_academic_year']
+                ];
+            }
             
             http_response_code(200);
             echo json_encode([

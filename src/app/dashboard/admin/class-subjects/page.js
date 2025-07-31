@@ -9,6 +9,7 @@ import '@/components/layout/adminLayout/ClassSubjectAddDialog.js';
 import '@/components/layout/adminLayout/ClassSubjectUpdateDialog.js';
 import '@/components/layout/adminLayout/ClassSubjectViewDialog.js';
 import '@/components/layout/adminLayout/ClassSubjectDeleteDialog.js';
+import '@/components/layout/adminLayout/ClassSubjectDeleteSubjectDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -85,6 +86,24 @@ class ClassSubjectManagementPage extends App {
             } else {
                 this.loadData();
             }
+        });
+
+        // Listen for subject deletion events
+        this.addEventListener('class-subject-deleted', (event) => {
+            // Remove the deleted subject from the current data
+            const deletedSubject = event.detail.deletedSubject;
+            const currentClassSubjects = this.get('classSubjects') || [];
+            const updatedClassSubjects = currentClassSubjects.filter(classSubject => 
+                !(classSubject.class_name === deletedSubject.className && 
+                  classSubject.class_section === deletedSubject.classSection &&
+                  classSubject.subject_name === deletedSubject.subjectName &&
+                  classSubject.subject_code === deletedSubject.subjectCode)
+            );
+            this.set('classSubjects', updatedClassSubjects);
+            this.updateTableData();
+            
+            // Close the delete dialog
+            this.set('showDeleteSubjectDialog', false);
         });
     }
 
@@ -178,6 +197,35 @@ class ClassSubjectManagementPage extends App {
         this.set('showAddModal', true);
     }
 
+    onDeleteSubject(className, classSection, subjectName, subjectCode) {
+        // Find the specific class subject for this class and subject
+        const classSubjects = this.get('classSubjects');
+        const subjectAssignment = classSubjects.find(classSubject => 
+            classSubject.class_name === className && 
+            classSubject.class_section === classSection &&
+            classSubject.subject_name === subjectName &&
+            classSubject.subject_code === subjectCode
+        );
+        
+        if (subjectAssignment) {
+            this.closeAllModals();
+            this.set('showDeleteSubjectDialog', true);
+            setTimeout(() => {
+                const deleteSubjectDialog = this.querySelector('class-subject-delete-subject-dialog');
+                if (deleteSubjectDialog) {
+                    deleteSubjectDialog.setDeleteSubjectData({
+                        classId: subjectAssignment.class_id,
+                        subjectId: subjectAssignment.subject_id,
+                        className: className,
+                        classSection: classSection,
+                        subjectName: subjectName,
+                        subjectCode: subjectCode
+                    });
+                }
+            }, 0);
+        }
+    }
+
     updateTableData() {
         const classSubjects = this.get('classSubjects');
         if (!classSubjects) return;
@@ -206,6 +254,7 @@ class ClassSubjectManagementPage extends App {
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
+        this.set('showDeleteSubjectDialog', false);
         this.set('updateClassSubjectData', null);
         this.set('viewClassSubjectData', null);
         this.set('deleteClassSubjectData', null);
@@ -354,6 +403,12 @@ class ClassSubjectManagementPage extends App {
                                                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                                             Active
                                                                         </span>
+                                                                        <button 
+                                                                            onclick="this.closest('app-class-subject-management-page').onDeleteSubject('${classGroup.className}', '${classGroup.classSection}', '${subject.subjectName}', '${subject.subjectCode}')"
+                                                                            class="inline-flex items-center p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                                                                            title="Delete this subject">
+                                                                            <i class="fas fa-trash text-xs"></i>
+                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -391,6 +446,9 @@ class ClassSubjectManagementPage extends App {
             
             <!-- Delete Class Subject Dialog -->
             <class-subject-delete-dialog ${showDeleteDialog ? 'open' : ''}></class-subject-delete-dialog>
+            
+            <!-- Delete Subject Dialog -->
+            <class-subject-delete-subject-dialog ${this.get('showDeleteSubjectDialog') ? 'open' : ''}></class-subject-delete-subject-dialog>
         `;
     }
 }

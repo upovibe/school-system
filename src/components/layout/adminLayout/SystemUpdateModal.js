@@ -46,19 +46,7 @@ class SystemUpdateModal extends HTMLElement {
             this.close();
         });
 
-        // Listen for setting type dropdown change
-        this.addEventListener('change', (event) => {
-            if (event.target.matches('ui-dropdown[data-field="setting_type"]')) {
-                // Store current value before changing type
-                const currentValueInput = this.querySelector('[data-value-input] input, [data-value-input] ui-input, [data-value-input] ui-textarea, [data-value-input] ui-radio-group');
-                if (currentValueInput) {
-                    this.settingData.setting_value = currentValueInput.value || currentValueInput.getAttribute('value') || '';
-                }
-                
-                this.settingData.setting_type = event.target.value;
-                this.updateValueInput();
-            }
-        });
+
 
         // Listen for color input and text input changes for color type
         this.addEventListener('input', (event) => {
@@ -241,18 +229,14 @@ class SystemUpdateModal extends HTMLElement {
             await new Promise(resolve => setTimeout(resolve, 100));
             
             // Get values from custom UI components
-            const allInputs = this.querySelectorAll('ui-input');
-            const keyInput = allInputs[0]; // First ui-input is the setting key
-            const settingValueInput = allInputs[1]; // Second ui-input is the setting value
-            const typeDropdown = this.querySelector('ui-dropdown[data-field="setting_type"]');
-            const categoryDropdown = this.querySelector('ui-dropdown[data-field="category"]');
+            const settingValueInput = this.querySelector('ui-input[name="setting_value"]');
             const descriptionTextarea = this.querySelector('ui-textarea[name="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
             // Get value based on the type
             let valueInput;
             let fileUpload = null; // Declare fileUpload variable
-            const settingType = typeDropdown ? typeDropdown.value : 'text';
+            const settingType = this.settingData?.setting_type || 'text';
             
             switch (settingType) {
                 case 'boolean':
@@ -279,21 +263,6 @@ class SystemUpdateModal extends HTMLElement {
                     break;
             }
 
-            // Fallback: Try to get value from the input element directly if component isn't initialized
-            let settingKey = '';
-            if (keyInput) {
-                settingKey = keyInput.value || keyInput.getAttribute('value') || '';
-            } else {
-                // Try to find the actual input element inside the component
-                const actualInput = this.querySelector('ui-input[name="setting_key"] input');
-                if (actualInput) {
-                    settingKey = actualInput.value || '';
-                } else {
-                    // Try to get from the setting data directly
-                    settingKey = this.settingData?.setting_key || '';
-                }
-            }
-            
             // Fallback for setting value if not found
             if (!valueInput && (settingType === 'text' || settingType === 'number')) {
                 // Try to get from the setting data directly
@@ -301,10 +270,10 @@ class SystemUpdateModal extends HTMLElement {
             }
 
             const settingData = {
-                setting_key: settingKey,
+                setting_key: this.settingData?.setting_key || '',
                 setting_value: valueInput,
-                setting_type: settingType,
-                category: categoryDropdown ? categoryDropdown.value : 'general',
+                setting_type: this.settingData?.setting_type || 'text',
+                category: this.settingData?.category || 'general',
                 description: descriptionTextarea ? descriptionTextarea.value : '',
                 is_active: statusSwitch ? statusSwitch.checked : true
             };
@@ -397,56 +366,10 @@ class SystemUpdateModal extends HTMLElement {
                 
                 <form id="setting-update-form" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Setting Key</label>
-                        <ui-input 
-                            name="setting_key"
-                            type="text" 
-                            placeholder="Enter setting key"
-                            value="${this.settingData?.setting_key || ''}"
-                            class="w-full">
-                        </ui-input>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Setting Type</label>
-                        <ui-dropdown 
-                            data-field="setting_type"
-                            placeholder="Select type"
-                            value="${this.settingData?.setting_type || 'text'}"
-                            class="w-full">
-                            <ui-option value="text">Text</ui-option>
-                            <ui-option value="number">Number</ui-option>
-                            <ui-option value="boolean">Boolean</ui-option>
-                            <ui-option value="color">Color</ui-option>
-                            <ui-option value="file">File</ui-option>
-                            <ui-option value="textarea">Textarea</ui-option>
-                            <ui-option value="select">Select</ui-option>
-                            <ui-option value="image">Image</ui-option>
-                        </ui-dropdown>
-                    </div>
-                    
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Setting Value</label>
                         <div data-value-input>
                             ${this.renderValueInput()}
                         </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <ui-dropdown 
-                            data-field="category"
-                            placeholder="Select category"
-                            value="${this.settingData?.category || 'general'}"
-                            class="w-full">
-                            <ui-option value="general">General</ui-option>
-                            <ui-option value="theme">Theme</ui-option>
-                            <ui-option value="contact">Contact</ui-option>
-                            <ui-option value="social">Social</ui-option>
-                            <ui-option value="map">Map</ui-option>
-                            <ui-option value="branding">Branding</ui-option>
-                            <ui-option value="system">System</ui-option>
-                        </ui-dropdown>
                     </div>
                     
                     <div>

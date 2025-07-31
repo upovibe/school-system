@@ -363,6 +363,34 @@ class StudentModel extends BaseModel {
     }
 
     /**
+     * Get student with class information
+     */
+    public function getStudentWithClassInfo($studentId) {
+        try {
+            $sql = "
+                SELECT s.*, 
+                       c.name as class_name, c.section as class_section,
+                       c.description as class_description
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                WHERE s.student_id = ?
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$studentId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching student with class info: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Update student and corresponding user account
      */
     public function updateStudentWithUser($id, $data) {

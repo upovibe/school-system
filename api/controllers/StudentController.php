@@ -738,5 +738,73 @@ class StudentController {
             return null;
         }
     }
+
+    /**
+     * Get current student's class and subjects (student only)
+     */
+    public function getMyClass() {
+        try {
+            // Require student authentication
+            global $pdo;
+            RoleMiddleware::requireStudent($pdo);
+            
+            // Get current student ID from token
+            $token = $this->getAuthToken();
+            $studentId = $this->getStudentIdFromToken($token);
+            
+            // Get student information with class details
+            $student = $this->studentModel->getStudentWithClassInfo($studentId);
+            
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+            
+            // If student has no class assigned
+            if (!$student['current_class_id']) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'student' => $student,
+                        'class' => null,
+                        'subjects' => []
+                    ],
+                    'message' => 'Student has no class assigned'
+                ]);
+                return;
+            }
+            
+            // Get class subjects for the student's class
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $subjects = $classSubjectModel->getByClassId($student['current_class_id']);
+            
+            // Get class information
+            $class = $this->classModel->findById($student['current_class_id']);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'student' => $student,
+                    'class' => $class,
+                    'subjects' => $subjects
+                ],
+                'message' => 'Student class information retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving student class information: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?> 

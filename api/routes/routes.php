@@ -175,6 +175,7 @@ Router::post('/students/login', 'StudentController@login');
 Router::post('/students/change-password', 'StudentController@changePassword');
 Router::get('/students/profile', 'StudentController@getProfile');
 Router::put('/students/profile', 'StudentController@updateProfile');
+Router::get('/students/my-class', 'StudentController@getMyClass');
 
 // Class Subject Management Routes (admin only for create/update/delete, public for view)
 Router::get('/class-subjects', 'ClassSubjectController@index');

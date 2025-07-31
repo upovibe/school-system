@@ -150,51 +150,73 @@ class ClassSubjectManagementPage extends App {
 
     onView(event) {
         const { detail } = event;
-        const viewClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
-        if (viewClassSubject) {
-            this.closeAllModals();
-            this.set('viewClassSubjectData', viewClassSubject);
-            this.set('showViewModal', true);
-            setTimeout(() => {
-                const viewDialog = this.querySelector('class-subject-view-dialog');
-                if (viewDialog) {
-                    viewDialog.setClassSubjectData(viewClassSubject);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle class-level view
+        if (rowData.class_key) {
+            this.onViewClass(rowData.class_name, rowData.class_section);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const viewClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
+            if (viewClassSubject) {
+                this.closeAllModals();
+                this.set('viewClassSubjectData', viewClassSubject);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewDialog = this.querySelector('class-subject-view-dialog');
+                    if (viewDialog) {
+                        viewDialog.setClassSubjectData(viewClassSubject);
+                    }
+                }, 0);
+            }
         }
     }
 
     onEdit(event) {
         const { detail } = event;
-        const editClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
-        if (editClassSubject) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('updateClassSubjectData', editClassSubject);
-            this.set('showUpdateModal', true);
-            setTimeout(() => {
-                const updateModal = this.querySelector('class-subject-update-dialog');
-                if (updateModal) {
-                    updateModal.setClassSubjectData(editClassSubject);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle class-level edit
+        if (rowData.class_key) {
+            this.onEditClass(rowData.class_name, rowData.class_section);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const editClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
+            if (editClassSubject) {
+                this.closeAllModals();
+                this.set('updateClassSubjectData', editClassSubject);
+                this.set('showUpdateModal', true);
+                setTimeout(() => {
+                    const updateModal = this.querySelector('class-subject-update-dialog');
+                    if (updateModal) {
+                        updateModal.setClassSubjectData(editClassSubject);
+                    }
+                }, 0);
+            }
         }
     }
 
     onDelete(event) {
         const { detail } = event;
-        const deleteClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
-        if (deleteClassSubject) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('deleteClassSubjectData', deleteClassSubject);
-            this.set('showDeleteDialog', true);
-            setTimeout(() => {
-                const deleteDialog = this.querySelector('class-subject-delete-dialog');
-                if (deleteDialog) {
-                    deleteDialog.setClassSubjectData(deleteClassSubject);
-                }
-            }, 0);
+        const rowData = detail.row;
+        
+        // For grouped table, handle class-level delete
+        if (rowData.class_key) {
+            this.onDeleteClass(rowData.class_name, rowData.class_section);
+        } else {
+            // Fallback to original logic for non-grouped data
+            const deleteClassSubject = this.get('classSubjects').find(classSubject => classSubject.id === detail.row.id);
+            if (deleteClassSubject) {
+                this.closeAllModals();
+                this.set('deleteClassSubjectData', deleteClassSubject);
+                this.set('showDeleteDialog', true);
+                setTimeout(() => {
+                    const deleteDialog = this.querySelector('class-subject-delete-dialog');
+                    if (deleteDialog) {
+                        deleteDialog.setClassSubjectData(deleteClassSubject);
+                    }
+                }, 0);
+            }
         }
     }
 
@@ -305,17 +327,31 @@ class ClassSubjectManagementPage extends App {
         const classSubjects = this.get('classSubjects');
         if (!classSubjects) return;
 
-        // Prepare table data
-        const tableData = classSubjects.map((classSubject, index) => ({
-            id: classSubject.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
-            class_name: classSubject.class_name || 'N/A',
-            class_section: classSubject.class_section || 'N/A',
-            subject_name: classSubject.subject_name || 'N/A',
-            subject_code: classSubject.subject_code || 'N/A',
-            created: classSubject.created_at,
-            updated: classSubject.updated_at
-        }));
+        // Group class subjects by class
+        const groupedData = this.groupClassSubjects(classSubjects);
+        
+        // Convert grouped data to table format with proper row grouping
+        const tableData = [];
+        let rowIndex = 1;
+        
+        groupedData.forEach(classGroup => {
+            const subjectsText = classGroup.subjects.map(subject => 
+                `${subject.subjectName} (${subject.subjectCode})`
+            ).join(', ');
+            
+            tableData.push({
+                id: `${classGroup.className}-${classGroup.classSection}`, // Composite ID
+                index: rowIndex++,
+                class_name: classGroup.className,
+                class_section: classGroup.classSection,
+                subjects: subjectsText,
+                subject_count: classGroup.subjects.length,
+                updated: new Date().toISOString(), // Placeholder - you might want to track this differently
+                // Add metadata for styling and actions
+                class_key: `${classGroup.className}-${classGroup.classSection}`,
+                subjects_data: classGroup.subjects
+            });
+        });
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
@@ -362,25 +398,38 @@ class ClassSubjectManagementPage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
-        // Prepare table data and columns for class subjects
-        const tableData = classSubjects ? classSubjects.map((classSubject, index) => ({
-            id: classSubject.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
-            class_name: classSubject.class_name || 'N/A',
-            class_section: classSubject.class_section || 'N/A',
-            subject_name: classSubject.subject_name || 'N/A',
-            subject_code: classSubject.subject_code || 'N/A',
-            created: classSubject.created_at,
-            updated: classSubject.updated_at
-        })) : [];
+        // Prepare grouped table data for class subjects
+        const groupedData = classSubjects ? this.groupClassSubjects(classSubjects) : [];
+        
+        // Convert grouped data to table format with proper row grouping
+        const tableData = [];
+        let rowIndex = 1;
+        
+        groupedData.forEach(classGroup => {
+            const subjectsText = classGroup.subjects.map(subject => 
+                `${subject.subjectName} (${subject.subjectCode})`
+            ).join(', ');
+            
+            tableData.push({
+                id: `${classGroup.className}-${classGroup.classSection}`, // Composite ID
+                index: rowIndex++,
+                class_name: classGroup.className,
+                class_section: classGroup.classSection,
+                subjects: subjectsText,
+                subject_count: classGroup.subjects.length,
+                updated: new Date().toISOString(), // Placeholder - you might want to track this differently
+                // Add metadata for styling and actions
+                class_key: `${classGroup.className}-${classGroup.classSection}`,
+                subjects_data: classGroup.subjects
+            });
+        });
 
         const tableColumns = [
             { key: 'index', label: 'No.', html: false },
             { key: 'class_name', label: 'Class' },
             { key: 'class_section', label: 'Section' },
-            { key: 'subject_name', label: 'Subject' },
-            { key: 'subject_code', label: 'Subject Code' },
-            { key: 'updated', label: 'Updated' }
+            { key: 'subjects', label: 'Subjects' },
+            { key: 'subject_count', label: 'Subject Count' }
         ];
         
         return `

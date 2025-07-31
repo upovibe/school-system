@@ -42,6 +42,25 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
             if (response.status === 200 && response.data.success) {
                 this.subjects = response.data.data;
                 this.render();
+                
+                // If we have edit data, set the selected subjects after loading
+                if (this.editClassData) {
+                    setTimeout(() => {
+                        const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+                        if (subjectDropdown && this.editClassData?.assignments) {
+                            // Extract subject IDs from current assignments
+                            const currentSubjectIds = this.editClassData.assignments.map(assignment => assignment.subject_id);
+                            
+                            // Set the value as JSON string for multi-select
+                            subjectDropdown.setAttribute('value', JSON.stringify(currentSubjectIds));
+                            
+                            // Set display value for selected subjects
+                            const selectedSubjects = this.subjects.filter(subject => currentSubjectIds.includes(subject.id));
+                            const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
+                            subjectDropdown.setAttribute('display-value', displayValue);
+                        }
+                    }, 100);
+                }
             }
         } catch (error) {
             console.error('Error loading subjects:', error);
@@ -57,12 +76,14 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
         this.editClassData = data;
         this.render();
         
-        // Set the selected subjects after render
-        setTimeout(() => {
+        // Set the selected subjects after render and after subjects are loaded
+        const setSelectedSubjects = () => {
             const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-            if (subjectDropdown && this.editClassData?.assignments) {
+            if (subjectDropdown && this.editClassData?.assignments && this.subjects.length > 0) {
                 // Extract subject IDs from current assignments
                 const currentSubjectIds = this.editClassData.assignments.map(assignment => assignment.subject_id);
+                
+                // Set the value as JSON string for multi-select
                 subjectDropdown.setAttribute('value', JSON.stringify(currentSubjectIds));
                 
                 // Set display value for selected subjects
@@ -70,7 +91,12 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
                 const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
                 subjectDropdown.setAttribute('display-value', displayValue);
             }
-        }, 200);
+        };
+        
+        // Try to set immediately, then retry after a delay
+        setSelectedSubjects();
+        setTimeout(setSelectedSubjects, 100);
+        setTimeout(setSelectedSubjects, 300);
     }
 
     async updateClassAssignments() {
@@ -170,6 +196,7 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
 
     render() {
         const data = this.editClassData;
+        
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 

@@ -199,6 +199,23 @@ class ClassSubjectModel extends BaseModel {
 
     
     /**
+     * Delete class subject by class ID and subject ID
+     */
+    public function deleteByClassAndSubject($classId, $subjectId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM {$this->getTableName()} 
+                WHERE class_id = ? AND subject_id = ?
+            ");
+            $stmt->execute([$classId, $subjectId]);
+            
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            throw new Exception('Error deleting class subject: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get statistics
      */
     public function getStatistics() {

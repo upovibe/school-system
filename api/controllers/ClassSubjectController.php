@@ -493,6 +493,87 @@ class ClassSubjectController {
     }
 
     /**
+     * Delete specific subject from a class (admin only)
+     */
+    public function deleteByClassAndSubject($classId, $subjectId) {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Validate parameters
+            if (empty($classId) || !is_numeric($classId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid class ID is required'
+                ]);
+                return;
+            }
+            
+            if (empty($subjectId) || !is_numeric($subjectId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid subject ID is required'
+                ]);
+                return;
+            }
+            
+            // Get the specific class subject to be deleted for logging
+            $classSubjectToDelete = $this->classSubjectModel->findByUniqueKey($classId, $subjectId);
+            
+            if (!$classSubjectToDelete) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No class subject found for the specified class and subject'
+                ]);
+                return;
+            }
+            
+            // Delete the specific class subject
+            $deletedCount = $this->classSubjectModel->deleteByClassAndSubject($classId, $subjectId);
+            
+            if ($deletedCount > 0) {
+                // Log the action
+                $this->logAction(
+                    'DELETE_CLASS_SUBJECT',
+                    "Deleted class subject for class ID {$classId} and subject ID {$subjectId}",
+                    [
+                        'class_id' => $classId,
+                        'subject_id' => $subjectId,
+                        'deleted_class_subject' => $classSubjectToDelete
+                    ]
+                );
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Successfully deleted class subject for class ID {$classId} and subject ID {$subjectId}",
+                    'data' => [
+                        'deleted_count' => $deletedCount,
+                        'class_id' => $classId,
+                        'subject_id' => $subjectId
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to delete class subject'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting class subject: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get authentication token from headers
      */
     private function getAuthToken() {

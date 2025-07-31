@@ -189,6 +189,7 @@ Router::get('/class-subjects/statistics', 'ClassSubjectController@getStatistics'
 Router::get('/class-subjects/{id}', 'ClassSubjectController@show');
 Router::put('/class-subjects/{id}', 'ClassSubjectController@update');
 Router::delete('/class-subjects/{id}', 'ClassSubjectController@destroy');
+Router::delete('/class-subjects/class/{classId}/subject/{subjectId}', 'ClassSubjectController@deleteByClassAndSubject');
 
 // Teacher Assignment Management Routes (admin only for create/update/delete, public for view)
 Router::get('/teacher-assignments', 'TeacherAssignmentController@index');

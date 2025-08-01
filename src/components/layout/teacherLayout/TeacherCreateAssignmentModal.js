@@ -25,15 +25,6 @@ import api from '@/services/api.js';
 class TeacherCreateAssignmentModal extends HTMLElement {
     constructor() {
         super();
-        this.formData = {
-            title: '',
-            description: '',
-            due_date: '',
-            total_points: '',
-            assignment_type: 'homework',
-            status: 'published',
-            attachment_file: null
-        };
         this.loading = false;
         this.error = null;
         this.classId = null;
@@ -59,10 +50,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
-
-        // Listen for form input changes
-        this.addEventListener('input', this.handleInputChange.bind(this));
-        this.addEventListener('change', this.handleInputChange.bind(this));
     }
 
     open(classId = null, subjectId = null) {
@@ -79,54 +66,63 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
     // Reset form to initial state
     resetForm() {
-        this.formData = {
-            title: '',
-            description: '',
-            due_date: '',
-            total_points: '',
-            assignment_type: 'homework',
-            status: 'published',
-            attachment_file: null
-        };
         this.loading = false;
         this.error = null;
         this.render();
     }
 
-    // Handle form input changes
-    handleInputChange(event) {
-        const { name, value, files } = event.target;
-        
-        if (name === 'attachment_file' && files && files[0]) {
-            this.formData[name] = files[0];
-        } else if (name) {
-            this.formData[name] = value;
-        }
-        
-        this.validateForm();
+    // Handle form input changes (removed - not needed)
+    // We get form data directly when submitting, like other modals
+
+    // Get form data directly from DOM elements
+    getFormData() {
+        const titleInput = this.querySelector('ui-input[data-field="title"]');
+        const descriptionWysiwyg = this.querySelector('ui-wysiwyg[data-field="description"]');
+        const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
+        const totalPointsInput = this.querySelector('ui-input[data-field="total_points"]');
+        const assignmentTypeDropdown = this.querySelector('ui-dropdown[data-field="assignment_type"]');
+        const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
+        const attachmentFileUpload = this.querySelector('ui-file-upload[data-field="attachment_file"]');
+
+        // Debug: Log what we found
+        console.log('Form elements found:', {
+            titleInput: !!titleInput,
+            descriptionWysiwyg: !!descriptionWysiwyg,
+            dueDateInput: !!dueDateInput,
+            totalPointsInput: !!totalPointsInput,
+            assignmentTypeDropdown: !!assignmentTypeDropdown,
+            statusDropdown: !!statusDropdown,
+            attachmentFileUpload: !!attachmentFileUpload
+        });
+
+        const formData = {
+            title: titleInput ? titleInput.value : '',
+            description: descriptionWysiwyg ? descriptionWysiwyg.value : '',
+            due_date: dueDateInput ? dueDateInput.value : '',
+            total_points: totalPointsInput ? totalPointsInput.value : '',
+            assignment_type: assignmentTypeDropdown ? assignmentTypeDropdown.value : 'homework',
+            status: statusDropdown ? statusDropdown.value : 'published',
+            attachmentFileUpload: attachmentFileUpload
+        };
+
+        // Debug: Log the values
+        console.log('Form values:', {
+            title: formData.title,
+            description: formData.description,
+            due_date: formData.due_date,
+            total_points: formData.total_points,
+            assignment_type: formData.assignment_type,
+            status: formData.status
+        });
+
+        return formData;
     }
 
 
 
-    // Validate form
+    // Validate form (simplified - no real-time validation)
     validateForm() {
-        // Get current form values
-        const titleInput = this.querySelector('ui-input[name="title"]');
-        const descriptionWysiwyg = this.querySelector('ui-wysiwyg[name="description"]');
-        const dueDateInput = this.querySelector('ui-input[name="due_date"]');
-        const totalPointsInput = this.querySelector('ui-input[name="total_points"]');
-
-        const title = titleInput ? titleInput.value : '';
-        const description = descriptionWysiwyg ? descriptionWysiwyg.value : '';
-        const due_date = dueDateInput ? dueDateInput.value : '';
-        const total_points = totalPointsInput ? totalPointsInput.value : '';
-
-        const isValid = title.trim() && description.trim() && due_date && total_points;
-        
-        const confirmButton = this.shadowRoot?.querySelector('ui-modal')?.shadowRoot?.querySelector('.confirm-btn');
-        if (confirmButton) {
-            confirmButton.disabled = !isValid;
-        }
+        // We'll validate when submitting instead
     }
 
     // Create assignment
@@ -135,41 +131,30 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             this.set('loading', true);
             this.set('error', null);
 
-            // Get form data using reliable selectors
-            const titleInput = this.querySelector('ui-input[name="title"]');
-            const descriptionWysiwyg = this.querySelector('ui-wysiwyg[name="description"]');
-            const dueDateInput = this.querySelector('ui-input[name="due_date"]');
-            const totalPointsInput = this.querySelector('ui-input[name="total_points"]');
-            const assignmentTypeDropdown = this.querySelector('ui-dropdown[name="assignment_type"]');
-            const statusDropdown = this.querySelector('ui-dropdown[name="status"]');
-            const attachmentFileUpload = this.querySelector('ui-file-upload[name="attachment_file"]');
+            // Get form data using the helper method
+            const assignmentData = this.getFormData();
+            const { title, description, due_date, total_points, assignment_type, status, attachmentFileUpload } = assignmentData;
 
-            const assignmentData = {
-                title: titleInput ? titleInput.value : '',
-                description: descriptionWysiwyg ? descriptionWysiwyg.value : '',
-                due_date: dueDateInput ? dueDateInput.value : '',
-                total_points: totalPointsInput ? totalPointsInput.value : '',
-                assignment_type: assignmentTypeDropdown ? assignmentTypeDropdown.value : 'homework',
-                status: statusDropdown ? statusDropdown.value : 'published'
-            };
+            // Debug: Log the form data
+            console.log('Form data:', assignmentData);
 
             // Validate required fields
-            if (!assignmentData.title.trim()) {
+            if (!title.trim()) {
                 this.set('error', 'Please fill in the assignment title.');
                 return;
             }
 
-            if (!assignmentData.description.trim()) {
+            if (!description.trim()) {
                 this.set('error', 'Please fill in the assignment description.');
                 return;
             }
 
-            if (!assignmentData.due_date) {
+            if (!due_date) {
                 this.set('error', 'Please select a due date.');
                 return;
             }
 
-            if (!assignmentData.total_points) {
+            if (!total_points) {
                 this.set('error', 'Please enter total points.');
                 return;
             }
@@ -183,12 +168,12 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
             // Prepare form data
             const formData = new FormData();
-            formData.append('title', assignmentData.title.trim());
-            formData.append('description', assignmentData.description.trim());
-            formData.append('due_date', assignmentData.due_date);
-            formData.append('total_points', assignmentData.total_points);
-            formData.append('assignment_type', assignmentData.assignment_type);
-            formData.append('status', assignmentData.status);
+            formData.append('title', title.trim());
+            formData.append('description', description.trim());
+            formData.append('due_date', due_date);
+            formData.append('total_points', total_points);
+            formData.append('assignment_type', assignment_type);
+            formData.append('status', status);
             formData.append('class_id', this.classId);
             formData.append('subject_id', this.subjectId);
 
@@ -249,8 +234,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     }
 
     render() {
-        const { loading, error, formData } = this;
-        const { title, description, due_date, total_points, assignment_type, status } = formData;
+        const { loading, error } = this;
 
         this.innerHTML = `
             <ui-modal 
@@ -286,12 +270,11 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Assignment Title <span class="text-red-500">*</span>
                             </label>
-                            <ui-input 
-                                name="title"
-                                value="${title}"
-                                placeholder="Enter assignment title"
-                                required>
-                            </ui-input>
+                             <ui-input 
+                                 data-field="title"
+                                 placeholder="Enter assignment title"
+                                 required>
+                             </ui-input>
                         </div>
 
                         <!-- Assignment Description -->
@@ -300,7 +283,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                 Description <span class="text-red-500">*</span>
                             </label>
                             <ui-wysiwyg 
-                                name="description"
+                                data-field="description"
                                 placeholder="Enter detailed assignment description"
                                 class="w-full">
                             </ui-wysiwyg>
@@ -312,13 +295,12 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                  <label class="block text-sm font-medium text-gray-700 mb-2">
                                      Due Date <span class="text-red-500">*</span>
                                  </label>
-                                 <ui-input 
-                                     type="date"
-                                     name="due_date"
-                                     value="${due_date}"
-                                     min="${new Date().toISOString().split('T')[0]}"
-                                     required>
-                                 </ui-input>
+                                                                   <ui-input 
+                                      type="date"
+                                      data-field="due_date"
+                                      min="${new Date().toISOString().split('T')[0]}"
+                                      required>
+                                  </ui-input>
                              </div>
                              
                              <div>
@@ -326,9 +308,8 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                      Total Points <span class="text-red-500">*</span>
                                  </label>
                                  <ui-input 
-                                     name="total_points"
+                                     data-field="total_points"
                                      type="number"
-                                     value="${total_points}"
                                      placeholder="e.g., 100"
                                      min="1"
                                      required>
@@ -342,7 +323,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                   <label class="block text-sm font-medium text-gray-700 mb-2">
                                       Assignment Type
                                   </label>
-                                  <ui-dropdown name="assignment_type" value="${assignment_type}">
+                                  <ui-dropdown data-field="assignment_type">
                                       <ui-option value="homework">Homework</ui-option>
                                       <ui-option value="quiz">Quiz</ui-option>
                                       <ui-option value="project">Project</ui-option>
@@ -355,7 +336,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                   <label class="block text-sm font-medium text-gray-700 mb-2">
                                       Status
                                   </label>
-                                  <ui-dropdown name="status" value="${status}">
+                                  <ui-dropdown data-field="status">
                                       <ui-option value="draft">Draft</ui-option>
                                       <ui-option value="published">Published</ui-option>
                                   </ui-dropdown>
@@ -368,7 +349,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                 Attachment (Optional)
                             </label>
                             <ui-file-upload 
-                                name="attachment_file"
+                                data-field="attachment_file"
                                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
                                 max-size="5MB"
                                 placeholder="Upload assignment file">

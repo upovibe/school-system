@@ -268,7 +268,7 @@ function saveImage($image, $path, $mimeType) {
  * Get event banner info for API response
  * 
  * @param string|array $bannerPath Banner path(s)
- * @return array Banner information
+ * @return array|null Banner information or null if file doesn't exist
  */
 function getEventBannerInfo($bannerPath) {
     if (empty($bannerPath)) {

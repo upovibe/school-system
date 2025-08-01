@@ -332,16 +332,6 @@ class TeacherUpdateDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password (Optional)</label>
-                            <ui-input 
-                                data-field="password"
-                                type="password" 
-                                placeholder="Leave blank to keep current password"
-                                class="w-full">
-                            </ui-input>
-                        </div>
-                        
-                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class Teacher (Optional)</label>
                             <ui-search-dropdown 
                                 name="class_id" 
@@ -357,6 +347,16 @@ class TeacherUpdateDialog extends HTMLElement {
                                     `
                                 ).join('')}
                             </ui-search-dropdown>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password (Optional)</label>
+                            <ui-input 
+                                data-field="password"
+                                type="password" 
+                                placeholder="Leave blank to keep current password"
+                                class="w-full">
+                            </ui-input>
                         </div>
                         
                         <div>

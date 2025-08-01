@@ -310,7 +310,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Dashboard',
                     items: [
-                        { label: 'Home', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/teacher/dashboard' },
+                        { label: 'Home', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/teacher' },
                     ]
                 },
                 {
@@ -326,7 +326,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Dashboard',
                     items: [
-                        { label: 'Home', icon: 'fas fa-user-graduate', href: '/dashboard/student/dashboard' },
+                        { label: 'Home', icon: 'fas fa-user-graduate', href: '/dashboard/student' },
                     ]
                 },
                 {
@@ -342,7 +342,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Dashboard',
                     items: [
-                        { label: 'Home', icon: 'fas fa-users', href: '/dashboard/parent/dashboard' },
+                        { label: 'Home', icon: 'fas fa-users', href: '/dashboard/parent' },
                     ]
                 },
                 {
@@ -358,7 +358,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Dashboard',
                     items: [
-                        { label: 'Home', icon: 'fas fa-user-tie', href: '/dashboard/staff/dashboard' },
+                        { label: 'Home', icon: 'fas fa-user-tie', href: '/dashboard/staff' },
                     ]
                 },
                 {

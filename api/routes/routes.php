@@ -160,8 +160,6 @@ Router::get('/teachers/class-teachers', 'TeacherController@getClassTeachers');
 Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasses');
 Router::get('/teachers/my-class', 'TeacherController@getMyClass');
 Router::get('/teachers/my-assignments', 'TeacherController@getMyAssignments');
-Router::get('/teachers/my-subjects', 'TeacherController@getMySubjects');
-Router::get('/teachers/my-classes', 'TeacherController@getMyClasses');
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');

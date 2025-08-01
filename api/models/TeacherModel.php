@@ -576,7 +576,7 @@ class TeacherModel extends BaseModel {
     }
 
     /**
-     * Get teacher assignments with class and subject details (grouped by class)
+     * Get teacher assignments with class, subject, and student details (grouped by class)
      */
     public function getTeacherAssignments($teacherId) {
         try {
@@ -618,7 +618,8 @@ class TeacherModel extends BaseModel {
                         'class_academic_year' => $result['class_academic_year'],
                         'class_capacity' => $result['class_capacity'],
                         'class_status' => $result['class_status'],
-                        'subjects' => []
+                        'subjects' => [],
+                        'students' => []
                     ];
                 }
                 
@@ -630,6 +631,41 @@ class TeacherModel extends BaseModel {
                     'subject_category' => $result['subject_category'],
                     'subject_description' => $result['subject_description']
                 ];
+            }
+            
+            // Get students for each class
+            foreach ($groupedResults as $classId => &$classData) {
+                $studentStmt = $this->pdo->prepare("
+                    SELECT 
+                        s.id,
+                        s.student_id,
+                        s.first_name,
+                        s.last_name,
+                        s.gender,
+                        s.date_of_birth,
+                        s.address,
+                        s.phone,
+                        s.email,
+                        s.status,
+                        s.created_at,
+                        s.updated_at,
+                        u.name as user_name,
+                        u.email as user_email,
+                        u.status as user_status
+                    FROM students s
+                    LEFT JOIN users u ON s.user_id = u.id
+                    WHERE s.current_class_id = ?
+                    ORDER BY s.first_name ASC, s.last_name ASC
+                ");
+                $studentStmt->execute([$classId]);
+                $students = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Apply casts to each student
+                foreach ($students as &$student) {
+                    $student = $this->applyCasts($student);
+                }
+                
+                $classData['students'] = $students;
             }
             
             // Convert to indexed array and apply casts

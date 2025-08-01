@@ -179,7 +179,7 @@ class TeacherClassesSubjectsPage extends App {
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="p-2 sm:p-3 bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                <div class="size-10 flex items-center justify-center bg-lime-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -191,19 +191,19 @@ class TeacherClassesSubjectsPage extends App {
                         
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="p-2 sm:p-3 bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-book text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${summary.total_subjects}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Total Subject${summary.total_subjects > 1 ? 's' : ''}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Subject${summary.total_subjects > 1 ? 's' : ''} Across all classes</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
                             <div class="flex items-center">
-                                <div class="p-2 sm:p-3 bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -301,7 +301,7 @@ class TeacherClassesSubjectsPage extends App {
                                             <ui-table 
                                                 data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
                                                 columns='${JSON.stringify(this.getStudentTableColumns())}'
-                                                title="Students in ${assignment.class_name}"
+                                                title="Students in ${assignment.class_name}-${assignment.class_section}"
                                                 searchable
                                                 search-placeholder="Search students..."
                                                 striped

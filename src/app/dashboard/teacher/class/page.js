@@ -5,6 +5,7 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
+import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 
 /**
  * Teacher Class Page Component (/dashboard/teacher/class)
@@ -17,12 +18,17 @@ class TeacherClassPage extends App {
         this.classData = null;
         this.loading = true;
         this.error = null;
+        this.showStudentModal = false;
+        this.selectedStudentData = null;
     }
 
     async connectedCallback() {
         super.connectedCallback();
         document.title = 'My Class | School System';
         await this.loadClassData();
+        
+        // Add event listeners for table events
+        this.addEventListener('table-row-click', this.onStudentClick.bind(this));
     }
 
     async loadClassData() {
@@ -56,10 +62,34 @@ class TeacherClassPage extends App {
         }
     }
 
+    // Handle student row click
+    onStudentClick(event) {
+        const { detail } = event;
+        const studentId = detail.row.id;
+        
+        // Find the student data from the class data
+        const students = this.get('classData')?.students || [];
+        const student = students.find(s => s.id == studentId);
+        
+        if (student) {
+            this.set('selectedStudentData', student);
+            this.set('showStudentModal', true);
+            
+            // Set the student data in the modal
+            setTimeout(() => {
+                const modal = this.querySelector('teacher-student-personal-information');
+                if (modal) {
+                    modal.setStudentData(student);
+                }
+            }, 0);
+        }
+    }
+
     render() {
         const loading = this.get('loading');
         const error = this.get('error');
         const classData = this.get('classData');
+        const showStudentModal = this.get('showStudentModal');
 
         if (loading) {
             return `
@@ -124,6 +154,7 @@ class TeacherClassPage extends App {
 
         // Prepare table data with separate columns
         const tableData = students ? students.map(student => ({
+            id: student.id, // Keep ID for click handling
             student_name: `${student.first_name} ${student.last_name}`,
             student_id: student.student_id,
             gender: student.gender === 'male' ? 'Male' : 'Female',
@@ -191,6 +222,7 @@ class TeacherClassPage extends App {
                             sortable
                             clickable
                             refresh
+                            row-clickable="true"
                             >
                         </ui-table>
                     </div>
@@ -202,6 +234,9 @@ class TeacherClassPage extends App {
                     </div>
                 `}
             </div>
+            
+            <!-- Student Information Modal -->
+            <teacher-student-personal-information ${showStudentModal ? 'open' : ''}></teacher-student-personal-information>
         `;
     }
 }

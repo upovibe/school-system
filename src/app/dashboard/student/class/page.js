@@ -5,6 +5,7 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
+import '@/components/layout/studentLayout/StudentSubjectDetailModal.js';
 
 /**
  * Student Class Page Component (/dashboard/student/class)
@@ -17,12 +18,17 @@ class StudentClassPage extends App {
         this.classData = null;
         this.loading = true;
         this.error = null;
+        this.showSubjectModal = false;
+        this.selectedSubjectData = null;
     }
 
     async connectedCallback() {
         super.connectedCallback();
         document.title = 'My Class | School System';
         await this.loadClassData();
+        
+        // Add event listeners for table events
+        this.addEventListener('table-row-click', this.onSubjectClick.bind(this));
     }
 
     async loadClassData() {
@@ -56,10 +62,34 @@ class StudentClassPage extends App {
         }
     }
 
+    // Handle subject row click
+    onSubjectClick(event) {
+        const { detail } = event;
+        const subjectCode = detail.row.subject_code;
+        
+        // Find the subject data from the class data
+        const subjects = this.get('classData')?.subjects || [];
+        const subject = subjects.find(s => s.subject_code === subjectCode);
+        
+        if (subject) {
+            this.set('selectedSubjectData', subject);
+            this.set('showSubjectModal', true);
+            
+            // Set the subject data in the modal
+            setTimeout(() => {
+                const modal = this.querySelector('student-subject-detail-modal');
+                if (modal) {
+                    modal.setSubjectData(subject);
+                }
+            }, 0);
+        }
+    }
+
     render() {
         const loading = this.get('loading');
         const error = this.get('error');
         const classData = this.get('classData');
+        const showSubjectModal = this.get('showSubjectModal');
 
         if (loading) {
             return `
@@ -124,8 +154,9 @@ class StudentClassPage extends App {
 
         // Prepare table data for subjects
         const tableData = subjects ? subjects.map(subject => ({
+            subject_code: subject.subject_code, // Keep for click handling
             subject_name: subject.subject_name,
-            subject_code: subject.subject_code,
+            subject_code_display: subject.subject_code,
             subject_category: subject.subject_category,
             term: subject.term || 'Full Year',
             teacher: subject.teacher ? `${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}` : 'No teacher assigned',
@@ -134,7 +165,7 @@ class StudentClassPage extends App {
 
         const tableColumns = [
             { key: 'subject_name', label: 'Subject Name' },
-            { key: 'subject_code', label: 'Subject Code' },
+            { key: 'subject_code_display', label: 'Subject Code' },
             { key: 'subject_category', label: 'Category' },
             { key: 'term', label: 'Term' },
             { key: 'teacher', label: 'Teacher' },
@@ -187,6 +218,7 @@ class StudentClassPage extends App {
                             sortable
                             clickable
                             refresh
+                            row-clickable="true"
                             >
                         </ui-table>
                     </div>
@@ -198,6 +230,9 @@ class StudentClassPage extends App {
                     </div>
                 `}
             </div>
+            
+            <!-- Subject Detail Modal -->
+            <student-subject-detail-modal ${showSubjectModal ? 'open' : ''}></student-subject-detail-modal>
         `;
     }
 }

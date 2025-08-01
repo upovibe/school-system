@@ -38,6 +38,9 @@ class TeacherClassesSubjectsPage extends App {
         
         // Add event listeners for assignment modal
         this.addEventListener('assignment-created', this.onAssignmentCreated.bind(this));
+        
+        // Add event listeners for assignment buttons
+        this.addEventListener('click', this.onAssignmentButtonClick.bind(this));
     }
 
     async loadScheduleData() {
@@ -104,6 +107,17 @@ class TeacherClassesSubjectsPage extends App {
     onAssignmentCreated(event) {
         // Refresh the schedule data after assignment creation
         this.loadScheduleData();
+    }
+
+    // Handle assignment button clicks
+    onAssignmentButtonClick(event) {
+        // Check if the clicked element is an assignment button
+        const button = event.target.closest('.add-assignment-btn');
+        if (button) {
+            const classId = button.getAttribute('data-class-id');
+            const subjectId = button.getAttribute('data-subject-id');
+            this.openAssignmentModal(classId, subjectId);
+        }
     }
 
     // Open assignment creation modal
@@ -316,7 +330,9 @@ class TeacherClassesSubjectsPage extends App {
                                                     <ui-button 
                                                         variant="primary" 
                                                         size="sm"
-                                                        onclick="this.getRootNode().host.openAssignmentModal('${assignment.class_id}', '${subject.subject_id}')">
+                                                        data-class-id="${assignment.class_id}"
+                                                        data-subject-id="${subject.subject_id}"
+                                                        class="add-assignment-btn">
                                                         <i class="fas fa-plus mr-1"></i>
                                                         Add Assignment
                                                     </ui-button>

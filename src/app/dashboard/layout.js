@@ -333,8 +333,7 @@ class DashboardLayout extends App {
                     group: 'Academics',
                     items: [
                         { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/student/class' },
-                        { label: 'Courses', icon: 'fas fa-book-open', href: '/dashboard/student/courses' },
-                        { label: 'Assignments', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
+                        { label: 'My Assignment', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
                         { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
                     ]
                 }

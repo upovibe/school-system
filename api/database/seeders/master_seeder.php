@@ -21,6 +21,7 @@ class MasterSeeder
         $this->runClassSubjectSeeder();
         $this->runTeacherAssignmentSeeder();
         $this->runClassAssignmentSeeder();
+        $this->runStudentAssignmentSeeder();
         
         // Assign students to classes
         $this->assignStudentsToClasses();
@@ -36,6 +37,7 @@ class MasterSeeder
         echo "- Teacher-subject-class assignments\n";
         echo "- Student-class assignments\n";
         echo "- Class assignments with student submissions\n";
+        echo "- Student assignment submissions with grades and feedback\n";
     }
     
     private function runSubjectSeeder() {
@@ -98,6 +100,14 @@ class MasterSeeder
         echo "📝 Running class assignment seeder...\n";
         require_once __DIR__ . '/class_assignment_seeder.php';
         $seeder = new ClassAssignmentSeeder($this->pdo);
+        $seeder->run();
+        echo "\n";
+    }
+    
+    private function runStudentAssignmentSeeder() {
+        echo "📝 Running student assignment seeder...\n";
+        require_once __DIR__ . '/student_assignment_seeder.php';
+        $seeder = new StudentAssignmentSeeder($this->pdo);
         $seeder->run();
         echo "\n";
     }

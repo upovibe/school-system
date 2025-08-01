@@ -401,7 +401,7 @@ class TeacherAddDialog extends HTMLElement {
                                 class="w-full">
                                 <ui-option value="">No Class Assignment</ui-option>
                                 ${this.classes.map(
-                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name}</ui-option>`
+                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name}-${classItem.section}</ui-option>`
                                 ).join('')}
                             </ui-search-dropdown>
                         </div>

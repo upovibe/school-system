@@ -342,7 +342,7 @@ class TeacherUpdateDialog extends HTMLElement {
                                 ${this.classes.map(
                                     (classItem) => `
                                         <ui-option value="${classItem.id}" ${teacher && teacher.class_id == classItem.id ? 'selected' : ''}>
-                                            ${classItem.name}
+                                            ${classItem.name}-${classItem.section}
                                         </ui-option>
                                     `
                                 ).join('')}

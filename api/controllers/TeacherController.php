@@ -682,6 +682,11 @@ class TeacherController {
                 return;
             }
 
+            // Get students in this class
+            require_once __DIR__ . '/../models/StudentModel.php';
+            $studentModel = new StudentModel($pdo);
+            $students = $studentModel->getStudentsByClass($teacher['class_id']);
+
             http_response_code(200);
             echo json_encode([
                 'success' => true,
@@ -693,7 +698,9 @@ class TeacherController {
                     'class_section' => $class['section'],
                     'academic_year' => $class['academic_year'],
                     'capacity' => $class['capacity'],
-                    'status' => $class['status']
+                    'status' => $class['status'],
+                    'students' => $students,
+                    'student_count' => count($students)
                 ],
                 'message' => 'Teacher class retrieved successfully'
             ]);

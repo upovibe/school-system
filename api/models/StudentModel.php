@@ -210,7 +210,11 @@ class StudentModel extends BaseModel {
     public function getStudentsByClass($classId) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.*, c.name as class_name, c.grade_level
+                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.phone, 
+                       s.address, s.date_of_birth, s.gender, s.admission_date, s.current_class_id,
+                       s.parent_name, s.parent_phone, s.parent_email, s.emergency_contact,
+                       s.emergency_phone, s.blood_group, s.medical_conditions, s.status,
+                       s.created_at, s.updated_at, c.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 WHERE s.current_class_id = ? AND s.status = 'active'
@@ -230,9 +234,10 @@ class StudentModel extends BaseModel {
         }
     }
 
+
     /**
      * Check if student_id already exists
-     */
+    */
     public function studentIdExists($studentId, $excludeId = null) {
         try {
             $sql = "SELECT COUNT(*) FROM {$this->getTableName()} WHERE student_id = ?";

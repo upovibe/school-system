@@ -3,9 +3,8 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Select.js';
 import '@/components/ui/Textarea.js';
-import '@/components/ui/DatePicker.js';
+import '@/components/ui/Calendar.js';
 import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
@@ -64,6 +63,9 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         // Listen for form input changes
         this.addEventListener('input', this.handleInputChange.bind(this));
         this.addEventListener('change', this.handleInputChange.bind(this));
+        
+        // Listen for calendar date selection
+        this.addEventListener('date-select', this.handleDateSelect.bind(this));
     }
 
     open(classId = null, subjectId = null) {
@@ -104,6 +106,13 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             this.formData[name] = value;
         }
         
+        this.validateForm();
+    }
+
+    // Handle calendar date selection
+    handleDateSelect(event) {
+        const { date } = event.detail;
+        this.formData.due_date = date.toISOString().split('T')[0];
         this.validateForm();
     }
 
@@ -261,64 +270,62 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             </ui-textarea>
                         </div>
 
-                        <!-- Due Date and Total Points -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Due Date <span class="text-red-500">*</span>
-                                </label>
-                                <ui-date-picker 
-                                    name="due_date"
-                                    value="${due_date}"
-                                    placeholder="Select due date"
-                                    required>
-                                </ui-date-picker>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Total Points <span class="text-red-500">*</span>
-                                </label>
-                                <ui-input 
-                                    name="total_points"
-                                    type="number"
-                                    value="${total_points}"
-                                    placeholder="e.g., 100"
-                                    min="1"
-                                    required>
-                                </ui-input>
-                            </div>
-                        </div>
+                         <!-- Due Date and Total Points -->
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Due Date <span class="text-red-500">*</span>
+                                 </label>
+                                 <ui-calendar 
+                                     date="${due_date || ''}"
+                                     min-date="${new Date().toISOString().split('T')[0]}">
+                                 </ui-calendar>
+                             </div>
+                             
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Total Points <span class="text-red-500">*</span>
+                                 </label>
+                                 <ui-input 
+                                     name="total_points"
+                                     type="number"
+                                     value="${total_points}"
+                                     placeholder="e.g., 100"
+                                     min="1"
+                                     required>
+                                 </ui-input>
+                             </div>
+                         </div>
 
-                        <!-- Assignment Type and Status -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Assignment Type
-                                </label>
-                                <ui-select 
-                                    name="assignment_type"
-                                    value="${assignment_type}">
-                                    <option value="homework">Homework</option>
-                                    <option value="quiz">Quiz</option>
-                                    <option value="project">Project</option>
-                                    <option value="exam">Exam</option>
-                                    <option value="other">Other</option>
-                                </ui-select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Status
-                                </label>
-                                <ui-select 
-                                    name="status"
-                                    value="${status}">
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                </ui-select>
-                            </div>
-                        </div>
+                         <!-- Assignment Type and Status -->
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Assignment Type
+                                 </label>
+                                 <select 
+                                     name="assignment_type"
+                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                     <option value="homework" ${assignment_type === 'homework' ? 'selected' : ''}>Homework</option>
+                                     <option value="quiz" ${assignment_type === 'quiz' ? 'selected' : ''}>Quiz</option>
+                                     <option value="project" ${assignment_type === 'project' ? 'selected' : ''}>Project</option>
+                                     <option value="exam" ${assignment_type === 'exam' ? 'selected' : ''}>Exam</option>
+                                     <option value="other" ${assignment_type === 'other' ? 'selected' : ''}>Other</option>
+                                 </select>
+                             </div>
+                             
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Status
+                                 </label>
+                                 <select 
+                                     name="status"
+                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                     <option value="draft" ${status === 'draft' ? 'selected' : ''}>Draft</option>
+                                     <option value="published" ${status === 'published' ? 'selected' : ''}>Published</option>
+                                 </select>
+                             </div>
+                         </div>
 
                         <!-- File Attachment -->
                         <div>

@@ -179,15 +179,25 @@ Router::get('/students/search', 'StudentController@search');
 Router::get('/students/by-class', 'StudentController@getByClass');
 Router::get('/students/current-class', 'StudentController@getCurrentClass');
 Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
-Router::get('/students/{id}', 'StudentController@show');
-Router::put('/students/{id}', 'StudentController@update');
-Router::delete('/students/{id}', 'StudentController@destroy');
+
+// Student Assignment Management Routes (student only) - Must come before /students/{id}
+Router::get('/students/my-assignments', 'StudentController@getMyAssignments');
+Router::get('/students/assignments/{id}', 'StudentController@getAssignment');
+Router::post('/students/assignments/{id}/submit', 'StudentController@submitAssignment');
+Router::put('/students/assignments/{id}/submission', 'StudentController@updateSubmission');
+Router::get('/students/submission-history', 'StudentController@getSubmissionHistory');
+Router::get('/students/grades', 'StudentController@getGrades');
 
 // Student Authentication Routes (public for login, student auth for others)
 Router::post('/students/login', 'StudentController@login');
 Router::post('/students/change-password', 'StudentController@changePassword');
 Router::get('/students/profile', 'StudentController@getProfile');
 Router::put('/students/profile', 'StudentController@updateProfile');
+
+// General student routes (admin only) - Must come after specific routes
+Router::get('/students/{id}', 'StudentController@show');
+Router::put('/students/{id}', 'StudentController@update');
+Router::delete('/students/{id}', 'StudentController@destroy');
 
 // Class Subject Management Routes (admin only for create/update/delete, public for view)
 Router::get('/class-subjects', 'ClassSubjectController@index');

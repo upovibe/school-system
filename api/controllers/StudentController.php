@@ -4,6 +4,8 @@
 require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../models/ClassModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+require_once __DIR__ . '/../models/StudentAssignmentModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
@@ -11,12 +13,16 @@ require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
 class StudentController {
     private $studentModel;
     private $classModel;
+    private $classAssignmentModel;
+    private $studentAssignmentModel;
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->studentModel = new StudentModel($pdo);
         $this->classModel = new ClassModel($pdo);
+        $this->classAssignmentModel = new ClassAssignmentModel($pdo);
+        $this->studentAssignmentModel = new StudentAssignmentModel($pdo);
     }
 
     /**
@@ -859,6 +865,419 @@ class StudentController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error retrieving personal information: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get all assignments for the current student
+     */
+    public function getMyAssignments() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get assignments for the student's class
+            $assignments = $this->classAssignmentModel->getByClassId($student['class_id']);
+            
+            // For each assignment, check if student has submitted
+            foreach ($assignments as &$assignment) {
+                $submission = $this->studentAssignmentModel->getByStudentAndAssignment(
+                    $student['id'], 
+                    $assignment['id']
+                );
+                
+                $assignment['submission_status'] = $submission ? $submission['status'] : 'not_submitted';
+                $assignment['submission_grade'] = $submission ? $submission['grade'] : null;
+                $assignment['submitted_at'] = $submission ? $submission['submitted_at'] : null;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $assignments,
+                'message' => 'Student assignments retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get a specific assignment for the current student
+     */
+    public function getAssignment($assignmentId) {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get the assignment
+            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            // Check if assignment belongs to student's class
+            if ($assignment['class_id'] != $student['class_id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. Assignment does not belong to your class.'
+                ]);
+                return;
+            }
+            
+            // Get student's submission for this assignment
+            $submission = $this->studentAssignmentModel->getByStudentAndAssignment(
+                $student['id'], 
+                $assignmentId
+            );
+            
+            $assignment['submission'] = $submission;
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $assignment,
+                'message' => 'Assignment retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Submit an assignment
+     */
+    public function submitAssignment($assignmentId) {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get the assignment
+            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            // Check if assignment belongs to student's class
+            if ($assignment['class_id'] != $student['class_id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. Assignment does not belong to your class.'
+                ]);
+                return;
+            }
+            
+            // Check if assignment is still open
+            $dueDate = new DateTime($assignment['due_date']);
+            $now = new DateTime();
+            
+            if ($now > $dueDate) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment is past due date'
+                ]);
+                return;
+            }
+            
+            // Check if already submitted
+            $existingSubmission = $this->studentAssignmentModel->getByStudentAndAssignment(
+                $student['id'], 
+                $assignmentId
+            );
+            
+            if ($existingSubmission) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment already submitted'
+                ]);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (empty($data['submission_text']) && empty($_FILES['submission_file'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Either submission text or file is required'
+                ]);
+                return;
+            }
+            
+            $submissionData = [
+                'student_id' => $student['id'],
+                'assignment_id' => $assignmentId,
+                'submission_text' => $data['submission_text'] ?? null,
+                'submission_file' => null,
+                'submitted_at' => date('Y-m-d H:i:s'),
+                'status' => 'submitted'
+            ];
+            
+            // Handle file upload if provided
+            if (!empty($_FILES['submission_file'])) {
+                $uploadDir = __DIR__ . '/../uploads/assignments/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                $fileName = time() . '_' . $_FILES['submission_file']['name'];
+                $filePath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath)) {
+                    $submissionData['submission_file'] = $fileName;
+                }
+            }
+            
+            // Create submission
+            $submissionId = $this->studentAssignmentModel->create($submissionData);
+            
+            if ($submissionId) {
+                // Log the action
+                $this->logAction('assignment_submitted', "Submitted assignment: {$assignment['title']}", [
+                    'assignment_id' => $assignmentId,
+                    'submission_id' => $submissionId
+                ]);
+                
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'submission_id' => $submissionId,
+                        'submitted_at' => $submissionData['submitted_at']
+                    ],
+                    'message' => 'Assignment submitted successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error submitting assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error submitting assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update an existing submission
+     */
+    public function updateSubmission($assignmentId) {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get the assignment
+            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            // Check if assignment belongs to student's class
+            if ($assignment['class_id'] != $student['class_id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. Assignment does not belong to your class.'
+                ]);
+                return;
+            }
+            
+            // Get existing submission
+            $existingSubmission = $this->studentAssignmentModel->getByStudentAndAssignment(
+                $student['id'], 
+                $assignmentId
+            );
+            
+            if (!$existingSubmission) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No submission found for this assignment'
+                ]);
+                return;
+            }
+            
+            // Check if assignment is still open
+            $dueDate = new DateTime($assignment['due_date']);
+            $now = new DateTime();
+            
+            if ($now > $dueDate) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment is past due date'
+                ]);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            $updateData = [
+                'submission_text' => $data['submission_text'] ?? $existingSubmission['submission_text'],
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            // Handle file upload if provided
+            if (!empty($_FILES['submission_file'])) {
+                $uploadDir = __DIR__ . '/../uploads/assignments/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                $fileName = time() . '_' . $_FILES['submission_file']['name'];
+                $filePath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath)) {
+                    $updateData['submission_file'] = $fileName;
+                }
+            }
+            
+            // Update submission
+            $updated = $this->studentAssignmentModel->update($existingSubmission['id'], $updateData);
+            
+            if ($updated) {
+                // Log the action
+                $this->logAction('assignment_updated', "Updated submission for assignment: {$assignment['title']}", [
+                    'assignment_id' => $assignmentId,
+                    'submission_id' => $existingSubmission['id']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Submission updated successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error updating submission'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error updating submission: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get submission history for the current student
+     */
+    public function getSubmissionHistory() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get all submissions for the student
+            $submissions = $this->studentAssignmentModel->getByStudentId($student['id']);
+            
+            // Add assignment details to each submission
+            foreach ($submissions as &$submission) {
+                $assignment = $this->classAssignmentModel->getById($submission['assignment_id']);
+                $submission['assignment'] = $assignment;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $submissions,
+                'message' => 'Submission history retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving submission history: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get grades and feedback for the current student
+     */
+    public function getGrades() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Get graded submissions
+            $gradedSubmissions = $this->studentAssignmentModel->getGradedByStudentId($student['id']);
+            
+            // Add assignment details to each submission
+            foreach ($gradedSubmissions as &$submission) {
+                $assignment = $this->classAssignmentModel->getById($submission['assignment_id']);
+                $submission['assignment'] = $assignment;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $gradedSubmissions,
+                'message' => 'Grades retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving grades: ' . $e->getMessage()
             ]);
         }
     }

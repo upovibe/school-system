@@ -201,5 +201,38 @@ class StudentAssignmentModel extends BaseModel
 
         return $submittedDate > $dueDate;
     }
+
+    /**
+     * Get submission by student and assignment
+     */
+    public function getByStudentAndAssignment($studentId, $assignmentId)
+    {
+        $sql = "SELECT * FROM student_assignments WHERE student_id = ? AND assignment_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId, $assignmentId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get all submissions by student ID
+     */
+    public function getByStudentId($studentId)
+    {
+        $sql = "SELECT * FROM student_assignments WHERE student_id = ? ORDER BY submitted_at DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get graded submissions by student ID
+     */
+    public function getGradedByStudentId($studentId)
+    {
+        $sql = "SELECT * FROM student_assignments WHERE student_id = ? AND grade IS NOT NULL ORDER BY submitted_at DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

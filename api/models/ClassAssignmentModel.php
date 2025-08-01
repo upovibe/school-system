@@ -98,6 +98,38 @@ class ClassAssignmentModel extends BaseModel {
     }
 
     /**
+     * Get assignment by ID (simple version)
+     */
+    public function getById($id) {
+        $sql = "SELECT * FROM class_assignments WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get assignments by class ID
+     */
+    public function getByClassId($classId) {
+        $sql = "
+            SELECT 
+                ca.*,
+                t.first_name as teacher_first_name,
+                t.last_name as teacher_last_name,
+                s.name as subject_name
+            FROM class_assignments ca
+            LEFT JOIN teachers t ON ca.teacher_id = t.id
+            LEFT JOIN subjects s ON ca.subject_id = s.id
+            WHERE ca.class_id = ?
+            ORDER BY ca.due_date ASC
+        ";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$classId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Get teacher's assignments (for teacher view)
      */
     public function getTeacherAssignments($teacherId, $filters = []) {

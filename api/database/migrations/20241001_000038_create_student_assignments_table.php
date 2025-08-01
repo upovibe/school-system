@@ -5,8 +5,14 @@
  * This table stores student submissions for class homework assignments
  */
 
-class CreateStudentAssignmentsTable {
-    public function up($pdo) {
+class Migration_20241001000038createstudentassignmentstable {
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function up() {
         $sql = "
         CREATE TABLE student_assignments (
             id INT PRIMARY KEY AUTO_INCREMENT,
@@ -31,12 +37,12 @@ class CreateStudentAssignmentsTable {
             INDEX idx_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
-        $pdo->exec($sql);
+        $this->pdo->exec($sql);
     }
 
-    public function down($pdo) {
+    public function down() {
         $sql = "DROP TABLE IF EXISTS student_assignments;";
-        $pdo->exec($sql);
+        $this->pdo->exec($sql);
     }
 }
 ?> 

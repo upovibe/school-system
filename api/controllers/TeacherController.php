@@ -7,6 +7,8 @@ require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../models/ClassModel.php'; // Added for class assignment validation
+require_once __DIR__ . '/../core/MultipartFormParser.php';
+require_once __DIR__ . '/../utils/assignment_uploads.php';
 
 class TeacherController {
     private $teacherModel;
@@ -819,6 +821,603 @@ class TeacherController {
         }
         
         return null;
+    }
+
+    // ========================================
+    // TEACHER ASSIGNMENT MANAGEMENT METHODS
+    // ========================================
+
+    /**
+     * Get teacher's class assignments (teacher only)
+     */
+    public function getMyClassAssignments() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get query parameters for filtering
+            $filters = [];
+            if (isset($_GET['class_id'])) $filters['class_id'] = $_GET['class_id'];
+            if (isset($_GET['subject_id'])) $filters['subject_id'] = $_GET['subject_id'];
+            if (isset($_GET['status'])) $filters['status'] = $_GET['status'];
+            if (isset($_GET['assignment_type'])) $filters['assignment_type'] = $_GET['assignment_type'];
+            
+            // Get class assignments for this teacher
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            $assignments = $assignmentModel->getTeacherAssignments($teacher['id'], $filters);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $assignments,
+                'message' => 'Teacher class assignments retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Create new assignment (teacher only)
+     */
+    public function createAssignment() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Handle multipart form data or JSON data
+            $data = [];
+            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
+
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                require_once __DIR__ . '/../core/MultipartFormParser.php';
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
+            } else {
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
+            }
+            
+            // Validate required fields
+            if (empty($data['title'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Title is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['class_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class ID is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['subject_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Subject ID is required'
+                ]);
+                return;
+            }
+            
+            // Verify teacher is assigned to this class and subject
+            $assignments = $this->teacherModel->getTeacherAssignments($teacher['id']);
+            $isAssigned = false;
+            foreach ($assignments as $assignment) {
+                if ($assignment['class_id'] == $data['class_id']) {
+                    foreach ($assignment['subjects'] as $subject) {
+                        if ($subject['subject_id'] == $data['subject_id']) {
+                            $isAssigned = true;
+                            break 2;
+                        }
+                    }
+                }
+            }
+            
+            if (!$isAssigned) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not assigned to teach this class and subject'
+                ]);
+                return;
+            }
+            
+            // Convert due_date format if provided
+            if (isset($data['due_date']) && !empty($data['due_date'])) {
+                $dueDate = null;
+                $dateFormats = [
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'Y-m-d H:i',    // 2025-09-25 23:00
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'd/m/Y H:i'     // 25/9/2025 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $dueDate = DateTime::createFromFormat($format, $data['due_date']);
+                    if ($dueDate) break;
+                }
+                
+                if ($dueDate) {
+                    $data['due_date'] = $dueDate->format('Y-m-d H:i:s');
+                }
+            }
+            
+            // Handle attachment upload if present
+            if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                require_once __DIR__ . '/../utils/assignment_uploads.php';
+                $attachmentData = uploadAssignmentAttachment($_FILES['attachment']);
+                if ($attachmentData['success']) {
+                    $data['attachment_file'] = $attachmentData['filepath'];
+                }
+            }
+            
+            // Set teacher ID and default values
+            $data['teacher_id'] = $teacher['id'];
+            
+            if (empty($data['total_points'])) {
+                $data['total_points'] = 100.00;
+            }
+            
+            if (empty($data['assignment_type'])) {
+                $data['assignment_type'] = 'homework';
+            }
+            
+            if (empty($data['status'])) {
+                $data['status'] = 'draft';
+            }
+            
+            // Create assignment using ClassAssignmentModel
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $result = $assignmentModel->create($data);
+            
+            if ($result) {
+                // Get the created assignment data
+                $createdAssignment = $assignmentModel->getAssignmentWithDetails($result);
+                
+                // Log the action
+                $this->logAction('assignment_created', "Created assignment: {$data['title']}", [
+                    'assignment_id' => $result,
+                    'title' => $data['title'],
+                    'class_id' => $data['class_id'],
+                    'subject_id' => $data['subject_id']
+                ]);
+                
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $createdAssignment,
+                    'message' => 'Assignment created successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to create assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error creating assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get single assignment details (teacher only)
+     */
+    public function getAssignment($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get assignment details
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $assignment = $assignmentModel->getAssignmentWithDetails($id);
+            
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            // Verify teacher owns this assignment
+            if ($assignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only view your own assignments'
+                ]);
+                return;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $assignment,
+                'message' => 'Assignment details retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving assignment details: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update assignment (teacher only)
+     */
+    public function updateAssignment($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $existingAssignment = $assignmentModel->findById($id);
+            if (!$existingAssignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($existingAssignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only update your own assignments'
+                ]);
+                return;
+            }
+            
+            // Handle multipart form data or JSON data
+            $data = [];
+            $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
+
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                require_once __DIR__ . '/../core/MultipartFormParser.php';
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
+            } else {
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
+            }
+            
+            // Convert due_date format if provided
+            if (isset($data['due_date']) && !empty($data['due_date'])) {
+                $dueDate = null;
+                $dateFormats = [
+                    'Y-m-d H:i:s',  // 2025-09-25 23:00:45
+                    'Y-m-d\TH:i',   // 2025-09-25T23:00
+                    'Y-m-d H:i',    // 2025-09-25 23:00
+                    'd/m/Y H:i:s',  // 25/9/2025 23:00:45
+                    'd/m/Y H:i'     // 25/9/2025 23:00
+                ];
+                
+                foreach ($dateFormats as $format) {
+                    $dueDate = DateTime::createFromFormat($format, $data['due_date']);
+                    if ($dueDate) break;
+                }
+                
+                if ($dueDate) {
+                    $data['due_date'] = $dueDate->format('Y-m-d H:i:s');
+                }
+            }
+            
+            // Handle attachment upload if present
+            if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                require_once __DIR__ . '/../utils/assignment_uploads.php';
+                $attachmentData = uploadAssignmentAttachment($_FILES['attachment']);
+                if ($attachmentData['success']) {
+                    $data['attachment_file'] = $attachmentData['filepath'];
+                }
+            }
+            
+            // Ensure all fields are included in the update (even null values)
+            foreach ($data as $key => $value) {
+                if ($value === 'null' || $value === '') {
+                    $data[$key] = null;
+                }
+            }
+            
+            $result = $assignmentModel->update($id, $data);
+            
+            if ($result) {
+                // Get the updated assignment data
+                $updatedAssignment = $assignmentModel->getAssignmentWithDetails($id);
+                
+                // Log the action
+                $this->logAction('assignment_updated', "Updated assignment: {$existingAssignment['title']}", [
+                    'assignment_id' => $id,
+                    'title' => $data['title'] ?? $existingAssignment['title']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $updatedAssignment,
+                    'message' => 'Assignment updated successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to update assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error updating assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete assignment (teacher only)
+     */
+    public function deleteAssignment($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $existingAssignment = $assignmentModel->findById($id);
+            if (!$existingAssignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($existingAssignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only delete your own assignments'
+                ]);
+                return;
+            }
+            
+            // Delete attachment file if exists
+            if (!empty($existingAssignment['attachment_file'])) {
+                require_once __DIR__ . '/../utils/assignment_uploads.php';
+                deleteAssignmentFiles($existingAssignment['attachment_file']);
+            }
+            
+            $result = $assignmentModel->delete($id);
+            
+            if ($result) {
+                // Log the action
+                $this->logAction('assignment_deleted', "Deleted assignment: {$existingAssignment['title']}", [
+                    'assignment_id' => $id,
+                    'title' => $existingAssignment['title']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Assignment deleted successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to delete assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get assignment submissions for grading (teacher only)
+     */
+    public function getAssignmentSubmissions($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            require_once __DIR__ . '/../models/StudentAssignmentModel.php';
+            
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            $studentAssignmentModel = new StudentAssignmentModel($this->pdo);
+            
+            $assignment = $assignmentModel->findById($id);
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($assignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only view submissions for your own assignments'
+                ]);
+                return;
+            }
+            
+            $submissions = $studentAssignmentModel->getAssignmentSubmissions($id);
+            $statistics = $studentAssignmentModel->getAssignmentStatistics($id);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'assignment' => $assignment,
+                    'submissions' => $submissions,
+                    'statistics' => $statistics
+                ],
+                'message' => 'Assignment submissions retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving submissions: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Grade a student submission (teacher only)
+     */
+    public function gradeSubmission($assignmentId, $studentId) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            require_once __DIR__ . '/../models/StudentAssignmentModel.php';
+            
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            $studentAssignmentModel = new StudentAssignmentModel($this->pdo);
+            
+            $assignment = $assignmentModel->findById($assignmentId);
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($assignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only grade submissions for your own assignments'
+                ]);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['grade']) || !is_numeric($data['grade'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid grade is required'
+                ]);
+                return;
+            }
+            
+            $grade = floatval($data['grade']);
+            $feedback = $data['feedback'] ?? null;
+            
+            $result = $studentAssignmentModel->gradeSubmission($studentId, $assignmentId, $grade, $feedback);
+            
+            if ($result) {
+                // Get the updated submission
+                $submission = $studentAssignmentModel->getStudentSubmission($studentId, $assignmentId);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => $submission,
+                    'message' => 'Submission graded successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to grade submission'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error grading submission: ' . $e->getMessage()
+            ]);
+        }
     }
 }
 ?> 

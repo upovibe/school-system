@@ -206,20 +206,14 @@ Router::delete('/assignments/{id}', 'AssignmentController@destroy');
 Router::get('/assignments/{id}/submissions', 'AssignmentController@getSubmissions');
 Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentController@gradeSubmission');
 
-// Teacher Assignment Management Routes (admin only for create/update/delete, public for view)
-Router::get('/teacher-assignments', 'TeacherAssignmentController@index');
-Router::post('/teacher-assignments', 'TeacherAssignmentController@store');
-Router::get('/teacher-assignments/search', 'TeacherAssignmentController@search');
-Router::get('/teacher-assignments/by-teacher', 'TeacherAssignmentController@getByTeacher');
-Router::get('/teacher-assignments/by-class', 'TeacherAssignmentController@getByClass');
-Router::get('/teacher-assignments/by-subject', 'TeacherAssignmentController@getBySubject');
-Router::get('/teacher-assignments/statistics', 'TeacherAssignmentController@getStatistics');
-Router::get('/teacher-assignments/{id}', 'TeacherAssignmentController@show');
-Router::put('/teacher-assignments/{id}', 'TeacherAssignmentController@update');
-Router::delete('/teacher-assignments/{id}', 'TeacherAssignmentController@destroy');
-Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}', 'TeacherAssignmentController@deleteByTeacherAndClass');
-Router::put('/teacher-assignments/teacher/{teacherId}/class/{classId}', 'TeacherAssignmentController@updateByTeacherAndClass');
-Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}/subject/{subjectId}', 'TeacherAssignmentController@deleteByTeacherClassAndSubject');
+// Teacher Assignment Management Routes (teacher only)
+Router::get('/teachers/my-class-assignments', 'TeacherController@getMyClassAssignments');
+Router::post('/teachers/assignments', 'TeacherController@createAssignment');
+Router::get('/teachers/assignments/{id}', 'TeacherController@getAssignment');
+Router::put('/teachers/assignments/{id}', 'TeacherController@updateAssignment');
+Router::delete('/teachers/assignments/{id}', 'TeacherController@deleteAssignment');
+Router::get('/teachers/assignments/{id}/submissions', 'TeacherController@getAssignmentSubmissions');
+Router::post('/teachers/assignments/{assignmentId}/grade/{studentId}', 'TeacherController@gradeSubmission');
 
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');

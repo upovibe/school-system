@@ -100,7 +100,7 @@ class TeacherClassesSubjectsPage extends App {
         if (loading) {
             return `
                 <div class="space-y-6">
-                    <div class="bg-white shadow rounded-lg p-6">
+                    <div class="bg-white shadow rounded-lg p-4">
                         <div class="animate-pulse">
                             <div class="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
                             <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
@@ -150,8 +150,16 @@ class TeacherClassesSubjectsPage extends App {
         if (!scheduleData || !scheduleData.assignments || scheduleData.assignments.length === 0) {
             return `
                 <div class="space-y-6">
-                    <ui-alert variant="info" title="No Classes Assigned" message="You are not currently assigned to any classes or subjects.">
-                    </ui-alert>
+                    <div class="bg-white shadow rounded-lg p-8 text-center">
+                        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-chalkboard-teacher text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Teaching Assignments</h3>
+                        <p class="text-gray-500 max-w-md mx-auto">
+                            You are not currently assigned to any classes or subjects. 
+                            Please contact the administration for teaching assignments.
+                        </p>
+                    </div>
                 </div>
             `;
         }
@@ -159,99 +167,163 @@ class TeacherClassesSubjectsPage extends App {
         const { teacher_name, assignments, summary } = scheduleData;
 
         return `
-            <div class="space-y-6">
-                <!-- Header Information -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h1 class="text-2xl font-bold text-gray-900">Classes-Subjects</h1>
-                        <ui-badge variant="primary">${summary.total_classes} Classes</ui-badge>
-                    </div>
+            <div class="space-y-8">
+                <!-- Enhanced Header with Teacher Info -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                            <h1 class="text-2xl sm:text-3xl font-bold">My Classes & Subjects</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacher_name}</p>
+                        </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-blue-600 mb-1">Total Class${summary.total_classes > 1 ? 'es' : ''}</h3>
-                            <p class="text-lg font-semibold text-blue-900">${summary.total_classes}</p>
+                    <!-- Enhanced Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="p-2 sm:p-3 bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${summary.total_classes}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Class${summary.total_classes > 1 ? 'es' : ''}</div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-green-600 mb-1">Total Subject${summary.total_subjects > 1 ? 's' : ''}</h3>
-                            <p class="text-lg font-semibold text-green-900">${summary.total_subjects}</p>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="p-2 sm:p-3 bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-book text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${summary.total_subjects}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Subject${summary.total_subjects > 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-purple-600 mb-1">Total Assignment${summary.total_assignments > 1 ? 's' : ''}</h3>
-                            <p class="text-lg font-semibold text-purple-900">${summary.total_assignments}</p>
-                         </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
+                            <div class="flex items-center">
+                                <div class="p-2 sm:p-3 bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${summary.total_assignments}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Assignment${summary.total_assignments > 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Classes and Subjects -->
-                ${assignments.map(assignment => `
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900">
-                                    ${assignment.class_name} - Section ${assignment.class_section}
-                                </h2>
-                                <p class="text-gray-600">
-                                    Academic Year: ${assignment.class_academic_year} | 
-                                    Capacity: ${assignment.class_capacity} students
-                                </p>
-                            </div>
-                            <ui-badge variant="${assignment.class_status === 'active' ? 'success' : 'warning'}">
-                                ${assignment.class_status}
-                            </ui-badge>
-                        </div>
-
-                        <!-- Subjects -->
-                        <div class="mb-6">
-                            <h3 class="text-lg font-medium text-gray-800 mb-3">
-                                <i class="fas fa-book mr-2"></i>Subjects Taught
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                ${assignment.subjects.map(subject => `
-                                    <div class="bg-gray-50 p-4 rounded-lg border">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h4 class="font-medium text-gray-900">${subject.subject_name}</h4>
-                                            <ui-badge color="info" size="sm">${subject.subject_code}</ui-badge>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-2">${subject.subject_category}</p>
-                                        ${subject.subject_description ? `
-                                            <p class="text-xs text-gray-500">${subject.subject_description}</p>
-                                        ` : ''}
+                <!-- Enhanced Classes and Subjects -->
+                ${assignments.map((assignment, index) => `
+                    <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
+                        <!-- Class Header with Enhanced Design -->
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200">
+                                <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-chalkboard text-white text-lg sm:text-xl"></i>
                                     </div>
-                                `).join('')}
-                            </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                                            ${assignment.class_name}-${assignment.class_section}
+                                        </h2>
+                                        <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm">
+                                            <span class="flex items-center">
+                                                <i class="fas fa-calendar mr-1"></i>
+                                                ${assignment.class_academic_year}
+                                            </span>
+                                            <span class="flex items-center">
+                                                <i class="fas fa-users mr-1"></i>
+                                                ${assignment.class_capacity} students
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                         </div>
 
-                        <!-- Students -->
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-800 mb-3">
-                                <i class="fas fa-users mr-2"></i>Students (${assignment.students.length})
-                            </h3>
-                            ${assignment.students.length > 0 ? `
-                                <div class="overflow-x-auto">
-                                    <ui-table 
-                                        data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
-                                        columns='${JSON.stringify(this.getStudentTableColumns())}'
-                                        title="Students in ${assignment.class_name}"
-                                        searchable
-                                        search-placeholder="Search students..."
-                                        striped
-                                        print
-                                        sortable
-                                        clickable
-                                        refresh
-                                        row-clickable="true"
-                                        >
-                                    </ui-table>
+                        <div class="p-4 sm:p-6 lg:p-8">
+                            <!-- Enhanced Subjects Section -->
+                            <div class="mb-6 sm:mb-8">
+                                <div class="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                                    <div class="flex items-center">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                                            <i class="fas fa-book text-white text-xs sm:text-sm"></i>
+                                        </div>
+                                                                                 <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Subject${assignment.subjects.length > 1 ? 's' : ''} Taught</h3>
+                                    </div>
+                                    <div class="sm:ml-auto">
+                                        <ui-badge color="success" size="sm">${assignment.subjects.length} Subject${assignment.subjects.length > 1 ? 's' : ''}</ui-badge>
+                                    </div>
                                 </div>
-                            ` : `
-                                <div class="text-center py-8 bg-gray-50 rounded-lg">
-                                    <i class="fas fa-user-graduate text-gray-400 text-3xl mb-2"></i>
-                                    <p class="text-gray-500">No students enrolled in this class</p>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                    ${assignment.subjects.map(subject => `
+                                        <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow duration-200">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="font-semibold text-gray-900 text-base sm:text-lg mb-1 truncate">${subject.subject_name}</h4>
+                                                                                                         <div class="flex items-center gap-2">
+                                                         <ui-badge color="info" size="sm">${subject.subject_code}</ui-badge>
+                                                         <ui-badge color="warning" size="sm">${subject.subject_category.toUpperCase()}</ui-badge>
+                                                     </div>
+                                                </div>
+                                                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-book-open text-white text-xs sm:text-sm"></i>
+                                                </div>
+                                                
+                                            </div>
+                                            <div class="space-y-2">
+                                                ${subject.subject_description ? `
+                                                    <div class="flex items-start gap-1 text-xs sm:text-sm text-gray-500 bg-white bg-opacity-50 rounded-lg py-2">
+                                                        <i class="fas fa-info-circle mt-0.5 text-blue-500"></i>
+                                                        <span class="line-clamp-2">${subject.subject_description}</span>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                            `}
+                            </div>
+
+                            <!-- Enhanced Students Section -->
+                            <div>
+                                <div class="flex items-center mb-4 gap-2">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user-graduate text-white text-xs sm:text-sm"></i>
+                                        </div>
+                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Class Students</h3>
+                                    </div>
+                                
+                                ${assignment.students.length > 0 ? `
+                                    <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
+                                        <div class="overflow-x-auto -mx-4 sm:mx-0">
+                                            <ui-table 
+                                                data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
+                                                columns='${JSON.stringify(this.getStudentTableColumns())}'
+                                                title="Students in ${assignment.class_name}"
+                                                searchable
+                                                search-placeholder="Search students..."
+                                                striped
+                                                print
+                                                sortable
+                                                clickable
+                                                refresh
+                                                row-clickable="true"
+                                                >
+                                            </ui-table>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                            <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
+                                        </div>
+                                        <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
+                                        <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
+                                    </div>
+                                `}
+                            </div>
                         </div>
                     </div>
                 `).join('')}

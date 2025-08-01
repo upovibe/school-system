@@ -290,11 +290,9 @@ class TeacherClassesSubjectsPage extends App {
                                                          <!-- Enhanced Students Section with Accordion -->
                              <div>
                                  <ui-accordion>
-                                     <ui-accordion-item title="Class Students (${assignment.students.length} Student${assignment.students.length > 1 ? 's' : ''})" open>
+                                     <ui-accordion-item title="Class Students (${assignment.students.length} Student${assignment.students.length > 1 ? 's' : ''})">
                                          ${assignment.students.length > 0 ? `
-                                             <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
-                                                 <div class="overflow-x-auto -mx-4 sm:mx-0">
-                                                     <ui-table 
+                                             <ui-table 
                                                          data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
                                                          columns='${JSON.stringify(this.getStudentTableColumns())}'
                                                          title="Students in ${assignment.class_name}-${assignment.class_section}"
@@ -308,7 +306,6 @@ class TeacherClassesSubjectsPage extends App {
                                                          row-clickable="true"
                                                          >
                                                      </ui-table>
-                                                 </div>
                                              </div>
                                          ` : `
                                              <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">

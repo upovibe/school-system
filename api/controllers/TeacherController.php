@@ -714,6 +714,173 @@ class TeacherController {
     }
 
     /**
+     * Get current teacher's assignments (teacher only)
+     */
+    public function getMyAssignments() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get teacher assignments with class and subject details
+            $assignments = $this->teacherModel->getTeacherAssignments($teacher['id']);
+            
+            if (empty($assignments)) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'teacher_id' => $teacher['id'],
+                        'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                        'assignments' => [],
+                        'summary' => [
+                            'total_assignments' => 0,
+                            'total_classes' => 0,
+                            'total_subjects' => 0
+                        ]
+                    ],
+                    'message' => 'No assignments found for this teacher'
+                ]);
+                return;
+            }
+
+            // Calculate summary statistics
+            $uniqueClasses = [];
+            $uniqueSubjects = [];
+            foreach ($assignments as $assignment) {
+                $uniqueClasses[$assignment['class_id']] = $assignment['class_name'];
+                $uniqueSubjects[$assignment['subject_id']] = $assignment['subject_name'];
+            }
+
+            $summary = [
+                'total_assignments' => count($assignments),
+                'total_classes' => count($uniqueClasses),
+                'total_subjects' => count($uniqueSubjects)
+            ];
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'teacher_id' => $teacher['id'],
+                    'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                    'assignments' => $assignments,
+                    'summary' => $summary
+                ],
+                'message' => 'Teacher assignments retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get current teacher's subjects (teacher only)
+     */
+    public function getMySubjects() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get teacher subjects
+            $subjects = $this->teacherModel->getTeacherSubjects($teacher['id']);
+            
+            if (empty($subjects)) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'teacher_id' => $teacher['id'],
+                        'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                        'subjects' => []
+                    ],
+                    'message' => 'No subjects assigned to this teacher'
+                ]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'teacher_id' => $teacher['id'],
+                    'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                    'subjects' => $subjects
+                ],
+                'message' => 'Teacher subjects retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher subjects: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get current teacher's classes (teacher only)
+     */
+    public function getMyClasses() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get teacher classes
+            $classes = $this->teacherModel->getTeacherClasses($teacher['id']);
+            
+            if (empty($classes)) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'teacher_id' => $teacher['id'],
+                        'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                        'classes' => []
+                    ],
+                    'message' => 'No classes assigned to this teacher'
+                ]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'teacher_id' => $teacher['id'],
+                    'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                    'classes' => $classes
+                ],
+                'message' => 'Teacher classes retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher classes: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Log user action
      */
     private function logAction($action, $description = null, $metadata = null) {

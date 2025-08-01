@@ -574,5 +574,112 @@ class TeacherModel extends BaseModel {
             throw new Exception('Error updating teacher with user account: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get teacher assignments with class and subject details
+     */
+    public function getTeacherAssignments($teacherId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    ta.id,
+                    ta.created_at,
+                    c.id as class_id,
+                    c.name as class_name,
+                    c.section as class_section,
+                    c.academic_year as class_academic_year,
+                    c.capacity as class_capacity,
+                    c.status as class_status,
+                    s.id as subject_id,
+                    s.name as subject_name,
+                    s.code as subject_code,
+                    s.category as subject_category,
+                    s.description as subject_description
+                FROM teacher_assignments ta
+                JOIN classes c ON ta.class_id = c.id
+                JOIN subjects s ON ta.subject_id = s.id
+                WHERE ta.teacher_id = ?
+                ORDER BY c.name ASC, c.section ASC, s.name ASC
+            ");
+            $stmt->execute([$teacherId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching teacher assignments: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get teacher subjects (unique subjects assigned to teacher)
+     */
+    public function getTeacherSubjects($teacherId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT
+                    s.id,
+                    s.name,
+                    s.code,
+                    s.category,
+                    s.description,
+                    COUNT(ta.id) as assignment_count
+                FROM teacher_assignments ta
+                JOIN subjects s ON ta.subject_id = s.id
+                WHERE ta.teacher_id = ?
+                GROUP BY s.id, s.name, s.code, s.category, s.description
+                ORDER BY s.name ASC
+            ");
+            $stmt->execute([$teacherId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching teacher subjects: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get teacher classes (unique classes assigned to teacher)
+     */
+    public function getTeacherClasses($teacherId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT
+                    c.id,
+                    c.name,
+                    c.section,
+                    c.academic_year,
+                    c.capacity,
+                    c.status,
+                    COUNT(ta.id) as assignment_count
+                FROM teacher_assignments ta
+                JOIN classes c ON ta.class_id = c.id
+                WHERE ta.teacher_id = ?
+                GROUP BY c.id, c.name, c.section, c.academic_year, c.capacity, c.status
+                ORDER BY c.name ASC, c.section ASC
+            ");
+            $stmt->execute([$teacherId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching teacher classes: ' . $e->getMessage());
+        }
+    }
 }
 ?> 

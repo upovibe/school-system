@@ -22,7 +22,8 @@ class TeacherModel extends BaseModel {
         'hire_date',
         'salary',
         'password',
-        'status'
+        'status',
+        'class_id'
     ];
     
     // Fields that should be cast to specific types
@@ -31,6 +32,7 @@ class TeacherModel extends BaseModel {
         'date_of_birth' => 'date',
         'hire_date' => 'date',
         'salary' => 'float',
+        'class_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -92,9 +94,11 @@ class TeacherModel extends BaseModel {
     public function getActiveTeachers() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT t.*, u.name, u.email, u.status as user_status
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
                 WHERE t.status = 'active' AND u.status = 'active'
                 ORDER BY u.name ASC
             ");
@@ -118,9 +122,11 @@ class TeacherModel extends BaseModel {
     public function getTeachersWithUserInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT t.*, u.name, u.email, u.status as user_status
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
                 ORDER BY u.name ASC
             ");
             $stmt->execute();
@@ -143,9 +149,11 @@ class TeacherModel extends BaseModel {
     public function searchTeachers($query, $limit = null) {
         try {
             $sql = "
-                SELECT t.*, u.name, u.email, u.status as user_status
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
                 WHERE (u.name LIKE ? OR u.email LIKE ? OR t.employee_id LIKE ? OR t.specialization LIKE ?)
                 ORDER BY u.name ASC
             ";
@@ -176,9 +184,12 @@ class TeacherModel extends BaseModel {
     public function getTeachersWithAssignmentCounts() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT t.*, u.name, u.email, u.status as user_status, COUNT(ta.id) as assignment_count
+                SELECT t.*, u.name, u.email, u.status as user_status, 
+                       c.name as class_name, c.section as class_section,
+                       COUNT(ta.id) as assignment_count
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
                 LEFT JOIN teacher_assignments ta ON t.id = ta.teacher_id
                 GROUP BY t.id
                 ORDER BY u.name ASC
@@ -221,9 +232,11 @@ class TeacherModel extends BaseModel {
     public function getTeachersBySpecialization($specialization) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT t.*, u.name, u.email, u.status as user_status
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
                 WHERE t.specialization = ? AND t.status = 'active' AND u.status = 'active'
                 ORDER BY u.name ASC
             ");
@@ -251,7 +264,8 @@ class TeacherModel extends BaseModel {
                     COUNT(*) as total_teachers,
                     COUNT(CASE WHEN status = 'active' THEN 1 END) as active_teachers,
                     COUNT(CASE WHEN status = 'inactive' THEN 1 END) as inactive_teachers,
-                    COUNT(CASE WHEN hire_date >= DATE_SUB(NOW(), INTERVAL 1 YEAR) THEN 1 END) as new_teachers
+                    COUNT(CASE WHEN hire_date >= DATE_SUB(NOW(), INTERVAL 1 YEAR) THEN 1 END) as new_teachers,
+                    COUNT(CASE WHEN class_id IS NOT NULL THEN 1 END) as class_teachers
                 FROM {$this->getTableName()}
             ");
             $stmt->execute();
@@ -306,6 +320,76 @@ class TeacherModel extends BaseModel {
     }
 
     /**
+     * Check if class is already assigned to another teacher
+     */
+    public function isClassAssigned($classId, $excludeTeacherId = null) {
+        try {
+            $sql = "SELECT COUNT(*) FROM {$this->getTableName()} WHERE class_id = ?";
+            $params = [$classId];
+            
+            if ($excludeTeacherId) {
+                $sql .= " AND id != ?";
+                $params[] = $excludeTeacherId;
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            throw new Exception('Error checking class assignment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get class teachers (teachers assigned to classes)
+     */
+    public function getClassTeachers() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section,
+                       c.academic_year, c.capacity
+                FROM {$this->getTableName()} t
+                LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
+                WHERE t.class_id IS NOT NULL AND t.status = 'active'
+                ORDER BY c.name ASC, c.section ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching class teachers: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get available classes (classes without assigned teachers)
+     */
+    public function getAvailableClasses() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT c.* 
+                FROM classes c
+                LEFT JOIN teachers t ON c.id = t.class_id
+                WHERE t.class_id IS NULL AND c.status = 'active'
+                ORDER BY c.name ASC, c.section ASC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching available classes: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Create teacher with user account and role assignment
      */
     public function createTeacherWithUser($data) {
@@ -336,6 +420,7 @@ class TeacherModel extends BaseModel {
                 'salary' => $data['salary'] ?? 0,
                 'password' => $data['password'],
                 'status' => $data['status'],
+                'class_id' => $data['class_id'] ?? null,
                 'created_at' => $data['created_at'],
                 'updated_at' => $data['updated_at']
             ];
@@ -344,11 +429,11 @@ class TeacherModel extends BaseModel {
             $teacherSql = "INSERT INTO teachers (
                 employee_id, first_name, last_name, email, phone, address,
                 date_of_birth, gender, qualification, specialization, hire_date,
-                salary, password, status, created_at, updated_at
+                salary, password, status, class_id, created_at, updated_at
             ) VALUES (
                 :employee_id, :first_name, :last_name, :email, :phone, :address,
                 :date_of_birth, :gender, :qualification, :specialization, :hire_date,
-                :salary, :password, :status, :created_at, :updated_at
+                :salary, :password, :status, :class_id, :created_at, :updated_at
             )";
 
             $teacherStmt = $this->pdo->prepare($teacherSql);

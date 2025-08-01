@@ -26,14 +26,17 @@ class Migration_20241001000033createteacherstable {
                 salary DECIMAL(10,2),
                 password VARCHAR(255) NOT NULL,
                 status ENUM('active', 'inactive', 'on_leave') DEFAULT 'active',
+                class_id INT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL,
                 INDEX idx_user_id (user_id),
                 INDEX idx_employee_id (employee_id),
                 INDEX idx_email (email),
                 INDEX idx_status (status),
                 INDEX idx_hire_date (hire_date),
+                INDEX idx_class_id (class_id),
                 INDEX idx_created_at (created_at)
             )
         ");

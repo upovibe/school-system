@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
+require_once __DIR__ . '/../models/ClassModel.php'; // Added for class assignment validation
 
 class TeacherController {
     private $teacherModel;
@@ -128,6 +129,32 @@ class TeacherController {
                     'message' => 'Email already exists'
                 ]);
                 return;
+            }
+
+            // Validate class assignment if provided
+            if (!empty($data['class_id'])) {
+                // Check if class exists
+                $classModel = new ClassModel($this->pdo);
+                $class = $classModel->findById($data['class_id']);
+                
+                if (!$class) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Selected class does not exist'
+                    ]);
+                    return;
+                }
+
+                // Check if class is already assigned to another teacher
+                if ($this->teacherModel->isClassAssigned($data['class_id'])) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'This class is already assigned to another teacher'
+                    ]);
+                    return;
+                }
             }
 
             // Set default values if not provided
@@ -281,6 +308,34 @@ class TeacherController {
                     'message' => 'Email already exists'
                 ]);
                 return;
+            }
+
+            // Validate class assignment if provided
+            if (isset($data['class_id'])) {
+                if (!empty($data['class_id'])) {
+                    // Check if class exists
+                    $classModel = new ClassModel($this->pdo);
+                    $class = $classModel->findById($data['class_id']);
+                    
+                    if (!$class) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Selected class does not exist'
+                        ]);
+                        return;
+                    }
+
+                    // Check if class is already assigned to another teacher
+                    if ($this->teacherModel->isClassAssigned($data['class_id'], $id)) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'This class is already assigned to another teacher'
+                        ]);
+                        return;
+                    }
+                }
             }
 
             // Update teacher with user account
@@ -533,6 +588,58 @@ class TeacherController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error retrieving teacher statistics: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get class teachers (teachers assigned to classes)
+     */
+    public function getClassTeachers() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $classTeachers = $this->teacherModel->getClassTeachers();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $classTeachers,
+                'message' => 'Class teachers retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving class teachers: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get available classes (classes without assigned teachers)
+     */
+    public function getAvailableClasses() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $availableClasses = $this->teacherModel->getAvailableClasses();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $availableClasses,
+                'message' => 'Available classes retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving available classes: ' . $e->getMessage()
             ]);
         }
     }

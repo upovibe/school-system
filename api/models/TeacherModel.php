@@ -576,7 +576,7 @@ class TeacherModel extends BaseModel {
     }
 
     /**
-     * Get teacher assignments with class and subject details
+     * Get teacher assignments with class and subject details (grouped by class)
      */
     public function getTeacherAssignments($teacherId) {
         try {
@@ -604,12 +604,42 @@ class TeacherModel extends BaseModel {
             $stmt->execute([$teacherId]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Apply casts to each result
-            foreach ($results as &$result) {
-                $result = $this->applyCasts($result);
+            // Group results by class
+            $groupedResults = [];
+            foreach ($results as $result) {
+                $classId = $result['class_id'];
+                
+                // If this class hasn't been added yet, create the class entry
+                if (!isset($groupedResults[$classId])) {
+                    $groupedResults[$classId] = [
+                        'class_id' => $result['class_id'],
+                        'class_name' => $result['class_name'],
+                        'class_section' => $result['class_section'],
+                        'class_academic_year' => $result['class_academic_year'],
+                        'class_capacity' => $result['class_capacity'],
+                        'class_status' => $result['class_status'],
+                        'subjects' => []
+                    ];
+                }
+                
+                // Add the subject to this class
+                $groupedResults[$classId]['subjects'][] = [
+                    'subject_id' => $result['subject_id'],
+                    'subject_name' => $result['subject_name'],
+                    'subject_code' => $result['subject_code'],
+                    'subject_category' => $result['subject_category'],
+                    'subject_description' => $result['subject_description']
+                ];
             }
             
-            return $results;
+            // Convert to indexed array and apply casts
+            $finalResults = [];
+            foreach ($groupedResults as $classData) {
+                $classData = $this->applyCasts($classData);
+                $finalResults[] = $classData;
+            }
+            
+            return $finalResults;
         } catch (PDOException $e) {
             throw new Exception('Error fetching teacher assignments: ' . $e->getMessage());
         }

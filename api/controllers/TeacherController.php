@@ -751,9 +751,11 @@ class TeacherController {
             // Calculate summary statistics
             $uniqueClasses = [];
             $uniqueSubjects = [];
-            foreach ($assignments as $assignment) {
-                $uniqueClasses[$assignment['class_id']] = $assignment['class_name'];
-                $uniqueSubjects[$assignment['subject_id']] = $assignment['subject_name'];
+            foreach ($assignments as $class) {
+                $uniqueClasses[$class['class_id']] = $class['class_name'];
+                foreach ($class['subjects'] as $subject) {
+                    $uniqueSubjects[$subject['subject_id']] = $subject['subject_name'];
+                }
             }
 
             $summary = [

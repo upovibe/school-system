@@ -4,6 +4,7 @@ import '@/components/ui/Card.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
+import '@/components/ui/Table.js';
 
 /**
  * Teacher Class Page Component (/dashboard/teacher/class)
@@ -121,6 +122,29 @@ class TeacherClassPage extends App {
 
         const { class_name, class_section, academic_year, capacity, status, students, student_count } = classData;
 
+        // Prepare table data with separate columns
+        const tableData = students ? students.map(student => ({
+            student_name: `${student.first_name} ${student.last_name}`,
+            student_id: student.student_id,
+            gender: student.gender === 'male' ? 'Male' : 'Female',
+            email: student.email,
+            phone: student.phone || 'No phone',
+            parent_name: student.parent_name || 'Not provided',
+            parent_phone: student.parent_phone || 'No phone',
+            status: student.status === 'active' ? 'Active' : 'Inactive'
+        })) : [];
+
+        const tableColumns = [
+            { key: 'student_name', label: 'Student Name' },
+            { key: 'student_id', label: 'Student ID' },
+            { key: 'gender', label: 'Gender' },
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone' },
+            { key: 'parent_name', label: 'Parent Name' },
+            { key: 'parent_phone', label: 'Parent Phone' },
+            { key: 'status', label: 'Status' }
+        ];
+
         return `
             <div class="space-y-6">
                 <!-- Class Information -->
@@ -156,64 +180,19 @@ class TeacherClassPage extends App {
                 <!-- Students List -->
                 ${students && students.length > 0 ? `
                     <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-semibold text-gray-900">My Students (${student_count})</h2>
-                            <ui-badge variant="success">Active Students</ui-badge>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    ${students.map(student => `
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="flex-shrink-0 h-10 w-10">
-                                                        <ui-avatar 
-                                                            name="${student.first_name} ${student.last_name}"
-                                                            size="sm"
-                                                            class="h-10 w-10">
-                                                        </ui-avatar>
-                                                    </div>
-                                                    <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900">
-                                                            ${student.first_name} ${student.last_name}
-                                                        </div>
-                                                        <div class="text-sm text-gray-500">
-                                                            ${student.gender === 'male' ? 'Male' : 'Female'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">${student.student_id}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">${student.email}</div>
-                                                <div class="text-sm text-gray-500">${student.phone || 'No phone'}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">${student.parent_name || 'Not provided'}</div>
-                                                <div class="text-sm text-gray-500">${student.parent_phone || 'No phone'}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <ui-badge variant="${student.status === 'active' ? 'success' : 'warning'}">
-                                                    ${student.status}
-                                                </ui-badge>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
+                        <ui-table 
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            title="My Students"
+                            searchable
+                            search-placeholder="Search students..."
+                            striped
+                            print
+                            sortable
+                            clickable
+                            refresh
+                            >
+                        </ui-table>
                     </div>
                 ` : `
                     <div class="bg-white shadow rounded-lg p-6">

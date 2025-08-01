@@ -4,6 +4,7 @@ import '@/components/ui/Card.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
+import '@/components/ui/Table.js';
 
 /**
  * Student Class Page Component (/dashboard/student/class)
@@ -121,6 +122,25 @@ class StudentClassPage extends App {
 
         const { class: classInfo, subjects } = classData;
 
+        // Prepare table data for subjects
+        const tableData = subjects ? subjects.map(subject => ({
+            subject_name: subject.subject_name,
+            subject_code: subject.subject_code,
+            subject_category: subject.subject_category,
+            term: subject.term || 'Full Year',
+            teacher: subject.teacher ? `${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}` : 'No teacher assigned',
+            status: subject.subject_category === 'core' ? 'Core' : subject.subject_category === 'elective' ? 'Elective' : 'Optional'
+        })) : [];
+
+        const tableColumns = [
+            { key: 'subject_name', label: 'Subject Name' },
+            { key: 'subject_code', label: 'Subject Code' },
+            { key: 'subject_category', label: 'Category' },
+            { key: 'term', label: 'Term' },
+            { key: 'teacher', label: 'Teacher' },
+            { key: 'status', label: 'Status' }
+        ];
+
         return `
             <div class="space-y-6">
                 <!-- Class Information -->
@@ -153,43 +173,22 @@ class StudentClassPage extends App {
                     `}
                 </div>
 
-                <!-- Subjects -->
+                <!-- Subjects Table -->
                 ${subjects && subjects.length > 0 ? `
                     <div class="bg-white shadow rounded-lg p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-4">My Subjects</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            ${subjects.map(subject => `
-                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="text-lg font-medium text-gray-900">${subject.subject_name}</h3>
-                                        <div class="flex items-center gap-2">
-                                            <ui-badge variant="${subject.subject_category === 'core' ? 'primary' : subject.subject_category === 'elective' ? 'success' : 'warning'}">${subject.subject_category}</ui-badge>
-                                            <ui-badge variant="secondary">${subject.term || 'Full Year'}</ui-badge>
-                                        </div>
-                                    </div>
-                                    ${subject.subject_description ? `<p class="text-sm text-gray-600 mb-3">${subject.subject_description}</p>` : ''}
-                                    <div class="flex items-center justify-between text-sm text-gray-500">
-                                        <span>Code: ${subject.subject_code}</span>
-                                    </div>
-                                    ${subject.teacher ? `
-                                        <div class="mt-3 pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2">
-                                                <i class="fas fa-user-circle text-${subject.teacher.gender === 'female' ? 'pink' : 'blue'}-500"></i>
-                                                <span class="text-sm font-medium text-gray-700">Teacher:</span>
-                                                <span class="text-sm text-gray-600">${subject.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${subject.teacher.name}</span>
-                                            </div>
-                                        </div>
-                                    ` : `
-                                        <div class="mt-3 pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2">
-                                                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
-                                                <span class="text-sm text-gray-500">No teacher assigned</span>
-                                            </div>
-                                        </div>
-                                    `}
-                                </div>
-                            `).join('')}
-                        </div>
+                        <ui-table 
+                            data='${JSON.stringify(tableData)}'
+                            columns='${JSON.stringify(tableColumns)}'
+                            title="My Subjects"
+                            searchable
+                            search-placeholder="Search subjects..."
+                            striped
+                            print
+                            sortable
+                            clickable
+                            refresh
+                            >
+                        </ui-table>
                     </div>
                 ` : `
                     <div class="bg-white shadow rounded-lg p-6">

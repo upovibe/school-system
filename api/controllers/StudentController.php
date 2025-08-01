@@ -951,7 +951,7 @@ class StudentController {
             
             $assignment['submission'] = $submission;
             
-            http_response_code(200);
+                http_response_code(200);
             echo json_encode([
                 'success' => true,
                 'data' => $assignment,
@@ -1190,10 +1190,10 @@ class StudentController {
                     'assignment_id' => $assignmentId,
                     'submission_id' => $existingSubmission['id']
                 ]);
-                
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
                     'message' => 'Submission updated successfully'
                 ]);
             } else {

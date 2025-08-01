@@ -6,7 +6,9 @@ import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Accordion.js';
+import '@/components/ui/Button.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
+import '@/components/layout/teacherLayout/TeacherCreateAssignmentModal.js';
 
 /**
  * Teacher Classes-Subjects Page Component (/dashboard/teacher/schedule)
@@ -21,6 +23,9 @@ class TeacherClassesSubjectsPage extends App {
         this.error = null;
         this.showStudentModal = false;
         this.selectedStudentData = null;
+        this.showAssignmentModal = false;
+        this.selectedClassId = null;
+        this.selectedSubjectId = null;
     }
 
     async connectedCallback() {
@@ -30,6 +35,9 @@ class TeacherClassesSubjectsPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
+        
+        // Add event listeners for assignment modal
+        this.addEventListener('assignment-created', this.onAssignmentCreated.bind(this));
     }
 
     async loadScheduleData() {
@@ -92,11 +100,33 @@ class TeacherClassesSubjectsPage extends App {
         }
     }
 
+    // Handle assignment creation
+    onAssignmentCreated(event) {
+        // Refresh the schedule data after assignment creation
+        this.loadScheduleData();
+    }
+
+    // Open assignment creation modal
+    openAssignmentModal(classId, subjectId) {
+        this.set('selectedClassId', classId);
+        this.set('selectedSubjectId', subjectId);
+        this.set('showAssignmentModal', true);
+        
+        // Open the modal
+        setTimeout(() => {
+            const modal = this.querySelector('teacher-create-assignment-modal');
+            if (modal) {
+                modal.open(classId, subjectId);
+            }
+        }, 0);
+    }
+
     render() {
         const loading = this.get('loading');
         const error = this.get('error');
         const scheduleData = this.get('scheduleData');
         const showStudentModal = this.get('showStudentModal');
+        const showAssignmentModal = this.get('showAssignmentModal');
 
         if (loading) {
             return `
@@ -264,15 +294,14 @@ class TeacherClassesSubjectsPage extends App {
                                             <div class="flex items-start justify-between">
                                                 <div class="flex-1 min-w-0">
                                                     <h4 class="font-semibold text-gray-900 text-base sm:text-lg mb-1 truncate">${subject.subject_name}</h4>
-                                                                                                         <div class="flex items-center gap-2">
-                                                         <ui-badge color="info" size="sm">${subject.subject_code}</ui-badge>
-                                                         <ui-badge color="warning" size="sm">${subject.subject_category.toUpperCase()}</ui-badge>
-                                                     </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <ui-badge color="info" size="sm">${subject.subject_code}</ui-badge>
+                                                        <ui-badge color="warning" size="sm">${subject.subject_category.toUpperCase()}</ui-badge>
+                                                    </div>
                                                 </div>
                                                 <div class="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
                                                     <i class="fas fa-book-open text-white text-xs sm:text-sm"></i>
                                                 </div>
-                                                
                                             </div>
                                             <div class="space-y-2">
                                                 ${subject.subject_description ? `
@@ -281,6 +310,17 @@ class TeacherClassesSubjectsPage extends App {
                                                         <span class="line-clamp-2">${subject.subject_description}</span>
                                                     </div>
                                                 ` : ''}
+                                                
+                                                <!-- Add Assignment Button -->
+                                                <div class="pt-3 border-t border-green-200">
+                                                    <ui-button 
+                                                        variant="primary" 
+                                                        size="sm"
+                                                        onclick="this.getRootNode().host.openAssignmentModal('${assignment.class_id}', '${subject.subject_id}')">
+                                                        <i class="fas fa-plus mr-1"></i>
+                                                        Add Assignment
+                                                    </ui-button>
+                                                </div>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -326,6 +366,9 @@ class TeacherClassesSubjectsPage extends App {
             
             <!-- Student Information Modal -->
             <teacher-student-personal-information ${showStudentModal ? 'open' : ''}></teacher-student-personal-information>
+            
+            <!-- Assignment Creation Modal -->
+            <teacher-create-assignment-modal ${showAssignmentModal ? 'open' : ''}></teacher-create-assignment-modal>
         `;
     }
 

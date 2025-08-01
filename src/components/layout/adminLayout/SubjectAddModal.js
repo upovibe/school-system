@@ -2,6 +2,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -57,12 +58,14 @@ class SubjectAddModal extends HTMLElement {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const codeInput = this.querySelector('ui-input[data-field="code"]');
             const descriptionInput = this.querySelector('ui-input[data-field="description"]');
+            const categoryDropdown = this.querySelector('ui-dropdown[name="category"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
             const subjectData = {
                 name: nameInput ? nameInput.value : '',
                 code: codeInput ? codeInput.value : '',
                 description: descriptionInput ? descriptionInput.value : '',
+                category: categoryDropdown ? categoryDropdown.value : 'core',
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
@@ -119,6 +122,7 @@ class SubjectAddModal extends HTMLElement {
                     name: subjectData.name,
                     code: subjectData.code,
                     description: subjectData.description,
+                    category: subjectData.category,
                     status: subjectData.status,
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -173,6 +177,19 @@ class SubjectAddModal extends HTMLElement {
                             placeholder="Enter subject code (e.g., MATH, ENG)"
                             class="w-full">
                         </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <ui-dropdown 
+                            name="category" 
+                            placeholder="Select category"
+                            value="core"
+                            class="w-full">
+                            <ui-option value="core">Core</ui-option>
+                            <ui-option value="elective">Elective</ui-option>
+                            <ui-option value="optional">Optional</ui-option>
+                        </ui-dropdown>
                     </div>
                     
                     <div>

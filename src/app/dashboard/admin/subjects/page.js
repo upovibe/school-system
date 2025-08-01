@@ -192,6 +192,7 @@ class SubjectManagementPage extends App {
             index: index + 1, // Add index number for display
             name: subject.name,
             code: subject.code,
+            category: subject.category || 'core',
             description: subject.description,
             status: subject.status === 'active' ? 'Active' : 'Inactive',
             created: subject.created_at,
@@ -230,6 +231,7 @@ class SubjectManagementPage extends App {
             index: index + 1, // Add index number for display
             name: subject.name,
             code: subject.code,
+            category: subject.category || 'core',
             description: subject.description,
             status: subject.status === 'active' ? 'Active' : 'Inactive',
             created: subject.created_at,
@@ -240,6 +242,7 @@ class SubjectManagementPage extends App {
             { key: 'index', label: 'No.', html: false },
             { key: 'name', label: 'Subject Name' },
             { key: 'code', label: 'Code' },
+            { key: 'category', label: 'Category' },
             { key: 'description', label: 'Description' },
             { key: 'status', label: 'Status' },
             { key: 'updated', label: 'Updated' }

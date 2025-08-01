@@ -20,6 +20,7 @@ import api from '@/services/api.js';
 class TeacherAddDialog extends HTMLElement {
     constructor() {
         super();
+        this.classes = [];
         this.loading = false;
     }
 
@@ -36,6 +37,7 @@ class TeacherAddDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+        this.loadClasses();
     }
 
     setupEventListeners() {
@@ -48,6 +50,23 @@ class TeacherAddDialog extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+    }
+
+    async loadClasses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/classes');
+            
+            if (response.status === 200 && response.data.success) {
+                this.classes = response.data.data; // Classes array is in response.data.data
+                // Re-render to update the dropdown with classes
+                this.render();
+            }
+        } catch (error) {
+            // Silent error handling
+        }
     }
 
 
@@ -87,6 +106,7 @@ class TeacherAddDialog extends HTMLElement {
             const salaryInput = this.querySelector('ui-input[data-field="salary"]');
             const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
+            const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
 
             const teacherData = {
                 employee_id: employeeIdInput ? employeeIdInput.value : '',
@@ -102,7 +122,8 @@ class TeacherAddDialog extends HTMLElement {
                 hire_date: hireDateInput ? hireDateInput.value : '',
                 salary: salaryInput ? parseFloat(salaryInput.value) || 0 : 0,
                 password: passwordInput ? passwordInput.value : '',
-                status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
+                status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active',
+                class_id: classDropdown ? (classDropdown.value ? parseInt(classDropdown.value) : null) : null
             };
 
             // Validate required fields
@@ -207,6 +228,7 @@ class TeacherAddDialog extends HTMLElement {
                     hire_date: teacherData.hire_date,
                     salary: teacherData.salary,
                     status: teacherData.status,
+                    class_id: teacherData.class_id,
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 };
@@ -379,6 +401,19 @@ class TeacherAddDialog extends HTMLElement {
                                 placeholder="Enter password"
                                 class="w-full">
                             </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class Teacher (Optional)</label>
+                            <ui-search-dropdown 
+                                name="class_id" 
+                                placeholder="Select class to assign as class teacher"
+                                class="w-full">
+                                <ui-option value="">No Class Assignment</ui-option>
+                                ${this.classes.map(
+                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name}</ui-option>`
+                                ).join('')}
+                            </ui-search-dropdown>
                         </div>
                         
                         <div>

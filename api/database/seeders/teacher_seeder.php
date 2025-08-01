@@ -36,7 +36,8 @@ class TeacherSeeder
                 'hire_date' => '2020-09-01',
                 'salary' => 8500.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active'
+                'status' => 'active',
+                'class_id' => 1 // Class 1A
             ],
             [
                 'user_id' => null,
@@ -53,7 +54,8 @@ class TeacherSeeder
                 'hire_date' => '2021-01-15',
                 'salary' => 7800.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active'
+                'status' => 'active',
+                'class_id' => 2 // Class 1B
             ],
             [
                 'user_id' => null,
@@ -70,7 +72,8 @@ class TeacherSeeder
                 'hire_date' => '2019-08-20',
                 'salary' => 7200.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active'
+                'status' => 'active',
+                'class_id' => 3 // Class 2A
             ],
             [
                 'user_id' => null,
@@ -87,7 +90,8 @@ class TeacherSeeder
                 'hire_date' => '2022-03-10',
                 'salary' => 7500.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active'
+                'status' => 'active',
+                'class_id' => null // No class assignment
             ],
             [
                 'user_id' => null,
@@ -104,7 +108,8 @@ class TeacherSeeder
                 'hire_date' => '2021-06-01',
                 'salary' => 7000.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active'
+                'status' => 'active',
+                'class_id' => 4 // Class 2B
             ]
         ];
         
@@ -141,9 +146,9 @@ class TeacherSeeder
             INSERT INTO teachers (
                 user_id, employee_id, first_name, last_name, email, phone, address, 
                 date_of_birth, gender, qualification, specialization, hire_date, 
-                salary, password, status, created_at, updated_at
+                salary, password, status, created_at, updated_at, class_id
             ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
         ');
         
         $stmt->execute([
@@ -161,7 +166,8 @@ class TeacherSeeder
             $teacherData['hire_date'],
             $teacherData['salary'],
             $teacherData['password'],
-            $teacherData['status']
+            $teacherData['status'],
+            $teacherData['class_id']
         ]);
         
         echo "✅ Added teacher: {$teacherData['first_name']} {$teacherData['last_name']} ({$teacherData['employee_id']})\n";

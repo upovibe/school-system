@@ -9,6 +9,7 @@ class TeacherUpdateDialog extends HTMLElement {
     constructor() {
         super();
         this.teacherData = null;
+        this.classes = [];
     }
 
     static get observedAttributes() {
@@ -24,11 +25,29 @@ class TeacherUpdateDialog extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+        this.loadClasses();
     }
 
     setupEventListeners() {
         this.addEventListener('confirm', this.updateTeacher.bind(this));
         this.addEventListener('cancel', this.close.bind(this));
+    }
+
+    async loadClasses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/classes');
+            
+            if (response.status === 200 && response.data.success) {
+                this.classes = response.data.data; // Classes array is in response.data.data
+                // Re-render to update the dropdown with classes
+                this.render();
+            }
+        } catch (error) {
+            // Silent error handling
+        }
     }
 
 
@@ -51,9 +70,14 @@ class TeacherUpdateDialog extends HTMLElement {
         // Use a longer timeout to ensure data is loaded
         setTimeout(() => {
             const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+            const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
             
             if (genderDropdown && teacher?.gender) {
                 genderDropdown.value = teacher.gender;
+            }
+            
+            if (classDropdown && teacher?.class_id) {
+                classDropdown.value = teacher.class_id.toString();
             }
         }, 200);
     }
@@ -79,6 +103,7 @@ class TeacherUpdateDialog extends HTMLElement {
             const salaryInput = this.querySelector('ui-input[data-field="salary"]');
             const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
+            const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
 
             const updatedData = {
                 employee_id: employeeIdInput ? employeeIdInput.value : '',
@@ -94,7 +119,8 @@ class TeacherUpdateDialog extends HTMLElement {
                 hire_date: hireDateInput ? hireDateInput.value : '',
                 salary: salaryInput ? parseFloat(salaryInput.value) || 0 : 0,
                 password: passwordInput ? passwordInput.value : '',
-                status: statusSwitch ? (statusSwitch.hasAttribute('checked') ? 'active' : 'inactive') : 'active'
+                status: statusSwitch ? (statusSwitch.hasAttribute('checked') ? 'active' : 'inactive') : 'active',
+                class_id: classDropdown ? (classDropdown.value ? parseInt(classDropdown.value) : null) : null
             };
 
             // Validate required fields
@@ -313,6 +339,24 @@ class TeacherUpdateDialog extends HTMLElement {
                                 placeholder="Leave blank to keep current password"
                                 class="w-full">
                             </ui-input>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class Teacher (Optional)</label>
+                            <ui-search-dropdown 
+                                name="class_id" 
+                                placeholder="Select class to assign as class teacher"
+                                value="${teacher?.class_id || ''}"
+                                class="w-full">
+                                <ui-option value="">No Class Assignment</ui-option>
+                                ${this.classes.map(
+                                    (classItem) => `
+                                        <ui-option value="${classItem.id}" ${teacher && teacher.class_id == classItem.id ? 'selected' : ''}>
+                                            ${classItem.name}
+                                        </ui-option>
+                                    `
+                                ).join('')}
+                            </ui-search-dropdown>
                         </div>
                         
                         <div>

@@ -3,8 +3,8 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Textarea.js';
-import '@/components/ui/Calendar.js';
+import '@/components/ui/Wysiwyg.js';
+import '@/components/ui/Dropdown.js';
 import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
@@ -63,9 +63,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         // Listen for form input changes
         this.addEventListener('input', this.handleInputChange.bind(this));
         this.addEventListener('change', this.handleInputChange.bind(this));
-        
-        // Listen for calendar date selection
-        this.addEventListener('date-select', this.handleDateSelect.bind(this));
     }
 
     open(classId = null, subjectId = null) {
@@ -109,16 +106,21 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         this.validateForm();
     }
 
-    // Handle calendar date selection
-    handleDateSelect(event) {
-        const { date } = event.detail;
-        this.formData.due_date = date.toISOString().split('T')[0];
-        this.validateForm();
-    }
+
 
     // Validate form
     validateForm() {
-        const { title, description, due_date, total_points } = this.formData;
+        // Get current form values
+        const titleInput = this.querySelector('ui-input[name="title"]');
+        const descriptionWysiwyg = this.querySelector('ui-wysiwyg[name="description"]');
+        const dueDateInput = this.querySelector('ui-input[name="due_date"]');
+        const totalPointsInput = this.querySelector('ui-input[name="total_points"]');
+
+        const title = titleInput ? titleInput.value : '';
+        const description = descriptionWysiwyg ? descriptionWysiwyg.value : '';
+        const due_date = dueDateInput ? dueDateInput.value : '';
+        const total_points = totalPointsInput ? totalPointsInput.value : '';
+
         const isValid = title.trim() && description.trim() && due_date && total_points;
         
         const confirmButton = this.shadowRoot?.querySelector('ui-modal')?.shadowRoot?.querySelector('.confirm-btn');
@@ -133,10 +135,42 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             this.set('loading', true);
             this.set('error', null);
 
+            // Get form data using reliable selectors
+            const titleInput = this.querySelector('ui-input[name="title"]');
+            const descriptionWysiwyg = this.querySelector('ui-wysiwyg[name="description"]');
+            const dueDateInput = this.querySelector('ui-input[name="due_date"]');
+            const totalPointsInput = this.querySelector('ui-input[name="total_points"]');
+            const assignmentTypeDropdown = this.querySelector('ui-dropdown[name="assignment_type"]');
+            const statusDropdown = this.querySelector('ui-dropdown[name="status"]');
+            const attachmentFileUpload = this.querySelector('ui-file-upload[name="attachment_file"]');
+
+            const assignmentData = {
+                title: titleInput ? titleInput.value : '',
+                description: descriptionWysiwyg ? descriptionWysiwyg.value : '',
+                due_date: dueDateInput ? dueDateInput.value : '',
+                total_points: totalPointsInput ? totalPointsInput.value : '',
+                assignment_type: assignmentTypeDropdown ? assignmentTypeDropdown.value : 'homework',
+                status: statusDropdown ? statusDropdown.value : 'published'
+            };
+
             // Validate required fields
-            const { title, description, due_date, total_points } = this.formData;
-            if (!title.trim() || !description.trim() || !due_date || !total_points) {
-                this.set('error', 'Please fill in all required fields.');
+            if (!assignmentData.title.trim()) {
+                this.set('error', 'Please fill in the assignment title.');
+                return;
+            }
+
+            if (!assignmentData.description.trim()) {
+                this.set('error', 'Please fill in the assignment description.');
+                return;
+            }
+
+            if (!assignmentData.due_date) {
+                this.set('error', 'Please select a due date.');
+                return;
+            }
+
+            if (!assignmentData.total_points) {
+                this.set('error', 'Please enter total points.');
                 return;
             }
 
@@ -149,18 +183,22 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
             // Prepare form data
             const formData = new FormData();
-            formData.append('title', title.trim());
-            formData.append('description', description.trim());
-            formData.append('due_date', due_date);
-            formData.append('total_points', total_points);
-            formData.append('assignment_type', this.formData.assignment_type);
-            formData.append('status', this.formData.status);
+            formData.append('title', assignmentData.title.trim());
+            formData.append('description', assignmentData.description.trim());
+            formData.append('due_date', assignmentData.due_date);
+            formData.append('total_points', assignmentData.total_points);
+            formData.append('assignment_type', assignmentData.assignment_type);
+            formData.append('status', assignmentData.status);
             formData.append('class_id', this.classId);
             formData.append('subject_id', this.subjectId);
 
             // Add file if uploaded
-            if (this.formData.attachment_file) {
-                formData.append('attachment_file', this.formData.attachment_file);
+            if (attachmentFileUpload && attachmentFileUpload.getFiles().length > 0) {
+                const files = attachmentFileUpload.getFiles();
+                const newFiles = files.filter(file => file instanceof File);
+                newFiles.forEach(file => {
+                    formData.append('attachment_file', file, file.name);
+                });
             }
 
             const response = await api.withToken(token).post('/teachers/assignments', formData, {
@@ -261,13 +299,11 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Description <span class="text-red-500">*</span>
                             </label>
-                            <ui-textarea 
+                            <ui-wysiwyg 
                                 name="description"
-                                value="${description}"
                                 placeholder="Enter detailed assignment description"
-                                rows="4"
-                                required>
-                            </ui-textarea>
+                                class="w-full">
+                            </ui-wysiwyg>
                         </div>
 
                          <!-- Due Date and Total Points -->
@@ -276,10 +312,13 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                  <label class="block text-sm font-medium text-gray-700 mb-2">
                                      Due Date <span class="text-red-500">*</span>
                                  </label>
-                                 <ui-calendar 
-                                     date="${due_date || ''}"
-                                     min-date="${new Date().toISOString().split('T')[0]}">
-                                 </ui-calendar>
+                                 <ui-input 
+                                     type="date"
+                                     name="due_date"
+                                     value="${due_date}"
+                                     min="${new Date().toISOString().split('T')[0]}"
+                                     required>
+                                 </ui-input>
                              </div>
                              
                              <div>
@@ -299,33 +338,29 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
                          <!-- Assignment Type and Status -->
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     Assignment Type
-                                 </label>
-                                 <select 
-                                     name="assignment_type"
-                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                     <option value="homework" ${assignment_type === 'homework' ? 'selected' : ''}>Homework</option>
-                                     <option value="quiz" ${assignment_type === 'quiz' ? 'selected' : ''}>Quiz</option>
-                                     <option value="project" ${assignment_type === 'project' ? 'selected' : ''}>Project</option>
-                                     <option value="exam" ${assignment_type === 'exam' ? 'selected' : ''}>Exam</option>
-                                     <option value="other" ${assignment_type === 'other' ? 'selected' : ''}>Other</option>
-                                 </select>
-                             </div>
-                             
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     Status
-                                 </label>
-                                 <select 
-                                     name="status"
-                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                     <option value="draft" ${status === 'draft' ? 'selected' : ''}>Draft</option>
-                                     <option value="published" ${status === 'published' ? 'selected' : ''}>Published</option>
-                                 </select>
-                             </div>
-                         </div>
+                              <div>
+                                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                                      Assignment Type
+                                  </label>
+                                  <ui-dropdown name="assignment_type" value="${assignment_type}">
+                                      <ui-option value="homework">Homework</ui-option>
+                                      <ui-option value="quiz">Quiz</ui-option>
+                                      <ui-option value="project">Project</ui-option>
+                                      <ui-option value="exam">Exam</ui-option>
+                                      <ui-option value="other">Other</ui-option>
+                                  </ui-dropdown>
+                              </div>
+                              
+                              <div>
+                                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                                      Status
+                                  </label>
+                                  <ui-dropdown name="status" value="${status}">
+                                      <ui-option value="draft">Draft</ui-option>
+                                      <ui-option value="published">Published</ui-option>
+                                  </ui-dropdown>
+                              </div>
+                          </div>
 
                         <!-- File Attachment -->
                         <div>
@@ -338,32 +373,8 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                                 max-size="5MB"
                                 placeholder="Upload assignment file">
                             </ui-file-upload>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Supported formats: PDF, DOC, DOCX, TXT, Images (max 5MB)
-                            </p>
                         </div>
                     </form>
-                </div>
-
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button 
-                        variant="secondary" 
-                        size="md"
-                        ${loading ? 'disabled' : ''}>
-                        Cancel
-                    </ui-button>
-                    <ui-button 
-                        variant="primary" 
-                        size="md"
-                        ${loading ? 'disabled' : ''}>
-                        ${loading ? `
-                            <i class="fas fa-spinner fa-spin mr-2"></i>
-                            Creating...
-                        ` : `
-                            <i class="fas fa-plus mr-2"></i>
-                            Create Assignment
-                        `}
-                    </ui-button>
                 </div>
             </ui-modal>
         `;

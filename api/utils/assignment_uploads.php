@@ -1,14 +1,10 @@
 <?php
-/**
- * Assignment Upload Configuration
- * Handles file uploads for assignments and student submissions
- */
+// api/utils/assignment_uploads.php - Utility functions for assignment file uploads
 
-// Import the upload core
 require_once __DIR__ . '/../core/UploadCore.php';
 
 /**
- * Upload assignment attachment (teacher uploads)
+ * Upload assignment attachment (for teachers)
  */
 function uploadAssignmentAttachment($file) {
     $config = [
@@ -27,9 +23,10 @@ function uploadAssignmentAttachment($file) {
             'image/png',
             'image/gif'
         ],
-        'create_thumbnails' => false
+        'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif']
     ];
-    return uploadFile($file, $config);
+    
+    return UploadCore::uploadFile($file, $config);
 }
 
 /**
@@ -52,195 +49,57 @@ function uploadStudentSubmission($file) {
             'image/png',
             'image/gif',
             'application/zip',
-            'application/x-rar-compressed'
+            'application/x-rar-compressed',
+            'application/x-7z-compressed'
         ],
-        'create_thumbnails' => false
+        'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar', '7z']
     ];
-    return uploadFile($file, $config);
-}
-
-/**
- * Upload multiple assignment attachments
- */
-function uploadAssignmentAttachments($files) {
-    $uploadedFiles = [];
-
-    // Handle empty or invalid files array
-    if (empty($files) || !is_array($files)) {
-        return $uploadedFiles;
-    }
-
-    // Check if this is a single file upload
-    if (!isset($files['name']) || !is_array($files['name'])) {
-        $result = uploadAssignmentAttachment($files);
-        if ($result['success']) {
-            $uploadedFiles[] = $result['filepath'];
-        }
-    } else {
-        // This is a standard multiple file upload
-        $fileCount = count($files['name']);
-        
-        // Validate that all required arrays have the same length
-        $requiredKeys = ['name', 'type', 'tmp_name', 'error', 'size'];
-        foreach ($requiredKeys as $key) {
-            if (!isset($files[$key]) || !is_array($files[$key]) || count($files[$key]) !== $fileCount) {
-                return $uploadedFiles;
-            }
-        }
-        
-        foreach ($files['name'] as $key => $name) {
-            
-            // Skip empty file inputs
-            if ($files['error'][$key] === UPLOAD_ERR_NO_FILE) {
-                continue;
-            }
-            
-            // Skip files with upload errors
-            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            
-            $file = [
-                'name' => $name,
-                'type' => $files['type'][$key],
-                'tmp_name' => $files['tmp_name'][$key],
-                'error' => $files['error'][$key],
-                'size' => $files['size'][$key]
-            ];
-            $result = uploadAssignmentAttachment($file);
-            if ($result['success']) {
-                $uploadedFiles[] = $result['filepath'];
-            }
-        }
-    }
     
-    return $uploadedFiles;
+    return UploadCore::uploadFile($file, $config);
 }
 
 /**
- * Upload multiple student submission files
+ * Delete assignment files
  */
-function uploadStudentSubmissions($files) {
-    $uploadedFiles = [];
-
-    // Handle empty or invalid files array
-    if (empty($files) || !is_array($files)) {
-        return $uploadedFiles;
-    }
-
-    // Check if this is a single file upload
-    if (!isset($files['name']) || !is_array($files['name'])) {
-        $result = uploadStudentSubmission($files);
-        if ($result['success']) {
-            $uploadedFiles[] = $result['filepath'];
-        }
-    } else {
-        // This is a standard multiple file upload
-        $fileCount = count($files['name']);
-        
-        // Validate that all required arrays have the same length
-        $requiredKeys = ['name', 'type', 'tmp_name', 'error', 'size'];
-        foreach ($requiredKeys as $key) {
-            if (!isset($files[$key]) || !is_array($files[$key]) || count($files[$key]) !== $fileCount) {
-                return $uploadedFiles;
-            }
-        }
-        
-        foreach ($files['name'] as $key => $name) {
-            
-            // Skip empty file inputs
-            if ($files['error'][$key] === UPLOAD_ERR_NO_FILE) {
-                continue;
-            }
-            
-            // Skip files with upload errors
-            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            
-            $file = [
-                'name' => $name,
-                'type' => $files['type'][$key],
-                'tmp_name' => $files['tmp_name'][$key],
-                'error' => $files['error'][$key],
-                'size' => $files['size'][$key]
-            ];
-            $result = uploadStudentSubmission($file);
-            if ($result['success']) {
-                $uploadedFiles[] = $result['filepath'];
-            }
-        }
-    }
-    
-    return $uploadedFiles;
-}
-
-/**
- * Delete assignment file(s)
- */
-function deleteAssignmentFiles($filePaths) {
-    if (empty($filePaths)) {
+function deleteAssignmentFiles($filepath) {
+    if (file_exists($filepath)) {
+        unlink($filepath);
         return true;
     }
-
-    $pathsToDelete = [];
-    if (is_string($filePaths)) {
-        $decoded = json_decode($filePaths, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $pathsToDelete = $decoded;
-        } else {
-            $pathsToDelete = [$filePaths];
-        }
-    } elseif (is_array($filePaths)) {
-        $pathsToDelete = $filePaths;
-    } else {
-        return false;
-    }
-
-    $success = true;
-    foreach ($pathsToDelete as $path) {
-        if (!empty($path)) {
-            $result = deleteFile($path);
-            if (!$result) {
-                $success = false;
-            }
-        }
-    }
-
-    return $success;
+    return false;
 }
 
 /**
- * Get assignment file info
+ * Get file size in human readable format
  */
-function getAssignmentFileInfo($filePaths) {
-    if (empty($filePaths)) {
-        return [];
-    }
-
-    $pathsToCheck = [];
-    if (is_string($filePaths)) {
-        $decoded = json_decode($filePaths, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $pathsToCheck = $decoded;
-        } else {
-            $pathsToCheck = [$filePaths];
-        }
-    } elseif (is_array($filePaths)) {
-        $pathsToCheck = $filePaths;
+function formatFileSize($bytes) {
+    if ($bytes >= 1073741824) {
+        return number_format($bytes / 1073741824, 2) . ' GB';
+    } elseif ($bytes >= 1048576) {
+        return number_format($bytes / 1048576, 2) . ' MB';
+    } elseif ($bytes >= 1024) {
+        return number_format($bytes / 1024, 2) . ' KB';
+    } elseif ($bytes > 1) {
+        return $bytes . ' bytes';
+    } elseif ($bytes == 1) {
+        return $bytes . ' byte';
     } else {
-        return [];
+        return '0 bytes';
     }
+}
 
-    $fileInfo = [];
-    foreach ($pathsToCheck as $path) {
-        if (!empty($path)) {
-            $info = getFileInfo($path);
-            if ($info) {
-                $fileInfo[] = $info;
-            }
-        }
-    }
+/**
+ * Get file extension from filename
+ */
+function getFileExtension($filename) {
+    return strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+}
 
-    return $fileInfo;
-} 
+/**
+ * Check if file type is allowed
+ */
+function isAllowedFileType($filename, $allowedExtensions) {
+    $extension = getFileExtension($filename);
+    return in_array($extension, $allowedExtensions);
+}
+?> 

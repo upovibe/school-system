@@ -2,7 +2,7 @@
 /**
  * Migration: Create student_assignments table
  * 
- * This table stores student submissions for class assignments
+ * This table stores student submissions for class homework assignments
  */
 
 class CreateStudentAssignmentsTable {
@@ -22,19 +22,21 @@ class CreateStudentAssignmentsTable {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
             FOREIGN KEY (assignment_id) REFERENCES class_assignments(id) ON DELETE CASCADE,
+            UNIQUE (student_id, assignment_id), -- A student can only submit to an assignment once
             INDEX idx_student_id (student_id),
             INDEX idx_assignment_id (assignment_id),
             INDEX idx_status (status),
             INDEX idx_submitted_at (submitted_at),
-            UNIQUE KEY unique_student_assignment (student_id, assignment_id)
+            INDEX idx_grade (grade),
+            INDEX idx_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
-        
         $pdo->exec($sql);
     }
-    
+
     public function down($pdo) {
         $sql = "DROP TABLE IF EXISTS student_assignments;";
         $pdo->exec($sql);
     }
-} 
+}
+?> 

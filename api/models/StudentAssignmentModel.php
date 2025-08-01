@@ -3,10 +3,10 @@
 
 require_once __DIR__ . '/../core/BaseModel.php';
 
-class StudentAssignmentModel extends BaseModel {
+class StudentAssignmentModel extends BaseModel
+{
     protected static $table = 'student_assignments';
-    
-    // Fields that can be mass assigned
+
     protected static $fillable = [
         'student_id',
         'assignment_id',
@@ -17,8 +17,7 @@ class StudentAssignmentModel extends BaseModel {
         'feedback',
         'status'
     ];
-    
-    // Fields that should be cast to specific types
+
     protected static $casts = [
         'student_id' => 'integer',
         'assignment_id' => 'integer',
@@ -27,194 +26,180 @@ class StudentAssignmentModel extends BaseModel {
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-    
-    // Whether the model uses timestamps
-    protected static $timestamps = true;
 
-    public function __construct($pdo) {
-        parent::__construct($pdo);
-    }
-    
     /**
-     * Get student submission for a specific assignment
+     * Submit or update assignment submission
      */
-    public function getStudentSubmission($studentId, $assignmentId) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT sa.*, s.first_name, s.last_name, s.student_id as student_student_id
-                FROM {$this->getTableName()} sa
-                LEFT JOIN students s ON sa.student_id = s.id
-                WHERE sa.student_id = ? AND sa.assignment_id = ?
-            ");
-            $stmt->execute([$studentId, $assignmentId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($result) {
-                $result = $this->applyCasts($result);
-            }
-            
-            return $result;
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching student submission: ' . $e->getMessage());
+    public function submitAssignment($studentId, $assignmentId, $data)
+    {
+        // Check if submission already exists
+        $existingSubmission = $this->getStudentSubmission($studentId, $assignmentId);
+
+        $submissionData = [
+            'student_id' => $studentId,
+            'assignment_id' => $assignmentId,
+            'submitted_at' => date('Y-m-d H:i:s'),
+            'status' => 'submitted'
+        ];
+
+        // Add submission text if provided
+        if (!empty($data['submission_text'])) {
+            $submissionData['submission_text'] = $data['submission_text'];
+        }
+
+        // Add submission file if provided
+        if (!empty($data['submission_file'])) {
+            $submissionData['submission_file'] = $data['submission_file'];
+        }
+
+        if ($existingSubmission) {
+            // Update existing submission
+            return $this->update($existingSubmission['id'], $submissionData);
+        } else {
+            // Create new submission
+            return $this->create($submissionData);
         }
     }
-    
+
     /**
-     * Submit or update student assignment
+     * Get student's submission for a specific assignment
      */
-    public function submitAssignment($studentId, $assignmentId, $data) {
-        try {
-            // Check if submission already exists
-            $existing = $this->getStudentSubmission($studentId, $assignmentId);
-            
-            if ($existing) {
-                // Update existing submission
-                $data['submitted_at'] = date('Y-m-d H:i:s');
-                $data['status'] = 'submitted';
-                
-                return $this->update($existing['id'], $data);
-            } else {
-                // Create new submission
-                $data['student_id'] = $studentId;
-                $data['assignment_id'] = $assignmentId;
-                $data['submitted_at'] = date('Y-m-d H:i:s');
-                $data['status'] = 'submitted';
-                
-                return $this->create($data);
-            }
-        } catch (PDOException $e) {
-            throw new Exception('Error submitting assignment: ' . $e->getMessage());
-        }
+    public function getStudentSubmission($studentId, $assignmentId)
+    {
+        $sql = "
+            SELECT 
+                sa.*,
+                ca.title as assignment_title,
+                ca.description as assignment_description,
+                ca.due_date as assignment_due_date,
+                ca.total_points as assignment_total_points
+            FROM student_assignments sa
+            LEFT JOIN class_assignments ca ON sa.assignment_id = ca.id
+            WHERE sa.student_id = ? AND sa.assignment_id = ?
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId, $assignmentId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
+
     /**
-     * Grade student submission
+     * Get all submissions for an assignment (for teacher grading)
      */
-    public function gradeSubmission($studentId, $assignmentId, $grade, $feedback = null) {
-        try {
-            $submission = $this->getStudentSubmission($studentId, $assignmentId);
-            
-            if (!$submission) {
-                throw new Exception('Submission not found');
-            }
-            
-            $data = [
-                'grade' => $grade,
-                'feedback' => $feedback,
-                'status' => 'graded'
-            ];
-            
-            return $this->update($submission['id'], $data);
-        } catch (PDOException $e) {
-            throw new Exception('Error grading submission: ' . $e->getMessage());
-        }
+    public function getAssignmentSubmissions($assignmentId)
+    {
+        $sql = "
+            SELECT 
+                sa.*,
+                s.first_name as student_first_name,
+                s.last_name as student_last_name,
+                s.student_id as student_student_id,
+                s.email as student_email
+            FROM student_assignments sa
+            LEFT JOIN students s ON sa.student_id = s.id
+            WHERE sa.assignment_id = ?
+            ORDER BY sa.submitted_at DESC, s.first_name ASC, s.last_name ASC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$assignmentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     /**
-     * Get all submissions for an assignment
+     * Grade a student submission
      */
-    public function getAssignmentSubmissions($assignmentId) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT sa.*, s.first_name, s.last_name, s.student_id as student_student_id, s.email
-                FROM {$this->getTableName()} sa
-                LEFT JOIN students s ON sa.student_id = s.id
-                WHERE sa.assignment_id = ?
-                ORDER BY sa.submitted_at DESC, s.first_name ASC, s.last_name ASC
-            ");
-            $stmt->execute([$assignmentId]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Apply casts to each result
-            foreach ($results as &$result) {
-                $result = $this->applyCasts($result);
-            }
-            
-            return $results;
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching assignment submissions: ' . $e->getMessage());
+    public function gradeSubmission($studentId, $assignmentId, $grade, $feedback = null)
+    {
+        $submission = $this->getStudentSubmission($studentId, $assignmentId);
+
+        if (!$submission) {
+            return false;
         }
+
+        $updateData = [
+            'grade' => $grade,
+            'feedback' => $feedback,
+            'status' => 'graded'
+        ];
+
+        return $this->update($submission['id'], $updateData);
     }
-    
+
+    /**
+     * Get assignment statistics
+     */
+    public function getAssignmentStatistics($assignmentId)
+    {
+        $sql = "
+            SELECT 
+                COUNT(*) as total_students,
+                SUM(CASE WHEN sa.status = 'submitted' THEN 1 ELSE 0 END) as submitted_count,
+                SUM(CASE WHEN sa.status = 'graded' THEN 1 ELSE 0 END) as graded_count,
+                SUM(CASE WHEN sa.status = 'late' THEN 1 ELSE 0 END) as late_count,
+                AVG(sa.grade) as average_grade,
+                MAX(sa.grade) as highest_grade,
+                MIN(sa.grade) as lowest_grade
+            FROM class_assignments ca
+            JOIN students s ON ca.class_id = s.class_id
+            LEFT JOIN student_assignments sa ON ca.id = sa.assignment_id AND sa.student_id = s.id
+            WHERE ca.id = ?
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$assignmentId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     /**
      * Get student's assignment history
      */
-    public function getStudentAssignmentHistory($studentId) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT 
-                    sa.*,
-                    ca.title as assignment_title,
-                    ca.description as assignment_description,
-                    ca.due_date as assignment_due_date,
-                    ca.total_points as assignment_total_points,
-                    ca.assignment_type,
-                    ca.status as assignment_status,
-                    t.first_name as teacher_first_name,
-                    t.last_name as teacher_last_name,
-                    c.name as class_name,
-                    c.section as class_section,
-                    s.name as subject_name,
-                    s.code as subject_code
-                FROM {$this->getTableName()} sa
-                LEFT JOIN class_assignments ca ON sa.assignment_id = ca.id
-                LEFT JOIN teachers t ON ca.teacher_id = t.id
-                LEFT JOIN classes c ON ca.class_id = c.id
-                LEFT JOIN subjects s ON ca.subject_id = s.id
-                WHERE sa.student_id = ?
-                ORDER BY sa.submitted_at DESC, ca.due_date DESC
-            ");
-            $stmt->execute([$studentId]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Apply casts to each result
-            foreach ($results as &$result) {
-                $result = $this->applyCasts($result);
-            }
-            
-            return $results;
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching student assignment history: ' . $e->getMessage());
-        }
+    public function getStudentAssignmentHistory($studentId)
+    {
+        $sql = "
+            SELECT 
+                sa.*,
+                ca.title as assignment_title,
+                ca.description as assignment_description,
+                ca.due_date as assignment_due_date,
+                ca.total_points as assignment_total_points,
+                ca.assignment_type,
+                c.name as class_name,
+                s.name as subject_name,
+                t.first_name as teacher_first_name,
+                t.last_name as teacher_last_name
+            FROM student_assignments sa
+            LEFT JOIN class_assignments ca ON sa.assignment_id = ca.id
+            LEFT JOIN classes c ON ca.class_id = c.id
+            LEFT JOIN subjects s ON ca.subject_id = s.id
+            LEFT JOIN teachers t ON ca.teacher_id = t.id
+            WHERE sa.student_id = ?
+            ORDER BY sa.submitted_at DESC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     /**
-     * Check if student has submitted assignment
+     * Check if submission is late
      */
-    public function hasStudentSubmitted($studentId, $assignmentId) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT id FROM {$this->getTableName()} 
-                WHERE student_id = ? AND assignment_id = ? AND status IN ('submitted', 'graded')
-            ");
-            $stmt->execute([$studentId, $assignmentId]);
-            return $stmt->fetch() !== false;
-        } catch (PDOException $e) {
-            throw new Exception('Error checking submission status: ' . $e->getMessage());
+    public function isSubmissionLate($assignmentId, $submittedAt)
+    {
+        $sql = "SELECT due_date FROM class_assignments WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$assignmentId]);
+        $assignment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$assignment || !$assignment['due_date']) {
+            return false;
         }
+
+        $dueDate = new DateTime($assignment['due_date']);
+        $submittedDate = new DateTime($submittedAt);
+
+        return $submittedDate > $dueDate;
     }
-    
-    /**
-     * Get submission statistics for an assignment
-     */
-    public function getAssignmentStatistics($assignmentId) {
-        try {
-            $stmt = $this->pdo->prepare("
-                SELECT 
-                    COUNT(*) as total_students,
-                    COUNT(CASE WHEN status = 'submitted' THEN 1 END) as submitted_count,
-                    COUNT(CASE WHEN status = 'graded' THEN 1 END) as graded_count,
-                    COUNT(CASE WHEN status = 'not_submitted' THEN 1 END) as not_submitted_count,
-                    AVG(CASE WHEN status = 'graded' THEN grade END) as average_grade,
-                    MAX(CASE WHEN status = 'graded' THEN grade END) as highest_grade,
-                    MIN(CASE WHEN status = 'graded' THEN grade END) as lowest_grade
-                FROM {$this->getTableName()} 
-                WHERE assignment_id = ?
-            ");
-            $stmt->execute([$assignmentId]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception('Error fetching assignment statistics: ' . $e->getMessage());
-        }
-    }
-} 
+}
+?>

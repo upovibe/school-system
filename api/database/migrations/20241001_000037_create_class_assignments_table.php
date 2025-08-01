@@ -2,7 +2,7 @@
 /**
  * Migration: Create class_assignments table
  * 
- * This table stores assignments created by teachers for their classes
+ * This table stores homework assignments created by teachers for their classes
  */
 
 class CreateClassAssignmentsTable {
@@ -29,15 +29,17 @@ class CreateClassAssignmentsTable {
             INDEX idx_class_id (class_id),
             INDEX idx_subject_id (subject_id),
             INDEX idx_status (status),
-            INDEX idx_due_date (due_date)
+            INDEX idx_due_date (due_date),
+            INDEX idx_assignment_type (assignment_type),
+            INDEX idx_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
-        
         $pdo->exec($sql);
     }
-    
+
     public function down($pdo) {
         $sql = "DROP TABLE IF EXISTS class_assignments;";
         $pdo->exec($sql);
     }
-} 
+}
+?> 

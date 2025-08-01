@@ -170,7 +170,7 @@ class TeacherClassesSubjectsPage extends App {
         return `
             <div class="space-y-8">
                 <!-- Enhanced Header with Teacher Info -->
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                             <h1 class="text-2xl sm:text-3xl font-bold">My Classes & Subjects</h1>
                             <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacher_name}</p>
@@ -220,7 +220,7 @@ class TeacherClassesSubjectsPage extends App {
                 ${assignments.map((assignment, index) => `
                     <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
                         <!-- Class Header with Enhanced Design -->
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
                                 <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
                                     <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-chalkboard text-white text-lg sm:text-xl"></i>
@@ -243,7 +243,7 @@ class TeacherClassesSubjectsPage extends App {
                                 </div>
                         </div>
 
-                        <div class="p-4 sm:p-6 lg:p-8">
+                        <div class="p-5">
                             <!-- Enhanced Subjects Section -->
                             <div class="mb-6 sm:mb-8">
                                 <div class="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">

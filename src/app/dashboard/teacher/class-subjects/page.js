@@ -5,6 +5,7 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
+import '@/components/ui/Accordion.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 
 /**
@@ -286,44 +287,41 @@ class TeacherClassesSubjectsPage extends App {
                                 </div>
                             </div>
 
-                            <!-- Enhanced Students Section -->
-                            <div>
-                                <div class="flex items-center mb-4 gap-2">
-                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <i class="fas fa-user-graduate text-white text-xs sm:text-sm"></i>
-                                        </div>
-                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Class Students</h3>
-                                    </div>
-                                
-                                ${assignment.students.length > 0 ? `
-                                    <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
-                                        <div class="overflow-x-auto -mx-4 sm:mx-0">
-                                            <ui-table 
-                                                data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
-                                                columns='${JSON.stringify(this.getStudentTableColumns())}'
-                                                title="Students in ${assignment.class_name}-${assignment.class_section}"
-                                                searchable
-                                                search-placeholder="Search students..."
-                                                striped
-                                                print
-                                                sortable
-                                                clickable
-                                                refresh
-                                                row-clickable="true"
-                                                >
-                                            </ui-table>
-                                        </div>
-                                    </div>
-                                ` : `
-                                    <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
-                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                            <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
-                                        </div>
-                                        <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
-                                        <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
-                                    </div>
-                                `}
-                            </div>
+                                                         <!-- Enhanced Students Section with Accordion -->
+                             <div>
+                                 <ui-accordion>
+                                     <ui-accordion-item title="Class Students (${assignment.students.length} Student${assignment.students.length > 1 ? 's' : ''})" open>
+                                         ${assignment.students.length > 0 ? `
+                                             <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
+                                                 <div class="overflow-x-auto -mx-4 sm:mx-0">
+                                                     <ui-table 
+                                                         data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
+                                                         columns='${JSON.stringify(this.getStudentTableColumns())}'
+                                                         title="Students in ${assignment.class_name}-${assignment.class_section}"
+                                                         searchable
+                                                         search-placeholder="Search students..."
+                                                         striped
+                                                         print
+                                                         sortable
+                                                         clickable
+                                                         refresh
+                                                         row-clickable="true"
+                                                         >
+                                                     </ui-table>
+                                                 </div>
+                                             </div>
+                                         ` : `
+                                             <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
+                                                 <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                                     <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
+                                                 </div>
+                                                 <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
+                                                 <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
+                                             </div>
+                                         `}
+                                     </ui-accordion-item>
+                                 </ui-accordion>
+                             </div>
                         </div>
                     </div>
                 `).join('')}

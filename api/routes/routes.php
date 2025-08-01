@@ -158,6 +158,7 @@ Router::get('/teachers/by-specialization', 'TeacherController@getBySpecializatio
 Router::get('/teachers/statistics', 'TeacherController@getStatistics');
 Router::get('/teachers/class-teachers', 'TeacherController@getClassTeachers');
 Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasses');
+Router::get('/teachers/my-class', 'TeacherController@getMyClass');
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');

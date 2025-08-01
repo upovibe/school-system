@@ -645,6 +645,68 @@ class TeacherController {
     }
 
     /**
+     * Get current teacher's assigned class (teacher only)
+     */
+    public function getMyClass() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if teacher has an assigned class
+            if (!$teacher['class_id']) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => null,
+                    'message' => 'No class assigned to this teacher'
+                ]);
+                return;
+            }
+
+            // Get class details
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($teacher['class_id']);
+            
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assigned class not found'
+                ]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'teacher_id' => $teacher['id'],
+                    'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                    'class_id' => $class['id'],
+                    'class_name' => $class['name'],
+                    'class_section' => $class['section'],
+                    'academic_year' => $class['academic_year'],
+                    'capacity' => $class['capacity'],
+                    'status' => $class['status']
+                ],
+                'message' => 'Teacher class retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher class: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Log user action
      */
     private function logAction($action, $description = null, $metadata = null) {

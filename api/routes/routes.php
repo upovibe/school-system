@@ -160,6 +160,13 @@ Router::get('/teachers/class-teachers', 'TeacherController@getClassTeachers');
 Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasses');
 Router::get('/teachers/my-class', 'TeacherController@getMyClass');
 Router::get('/teachers/my-assignments', 'TeacherController@getMyAssignments');
+Router::get('/teachers/my-class-assignments', 'TeacherController@getMyClassAssignments');
+Router::post('/teachers/assignments', 'TeacherController@createAssignment');
+Router::get('/teachers/assignments/{id}', 'TeacherController@getAssignment');
+Router::put('/teachers/assignments/{id}', 'TeacherController@updateAssignment');
+Router::delete('/teachers/assignments/{id}', 'TeacherController@deleteAssignment');
+Router::get('/teachers/assignments/{id}/submissions', 'TeacherController@getAssignmentSubmissions');
+Router::post('/teachers/assignments/{assignmentId}/grade/{studentId}', 'TeacherController@gradeSubmission');
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');
@@ -206,14 +213,7 @@ Router::delete('/assignments/{id}', 'AssignmentController@destroy');
 Router::get('/assignments/{id}/submissions', 'AssignmentController@getSubmissions');
 Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentController@gradeSubmission');
 
-// Teacher Assignment Management Routes (teacher only)
-Router::get('/teachers/my-class-assignments', 'TeacherController@getMyClassAssignments');
-Router::post('/teachers/assignments', 'TeacherController@createAssignment');
-Router::get('/teachers/assignments/{id}', 'TeacherController@getAssignment');
-Router::put('/teachers/assignments/{id}', 'TeacherController@updateAssignment');
-Router::delete('/teachers/assignments/{id}', 'TeacherController@deleteAssignment');
-Router::get('/teachers/assignments/{id}/submissions', 'TeacherController@getAssignmentSubmissions');
-Router::post('/teachers/assignments/{assignmentId}/grade/{studentId}', 'TeacherController@gradeSubmission');
+// Teacher Assignment Management Routes (teacher only) - Moved to teacher management section above
 
 // DB setup endpoints
 Router::get('/db/test', 'DbController@test');

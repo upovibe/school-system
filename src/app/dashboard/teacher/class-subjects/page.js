@@ -169,19 +169,19 @@ class TeacherClassesSubjectsPage extends App {
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div class="bg-blue-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-blue-600 mb-1">Total Classes</h3>
+                            <h3 class="text-sm font-medium text-blue-600 mb-1">Total Class${summary.total_classes > 1 ? 'es' : ''}</h3>
                             <p class="text-lg font-semibold text-blue-900">${summary.total_classes}</p>
                         </div>
                         
                         <div class="bg-green-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-green-600 mb-1">Total Subjects</h3>
+                            <h3 class="text-sm font-medium text-green-600 mb-1">Total Subject${summary.total_subjects > 1 ? 's' : ''}</h3>
                             <p class="text-lg font-semibold text-green-900">${summary.total_subjects}</p>
                         </div>
                         
                         <div class="bg-purple-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-purple-600 mb-1">Total Assignments</h3>
+                            <h3 class="text-sm font-medium text-purple-600 mb-1">Total Assignment${summary.total_assignments > 1 ? 's' : ''}</h3>
                             <p class="text-lg font-semibold text-purple-900">${summary.total_assignments}</p>
-                        </div>
+                         </div>
                     </div>
                 </div>
 

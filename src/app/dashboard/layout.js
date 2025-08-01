@@ -316,8 +316,8 @@ class DashboardLayout extends App {
                 {
                     group: 'Teaching',
                     items: [
-                        { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/teacher/class' },
+                        { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/grades' },
                         { label: 'Attendance', icon: 'fas fa-calendar-check', href: '/dashboard/teacher/attendance' },
                     ]

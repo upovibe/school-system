@@ -26,7 +26,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     constructor() {
         super();
         this.loading = false;
-        this.error = null;
         this.classId = null;
         this.subjectId = null;
     }
@@ -67,7 +66,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     // Reset form to initial state
     resetForm() {
         this.loading = false;
-        this.error = null;
         this.render();
     }
 
@@ -76,6 +74,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
     // Get form data directly from DOM elements
     getFormData() {
+        // Wait a bit for components to be fully initialized
         const titleInput = this.querySelector('ui-input[data-field="title"]');
         const descriptionWysiwyg = this.querySelector('ui-wysiwyg[data-field="description"]');
         const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
@@ -95,13 +94,14 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             attachmentFileUpload: !!attachmentFileUpload
         });
 
+        // Get values with proper fallbacks
         const formData = {
-            title: titleInput ? titleInput.value : '',
-            description: descriptionWysiwyg ? descriptionWysiwyg.value : '',
-            due_date: dueDateInput ? dueDateInput.value : '',
-            total_points: totalPointsInput ? totalPointsInput.value : '',
-            assignment_type: assignmentTypeDropdown ? assignmentTypeDropdown.value : 'homework',
-            status: statusDropdown ? statusDropdown.value : 'published',
+            title: titleInput ? (titleInput.value || titleInput.getAttribute('value') || '') : '',
+            description: descriptionWysiwyg ? (descriptionWysiwyg.value || descriptionWysiwyg.getAttribute('value') || '') : '',
+            due_date: dueDateInput ? (dueDateInput.value || dueDateInput.getAttribute('value') || '') : '',
+            total_points: totalPointsInput ? (totalPointsInput.value || totalPointsInput.getAttribute('value') || '') : '',
+            assignment_type: assignmentTypeDropdown ? (assignmentTypeDropdown.value || assignmentTypeDropdown.getAttribute('value') || 'homework') : 'homework',
+            status: statusDropdown ? (statusDropdown.value || statusDropdown.getAttribute('value') || 'published') : 'published',
             attachmentFileUpload: attachmentFileUpload
         };
 
@@ -129,7 +129,14 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     async createAssignment() {
         try {
             this.set('loading', true);
-            this.set('error', null);
+
+            // Show loading toast
+            Toast.show({ 
+                title: 'Creating Assignment', 
+                message: 'Please wait...', 
+                variant: 'info', 
+                duration: 2000 
+            });
 
             // Get form data using the helper method
             const assignmentData = this.getFormData();
@@ -140,29 +147,54 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
             // Validate required fields
             if (!title.trim()) {
-                this.set('error', 'Please fill in the assignment title.');
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in the assignment title',
+                    variant: 'error',
+                    duration: 3000
+                });
                 return;
             }
 
             if (!description.trim()) {
-                this.set('error', 'Please fill in the assignment description.');
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in the assignment description',
+                    variant: 'error',
+                    duration: 3000
+                });
                 return;
             }
 
             if (!due_date) {
-                this.set('error', 'Please select a due date.');
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please select a due date',
+                    variant: 'error',
+                    duration: 3000
+                });
                 return;
             }
 
             if (!total_points) {
-                this.set('error', 'Please enter total points.');
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter total points',
+                    variant: 'error',
+                    duration: 3000
+                });
                 return;
             }
 
             // Get token from localStorage
             const token = localStorage.getItem('token');
             if (!token) {
-                this.set('error', 'Authentication required. Please log in again.');
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to create assignments',
+                    variant: 'error',
+                    duration: 3000
+                });
                 return;
             }
 
@@ -194,7 +226,12 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
             if (response.data && response.data.success) {
                 // Show success message
-                this.showToast('Assignment created successfully!', 'success');
+                Toast.show({ 
+                    title: 'Assignment Created!', 
+                    message: `"${title}" has been successfully added to the assignments.`, 
+                    variant: 'success', 
+                    duration: 5000 
+                });
                 
                 // Close modal
                 this.close();
@@ -209,23 +246,26 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         } catch (error) {
             console.error('Error creating assignment:', error);
             if (error.response && error.response.status === 401) {
-                this.set('error', 'Authentication failed. Please log in again.');
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Authentication failed. Please log in again.',
+                    variant: 'error',
+                    duration: 3000
+                });
             } else {
-                this.set('error', error.response?.data?.message || 'Failed to create assignment. Please try again.');
+                Toast.show({
+                    title: 'Error',
+                    message: error.response?.data?.message || 'Failed to create assignment. Please try again.',
+                    variant: 'error',
+                    duration: 3000
+                });
             }
         } finally {
             this.set('loading', false);
         }
     }
 
-    // Show toast message
-    showToast(message, type = 'info') {
-        const toast = document.createElement('ui-toast');
-        toast.setAttribute('message', message);
-        toast.setAttribute('type', type);
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+
 
     // Set loading state
     set(property, value) {
@@ -234,7 +274,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     }
 
     render() {
-        const { loading, error } = this;
+        const { loading } = this;
 
         this.innerHTML = `
             <ui-modal 
@@ -242,28 +282,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                 position="right" 
                 size="lg"
                 close-button="true">
-                <div slot="title">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-plus text-white text-sm"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-900">Create New Assignment</h2>
-                            <p class="text-sm text-gray-500">Add a new assignment for your students</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="space-y-6">
-                    ${error ? `
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
-                                <span class="text-red-700 text-sm">${error}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
+                <div slot="title">Create New Assignment</div>
                     <form class="space-y-6">
                         <!-- Assignment Title -->
                         <div>
@@ -356,7 +375,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             </ui-file-upload>
                         </div>
                     </form>
-                </div>
             </ui-modal>
         `;
     }

@@ -251,14 +251,14 @@ class TeacherEditAssignmentModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Dispatch custom event to notify parent component
+                // Close modal first
+                this.close();
+
+                // Then dispatch custom event to notify parent component
                 this.dispatchEvent(new CustomEvent('assignment-updated', { 
                     bubbles: true, 
                     detail: { assignmentId: this.assignmentId, data: response.data.data } 
                 }));
-
-                // Close modal
-                this.close();
             } else {
                 throw new Error(response.data?.message || 'Failed to update assignment');
             }

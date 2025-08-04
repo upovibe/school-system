@@ -209,6 +209,9 @@ class TeacherAssignmentsPage extends App {
             // Update the state without causing a full reload
             this.set('assignmentsData', updatedAssignments);
         }
+        
+        // Ensure modal is closed
+        this.set('showEditModal', false);
     }
 
     // Handle modal closed

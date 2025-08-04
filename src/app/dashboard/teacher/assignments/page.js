@@ -8,6 +8,7 @@ import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
+import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
 
 /**
  * Teacher Assignments Page Component (/dashboard/teacher/assignments)
@@ -22,6 +23,7 @@ class TeacherAssignmentsPage extends App {
         this.error = null;
         this.showStudentModal = false;
         this.selectedStudentData = null;
+        this.showEditModal = false;
         this.filters = {
             status: '',
             class_id: '',
@@ -40,6 +42,10 @@ class TeacherAssignmentsPage extends App {
         
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
+        
+        // Add event listeners for modal events
+        this.addEventListener('assignment-updated', this.onAssignmentUpdated.bind(this));
+        this.addEventListener('modal-closed', this.onModalClosed.bind(this));
     }
 
     async loadAssignments() {
@@ -159,8 +165,7 @@ class TeacherAssignmentsPage extends App {
         if (button.classList.contains('view-assignment-btn')) {
             this.openAssignmentDialog(assignmentId);
         } else if (button.classList.contains('edit-assignment-btn')) {
-            // For now, just alert - edit functionality to be added later
-            alert('Edit functionality will be added in a future update');
+            this.openEditModal(assignmentId);
         }
     }
 
@@ -169,6 +174,32 @@ class TeacherAssignmentsPage extends App {
         const dialog = this.querySelector('teacher-assignment-view-dialog');
         if (dialog) {
             dialog.openAssignment(assignmentId);
+        }
+    }
+
+    // Open edit modal
+    openEditModal(assignmentId) {
+        this.set('showEditModal', true);
+        
+        // Open the modal
+        setTimeout(() => {
+            const modal = this.querySelector('teacher-edit-assignment-modal');
+            if (modal) {
+                modal.open(assignmentId);
+            }
+        }, 0);
+    }
+
+    // Handle assignment updated
+    onAssignmentUpdated(event) {
+        // Refresh the assignments data after update
+        this.loadAssignments();
+    }
+
+    // Handle modal closed
+    onModalClosed(event) {
+        if (event.detail?.type === 'edit-assignment') {
+            this.set('showEditModal', false);
         }
     }
 
@@ -456,6 +487,9 @@ class TeacherAssignmentsPage extends App {
             
             <!-- Assignment View Dialog -->
             <teacher-assignment-view-dialog></teacher-assignment-view-dialog>
+            
+            <!-- Assignment Edit Modal -->
+            <teacher-edit-assignment-modal ${this.get('showEditModal') ? 'open' : ''}></teacher-edit-assignment-modal>
         `;
     }
 }

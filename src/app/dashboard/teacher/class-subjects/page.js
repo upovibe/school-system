@@ -267,7 +267,7 @@ class TeacherClassesSubjectsPage extends App {
 
                 <!-- Enhanced Classes and Subjects -->
                 ${assignments.map((assignment, index) => `
-                    <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100 my-5">
+                    <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100 my-5">
                         <!-- Class Header with Enhanced Design -->
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
                                 <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">

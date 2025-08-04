@@ -38,6 +38,60 @@ class TeacherAssignmentsPage extends App {
         this.filteredAssignments = null;
     }
 
+    // Override set method to prevent re-rendering for search updates
+    set(property, value) {
+        // For filteredAssignments, update without re-rendering to maintain input focus
+        if (property === 'filteredAssignments') {
+            this.state = this.state || {};
+            this.state[property] = value;
+            // Only update the assignments list part of the DOM, not the entire component
+            this.updateAssignmentsList(value);
+            return;
+        }
+        
+        // For other properties, use the normal set method
+        super.set(property, value);
+    }
+
+    // Update only the assignments list without full re-render
+    updateAssignmentsList(filteredAssignments) {
+        const assignmentsData = this.get('assignmentsData');
+        const assignmentsContainer = this.querySelector('.assignments-list-container');
+        
+        if (!assignmentsContainer || !assignmentsData) return;
+        
+        // Generate the assignments HTML
+        const assignmentsHTML = (filteredAssignments && filteredAssignments.length > 0) ? 
+            filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
+            this.generateNoAssignmentsHTML();
+            
+        assignmentsContainer.innerHTML = assignmentsHTML;
+        
+        // Update the results count
+        const resultsCount = this.querySelector('.results-count');
+        if (resultsCount) {
+            resultsCount.innerHTML = `
+                Showing <span class="font-medium text-gray-900">${filteredAssignments?.length || 0}</span> 
+                of <span class="font-medium text-gray-900">${assignmentsData.length}</span> assignments
+            `;
+        }
+        
+        // Update filters applied indicator
+        const filtersIndicator = this.querySelector('.filters-indicator');
+        if (filtersIndicator) {
+            if ((filteredAssignments?.length || 0) !== assignmentsData.length) {
+                filtersIndicator.innerHTML = `
+                    <span class="text-blue-600 font-medium">
+                        <i class="fas fa-filter mr-1"></i>
+                        Filters Applied
+                    </span>
+                `;
+            } else {
+                filtersIndicator.innerHTML = '';
+            }
+        }
+    }
+
     async connectedCallback() {
         super.connectedCallback();
         document.title = 'My Assignments | School System';
@@ -261,6 +315,12 @@ class TeacherAssignmentsPage extends App {
         
         if (target.matches('[data-filter="search"]')) {
             this.searchTerm = target.value;
+            // Use debounced search to avoid too many re-renders
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                this.applyFiltersAndSearch();
+            }, 300);
+            return; // Don't call applyFiltersAndSearch immediately for search
         } else if (target.matches('[data-filter="status"]')) {
             this.filters.status = target.value;
         } else if (target.matches('[data-filter="assignment_type"]')) {
@@ -371,6 +431,157 @@ class TeacherAssignmentsPage extends App {
         const assignments = this.get('assignmentsData') || [];
         const types = [...new Set(assignments.map(a => a.assignment_type).filter(Boolean))];
         return types.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }));
+    }
+
+    // Generate HTML for a single assignment
+    generateAssignmentHTML(assignment) {
+        return `
+            <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100">
+                <!-- Assignment Header -->
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">${assignment.title}</h3>
+                            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <i class="fas fa-graduation-cap mr-1"></i>
+                                    ${assignment.class_name}-${assignment.class_section}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-book mr-1"></i>
+                                    ${assignment.subject_name}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Due: ${this.formatDate(assignment.due_date)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2">
+                                <button 
+                                    class="view-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
+                                    title="View Submissions"
+                                    data-assignment-id="${assignment.id}">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </button>
+                                <button 
+                                    class="edit-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
+                                    title="Edit Assignment"
+                                    data-assignment-id="${assignment.id}">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </button>
+                            </div>
+                            <!-- Badges -->
+                            <div class="flex items-center gap-2">
+                                <ui-badge color="${this.getStatusColor(assignment.status)}" size="sm">
+                                    ${assignment.status?.toUpperCase() || 'UNKNOWN'}
+                                </ui-badge>
+                                <ui-badge color="${this.getTypeColor(assignment.assignment_type)}" size="sm">
+                                    ${assignment.assignment_type?.toUpperCase() || 'GENERAL'}
+                                </ui-badge>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Assignment Content -->
+                <div class="p-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Description -->
+                        <div class="lg:col-span-2">
+                            <h4 class="font-semibold text-gray-900 mb-2">Description</h4>
+                            <div class="text-gray-600 prose prose-sm max-w-none">
+                                ${assignment.description || 'No description provided.'}
+                            </div>
+                            
+                            ${assignment.attachment_file ? `
+                                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-paperclip text-blue-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-blue-800">Attachment Available</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Details -->
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Assignment Details</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Points:</span>
+                                        <span class="font-medium">${assignment.total_points || 'Not set'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Submissions:</span>
+                                        <span class="font-medium">${assignment.submission_count || 0}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Created:</span>
+                                        <span class="font-medium">${this.formatDate(assignment.created_at)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Section with Accordion -->
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <ui-accordion>
+                            <ui-accordion-item title="Class Students (${assignment.students ? assignment.students.length : 0} Student${assignment.students && assignment.students.length > 1 ? 's' : ''})">
+                                ${assignment.students && assignment.students.length > 0 ? `
+                                    <ui-table 
+                                        data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
+                                        columns='${JSON.stringify(this.getStudentTableColumns())}'
+                                        title="Students in ${assignment.class_name}-${assignment.class_section}"
+                                        searchable
+                                        search-placeholder="Search students..."
+                                        striped
+                                        print
+                                        sortable
+                                        clickable
+                                        refresh
+                                        row-clickable="true">
+                                    </ui-table>
+                                ` : `
+                                    <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                            <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
+                                        </div>
+                                        <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
+                                        <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
+                                    </div>
+                                `}
+                            </ui-accordion-item>
+                        </ui-accordion>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Generate HTML for no assignments found
+    generateNoAssignmentsHTML() {
+        return `
+            <div class="bg-white shadow-sm rounded-xl p-8 text-center border border-gray-100">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-search text-2xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Assignments Found</h3>
+                <p class="text-gray-500 max-w-md mx-auto mb-4">
+                    No assignments match your current filters. Try adjusting your search criteria or clearing the filters.
+                </p>
+                <button 
+                    onclick="this.closest('app-teacher-assignments-page').clearFilters()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200">
+                    <i class="fas fa-times mr-2"></i>
+                    Clear Filters
+                </button>
+            </div>
+        `;
     }
 
     // Clear all filters
@@ -629,165 +840,28 @@ class TeacherAssignmentsPage extends App {
                         
                         <!-- Results Count -->
                         <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
-                            <span>
+                            <span class="results-count">
                                 Showing <span class="font-medium text-gray-900">${filteredAssignments?.length || 0}</span> 
                                 of <span class="font-medium text-gray-900">${assignmentsData.length}</span> assignments
                             </span>
-                            ${(filteredAssignments?.length || 0) !== assignmentsData.length ? 
-                                `<span class="text-blue-600 font-medium">
-                                    <i class="fas fa-filter mr-1"></i>
-                                    Filters Applied
-                                </span>` : 
-                                ''
-                            }
+                            <span class="filters-indicator">
+                                ${(filteredAssignments?.length || 0) !== assignmentsData.length ? 
+                                    `<span class="text-blue-600 font-medium">
+                                        <i class="fas fa-filter mr-1"></i>
+                                        Filters Applied
+                                    </span>` : 
+                                    ''
+                                }
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Assignments List -->
-                <div class="space-y-6">
+                <div class="assignments-list-container space-y-6">
                     ${(filteredAssignments && filteredAssignments.length > 0) ? 
-                        filteredAssignments.map(assignment => `
-                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100">
-                            <!-- Assignment Header -->
-                            <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
-                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-xl font-bold text-gray-900 mb-2">${assignment.title}</h3>
-                                        <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                                            <span class="flex items-center">
-                                                <i class="fas fa-graduation-cap mr-1"></i>
-                                                ${assignment.class_name}-${assignment.class_section}
-                                            </span>
-                                            <span class="flex items-center">
-                                                <i class="fas fa-book mr-1"></i>
-                                                ${assignment.subject_name}
-                                            </span>
-                                            <span class="flex items-center">
-                                                <i class="fas fa-calendar mr-1"></i>
-                                                Due: ${this.formatDate(assignment.due_date)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col items-end gap-2">
-                                        <!-- Action Buttons -->
-                                        <div class="flex items-center gap-2">
-                                            <button 
-                                                class="view-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
-                                                title="View Submissions"
-                                                data-assignment-id="${assignment.id}">
-                                                <i class="fas fa-eye text-xs"></i>
-                                            </button>
-                                            <button 
-                                                class="edit-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
-                                                title="Edit Assignment"
-                                                data-assignment-id="${assignment.id}">
-                                                <i class="fas fa-edit text-xs"></i>
-                                            </button>
-                                        </div>
-                                        <!-- Badges -->
-                                        <div class="flex items-center gap-2">
-                                            <ui-badge color="${this.getStatusColor(assignment.status)}" size="sm">
-                                                ${assignment.status?.toUpperCase() || 'UNKNOWN'}
-                                            </ui-badge>
-                                            <ui-badge color="${this.getTypeColor(assignment.assignment_type)}" size="sm">
-                                                ${assignment.assignment_type?.toUpperCase() || 'GENERAL'}
-                                            </ui-badge>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Assignment Content -->
-                            <div class="p-5">
-                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    <!-- Description -->
-                                    <div class="lg:col-span-2">
-                                        <h4 class="font-semibold text-gray-900 mb-2">Description</h4>
-                                        <div class="text-gray-600 prose prose-sm max-w-none">
-                                            ${assignment.description || 'No description provided.'}
-                                        </div>
-                                        
-                                        ${assignment.attachment_file ? `
-                                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                                <div class="flex items-center">
-                                                    <i class="fas fa-paperclip text-blue-600 mr-2"></i>
-                                                    <span class="text-sm font-medium text-blue-800">Attachment Available</span>
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    
-                                    <!-- Details -->
-                                    <div class="space-y-4">
-                                        <div>
-                                            <h4 class="font-semibold text-gray-900 mb-2">Assignment Details</h4>
-                                            <div class="space-y-2 text-sm">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Total Points:</span>
-                                                    <span class="font-medium">${assignment.total_points || 'Not set'}</span>
-                                                </div>
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Submissions:</span>
-                                                    <span class="font-medium">${assignment.submission_count || 0}</span>
-                                                </div>
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Created:</span>
-                                                    <span class="font-medium">${this.formatDate(assignment.created_at)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Students Section with Accordion -->
-                                <div class="mt-6 pt-6 border-t border-gray-200">
-                                    <ui-accordion>
-                                        <ui-accordion-item title="Class Students (${assignment.students ? assignment.students.length : 0} Student${assignment.students && assignment.students.length > 1 ? 's' : ''})">
-                                            ${assignment.students && assignment.students.length > 0 ? `
-                                                <ui-table 
-                                                    data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
-                                                    columns='${JSON.stringify(this.getStudentTableColumns())}'
-                                                    title="Students in ${assignment.class_name}-${assignment.class_section}"
-                                                    searchable
-                                                    search-placeholder="Search students..."
-                                                    striped
-                                                    print
-                                                    sortable
-                                                    clickable
-                                                    refresh
-                                                    row-clickable="true">
-                                                </ui-table>
-                                            ` : `
-                                                <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
-                                                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                                        <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
-                                                    </div>
-                                                    <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
-                                                    <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
-                                                </div>
-                                            `}
-                                        </ui-accordion-item>
-                                    </ui-accordion>
-                                </div>
-                            </div>
-                        </div>
-                        `).join('') : 
-                        `<div class="bg-white shadow-sm rounded-xl p-8 text-center border border-gray-100">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-search text-2xl text-gray-400"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Assignments Found</h3>
-                            <p class="text-gray-500 max-w-md mx-auto mb-4">
-                                No assignments match your current filters. Try adjusting your search criteria or clearing the filters.
-                            </p>
-                            <button 
-                                onclick="this.closest('app-teacher-assignments-page').clearFilters()"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200">
-                                <i class="fas fa-times mr-2"></i>
-                                Clear Filters
-                            </button>
-                        </div>`
+                        filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
+                        this.generateNoAssignmentsHTML()
                     }
                 </div>
             </div>

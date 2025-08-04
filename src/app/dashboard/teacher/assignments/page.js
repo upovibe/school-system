@@ -192,8 +192,23 @@ class TeacherAssignmentsPage extends App {
 
     // Handle assignment updated
     onAssignmentUpdated(event) {
-        // Refresh the assignments data after update
-        this.loadAssignments();
+        // Update the specific assignment in the current data instead of reloading everything
+        const { assignmentId, data } = event.detail;
+        const assignmentsData = this.get('assignmentsData');
+        
+        if (assignmentsData && assignmentId) {
+            // Find and update the specific assignment
+            const updatedAssignments = assignmentsData.map(assignment => {
+                if (assignment.id == assignmentId) {
+                    // Merge the updated data with existing assignment data
+                    return { ...assignment, ...data };
+                }
+                return assignment;
+            });
+            
+            // Update the state without causing a full reload
+            this.set('assignmentsData', updatedAssignments);
+        }
     }
 
     // Handle modal closed

@@ -232,7 +232,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
                     }
                 });
 
-                response = await api.withToken(token).post(`/teachers/assignments/${this.assignmentId}`, submitFormData, {
+                response = await api.withToken(token).put(`/teachers/assignments/${this.assignmentId}`, submitFormData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -240,7 +240,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
             } else {
                 // Use JSON for text-only data
                 const { attachment_file, ...jsonData } = formData;
-                response = await api.withToken(token).post(`/teachers/assignments/${this.assignmentId}`, jsonData);
+                response = await api.withToken(token).put(`/teachers/assignments/${this.assignmentId}`, jsonData);
             }
 
             if (response.data && response.data.success) {
@@ -397,15 +397,6 @@ class TeacherEditAssignmentModal extends HTMLElement {
                         </div>
                         
                     </form>
-
-                <div slot="footer" class="flex justify-between">
-                    <ui-button variant="secondary" size="sm">
-                        Cancel
-                    </ui-button>
-                    <ui-button variant="primary" size="sm" ${loading ? 'loading' : ''}>
-                        ${loading ? 'Updating...' : 'Update Assignment'}
-                    </ui-button>
-                </div>
             </ui-modal>
         `;
     }

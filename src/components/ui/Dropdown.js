@@ -106,12 +106,17 @@ class Dropdown extends HTMLElement {
             const style = document.createElement('style');
             style.id = 'upo-ui-dropdown-styles';
             style.textContent = `
-                .upo-dropdown {
-                    position: relative;
-                    display: inline-block;
-                    width: 100%;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                }
+                                 .upo-dropdown {
+                     position: relative;
+                     display: inline-block;
+                     width: 100%;
+                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                     z-index: 1000;
+                 }
+                 
+                 .upo-dropdown.open {
+                     z-index: 999999 !important;
+                 }
                 
                 .upo-dropdown-trigger {
                     display: flex;
@@ -205,20 +210,18 @@ class Dropdown extends HTMLElement {
                     transform: rotate(180deg);
                 }
                 
-                .upo-dropdown-menu {
-                    position: absolute;
-                    top: calc(100% + 4px);
-                    left: 0;
-                    right: 0;
-                    background-color: #ffffff;
-                    border: 1px solid #d1d5db;
-                    border-radius: 0.375rem;
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-                    z-index: 9999;
-                    max-height: 15rem;
-                    overflow: hidden;
-                    display: none;
-                }
+                                 .upo-dropdown-menu {
+                     position: fixed !important;
+                     background-color: #ffffff !important;
+                     border: 1px solid #d1d5db;
+                     border-radius: 0.375rem;
+                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+                     z-index: 999999 !important;
+                     max-height: 15rem;
+                     overflow: hidden;
+                     display: none;
+                     box-sizing: border-box;
+                 }
                 
                 .upo-dropdown.open .upo-dropdown-menu {
                     display: block;
@@ -420,6 +423,16 @@ class Dropdown extends HTMLElement {
         this.updateOptions();
     }
 
+    disconnectedCallback() {
+        // Clean up event listeners
+        if (this.documentClickHandler) {
+            document.removeEventListener('click', this.documentClickHandler, true);
+        }
+        if (this.resizeHandler) {
+            window.removeEventListener('resize', this.resizeHandler);
+        }
+    }
+
     setupEventListeners() {
         // Toggle dropdown
         this.trigger.addEventListener('click', (e) => {
@@ -479,12 +492,23 @@ class Dropdown extends HTMLElement {
             }
         });
 
-        // Global click to close
-        document.addEventListener('click', (e) => {
-            if (!this.container.contains(e.target)) {
+        // Global click to close - use capture phase to handle before other events
+        this.documentClickHandler = (e) => {
+            // Check if click is outside this dropdown
+            if (!this.container.contains(e.target) && this.isOpen) {
+                console.log('Click outside dropdown, closing:', e.target);
                 this.closeDropdown();
             }
-        });
+        };
+        document.addEventListener('click', this.documentClickHandler, true);
+
+        // Handle window resize to reposition dropdown
+        this.resizeHandler = () => {
+            if (this.isOpen) {
+                this.updateDropdownPosition();
+            }
+        };
+        window.addEventListener('resize', this.resizeHandler);
 
         // Keyboard navigation for options
         this.optionsContainer.addEventListener('keydown', (e) => {
@@ -523,6 +547,9 @@ class Dropdown extends HTMLElement {
         this.isOpen = true;
         this.container.classList.add('open');
         
+        // Position the dropdown immediately
+        this.updateDropdownPosition();
+        
         // Show/hide search
         if (this.hasAttribute('searchable')) {
             this.searchContainer.style.display = 'block';
@@ -543,6 +570,22 @@ class Dropdown extends HTMLElement {
         this.searchInput.value = '';
         
         this.dispatchEvent(new CustomEvent('close', { bubbles: true }));
+    }
+
+    updateDropdownPosition() {
+        if (!this.isOpen) return;
+        
+        const triggerRect = this.trigger.getBoundingClientRect();
+        const menuWidth = triggerRect.width;
+        
+        // Set position
+        this.menu.style.top = `${triggerRect.bottom + 4}px`;
+        this.menu.style.left = `${triggerRect.left}px`;
+        
+        // Set width explicitly with important flags
+        this.menu.style.setProperty('width', `${menuWidth}px`, 'important');
+        this.menu.style.setProperty('min-width', `${menuWidth}px`, 'important');
+        this.menu.style.setProperty('max-width', `${menuWidth}px`, 'important');
     }
     
     updateSelection() {

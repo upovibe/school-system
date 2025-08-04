@@ -1,6 +1,7 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/ContentDisplay.js';
 import api from '@/services/api.js';
 
 /**
@@ -21,11 +22,11 @@ class TeacherAssignmentViewDialog extends HTMLElement {
 
     async openAssignment(assignmentId) {
         console.log('Opening assignment dialog for ID:', assignmentId);
-        
+
         // Show loading dialog first
         this.loading = true;
         this.render();
-        
+
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -35,13 +36,13 @@ class TeacherAssignmentViewDialog extends HTMLElement {
 
             console.log('Loading assignment data...');
             const response = await api.withToken(token).get(`/teachers/assignments/${assignmentId}`);
-            
+
             if (response.data && response.data.success) {
                 this.assignmentData = response.data.data;
                 console.log('Assignment loaded:', this.assignmentData);
                 this.loading = false;
                 this.render();
-                
+
                 // Open the dialog
                 const dialog = this.querySelector('ui-dialog');
                 if (dialog) {
@@ -120,7 +121,7 @@ class TeacherAssignmentViewDialog extends HTMLElement {
         }
 
         const assignment = this.assignmentData;
-        
+
         this.innerHTML = `
             <ui-dialog size="lg">
                 <div slot="title">Assignment Details</div>
@@ -128,14 +129,14 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                 <div slot="content">
                     <!-- Assignment Header with Gradient Background -->
                     <div class="border-b border-indigo-100">
-                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                            <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-1">
+                            <div class="flex-1 mb-5">
                                 <div class="flex items-center gap-3 mb-3">
                                     <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                                         <i class="fas fa-tasks text-white text-lg"></i>
                                     </div>
                                     <div>
-                                        <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-1">
+                                        <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                                             ${assignment.title}
                                         </h2>
                                         <div class="flex items-center gap-2">
@@ -150,7 +151,7 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                                 </div>
                                 
                                 <!-- Info Cards -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
                                         <div class="flex items-center gap-2">
                                             <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -198,6 +199,53 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-tag text-purple-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium">Type</p>
+                                        <p class="text-sm font-semibold text-gray-800">${assignment.assignment_type?.toUpperCase() || 'GENERAL'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium">Status</p>
+                                        <p class="text-sm font-semibold text-gray-800">${assignment.status?.toUpperCase() || 'UNKNOWN'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-plus text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium">Created</p>
+                                        <p class="text-sm font-semibold text-gray-800">${this.formatDate(assignment.created_at)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-edit text-indigo-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium">Last Updated</p>
+                                        <p class="text-sm font-semibold text-gray-800">${this.formatDate(assignment.updated_at)}</p>
+                                    </div>
+                                </div>
+                            </div>
                                 </div>
                             </div>
                         </div>
@@ -205,9 +253,20 @@ class TeacherAssignmentViewDialog extends HTMLElement {
 
                     <!-- Assignment Description -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                        <div class="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4">
-                            ${assignment.description || 'No description provided.'}
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-file-text text-green-500"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Description</h3>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg">
+                            ${assignment.description ? `
+                                <content-display 
+                                    content="${assignment.description.replace(/"/g, '&quot;')}"
+                                    max-height="300px"
+                                    no-styles>
+                                </content-display>
+                            ` : `
+                                <p class="text-gray-500 italic">No description provided for this assignment.</p>
+                            `}
                         </div>
                         
                         ${assignment.attachment_file ? `
@@ -229,39 +288,10 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                     </div>
 
                     <!-- Assignment Information -->
-                    <div class="border-t border-gray-200 pt-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Assignment Information</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Type:</span>
-                                    <span class="font-medium">${assignment.assignment_type?.toUpperCase() || 'GENERAL'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Status:</span>
-                                    <span class="font-medium">${assignment.status?.toUpperCase() || 'UNKNOWN'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Points:</span>
-                                    <span class="font-medium">${assignment.total_points}</span>
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Created:</span>
-                                    <span class="font-medium">${this.formatDate(assignment.created_at)}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Due Date:</span>
-                                    <span class="font-medium">${this.formatDate(assignment.due_date)}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Last Updated:</span>
-                                    <span class="font-medium">${this.formatDate(assignment.updated_at)}</span>
-                                </div>
-                            </div>
+                    <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Assignment Information</h3>
                         </div>
-                    </div>
 
                 </div>
                 

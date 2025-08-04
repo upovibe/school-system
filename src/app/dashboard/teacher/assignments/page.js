@@ -294,7 +294,10 @@ class TeacherAssignmentsPage extends App {
             gender: student.gender === 'male' ? 'Male' : 'Female',
             email: student.email || 'No email',
             phone: student.phone || 'No phone',
-            status: student.status === 'active' ? 'Active' : 'Inactive'
+            status: student.status === 'active' ? 'Active' : 'Inactive',
+            submission_status: student.has_submitted,
+            submitted_at: student.submitted_at,
+            grade: student.grade || 'Not graded'
         }));
     }
 
@@ -305,8 +308,31 @@ class TeacherAssignmentsPage extends App {
             { key: 'gender', label: 'Gender' },
             { key: 'email', label: 'Email' },
             { key: 'phone', label: 'Phone' },
-            { key: 'status', label: 'Status' }
+            { key: 'status', label: 'Status' },
+            { key: 'submission_status', label: 'Submitted', render: this.renderSubmissionStatus.bind(this) },
+            { key: 'grade', label: 'Grade' }
         ];
+    }
+
+    // Render submission status with visual indicator
+    renderSubmissionStatus(value, row) {
+        if (value === 'submitted') {
+            const submittedDate = row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : 'Unknown';
+            return `
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-green-700 font-medium">Submitted</span>
+                    <span class="text-xs text-gray-500 ml-1">(${submittedDate})</span>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
+                    <span class="text-gray-500">Not Submitted</span>
+                </div>
+            `;
+        }
     }
 
     // Handle filter and search changes

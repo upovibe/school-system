@@ -166,7 +166,7 @@ class ClassAssignmentModel extends BaseModel {
         $stmt->execute($params);
         $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Get students for each assignment's class
+        // Get students for each assignment's class with submission status
         foreach ($assignments as &$assignment) {
             $studentStmt = $this->pdo->prepare("
                 SELECT 
@@ -184,13 +184,25 @@ class ClassAssignmentModel extends BaseModel {
                     s.updated_at,
                     u.name as user_name,
                     u.email as user_email,
-                    u.status as user_status
+                    u.status as user_status,
+                    sa.id as submission_id,
+                    sa.submitted_at,
+                    sa.submission_text,
+                    sa.submission_file,
+                    sa.grade,
+                    sa.feedback,
+                    sa.status as submission_status,
+                    CASE 
+                        WHEN sa.id IS NOT NULL THEN 'submitted'
+                        ELSE 'not_submitted'
+                    END as has_submitted
                 FROM students s
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN student_assignments sa ON s.id = sa.student_id AND sa.assignment_id = ?
                 WHERE s.current_class_id = ?
                 ORDER BY s.first_name ASC, s.last_name ASC
             ");
-            $studentStmt->execute([$assignment['class_id']]);
+            $studentStmt->execute([$assignment['id'], $assignment['class_id']]);
             $assignment['students'] = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
         }
         

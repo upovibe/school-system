@@ -314,12 +314,12 @@ class TeacherAssignmentsPage extends App {
 
         return `
             <div class="space-y-8">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <div></div>
-                            <h1 class="text-2xl sm:text-3xl font-bold mb-2">My Class Assignments</h1>
-                            <p class="text-blue-100">Manage and review your created assignments</p>
+                <!-- Enhanced Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold">My Class Assignments</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">Manage and review your created assignments</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <ui-button onclick="window.location.href='/dashboard/teacher/class-subjects'" variant="secondary" size="sm">
@@ -329,40 +329,52 @@ class TeacherAssignmentsPage extends App {
                         </div>
                     </div>
                     
-                    <!-- Summary Stats -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+                    <!-- Enhanced Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 flex items-center justify-center bg-green-500 rounded-lg mr-3">
-                                    <i class="fas fa-tasks text-white"></i>
+                                <div class="size-10 flex items-center justify-center bg-emerald-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
                                 </div>
-                                <div>
-                                    <div class="text-xl font-bold">${assignmentsData.length}</div>
-                                    <div class="text-blue-100 text-sm">Total Assignments</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${assignmentsData.length}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Assignment${assignmentsData.length > 1 ? 's' : ''}</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3">
-                                    <i class="fas fa-check-circle text-white"></i>
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-check-circle text-white text-lg sm:text-xl"></i>
                                 </div>
-                                <div>
-                                    <div class="text-xl font-bold">${assignmentsData.filter(a => a.status === 'published').length}</div>
-                                    <div class="text-blue-100 text-sm">Published</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${assignmentsData.filter(a => a.status === 'published').length}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Published</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3">
-                                    <i class="fas fa-edit text-white"></i>
+                                <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-edit text-white text-lg sm:text-xl"></i>
                                 </div>
-                                <div>
-                                    <div class="text-xl font-bold">${assignmentsData.filter(a => a.status === 'draft').length}</div>
-                                    <div class="text-blue-100 text-sm">Drafts</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${assignmentsData.filter(a => a.status === 'draft').length}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Draft${assignmentsData.filter(a => a.status === 'draft').length > 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-file-alt text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${assignmentsData.reduce((total, a) => total + (a.submission_count || 0), 0)}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Submission${assignmentsData.reduce((total, a) => total + (a.submission_count || 0), 0) > 1 ? 's' : ''}</div>
                                 </div>
                             </div>
                         </div>

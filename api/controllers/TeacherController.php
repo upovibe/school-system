@@ -1419,5 +1419,39 @@ class TeacherController {
             ]);
         }
     }
+
+    /**
+     * Get student's assignments (teacher only)
+     */
+    public function getStudentAssignments($studentId) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get student's assignment history
+            require_once __DIR__ . '/../models/StudentAssignmentModel.php';
+            $studentAssignmentModel = new StudentAssignmentModel($this->pdo);
+            
+            $assignments = $studentAssignmentModel->getStudentAssignmentHistory($studentId);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $assignments,
+                'message' => 'Student assignments retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving student assignments: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?> 

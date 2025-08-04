@@ -8,7 +8,7 @@ import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
-import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
+import '@/components/layout/teacherLayout/TeacherStudentAssignmentView.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
 
@@ -23,8 +23,6 @@ class TeacherAssignmentsPage extends App {
         this.assignmentsData = null;
         this.loading = true;
         this.error = null;
-        this.showStudentModal = false;
-        this.selectedStudentData = null;
         this.showEditModal = false;
         this.searchTerm = '';
         this.sortBy = 'created_at';
@@ -99,6 +97,17 @@ class TeacherAssignmentsPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
+        
+        // Debug: Check if component is created
+        setTimeout(() => {
+            const component = this.querySelector('teacher-student-assignment-view');
+            console.log('🔍 Component in DOM:', component);
+            if (component) {
+                console.log('🔍 Component found in DOM');
+            } else {
+                console.error('❌ Component not found in DOM');
+            }
+        }, 1000);
         
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
@@ -192,6 +201,9 @@ class TeacherAssignmentsPage extends App {
         const { detail } = event;
         const studentId = detail.row.student_id;
         
+        console.log('🔍 Student clicked:', studentId);
+        console.log('🔍 Event detail:', detail);
+        
         // Find the student data from the assignments data
         const assignments = this.get('assignmentsData') || [];
         let foundStudent = null;
@@ -202,15 +214,20 @@ class TeacherAssignmentsPage extends App {
             if (foundStudent) break;
         }
         
+        console.log('🔍 Found student:', foundStudent);
+        
         if (foundStudent) {
-            this.set('selectedStudentData', foundStudent);
-            this.set('showStudentModal', true);
-            
-            // Set the student data in the modal
+            // Open the student assignment view modal
             setTimeout(() => {
-                const modal = this.querySelector('teacher-student-personal-information');
+                const modal = this.querySelector('teacher-student-assignment-view');
+                console.log('🔍 Modal element:', modal);
+                console.log('🔍 All elements in component:', this.querySelectorAll('*'));
                 if (modal) {
-                    modal.setStudentData(foundStudent);
+                    console.log('🔍 Opening modal with student data...');
+                    modal.openStudentAssignments(studentId, foundStudent);
+                } else {
+                    console.error('❌ Modal not found!');
+                    console.log('🔍 Available elements:', Array.from(this.querySelectorAll('*')).map(el => el.tagName));
                 }
             }, 0);
         }
@@ -892,8 +909,12 @@ class TeacherAssignmentsPage extends App {
                 </div>
             </div>
             
-            <!-- Student Information Modal -->
-            <teacher-student-personal-information ${this.get('showStudentModal') ? 'open' : ''}></teacher-student-personal-information>
+            <!-- Student Assignment View Modal -->
+            <teacher-student-assignment-view></teacher-student-assignment-view>
+            <!-- Debug: Check if component exists -->
+            <div id="debug-component-check" style="display: none;">
+                Component should be created above
+            </div>
             
             <!-- Assignment View Dialog -->
             <teacher-assignment-view-dialog></teacher-assignment-view-dialog>

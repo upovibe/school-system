@@ -556,12 +556,10 @@ class TeacherAssignmentsPage extends App {
                         <!-- Search Bar -->
                         <div class="w-full">
                             <ui-input 
+                                type="search"
                                 data-filter="search"
                                 placeholder="Search assignments by title, description, class, or subject..."
                                 value="${this.searchTerm}">
-                                <div slot="prefix" class="flex items-center">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
                             </ui-input>
                         </div>
                         

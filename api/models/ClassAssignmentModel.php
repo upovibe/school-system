@@ -164,7 +164,37 @@ class ClassAssignmentModel extends BaseModel {
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get students for each assignment's class
+        foreach ($assignments as &$assignment) {
+            $studentStmt = $this->pdo->prepare("
+                SELECT 
+                    s.id,
+                    s.student_id,
+                    s.first_name,
+                    s.last_name,
+                    s.gender,
+                    s.date_of_birth,
+                    s.address,
+                    s.phone,
+                    s.email,
+                    s.status,
+                    s.created_at,
+                    s.updated_at,
+                    u.name as user_name,
+                    u.email as user_email,
+                    u.status as user_status
+                FROM students s
+                LEFT JOIN users u ON s.user_id = u.id
+                WHERE s.current_class_id = ?
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $studentStmt->execute([$assignment['class_id']]);
+            $assignment['students'] = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        return $assignments;
     }
 
     /**

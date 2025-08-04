@@ -116,6 +116,13 @@ class TeacherClassesSubjectsPage extends App {
         if (button) {
             const classId = button.getAttribute('data-class-id');
             const subjectId = button.getAttribute('data-subject-id');
+            
+            // Console log the class ID and subject ID
+            console.log('Add Assignment clicked:', {
+                classId: classId,
+                subjectId: subjectId
+            });
+            
             this.openAssignmentModal(classId, subjectId);
         }
     }
@@ -327,15 +334,14 @@ class TeacherClassesSubjectsPage extends App {
                                                 
                                                 <!-- Add Assignment Button -->
                                                 <div class="pt-3 border-t border-green-200">
-                                                    <ui-button 
-                                                        variant="primary" 
-                                                        size="sm"
+                                                    <button 
+                                                        type="button"
                                                         data-class-id="${assignment.class_id}"
                                                         data-subject-id="${subject.subject_id}"
-                                                        class="add-assignment-btn">
+                                                        class="add-assignment-btn text-sm font-medium text-gray-800 transition-colors duration-200 flex items-center w-full">
                                                         <i class="fas fa-plus mr-1"></i>
                                                         Add Assignment
-                                                    </ui-button>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

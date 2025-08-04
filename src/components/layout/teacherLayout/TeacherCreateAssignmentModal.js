@@ -37,7 +37,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        this.setupFormDebugListeners();
     }
 
     setupEventListeners() {
@@ -52,57 +51,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         });
     }
 
-    setupFormDebugListeners() {
-        // Wait for the modal to be rendered before setting up listeners
-        setTimeout(() => {
-            const fields = [
-                { selector: 'ui-input[data-field="title"]', name: 'Title' },
-                { selector: 'ui-wysiwyg[data-field="description"]', name: 'Description' },
-                { selector: 'ui-input[data-field="due_date"]', name: 'Due Date' },
-                { selector: 'ui-input[data-field="total_points"]', name: 'Total Points' },
-                { selector: 'ui-dropdown[data-field="assignment_type"]', name: 'Assignment Type' },
-                { selector: 'ui-dropdown[data-field="status"]', name: 'Status' }
-            ];
 
-            fields.forEach(field => {
-                const element = this.querySelector(field.selector);
-                if (element) {
-                    console.log(`✅ Found ${field.name} element:`, element);
-                    
-                    // Add input event listener
-                    element.addEventListener('input', (e) => {
-                        console.log(`📝 ${field.name} input changed:`, e.target.value);
-                    });
-                    
-                    // Add change event listener
-                    element.addEventListener('change', (e) => {
-                        console.log(`🔄 ${field.name} changed:`, e.target.value);
-                    });
-                    
-                    // Add blur event listener to see final value
-                    element.addEventListener('blur', (e) => {
-                        console.log(`👁️ ${field.name} blur - final value:`, e.target.value);
-                    });
-                    
-                    // For dropdowns, also listen for selection events
-                    if (field.selector.includes('dropdown')) {
-                        element.addEventListener('select', (e) => {
-                            console.log(`🎯 ${field.name} selected:`, e.detail || e.target.value);
-                        });
-                    }
-                    
-                    // For WYSIWYG, also listen for content changes
-                    if (field.selector.includes('wysiwyg')) {
-                        element.addEventListener('content-changed', (e) => {
-                            console.log(`📄 ${field.name} content changed:`, e.detail || e.target.value);
-                        });
-                    }
-                } else {
-                    console.log(`❌ Could not find ${field.name} element with selector:`, field.selector);
-                }
-            });
-        }, 500);
-    }
 
     open(classId = null, subjectId = null) {
         this.classId = classId;
@@ -126,7 +75,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     // Reset form to initial state
     resetForm() {
         this.loading = false;
-        console.log('🔄 Form is being reset!');
         this.render();
     }
 
@@ -155,24 +103,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             attachmentFileUpload: attachmentFileUpload
         };
 
-        // Debug: Log current form values
-        console.log('🔍 Current form values:', {
-            title: `"${formData.title}"`,
-            description: `"${formData.description}"`,
-            due_date: `"${formData.due_date}"`,
-            total_points: `"${formData.total_points}"`,
-            assignment_type: `"${formData.assignment_type}"`,
-            status: `"${formData.status}"`
-        });
-
-        // Debug: Log element properties directly
-        console.log('🔧 Element properties:', {
-            titleElement: titleInput ? { value: titleInput.value, innerHTML: titleInput.innerHTML.substring(0, 50) } : null,
-            descriptionElement: descriptionWysiwyg ? { value: descriptionWysiwyg.value, innerHTML: descriptionWysiwyg.innerHTML.substring(0, 50) } : null,
-            dueDateElement: dueDateInput ? { value: dueDateInput.value, innerHTML: dueDateInput.innerHTML.substring(0, 50) } : null,
-            totalPointsElement: totalPointsInput ? { value: totalPointsInput.value, innerHTML: totalPointsInput.innerHTML.substring(0, 50) } : null
-        });
-
         return formData;
     }
 
@@ -186,7 +116,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     // Create assignment
     async createAssignment() {
         try {
-            console.log('🚀 Creating assignment - START');
             this.set('loading', true);
 
             // Show loading toast
@@ -277,7 +206,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                     formData.append('attachment_file', file, file.name);
                 });
                 
-                console.log('Sending with FormData (with files)');
                 response = await api.withToken(token).post('/teachers/assignments', formData);
             } else {
                 // Use JSON for simpler data without files
@@ -292,15 +220,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                     subject_id: this.subjectId
                 };
                 
-                // Console log the IDs being sent with the request
-                console.log('Sending assignment request with IDs:', {
-                    class_id: this.classId,
-                    subject_id: this.subjectId
-                });
-
-                // Debug: Log the actual JSON data being sent
-                console.log('📦 JSON data contents:', jsonData);
-                
                 response = await api.withToken(token).post('/teachers/assignments', jsonData, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -311,8 +230,8 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             if (response.data && response.data.success) {
                 // Show success message
                 Toast.show({ 
-                    title: 'Assignment Created!', 
-                    message: `"${title}" has been successfully added to the assignments.`, 
+                    title: 'Success!', 
+                    message: 'Assignment successfully sent to class.', 
                     variant: 'success', 
                     duration: 5000 
                 });
@@ -360,13 +279,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         }
     }
 
-    // Debug method to manually check form values
-    debugFormValues() {
-        console.log('🚀 === MANUAL FORM DEBUG ===');
-        const formData = this.getFormData();
-        console.log('🎯 Final form data result:', formData);
-        console.log('✅ === DEBUG COMPLETE ===');
-    }
+
 
     render() {
         const { loading } = this;
@@ -470,15 +383,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             </ui-file-upload>
                         </div>
                         
-                        <!-- Debug Button -->
-                        <div class="border-t pt-4">
-                            <button 
-                                type="button" 
-                                onclick="this.closest('teacher-create-assignment-modal').debugFormValues()"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
-                                🐛 Debug Form Values
-                            </button>
-                        </div>
+
                     </form>
             </ui-modal>
         `;

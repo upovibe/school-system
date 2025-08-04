@@ -117,11 +117,7 @@ class TeacherClassesSubjectsPage extends App {
             const classId = button.getAttribute('data-class-id');
             const subjectId = button.getAttribute('data-subject-id');
             
-            // Console log the class ID and subject ID
-            console.log('Add Assignment clicked:', {
-                classId: classId,
-                subjectId: subjectId
-            });
+
             
             this.openAssignmentModal(classId, subjectId);
         }

@@ -133,6 +133,8 @@ class TeacherClassesSubjectsPage extends App {
         this.set('selectedSubjectId', subjectId);
         this.set('showAssignmentModal', true);
         
+
+        
         // Open the modal
         setTimeout(() => {
             const modal = this.querySelector('teacher-create-assignment-modal');

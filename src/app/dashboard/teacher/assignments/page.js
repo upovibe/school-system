@@ -6,6 +6,8 @@ import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/Input.js';
+import '@/components/ui/Dropdown.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
@@ -24,12 +26,16 @@ class TeacherAssignmentsPage extends App {
         this.showStudentModal = false;
         this.selectedStudentData = null;
         this.showEditModal = false;
+        this.searchTerm = '';
+        this.sortBy = 'created_at';
+        this.sortOrder = 'desc';
         this.filters = {
             status: '',
             class_id: '',
             subject_id: '',
             assignment_type: ''
         };
+        this.filteredAssignments = null;
     }
 
     async connectedCallback() {
@@ -46,6 +52,10 @@ class TeacherAssignmentsPage extends App {
         // Add event listeners for modal events
         this.addEventListener('assignment-updated', this.onAssignmentUpdated.bind(this));
         this.addEventListener('modal-closed', this.onModalClosed.bind(this));
+        
+        // Add event listeners for filtering and search
+        this.addEventListener('input', this.onFilterChange.bind(this));
+        this.addEventListener('change', this.onFilterChange.bind(this));
     }
 
     async loadAssignments() {
@@ -73,6 +83,7 @@ class TeacherAssignmentsPage extends App {
             
             if (response.data && response.data.success) {
                 this.set('assignmentsData', response.data.data);
+                this.applyFiltersAndSearch();
             } else {
                 this.set('error', 'Failed to load assignments data');
             }
@@ -244,10 +255,151 @@ class TeacherAssignmentsPage extends App {
         ];
     }
 
+    // Handle filter and search changes
+    onFilterChange(event) {
+        const target = event.target;
+        
+        if (target.matches('[data-filter="search"]')) {
+            this.searchTerm = target.value;
+        } else if (target.matches('[data-filter="status"]')) {
+            this.filters.status = target.value;
+        } else if (target.matches('[data-filter="assignment_type"]')) {
+            this.filters.assignment_type = target.value;
+        } else if (target.matches('[data-filter="class"]')) {
+            this.filters.class_id = target.value;
+        } else if (target.matches('[data-filter="subject"]')) {
+            this.filters.subject_id = target.value;
+        } else if (target.matches('[data-filter="sort"]')) {
+            const [sortBy, sortOrder] = target.value.split(':');
+            this.sortBy = sortBy;
+            this.sortOrder = sortOrder;
+        }
+        
+        this.applyFiltersAndSearch();
+    }
+
+    // Apply filters and search
+    applyFiltersAndSearch() {
+        const assignments = this.get('assignmentsData') || [];
+        let filtered = [...assignments];
+
+        // Apply search filter
+        if (this.searchTerm) {
+            const search = this.searchTerm.toLowerCase();
+            filtered = filtered.filter(assignment => 
+                assignment.title?.toLowerCase().includes(search) ||
+                assignment.description?.toLowerCase().includes(search) ||
+                assignment.class_name?.toLowerCase().includes(search) ||
+                assignment.subject_name?.toLowerCase().includes(search) ||
+                assignment.assignment_type?.toLowerCase().includes(search)
+            );
+        }
+
+        // Apply status filter
+        if (this.filters.status) {
+            filtered = filtered.filter(assignment => assignment.status === this.filters.status);
+        }
+
+        // Apply assignment type filter
+        if (this.filters.assignment_type) {
+            filtered = filtered.filter(assignment => assignment.assignment_type === this.filters.assignment_type);
+        }
+
+        // Apply class filter
+        if (this.filters.class_id) {
+            filtered = filtered.filter(assignment => assignment.class_id == this.filters.class_id);
+        }
+
+        // Apply subject filter
+        if (this.filters.subject_id) {
+            filtered = filtered.filter(assignment => assignment.subject_id == this.filters.subject_id);
+        }
+
+        // Apply sorting
+        filtered.sort((a, b) => {
+            let aValue = a[this.sortBy];
+            let bValue = b[this.sortBy];
+
+            // Handle date sorting
+            if (this.sortBy.includes('date') || this.sortBy.includes('at')) {
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+            }
+
+            // Handle string sorting
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+
+            // Handle numeric sorting
+            if (this.sortBy === 'total_points' || this.sortBy === 'submission_count') {
+                aValue = parseFloat(aValue) || 0;
+                bValue = parseFloat(bValue) || 0;
+            }
+
+            if (this.sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        this.set('filteredAssignments', filtered);
+    }
+
+    // Get unique values for filter options
+    getUniqueClasses() {
+        const assignments = this.get('assignmentsData') || [];
+        const classes = assignments.map(a => ({ 
+            id: a.class_id, 
+            name: `${a.class_name}-${a.class_section}` 
+        }));
+        return [...new Map(classes.map(c => [c.id, c])).values()];
+    }
+
+    getUniqueSubjects() {
+        const assignments = this.get('assignmentsData') || [];
+        const subjects = assignments.map(a => ({ 
+            id: a.subject_id, 
+            name: a.subject_name 
+        }));
+        return [...new Map(subjects.map(s => [s.id, s])).values()];
+    }
+
+    getUniqueAssignmentTypes() {
+        const assignments = this.get('assignmentsData') || [];
+        const types = [...new Set(assignments.map(a => a.assignment_type).filter(Boolean))];
+        return types.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }));
+    }
+
+    // Clear all filters
+    clearFilters() {
+        this.searchTerm = '';
+        this.filters = {
+            status: '',
+            class_id: '',
+            subject_id: '',
+            assignment_type: ''
+        };
+        this.sortBy = 'created_at';
+        this.sortOrder = 'desc';
+        
+        // Reset form elements
+        const searchInput = this.querySelector('[data-filter="search"]');
+        if (searchInput) searchInput.value = '';
+        
+        const filterElements = this.querySelectorAll('[data-filter]:not([data-filter="search"])');
+        filterElements.forEach(el => el.value = '');
+        
+        this.applyFiltersAndSearch();
+    }
+
     render() {
         const loading = this.get('loading');
         const error = this.get('error');
         const assignmentsData = this.get('assignmentsData');
+        const filteredAssignments = this.get('filteredAssignments') || assignmentsData;
 
         if (loading) {
             return `
@@ -337,8 +489,8 @@ class TeacherAssignmentsPage extends App {
                                     <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${assignmentsData.length}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Total Assignment${assignmentsData.length > 1 ? 's' : ''}</div>
+                                    <div class="text-xl sm:text-2xl font-bold">${filteredAssignments?.length || 0} / ${assignmentsData.length}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Showing Assignment${(filteredAssignments?.length || 0) > 1 ? 's' : ''}</div>
                                 </div>
                             </div>
                         </div>
@@ -381,9 +533,123 @@ class TeacherAssignmentsPage extends App {
                     </div>
                 </div>
 
+                <!-- Filters and Search Section -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-filter text-white text-sm"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900">Filter & Search Assignments</h3>
+                            </div>
+                            <button 
+                                onclick="this.closest('app-teacher-assignments-page').clearFilters()"
+                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                                <i class="fas fa-times mr-1"></i>
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 space-y-4">
+                        <!-- Search Bar -->
+                        <div class="w-full">
+                            <ui-input 
+                                data-filter="search"
+                                placeholder="Search assignments by title, description, class, or subject..."
+                                value="${this.searchTerm}">
+                                <div slot="prefix" class="flex items-center">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </ui-input>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                            <!-- Status Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <ui-dropdown data-filter="status" value="${this.filters.status}">
+                                    <ui-option value="">All Status</ui-option>
+                                    <ui-option value="published">Published</ui-option>
+                                    <ui-option value="draft">Draft</ui-option>
+                                    <ui-option value="archived">Archived</ui-option>
+                                </ui-dropdown>
+                            </div>
+                            
+                            <!-- Assignment Type Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <ui-dropdown data-filter="assignment_type" value="${this.filters.assignment_type}">
+                                    <ui-option value="">All Types</ui-option>
+                                    ${this.getUniqueAssignmentTypes().map(type => 
+                                        `<ui-option value="${type.value}">${type.label}</ui-option>`
+                                    ).join('')}
+                                </ui-dropdown>
+                            </div>
+                            
+                            <!-- Class Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                                <ui-dropdown data-filter="class" value="${this.filters.class_id}">
+                                    <ui-option value="">All Classes</ui-option>
+                                    ${this.getUniqueClasses().map(cls => 
+                                        `<ui-option value="${cls.id}">${cls.name}</ui-option>`
+                                    ).join('')}
+                                </ui-dropdown>
+                            </div>
+                            
+                            <!-- Subject Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <ui-dropdown data-filter="subject" value="${this.filters.subject_id}">
+                                    <ui-option value="">All Subjects</ui-option>
+                                    ${this.getUniqueSubjects().map(subject => 
+                                        `<ui-option value="${subject.id}">${subject.name}</ui-option>`
+                                    ).join('')}
+                                </ui-dropdown>
+                            </div>
+                            
+                            <!-- Sort Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                                <ui-dropdown data-filter="sort" value="${this.sortBy}:${this.sortOrder}">
+                                    <ui-option value="created_at:desc">Newest First</ui-option>
+                                    <ui-option value="created_at:asc">Oldest First</ui-option>
+                                    <ui-option value="title:asc">Title A-Z</ui-option>
+                                    <ui-option value="title:desc">Title Z-A</ui-option>
+                                    <ui-option value="due_date:asc">Due Date (Earliest)</ui-option>
+                                    <ui-option value="due_date:desc">Due Date (Latest)</ui-option>
+                                    <ui-option value="total_points:desc">Points (High to Low)</ui-option>
+                                    <ui-option value="total_points:asc">Points (Low to High)</ui-option>
+                                    <ui-option value="submission_count:desc">Most Submissions</ui-option>
+                                    <ui-option value="submission_count:asc">Least Submissions</ui-option>
+                                </ui-dropdown>
+                            </div>
+                        </div>
+                        
+                        <!-- Results Count -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
+                            <span>
+                                Showing <span class="font-medium text-gray-900">${filteredAssignments?.length || 0}</span> 
+                                of <span class="font-medium text-gray-900">${assignmentsData.length}</span> assignments
+                            </span>
+                            ${(filteredAssignments?.length || 0) !== assignmentsData.length ? 
+                                `<span class="text-blue-600 font-medium">
+                                    <i class="fas fa-filter mr-1"></i>
+                                    Filters Applied
+                                </span>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Assignments List -->
                 <div class="space-y-6">
-                    ${assignmentsData.map(assignment => `
+                    ${(filteredAssignments && filteredAssignments.length > 0) ? 
+                        filteredAssignments.map(assignment => `
                         <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100">
                             <!-- Assignment Header -->
                             <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
@@ -508,7 +774,23 @@ class TeacherAssignmentsPage extends App {
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                        `).join('') : 
+                        `<div class="bg-white shadow-sm rounded-xl p-8 text-center border border-gray-100">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-search text-2xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Assignments Found</h3>
+                            <p class="text-gray-500 max-w-md mx-auto mb-4">
+                                No assignments match your current filters. Try adjusting your search criteria or clearing the filters.
+                            </p>
+                            <button 
+                                onclick="this.closest('app-teacher-assignments-page').clearFilters()"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200">
+                                <i class="fas fa-times mr-2"></i>
+                                Clear Filters
+                            </button>
+                        </div>`
+                    }
                 </div>
             </div>
             

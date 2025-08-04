@@ -1,0 +1,280 @@
+import '@/components/ui/Dialog.js';
+import '@/components/ui/Badge.js';
+import '@/components/ui/Button.js';
+import api from '@/services/api.js';
+
+/**
+ * Teacher Assignment View Dialog Component
+ * 
+ * A simple dialog for viewing assignment details
+ */
+class TeacherAssignmentViewDialog extends HTMLElement {
+    constructor() {
+        super();
+        this.assignmentData = null;
+        this.loading = false;
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    async openAssignment(assignmentId) {
+        console.log('Opening assignment dialog for ID:', assignmentId);
+        
+        // Show loading dialog first
+        this.loading = true;
+        this.render();
+        
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+
+            console.log('Loading assignment data...');
+            const response = await api.withToken(token).get(`/teachers/assignments/${assignmentId}`);
+            
+            if (response.data && response.data.success) {
+                this.assignmentData = response.data.data;
+                console.log('Assignment loaded:', this.assignmentData);
+                this.loading = false;
+                this.render();
+                
+                // Open the dialog
+                const dialog = this.querySelector('ui-dialog');
+                if (dialog) {
+                    dialog.open();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading assignment:', error);
+            this.loading = false;
+            this.render();
+        }
+    }
+
+    close() {
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.close();
+        }
+        this.assignmentData = null;
+        this.render();
+    }
+
+    formatDate(dateString) {
+        if (!dateString) return 'No date set';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    getStatusColor(status) {
+        switch (status?.toLowerCase()) {
+            case 'published': return 'success';
+            case 'draft': return 'warning';
+            case 'archived': return 'secondary';
+            default: return 'primary';
+        }
+    }
+
+    getTypeColor(type) {
+        switch (type?.toLowerCase()) {
+            case 'homework': return 'info';
+            case 'quiz': return 'warning';
+            case 'exam': return 'error';
+            case 'project': return 'success';
+            default: return 'primary';
+        }
+    }
+
+    render() {
+        if (this.loading) {
+            this.innerHTML = `
+                <ui-dialog size="lg">
+                    <div slot="title">Loading Assignment...</div>
+                    <div slot="content" class="flex items-center justify-center p-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span class="ml-2 text-gray-600">Loading assignment details...</span>
+                    </div>
+                </ui-dialog>
+            `;
+            return;
+        }
+
+        if (!this.assignmentData) {
+            this.innerHTML = `
+                <ui-dialog size="lg">
+                    <div slot="title">Assignment Details</div>
+                    <div slot="content" class="p-4">
+                        <p>No assignment data available.</p>
+                    </div>
+                </ui-dialog>
+            `;
+            return;
+        }
+
+        const assignment = this.assignmentData;
+        
+        this.innerHTML = `
+            <ui-dialog size="lg">
+                <div slot="title">Assignment Details</div>
+                
+                <div slot="content">
+                    <!-- Assignment Header with Gradient Background -->
+                    <div class="border-b border-indigo-100">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <i class="fas fa-tasks text-white text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-1">
+                                            ${assignment.title}
+                                        </h2>
+                                        <div class="flex items-center gap-2">
+                                            <ui-badge color="${this.getStatusColor(assignment.status)}" size="sm">
+                                                ${assignment.status?.toUpperCase() || 'UNKNOWN'}
+                                            </ui-badge>
+                                            <ui-badge color="${this.getTypeColor(assignment.assignment_type)}" size="sm">
+                                                ${assignment.assignment_type?.toUpperCase() || 'GENERAL'}
+                                            </ui-badge>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Info Cards -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-graduation-cap text-emerald-600 text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 font-medium">Class</p>
+                                                <p class="text-sm font-semibold text-gray-800">${assignment.class_name}-${assignment.class_section}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-book text-blue-600 text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 font-medium">Subject</p>
+                                                <p class="text-sm font-semibold text-gray-800">${assignment.subject_name}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-calendar text-orange-600 text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 font-medium">Due Date</p>
+                                                <p class="text-sm font-semibold text-gray-800">${this.formatDate(assignment.due_date)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-star text-yellow-600 text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 font-medium">Points</p>
+                                                <p class="text-sm font-semibold text-gray-800">${assignment.total_points}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Description -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                        <div class="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4">
+                            ${assignment.description || 'No description provided.'}
+                        </div>
+                        
+                        ${assignment.attachment_file ? `
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-paperclip text-blue-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-blue-800">
+                                            ${assignment.attachment_file.split('/').pop()}
+                                        </span>
+                                    </div>
+                                    <ui-button variant="secondary" size="sm" onclick="window.open('${assignment.attachment_file}', '_blank')">
+                                        <i class="fas fa-download mr-1"></i>
+                                        Download
+                                    </ui-button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Assignment Information -->
+                    <div class="border-t border-gray-200 pt-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Assignment Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Type:</span>
+                                    <span class="font-medium">${assignment.assignment_type?.toUpperCase() || 'GENERAL'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Status:</span>
+                                    <span class="font-medium">${assignment.status?.toUpperCase() || 'UNKNOWN'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Total Points:</span>
+                                    <span class="font-medium">${assignment.total_points}</span>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Created:</span>
+                                    <span class="font-medium">${this.formatDate(assignment.created_at)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Due Date:</span>
+                                    <span class="font-medium">${this.formatDate(assignment.due_date)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Last Updated:</span>
+                                    <span class="font-medium">${this.formatDate(assignment.updated_at)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div slot="footer" class="flex justify-end">
+                    <ui-button variant="primary" onclick="alert('Edit functionality will be added later')">
+                        <i class="fas fa-edit mr-1"></i>
+                        Edit Assignment
+                    </ui-button>
+                </div>
+            </ui-dialog>
+        `;
+    }
+}
+
+customElements.define('teacher-assignment-view-dialog', TeacherAssignmentViewDialog);
+export default TeacherAssignmentViewDialog;

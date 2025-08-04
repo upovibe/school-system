@@ -7,6 +7,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
+import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 
 /**
  * Teacher Assignments Page Component (/dashboard/teacher/assignments)
@@ -36,6 +37,9 @@ class TeacherAssignmentsPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
+        
+        // Add event listeners for button clicks
+        this.addEventListener('click', this.onButtonClick.bind(this));
     }
 
     async loadAssignments() {
@@ -141,6 +145,33 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
+
+
+    // Handle button clicks for view assignment
+    onButtonClick(event) {
+        const button = event.target.closest('button');
+        if (!button) return;
+
+        const assignmentId = button.getAttribute('data-assignment-id');
+        
+        if (!assignmentId) return;
+
+        if (button.classList.contains('view-assignment-btn')) {
+            this.openAssignmentDialog(assignmentId);
+        } else if (button.classList.contains('edit-assignment-btn')) {
+            // For now, just alert - edit functionality to be added later
+            alert('Edit functionality will be added in a future update');
+        }
+    }
+
+    // Open assignment view dialog
+    openAssignmentDialog(assignmentId) {
+        const dialog = this.querySelector('teacher-assignment-view-dialog');
+        if (dialog) {
+            dialog.openAssignment(assignmentId);
+        }
+    }
+
     // Prepare student data for table
     prepareStudentTableData(students) {
         return students.map(student => ({
@@ -237,7 +268,7 @@ class TeacherAssignmentsPage extends App {
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <div>
+                        <div></div>
                             <h1 class="text-2xl sm:text-3xl font-bold mb-2">My Class Assignments</h1>
                             <p class="text-blue-100">Manage and review your created assignments</p>
                         </div>
@@ -295,7 +326,7 @@ class TeacherAssignmentsPage extends App {
                         <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100">
                             <!-- Assignment Header -->
                             <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
-                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
                                     <div class="flex-1 min-w-0">
                                         <h3 class="text-xl font-bold text-gray-900 mb-2">${assignment.title}</h3>
                                         <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
@@ -316,11 +347,17 @@ class TeacherAssignmentsPage extends App {
                                     <div class="flex flex-col items-end gap-2">
                                         <!-- Action Buttons -->
                                         <div class="flex items-center gap-2">
-                                            <button class="size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" title="View Submissions">
-                                                <i class="fas fa-eye text-sm"></i>
+                                            <button 
+                                                class="view-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
+                                                title="View Submissions"
+                                                data-assignment-id="${assignment.id}">
+                                                <i class="fas fa-eye text-xs"></i>
                                             </button>
-                                            <button class="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" title="Edit Assignment">
-                                                <i class="fas fa-edit text-sm"></i>
+                                            <button 
+                                                class="edit-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
+                                                title="Edit Assignment"
+                                                data-assignment-id="${assignment.id}">
+                                                <i class="fas fa-edit text-xs"></i>
                                             </button>
                                         </div>
                                         <!-- Badges -->
@@ -416,6 +453,9 @@ class TeacherAssignmentsPage extends App {
             
             <!-- Student Information Modal -->
             <teacher-student-personal-information ${this.get('showStudentModal') ? 'open' : ''}></teacher-student-personal-information>
+            
+            <!-- Assignment View Dialog -->
+            <teacher-assignment-view-dialog></teacher-assignment-view-dialog>
         `;
     }
 }

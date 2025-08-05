@@ -114,12 +114,12 @@ class StudentAssignmentModel extends BaseModel
                 ca.status as assignment_status
             FROM students s
             LEFT JOIN student_assignments sa ON s.id = sa.student_id AND sa.assignment_id = ?
-            LEFT JOIN class_assignments ca ON sa.assignment_id = ca.id
+            LEFT JOIN class_assignments ca ON ca.id = ?
             WHERE s.id = ?
         ";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$assignmentId, $studentId]);
+        $stmt->execute([$assignmentId, $assignmentId, $studentId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 

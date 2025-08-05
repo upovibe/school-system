@@ -84,26 +84,74 @@ class StudentAssignmentModel extends BaseModel
     }
 
     /**
-     * Get all submissions for an assignment (for teacher grading)
+     * Get all students in the class with their submission status for an assignment
      */
     public function getAssignmentSubmissions($assignmentId)
     {
         $sql = "
             SELECT 
-                sa.*,
+                s.id as student_id,
                 s.first_name as student_first_name,
                 s.last_name as student_last_name,
                 s.student_id as student_student_id,
-                s.email as student_email
-            FROM student_assignments sa
-            LEFT JOIN students s ON sa.student_id = s.id
-            WHERE sa.assignment_id = ?
-            ORDER BY sa.submitted_at DESC, s.first_name ASC, s.last_name ASC
+                s.email as student_email,
+                s.gender,
+                s.phone,
+                sa.id as submission_id,
+                sa.submission_text,
+                sa.submission_file,
+                sa.submitted_at,
+                sa.grade,
+                sa.feedback,
+                sa.status as submission_status,
+                CASE 
+                    WHEN sa.id IS NOT NULL THEN 'submitted'
+                    ELSE 'not_submitted'
+                END as overall_status
+            FROM class_assignments ca
+            JOIN students s ON ca.class_id = s.current_class_id
+            LEFT JOIN student_assignments sa ON ca.id = sa.assignment_id AND sa.student_id = s.id
+            WHERE ca.id = ?
+            ORDER BY s.first_name ASC, s.last_name ASC
         ";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$assignmentId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rawData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Restructure the data to group submission data
+        $structuredData = [];
+        foreach ($rawData as $row) {
+            $student = [
+                'id' => $row['student_id'],
+                'first_name' => $row['student_first_name'],
+                'last_name' => $row['student_last_name'],
+                'student_id' => $row['student_student_id'],
+                'email' => $row['student_email'],
+                'gender' => $row['gender'],
+                'phone' => $row['phone'],
+                'overall_status' => $row['overall_status']
+            ];
+            
+            // Create submission object
+            if ($row['submission_id']) {
+                $student['submission'] = [
+                    'id' => $row['submission_id'],
+                    'submission_text' => $row['submission_text'],
+                    'submission_file' => $row['submission_file'],
+                    'submitted_at' => $row['submitted_at'],
+                    'grade' => $row['grade'],
+                    'feedback' => $row['feedback'],
+                    'status' => $row['submission_status']
+                ];
+            } else {
+                $student['submission'] = null;
+            }
+            
+            $structuredData[] = $student;
+        }
+        
+        return $structuredData;
     }
 
     /**
@@ -134,7 +182,7 @@ class StudentAssignmentModel extends BaseModel
         $sql = "
             SELECT 
                 COUNT(*) as total_students,
-                SUM(CASE WHEN sa.status = 'submitted' THEN 1 ELSE 0 END) as submitted_count,
+                SUM(CASE WHEN sa.id IS NOT NULL THEN 1 ELSE 0 END) as submitted_count,
                 SUM(CASE WHEN sa.status = 'graded' THEN 1 ELSE 0 END) as graded_count,
                 SUM(CASE WHEN sa.status = 'late' THEN 1 ELSE 0 END) as late_count,
                 AVG(sa.grade) as average_grade,

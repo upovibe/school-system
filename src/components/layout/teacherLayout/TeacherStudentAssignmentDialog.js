@@ -63,15 +63,10 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
     }
 
     openGradingDialog() {
-        console.log('Opening grading dialog...');
         const gradingDialog = this.querySelector('#grading-dialog');
-        console.log('Grading dialog element:', gradingDialog);
         if (gradingDialog) {
             gradingDialog.classList.remove('hidden');
             gradingDialog.classList.add('flex');
-            console.log('Grading dialog should now be visible');
-        } else {
-            console.error('Grading dialog element not found');
         }
     }
 
@@ -209,15 +204,9 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
 
         const { assignment, submission } = this.submissionData;
         
-        // Debug: Log the submission data to see the structure
-        console.log('Submission data:', submission);
-        
         // Get grade from different possible locations
         const grade = submission?.grade || submission?.submission?.grade || null;
         const submissionStatus = submission?.submission_status || submission?.submission?.status || 'submitted';
-        
-        console.log('Grade found:', grade);
-        console.log('Submission status:', submissionStatus);
 
         this.innerHTML = `
             <ui-dialog size="lg">
@@ -332,7 +321,7 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                         Cancel
                     </button>
                     ${submission?.submission_id ? `
-                        <button onclick="console.log('Grade button clicked'); this.closest('teacher-student-assignment-dialog').openGradingDialog()" 
+                        <button onclick="this.closest('teacher-student-assignment-dialog').openGradingDialog()" 
                                 class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                             <i class="fas fa-star mr-1"></i>
                             ${grade ? 'Update Grade' : 'Grade Submission'}

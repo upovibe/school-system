@@ -209,6 +209,45 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
+    // Get the current assignment ID from the page context
+    getCurrentAssignmentId(studentId) {
+        const assignmentsData = this.get('assignmentsData');
+        
+        if (!assignmentsData) {
+            return null;
+        }
+        
+        console.log('Available assignments:', assignmentsData.map(a => ({ id: a.id, title: a.title })));
+        
+        // Find the assignment that contains this specific student
+        // Prioritize assignments with "Laboratory Report" in the title
+        let foundAssignment = null;
+        
+        for (const assignment of assignmentsData) {
+            console.log(`Checking assignment ${assignment.id} (${assignment.title}):`, assignment.students?.map(s => s.id));
+            if (assignment.students && assignment.students.some(s => s.id === studentId)) {
+                console.log(`Found student ${studentId} in assignment ${assignment.id}`);
+                
+                // If this is a Laboratory Report assignment, prioritize it
+                if (assignment.title.includes('Laboratory Report')) {
+                    console.log(`Prioritizing Laboratory Report assignment ${assignment.id}`);
+                    return assignment.id;
+                }
+                
+                // Store the first assignment found as fallback
+                if (!foundAssignment) {
+                    foundAssignment = assignment.id;
+                }
+            }
+        }
+        
+        // Return the first assignment found if no Laboratory Report was found
+        return foundAssignment;
+        
+        console.log(`Student ${studentId} not found in any assignment`);
+        return null;
+    }
+
     // Handle student row clicks
     async onStudentRowClick(event) {
         const { detail } = event;
@@ -223,10 +262,12 @@ class TeacherAssignmentsPage extends App {
             
             let assignmentId = null;
             
-            // For testing - hardcode to assignment 4 (Laboratory Report)
-            assignmentId = 4;
+            // Get the current assignment context for this specific student
+            const currentAssignmentId = this.getCurrentAssignmentId(student.id);
+            assignmentId = currentAssignmentId;
             
-            console.log(assignmentId);
+            console.log('Assignment ID:', assignmentId);
+            console.log('Student ID:', student.id);
             
             // Open the student assignment dialog
             const dialog = this.querySelector('teacher-student-assignment-dialog');

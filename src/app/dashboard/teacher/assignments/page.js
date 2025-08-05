@@ -101,6 +101,9 @@ class TeacherAssignmentsPage extends App {
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
         
+        // Add event listeners for table row clicks
+        this.addEventListener('table-row-click', this.onStudentRowClick.bind(this));
+        
         // Add event listeners for modal events
         this.addEventListener('assignment-updated', this.onAssignmentUpdated.bind(this));
         this.addEventListener('modal-closed', this.onModalClosed.bind(this));
@@ -205,6 +208,66 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
+    // Handle student row clicks
+    onStudentRowClick(event) {
+        const { detail } = event;
+        const studentData = detail.row;
+        
+        console.log('🔍 Student Row Clicked:', studentData);
+        
+        // Get the full student data including submission details
+        if (studentData.full_data) {
+            const student = studentData.full_data;
+            
+            console.log('📚 Student Details:', {
+                id: student.id,
+                name: `${student.first_name} ${student.last_name}`,
+                student_id: student.student_id,
+                email: student.email,
+                phone: student.phone,
+                gender: student.gender,
+                overall_status: student.overall_status
+            });
+            
+            // Check if student has a submission
+            if (student.submission && (student.submission.submission_text || student.submission.submission_file)) {
+                console.log('📝 SUBMITTED ASSIGNMENT DETAILS:', {
+                    student_name: `${student.first_name} ${student.last_name}`,
+                    student_id: student.student_id,
+                    submission_id: student.submission.id,
+                    submission_text: student.submission.submission_text,
+                    submission_file: student.submission.submission_file,
+                    submitted_at: student.submission.submitted_at,
+                    grade: student.submission.grade,
+                    feedback: student.submission.feedback,
+                    status: student.submission.status
+                });
+                
+                // Show submission text if available
+                if (student.submission.submission_text) {
+                    console.log('📄 SUBMISSION TEXT:', student.submission.submission_text);
+                }
+                
+                // Show file info if available
+                if (student.submission.submission_file) {
+                    console.log('📎 SUBMISSION FILE:', student.submission.submission_file);
+                }
+                
+                // Show grade and feedback if available
+                if (student.submission.grade) {
+                    console.log('📊 GRADE:', student.submission.grade);
+                }
+                
+                if (student.submission.feedback) {
+                    console.log('💬 FEEDBACK:', student.submission.feedback);
+                }
+                
+            } else {
+                console.log('❌ NO SUBMISSION: This student has not submitted the assignment yet.');
+            }
+        }
+    }
+
     // Open assignment view dialog
     openAssignmentDialog(assignmentId) {
         const dialog = this.querySelector('teacher-assignment-view-dialog');
@@ -255,18 +318,20 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
-    // Prepare student data for table
+    // Prepare student data for table using new API structure
     prepareStudentTableData(students) {
+        console.log('🔍 Student data structure:', students[0]); // Debug the first student
+        
         return students.map(student => ({
-            student_id: student.student_id,
+            id: student.id,
             name: `${student.first_name} ${student.last_name}`,
             gender: student.gender === 'male' ? 'Male' : 'Female',
             email: student.email || 'No email',
             phone: student.phone || 'No phone',
-            status: student.status === 'active' ? 'Active' : 'Inactive',
-            submission_status: student.has_submitted,
-            submitted_at: student.submitted_at,
-            grade: student.grade || 'Not graded'
+            submitted: student.overall_status === 'submitted' ? 'Yes' : 'No',
+            grade: student.grade ? `${student.grade}%` : 'Not graded',
+            // Store full student data for click handling
+            full_data: student
         }));
     }
 
@@ -277,32 +342,12 @@ class TeacherAssignmentsPage extends App {
             { key: 'gender', label: 'Gender' },
             { key: 'email', label: 'Email' },
             { key: 'phone', label: 'Phone' },
-            { key: 'status', label: 'Status' },
-            { key: 'submission_status', label: 'Submitted', render: this.renderSubmissionStatus.bind(this) },
+            { key: 'submitted', label: 'Submitted' },
             { key: 'grade', label: 'Grade' }
         ];
     }
 
-    // Render submission status with visual indicator
-    renderSubmissionStatus(value, row) {
-        if (value === 'submitted') {
-            const submittedDate = row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : 'Unknown';
-            return `
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                    <span class="text-green-700 font-medium">Submitted</span>
-                    <span class="text-xs text-gray-500 ml-1">(${submittedDate})</span>
-                </div>
-            `;
-        } else {
-            return `
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
-                    <span class="text-gray-500">Not Submitted</span>
-                </div>
-            `;
-        }
-    }
+
 
     // Handle filter and search changes
     onFilterChange(event) {
@@ -537,6 +582,7 @@ class TeacherAssignmentsPage extends App {
                                         striped
                                         print
                                         sortable
+                                        clickable
                                         refresh>
                                     </ui-table>
                                 ` : `

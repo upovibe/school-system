@@ -496,7 +496,6 @@ class Dropdown extends HTMLElement {
         this.documentClickHandler = (e) => {
             // Check if click is outside this dropdown
             if (!this.container.contains(e.target) && this.isOpen) {
-                console.log('Click outside dropdown, closing:', e.target);
                 this.closeDropdown();
             }
         };

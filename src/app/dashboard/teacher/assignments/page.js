@@ -210,43 +210,7 @@ class TeacherAssignmentsPage extends App {
     }
 
     // Get the current assignment ID from the page context
-    getCurrentAssignmentId(studentId) {
-        const assignmentsData = this.get('assignmentsData');
-        
-        if (!assignmentsData) {
-            return null;
-        }
-        
-        console.log('Available assignments:', assignmentsData.map(a => ({ id: a.id, title: a.title })));
-        
-        // Find the assignment that contains this specific student
-        // Prioritize assignments with "Laboratory Report" in the title
-        let foundAssignment = null;
-        
-        for (const assignment of assignmentsData) {
-            console.log(`Checking assignment ${assignment.id} (${assignment.title}):`, assignment.students?.map(s => s.id));
-            if (assignment.students && assignment.students.some(s => s.id === studentId)) {
-                console.log(`Found student ${studentId} in assignment ${assignment.id}`);
-                
-                // If this is a Laboratory Report assignment, prioritize it
-                if (assignment.title.includes('Laboratory Report')) {
-                    console.log(`Prioritizing Laboratory Report assignment ${assignment.id}`);
-                    return assignment.id;
-                }
-                
-                // Store the first assignment found as fallback
-                if (!foundAssignment) {
-                    foundAssignment = assignment.id;
-                }
-            }
-        }
-        
-        // Return the first assignment found if no Laboratory Report was found
-        return foundAssignment;
-        
-        console.log(`Student ${studentId} not found in any assignment`);
-        return null;
-    }
+
 
     // Handle student row clicks
     async onStudentRowClick(event) {
@@ -257,22 +221,16 @@ class TeacherAssignmentsPage extends App {
         if (studentData.full_data) {
             const student = studentData.full_data;
             
-            // Get the assignment ID from the current assignment context
-            const assignmentsData = this.get('assignmentsData');
+            // Get the assignment ID from the table's data attribute
+            const table = event.target.closest('ui-table');
+            const assignmentId = table ? table.getAttribute('data-assignment-id') : null;
             
-            let assignmentId = null;
-            
-            // Get the current assignment context for this specific student
-            const currentAssignmentId = this.getCurrentAssignmentId(student.id);
-            assignmentId = currentAssignmentId;
-            
-            console.log('Assignment ID:', assignmentId);
-            console.log('Student ID:', student.id);
-            
-            // Open the student assignment dialog
-            const dialog = this.querySelector('teacher-student-assignment-dialog');
-            if (dialog) {
-                await dialog.openStudentAssignment(assignmentId, student.id);
+            if (assignmentId) {
+                // Open the student assignment dialog
+                const dialog = this.querySelector('teacher-student-assignment-dialog');
+                if (dialog) {
+                    await dialog.openStudentAssignment(assignmentId, student.id);
+                }
             }
         }
     }
@@ -590,7 +548,8 @@ class TeacherAssignmentsPage extends App {
                                         print
                                         sortable
                                         clickable
-                                        refresh>
+                                        refresh
+                                        data-assignment-id="${assignment.id}">
                                     </ui-table>
                                 ` : `
                                     <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">

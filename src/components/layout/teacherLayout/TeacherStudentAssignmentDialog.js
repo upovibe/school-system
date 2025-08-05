@@ -266,17 +266,16 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                             } Submission
                         </h2>
                     </div>
-                    ${
-                      grade
-                        ? `
-                        <div class="p-2">
-                            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                                <span class="text-white font-bold text-sm">${grade}%</span>
-                            </div>
-                        </div>
-                    `
-                        : ""
-                    }
+                    ${grade ? `
+                         <div class="p-2">
+                             <div class="size-18 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                                 <div class="text-white font-bold text-center">
+                                     <div>${grade}</div>
+                                     <div class="border-t border-white border-opacity-50">${assignment?.total_points || 100}</div>
+                                 </div>
+                           </div>
+                         </div>
+                     ` : ''}
                 </div>
                 
                 <div slot="content" class="space-y-6">
@@ -290,8 +289,11 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                               grade
                                 ? `
                                 <div class="absolute top-0 right-0 z-10">
-                                    <div class="size-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                                        <span class="text-white font-bold text-sm">${grade}%</span>
+                                    <div class="size-18 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <div class="text-white font-bold text-center">
+                                            <div>${grade}</div>
+                                            <div class="border-t border-white border-opacity-50">${assignment?.total_points || 100}</div>
+                                        </div>
                                     </div>
                                 </div>
                             `

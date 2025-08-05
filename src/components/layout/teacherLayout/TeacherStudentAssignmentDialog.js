@@ -2,6 +2,8 @@ import '@/components/ui/Dialog.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/ContentDisplay.js';
+import '@/components/ui/Input.js';
+import '@/components/ui/Textarea.js';
 import api from '@/services/api.js';
 
 /**
@@ -75,8 +77,8 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         const feedbackInput = this.querySelector('#feedback-input');
         const gradingDialog = this.querySelector('#grading-dialog');
 
-        const grade = parseFloat(gradeInput.value);
-        const feedback = feedbackInput.value.trim();
+        const grade = parseFloat(gradeInput.value || gradeInput.getValue());
+        const feedback = (feedbackInput.value || feedbackInput.getValue() || '').trim();
 
         if (!grade || grade < 0 || grade > 100) {
             alert('Please enter a valid grade between 0 and 100');
@@ -338,33 +340,31 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                              ${grade ? 'Update Grade' : 'Grade Submission'}
                          </h3>
                          
-                         <div class="space-y-4">
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">Grade (%)</label>
-                                 <input type="number" id="grade-input" min="0" max="100" step="0.1" 
-                                        value="${grade || ''}" 
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Enter grade (0-100)">
-                             </div>
-                             
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">Feedback</label>
-                                 <textarea id="feedback-input" rows="4" 
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="Enter feedback for the student">${submission?.feedback || ''}</textarea>
-                             </div>
-                         </div>
-                         
-                         <div class="flex justify-end space-x-3 mt-6">
-                             <button onclick="this.closest('#grading-dialog').classList.add('hidden')" 
-                                     class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
-                                 Cancel
-                             </button>
-                             <button onclick="this.closest('teacher-student-assignment-dialog').submitGrade()" 
-                                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                 ${grade ? 'Update Grade' : 'Submit Grade'}
-                             </button>
-                         </div>
+                                                   <div class="space-y-4">
+                              <div>
+                                  <label class="block text-sm font-medium text-gray-700 mb-2">Grade (%)</label>
+                                  <ui-input type="number" id="grade-input" min="0" max="100" step="0.1" 
+                                           value="${grade || ''}" 
+                                           placeholder="Enter grade (0-100)">
+                                  </ui-input>
+                              </div>
+                              
+                                                             <div>
+                                   <label class="block text-sm font-medium text-gray-700 mb-2">Feedback</label>
+                                   <ui-textarea id="feedback-input" rows="4" 
+                                               value="${submission?.feedback || ''}"
+                                               placeholder="Enter feedback for the student"></ui-textarea>
+                               </div>
+                          </div>
+                          
+                          <div class="flex justify-end space-x-3 mt-6">
+                              <ui-button variant="secondary" onclick="this.closest('#grading-dialog').classList.add('hidden')">
+                                  Cancel
+                              </ui-button>
+                              <ui-button variant="primary" onclick="this.closest('teacher-student-assignment-dialog').submitGrade()">
+                                  ${grade ? 'Update Grade' : 'Submit Grade'}
+                              </ui-button>
+                          </div>
                      </div>
                  </div>
              </div>

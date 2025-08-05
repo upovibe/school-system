@@ -213,24 +213,11 @@ class TeacherAssignmentsPage extends App {
         const { detail } = event;
         const studentData = detail.row;
         
-        console.log('🔍 Student Row Clicked:', studentData);
-        
         // Get the full student data including submission details
         if (studentData.full_data) {
             const student = studentData.full_data;
             
-            console.log('📚 Student Details:', {
-                id: student.id,
-                name: `${student.first_name} ${student.last_name}`,
-                student_id: student.student_id,
-                email: student.email,
-                phone: student.phone,
-                gender: student.gender,
-                overall_status: student.overall_status
-            });
-            
             // Get the assignment ID from the current assignment context
-            // We need to find which assignment this student belongs to
             const assignmentsData = this.get('assignmentsData');
             let assignmentId = null;
             
@@ -243,99 +230,30 @@ class TeacherAssignmentsPage extends App {
             }
             
             if (!assignmentId) {
-                console.log('❌ ERROR: Could not find assignment ID for this student');
                 return;
             }
-            
-            console.log('📋 Assignment ID:', assignmentId);
-            console.log('👤 Student ID:', student.id);
             
             try {
                 // Get token from localStorage
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    console.log('❌ ERROR: No authentication token found');
                     return;
                 }
                 
-                // Call the new API endpoint
+                // Call the API endpoint
                 const endpoint = `/teachers/assignments/${assignmentId}/students/${student.id}/submission`;
-                console.log('🌐 API Endpoint:', endpoint);
-                
                 const response = await api.withToken(token).get(endpoint);
                 
                 if (response.data && response.data.success) {
                     const submissionData = response.data.data;
                     
-                    console.log('✅ API Response Success!');
-                    console.log('📊 Full Submission Data:', submissionData);
-                    
-                    // Log assignment details
-                    if (submissionData.assignment) {
-                        console.log('📚 ASSIGNMENT DETAILS:', {
-                            title: submissionData.assignment.title,
-                            description: submissionData.assignment.description,
-                            due_date: submissionData.assignment.due_date,
-                            total_points: submissionData.assignment.total_points,
-                            assignment_type: submissionData.assignment.assignment_type,
-                            status: submissionData.assignment.status
-                        });
-                    }
-                    
-                    // Log student details
-                    if (submissionData.submission) {
-                        console.log('👤 STUDENT DETAILS:', {
-                            name: `${submissionData.submission.first_name} ${submissionData.submission.last_name}`,
-                            student_id: submissionData.submission.student_id,
-                            email: submissionData.submission.email,
-                            phone: submissionData.submission.phone,
-                            gender: submissionData.submission.gender,
-                            date_of_birth: submissionData.submission.date_of_birth,
-                            address: submissionData.submission.address
-                        });
-                        
-                        console.log('📝 SUBMISSION DETAILS:', {
-                            submission_id: submissionData.submission.submission_id,
-                            submission_text: submissionData.submission.submission_text,
-                            submission_file: submissionData.submission.submission_file,
-                            submitted_at: submissionData.submission.submitted_at,
-                            grade: submissionData.submission.grade,
-                            feedback: submissionData.submission.feedback,
-                            status: submissionData.submission.submission_status
-                        });
-                        
-                        // Show submission text if available
-                        if (submissionData.submission.submission_text) {
-                            console.log('📄 SUBMISSION TEXT:', submissionData.submission.submission_text);
-                        }
-                        
-                        // Show file info if available
-                        if (submissionData.submission.submission_file) {
-                            console.log('📎 SUBMISSION FILE:', submissionData.submission.submission_file);
-                        }
-                        
-                        // Show grade and feedback if available
-                        if (submissionData.submission.grade) {
-                            console.log('📊 GRADE:', submissionData.submission.grade);
-                        }
-                        
-                        if (submissionData.submission.feedback) {
-                            console.log('💬 FEEDBACK:', submissionData.submission.feedback);
-                        }
-                        
-                    } else {
-                        console.log('❌ NO SUBMISSION: This student has not submitted the assignment yet.');
-                    }
-                    
-                } else {
-                    console.log('❌ API Error:', response.data?.message || 'Unknown error');
+                    // Console log the assignment and student details
+                    console.log('📚 ASSIGNMENT DETAILS:', submissionData.assignment);
+                    console.log('👤 STUDENT DETAILS:', submissionData.submission);
                 }
                 
             } catch (error) {
-                console.error('❌ Error fetching student submission:', error);
-                if (error.response) {
-                    console.log('📊 Error Response:', error.response.data);
-                }
+                console.error('Error fetching student submission:', error);
             }
         }
     }
@@ -392,8 +310,6 @@ class TeacherAssignmentsPage extends App {
 
     // Prepare student data for table using new API structure
     prepareStudentTableData(students) {
-        console.log('🔍 Student data structure:', students[0]); // Debug the first student
-        
         return students.map(student => ({
             id: student.id,
             name: `${student.first_name} ${student.last_name}`,

@@ -294,7 +294,7 @@ class TeacherAssignmentsPage extends App {
             email: student.email || 'No email',
             phone: student.phone || 'No phone',
             submitted: student.overall_status === 'submitted' ? 'Yes' : 'No',
-            grade: student.grade ? `${student.grade}%` : 'Not graded',
+            grade: student.grade ? `${student.grade}` : 'Not graded',
             // Store full student data for click handling
             full_data: student
         }));

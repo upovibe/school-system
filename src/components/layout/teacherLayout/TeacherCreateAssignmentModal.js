@@ -183,6 +183,18 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                 return;
             }
 
+            // Prepare assignment data
+            const formDataObj = {
+                title: title.trim(),
+                description: description.trim(),
+                due_date: due_date,
+                total_points: total_points,
+                assignment_type: assignment_type,
+                status: status,
+                class_id: this.classId,
+                subject_id: this.subjectId
+            };
+
             // Check if we have file uploads
             const hasFiles = attachmentFileUpload && attachmentFileUpload.getFiles().length > 0;
             let response;
@@ -190,41 +202,23 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             if (hasFiles) {
                 // Use FormData for file uploads
                 const formData = new FormData();
-                formData.append('title', title.trim());
-                formData.append('description', description.trim());
-                formData.append('due_date', due_date);
-                formData.append('total_points', total_points);
-                formData.append('assignment_type', assignment_type);
-                formData.append('status', status);
-                formData.append('class_id', this.classId);
-                formData.append('subject_id', this.subjectId);
+                
+                // Add all form fields (following the working pattern from NewsSettingsModal)
+                Object.keys(formDataObj).forEach(key => {
+                    formData.append(key, formDataObj[key]);
+                });
                 
                 // Add files
                 const files = attachmentFileUpload.getFiles();
                 const newFiles = files.filter(file => file instanceof File);
                 newFiles.forEach(file => {
-                    formData.append('attachment_file', file, file.name);
+                    formData.append('attachment', file, file.name);
                 });
                 
                 response = await api.withToken(token).post('/teachers/assignments', formData);
             } else {
                 // Use JSON for simpler data without files
-                const jsonData = {
-                    title: title.trim(),
-                    description: description.trim(),
-                    due_date: due_date,
-                    total_points: total_points,
-                    assignment_type: assignment_type,
-                    status: status,
-                    class_id: this.classId,
-                    subject_id: this.subjectId
-                };
-                
-                response = await api.withToken(token).post('/teachers/assignments', jsonData, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                response = await api.withToken(token).post('/teachers/assignments', formDataObj);
             }
 
             if (response.data && response.data.success) {

@@ -295,12 +295,7 @@ class TeacherAssignmentViewDialog extends HTMLElement {
 
                 </div>
                 
-                <div slot="footer" class="flex justify-end">
-                    <ui-button variant="primary" onclick="alert('Edit functionality will be added later')">
-                        <i class="fas fa-edit mr-1"></i>
-                        Edit Assignment
-                    </ui-button>
-                </div>
+
             </ui-dialog>
         `;
     }

@@ -227,17 +227,7 @@ class StudentAssignmentViewDialog extends HTMLElement {
                                         </div>
                                     </div>
                                     
-                                    <div class="bg-gray-300 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-check-circle text-green-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-gray-500 font-medium">Submission Status</p>
-                                                <p class="text-sm font-semibold text-gray-800">${this.getSubmissionStatusText(submission)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -279,104 +269,14 @@ class StudentAssignmentViewDialog extends HTMLElement {
                         ` : ''}
                     </div>
 
-                    <!-- Submission Details -->
-                    ${submission ? `
-                        <div class="mb-6">
-                            <div class="flex items-center gap-2 mb-3">
-                                <i class="fas fa-upload text-blue-500"></i>
-                                <h3 class="text-lg font-semibold text-gray-900">Your Submission</h3>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-4 space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-700">Submitted:</span>
-                                    <span class="text-sm text-gray-600">${this.formatDate(submission.submitted_at)}</span>
-                                </div>
-                                
-                                ${submission.submission_text ? `
-                                    <div>
-                                        <h4 class="text-sm font-medium text-gray-700 mb-2">Submission Text:</h4>
-                                        <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                            <p class="text-sm text-gray-800">${submission.submission_text}</p>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${submission.submission_file ? `
-                                    <div>
-                                        <h4 class="text-sm font-medium text-gray-700 mb-2">Submitted File:</h4>
-                                        <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-sm text-gray-800">${submission.submission_file.split('/').pop()}</span>
-                                                <ui-button variant="secondary" size="sm" onclick="window.open('${submission.submission_file}', '_blank')">
-                                                    <i class="fas fa-download mr-1"></i>
-                                                    Download
-                                                </ui-button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${submission.grade ? `
-                                    <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-4">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                                                    <i class="fas fa-trophy text-white text-sm"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-medium text-emerald-700">Grade</p>
-                                                    <p class="text-lg font-bold text-gray-900">${submission.grade}/${assignment.total_points} points</p>
-                                                </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
-                                                    <span class="text-white font-bold text-sm">${Math.round((submission.grade / assignment.total_points) * 100)}%</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${submission.feedback ? `
-                                    <div>
-                                        <h4 class="text-sm font-medium text-gray-700 mb-2">Teacher Feedback:</h4>
-                                        <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                            <p class="text-sm text-gray-800">${submission.feedback}</p>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="mb-6">
-                            <div class="flex items-center gap-2 mb-3">
-                                <i class="fas fa-exclamation-triangle text-amber-500"></i>
-                                <h3 class="text-lg font-semibold text-gray-900">Submission Status</h3>
-                            </div>
-                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                <div class="flex items-center">
-                                    <i class="fas fa-clock text-amber-600 mr-2"></i>
-                                    <span class="text-amber-800 font-medium">Not submitted yet</span>
-                                </div>
-                                <p class="text-amber-700 text-sm mt-2">
-                                    You haven't submitted this assignment yet. Make sure to submit before the due date.
-                                </p>
-                            </div>
-                        </div>
-                    `}
+                    <!-- Assignment Information -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        <h3 class="text-lg font-semibold text-gray-900">Assignment Information</h3>
+                    </div>
                 </div>
                 
-                <div slot="footer" class="flex justify-end gap-3">
-                    ${!submission ? `
-                        <ui-button variant="primary" onclick="window.location.href='/dashboard/student/assignments'">
-                            <i class="fas fa-upload mr-1"></i>
-                            Submit Assignment
-                        </ui-button>
-                    ` : ''}
-                    <ui-button variant="secondary" onclick="this.closest('ui-dialog').close()">
-                        Close
-                    </ui-button>
-                </div>
+
             </ui-dialog>
         `;
     }

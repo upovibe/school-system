@@ -3,6 +3,7 @@ import api from '@/services/api.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Card.js';
 import '@/components/ui/Button.js';
+import '@/components/layout/studentLayout/StudentAssignmentViewDialog.js';
 
 /**
  * Student Assignments Page Component (/dashboard/student/assignments)
@@ -21,6 +22,9 @@ class StudentAssignmentsPage extends App {
         super.connectedCallback();
         document.title = 'My Assignments | School System';
         await this.loadAssignments();
+        
+        // Add event listeners for button clicks
+        this.addEventListener('click', this.onButtonClick.bind(this));
     }
 
     async loadAssignments() {
@@ -128,6 +132,28 @@ class StudentAssignmentsPage extends App {
         
         const config = typeConfig[type] || typeConfig['other'];
         return `<ui-badge color="${config.color}"><i class="${config.icon} mr-1"></i>${config.text}</ui-badge>`;
+    }
+
+    // Handle button clicks for view assignment
+    onButtonClick(event) {
+        const button = event.target.closest('button');
+        if (!button) return;
+
+        const assignmentId = button.getAttribute('data-assignment-id');
+        
+        if (!assignmentId) return;
+
+        if (button.classList.contains('view-assignment-btn')) {
+            this.openAssignmentDialog(assignmentId);
+        }
+    }
+
+    // Open assignment view dialog
+    openAssignmentDialog(assignmentId) {
+        const dialog = this.querySelector('student-assignment-view-dialog');
+        if (dialog) {
+            dialog.openAssignment(assignmentId);
+        }
     }
 
     render() {
@@ -423,8 +449,9 @@ class StudentAssignmentsPage extends App {
                                     
                                     <div class="flex space-x-3">
                                         <button 
-                                            class="size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
-                                            title="View Details">
+                                            class="view-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
+                                            title="View Details"
+                                            data-assignment-id="${assignment.id}">
                                             <i class="fas fa-eye text-xs"></i>
                                         </button>
                                         ${assignment.submission_status === 'not_submitted' ? `
@@ -441,6 +468,9 @@ class StudentAssignmentsPage extends App {
                     `).join('')}
                 </div>
             </div>
+            
+            <!-- Student Assignment View Dialog -->
+            <student-assignment-view-dialog></student-assignment-view-dialog>
         `;
     }
 }

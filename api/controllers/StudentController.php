@@ -957,8 +957,8 @@ class StudentController {
             
             $student = $_REQUEST['current_student'];
             
-            // Get the assignment
-            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            // Get the assignment with full details
+            $assignment = $this->classAssignmentModel->getAssignmentWithDetails($assignmentId);
             
             if (!$assignment) {
                 http_response_code(404);
@@ -985,12 +985,42 @@ class StudentController {
                 $assignmentId
             );
             
-            $assignment['submission'] = $submission;
+            // Restructure the response to include teacher and subject details
+            $restructuredAssignment = [
+                'id' => $assignment['id'],
+                'title' => $assignment['title'],
+                'description' => $assignment['description'],
+                'due_date' => $assignment['due_date'],
+                'total_points' => $assignment['total_points'],
+                'assignment_type' => $assignment['assignment_type'],
+                'status' => $assignment['status'],
+                'attachment_file' => $assignment['attachment_file'],
+                'created_at' => $assignment['created_at'],
+                'updated_at' => $assignment['updated_at'],
+                'teacher' => [
+                    'id' => $assignment['teacher_id'],
+                    'first_name' => $assignment['teacher_first_name'],
+                    'last_name' => $assignment['teacher_last_name'],
+                    'full_name' => $assignment['teacher_first_name'] . ' ' . $assignment['teacher_last_name'],
+                    'email' => $assignment['teacher_email']
+                ],
+                'subject' => [
+                    'id' => $assignment['subject_id'],
+                    'name' => $assignment['subject_name'],
+                    'code' => $assignment['subject_code']
+                ],
+                'class' => [
+                    'id' => $assignment['class_id'],
+                    'name' => $assignment['class_name'],
+                    'section' => $assignment['class_section']
+                ],
+                'submission' => $submission
+            ];
             
-                http_response_code(200);
+            http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'data' => $assignment,
+                'data' => $restructuredAssignment,
                 'message' => 'Assignment retrieved successfully'
             ]);
         } catch (Exception $e) {

@@ -378,7 +378,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             <ui-file-upload 
                                 data-field="attachment_file"
                                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
-                                max-size="5MB"
                                 placeholder="Upload assignment file">
                             </ui-file-upload>
                         </div>

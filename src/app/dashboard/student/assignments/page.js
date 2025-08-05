@@ -4,6 +4,7 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Card.js';
 import '@/components/ui/Button.js';
 import '@/components/layout/studentLayout/StudentAssignmentViewDialog.js';
+import '@/components/layout/studentLayout/StudentAssignmentSubmissionModal.js';
 
 /**
  * Student Assignments Page Component (/dashboard/student/assignments)
@@ -16,6 +17,7 @@ class StudentAssignmentsPage extends App {
         this.assignments = [];
         this.loading = true;
         this.error = null;
+        this.showSubmitModal = false;
     }
 
     async connectedCallback() {
@@ -25,6 +27,14 @@ class StudentAssignmentsPage extends App {
         
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
+        
+        // Add event listeners for modal events
+        this.addEventListener('assignment-submitted', this.onAssignmentSubmitted.bind(this));
+        this.addEventListener('modal-closed', (event) => {
+            if (event.detail.type === 'submit-assignment') {
+                this.set('showSubmitModal', false);
+            }
+        });
     }
 
     async loadAssignments() {
@@ -145,6 +155,8 @@ class StudentAssignmentsPage extends App {
 
         if (button.classList.contains('view-assignment-btn')) {
             this.openAssignmentDialog(assignmentId);
+        } else if (button.classList.contains('submit-assignment-btn')) {
+            this.openSubmitModal(assignmentId);
         }
     }
 
@@ -154,6 +166,23 @@ class StudentAssignmentsPage extends App {
         if (dialog) {
             dialog.openAssignment(assignmentId);
         }
+    }
+
+    // Open submit modal
+    openSubmitModal(assignmentId) {
+        this.set('showSubmitModal', true);
+        
+        // Open the modal
+        const modal = this.querySelector('student-assignment-submission-modal');
+        if (modal) {
+            modal.open(assignmentId);
+        }
+    }
+
+    // Handle assignment submitted
+    onAssignmentSubmitted(event) {
+        // Reload assignments to get updated status
+        this.loadAssignments();
     }
 
     render() {
@@ -456,8 +485,9 @@ class StudentAssignmentsPage extends App {
                                         </button>
                                         ${assignment.submission_status === 'not_submitted' ? `
                                             <button 
-                                                class="size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
-                                                title="Submit Assignment">
+                                                class="submit-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
+                                                title="Submit Assignment"
+                                                data-assignment-id="${assignment.id}">
                                                 <i class="fas fa-upload text-xs"></i>
                                             </button>
                                         ` : ''}
@@ -471,6 +501,9 @@ class StudentAssignmentsPage extends App {
             
             <!-- Student Assignment View Dialog -->
             <student-assignment-view-dialog></student-assignment-view-dialog>
+            
+            <!-- Student Assignment Submission Modal -->
+            <student-assignment-submission-modal ${this.get('showSubmitModal') ? 'open' : ''}></student-assignment-submission-modal>
         `;
     }
 }

@@ -220,19 +220,13 @@ class TeacherAssignmentsPage extends App {
             
             // Get the assignment ID from the current assignment context
             const assignmentsData = this.get('assignmentsData');
+            
             let assignmentId = null;
             
-            // Find the assignment that contains this student
-            for (const assignment of assignmentsData) {
-                if (assignment.students && assignment.students.some(s => s.id === student.id)) {
-                    assignmentId = assignment.id;
-                    break;
-                }
-            }
+            // For testing - hardcode to assignment 4 (Laboratory Report)
+            assignmentId = 4;
             
-            if (!assignmentId) {
-                return;
-            }
+            console.log(assignmentId);
             
             // Open the student assignment dialog
             const dialog = this.querySelector('teacher-student-assignment-dialog');

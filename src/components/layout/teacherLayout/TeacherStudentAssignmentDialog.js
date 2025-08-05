@@ -21,8 +21,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
     }
 
     async openStudentAssignment(assignmentId, studentId) {
-        console.log('Opening student assignment dialog for assignment:', assignmentId, 'student:', studentId);
-
         // Show loading dialog first
         this.loading = true;
         this.render();
@@ -34,14 +32,11 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                 return;
             }
 
-            console.log('Loading student assignment data...');
-            const response = await api.withToken(token).get(`/teachers/assignments/${assignmentId}/students/${studentId}/submission`);
+            const apiUrl = `/teachers/assignments/${assignmentId}/students/${studentId}/submission`;
+            const response = await api.withToken(token).get(apiUrl);
 
             if (response.data && response.data.success) {
                 this.submissionData = response.data.data;
-                console.log('Student assignment loaded:', this.submissionData);
-                console.log('Assignment data:', this.submissionData.assignment);
-                console.log('Submission data:', this.submissionData.submission);
                 this.loading = false;
                 this.render();
 
@@ -139,55 +134,89 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         }
 
         const { assignment, submission } = this.submissionData;
-        
-        console.log('Rendering dialog with assignment:', assignment);
-        console.log('Rendering dialog with submission:', submission);
 
         this.innerHTML = `
             <ui-dialog size="lg">
                 <div slot="title" class="flex items-center space-x-3">
                     <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-file-alt text-white text-sm"></i>
+                        <i class="fas fa-user-graduate text-white text-sm"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-gray-900">Assignment Details</h2>
+                    <h2 class="text-xl font-bold text-gray-900">
+                        ${submission?.first_name ? `${submission.first_name} ${submission.last_name}` : 'Student'} Submission
+                    </h2>
                 </div>
                 
                 <div slot="content" class="space-y-4">
-                    <!-- Assignment Information -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-sm font-medium text-gray-600">Title</label>
-                                <p class="text-gray-900 font-semibold">${assignment?.title || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-gray-600">Type</label>
-                                <div class="flex items-center space-x-2">
-                                    <ui-badge color="${this.getTypeColor(assignment?.assignment_type)}" size="sm">
-                                        ${assignment?.assignment_type?.toUpperCase() || 'N/A'}
-                                    </ui-badge>
+                    ${submission?.submission_id ? `
+                        <!-- Student has submitted -->
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Submission Details</h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Submission Status</label>
+                                        <div class="flex items-center space-x-2 mt-1">
+                                            <ui-badge color="${this.getStatusColor(submission.submission_status)}" size="sm">
+                                                ${submission.submission_status?.toUpperCase() || 'SUBMITTED'}
+                                            </ui-badge>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Submitted At</label>
+                                        <p class="text-gray-900">${this.formatDate(submission.submitted_at)}</p>
+                                    </div>
+                                    ${submission.grade ? `
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Grade</label>
+                                            <p class="text-gray-900 font-semibold text-lg">${submission.grade}%</p>
+                                        </div>
+                                    ` : ''}
+                                    ${submission.feedback ? `
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Feedback</label>
+                                            <p class="text-gray-900">${submission.feedback}</p>
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-gray-600">Due Date</label>
-                                <p class="text-gray-900">${this.formatDate(assignment?.due_date)}</p>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-gray-600">Total Points</label>
-                                <p class="text-gray-900">${assignment?.total_points || 'N/A'}</p>
+                                
+                                ${submission.submission_text ? `
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Submission Text</label>
+                                        <div class="mt-2 p-3 bg-white rounded border border-gray-200">
+                                            <div class="prose prose-sm max-w-none text-gray-900">
+                                                ${submission.submission_text}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${submission.submission_file ? `
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Attached File</label>
+                                        <div class="mt-2 p-3 bg-white rounded border border-gray-200">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-paperclip text-gray-500"></i>
+                                                <span class="text-gray-900">${submission.submission_file}</span>
+                                                <button class="text-blue-600 hover:text-blue-800 text-sm">
+                                                    <i class="fas fa-download mr-1"></i>
+                                                    Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
-                        ${assignment?.description ? `
-                            <div class="mt-4">
-                                <label class="text-sm font-medium text-gray-600">Description</label>
-                                <div class="mt-2 p-3 bg-white rounded border border-gray-200">
-                                    <div class="prose prose-sm max-w-none text-gray-900">
-                                        ${assignment.description}
-                                    </div>
-                                </div>
+                    ` : `
+                        <!-- Student has not submitted -->
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-file-alt text-gray-400 text-2xl"></i>
                             </div>
-                        ` : ''}
-                    </div>
+                            <h4 class="text-lg font-medium text-gray-900 mb-2">No Submission Yet</h4>
+                            <p class="text-gray-500">This student has not submitted this assignment yet.</p>
+                        </div>
+                    `}
                 </div>
             </ui-dialog>
         `;

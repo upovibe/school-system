@@ -134,6 +134,16 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         }
 
         const { assignment, submission } = this.submissionData;
+        
+        // Debug: Log the submission data to see the structure
+        console.log('Submission data:', submission);
+        
+        // Get grade from different possible locations
+        const grade = submission?.grade || submission?.submission?.grade || null;
+        const submissionStatus = submission?.submission_status || submission?.submission?.status || 'submitted';
+        
+        console.log('Grade found:', grade);
+        console.log('Submission status:', submissionStatus);
 
         this.innerHTML = `
             <ui-dialog size="lg">
@@ -146,14 +156,10 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                             ${submission?.first_name ? `${submission.first_name} ${submission.last_name}` : 'Student'} Submission
                         </h2>
                     </div>
-                    ${submission?.grade ? `
-                        <div class="flex items-center space-x-2">
+                    ${grade ? `
+                        <div class="p-2">
                             <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                                <span class="text-white font-bold text-sm">${submission.grade}%</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide">Grade</div>
-                                <div class="text-sm font-medium text-gray-900">${submission.submission_status?.toUpperCase() || 'GRADED'}</div>
+                                <span class="text-white font-bold text-sm">${grade}%</span>
                             </div>
                         </div>
                     ` : ''}
@@ -162,7 +168,16 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                 <div slot="content" class="space-y-6">
                     ${submission?.submission_id ? `
                         <!-- Student has submitted -->
-                        <div class="">
+                        <div class="relative">
+                            <!-- Grade Display in Content -->
+                            ${grade ? `
+                                <div class="absolute top-0 right-0 z-10">
+                                    <div class="size-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <span class="text-white font-bold text-sm">${grade}%</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
                             <!-- Submission Content Section -->
                                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Submission Content</h3>
                                 
@@ -206,8 +221,8 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                                     <div>
                                         <label class="text-sm font-medium text-gray-600">Submission Status</label>
                                         <div class="flex items-center space-x-2 mt-1">
-                                            <ui-badge color="${this.getStatusColor(submission.submission_status)}" size="sm">
-                                                ${submission.submission_status?.toUpperCase() || 'SUBMITTED'}
+                                            <ui-badge color="${this.getStatusColor(submissionStatus)}" size="sm">
+                                                ${submissionStatus?.toUpperCase() || 'SUBMITTED'}
                                             </ui-badge>
                                         </div>
                                     </div>

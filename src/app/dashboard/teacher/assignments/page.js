@@ -209,7 +209,7 @@ class TeacherAssignmentsPage extends App {
     }
 
     // Handle student row clicks
-    onStudentRowClick(event) {
+    async onStudentRowClick(event) {
         const { detail } = event;
         const studentData = detail.row;
         
@@ -229,41 +229,113 @@ class TeacherAssignmentsPage extends App {
                 overall_status: student.overall_status
             });
             
-            // Check if student has a submission
-            if (student.submission && (student.submission.submission_text || student.submission.submission_file)) {
-                console.log('📝 SUBMITTED ASSIGNMENT DETAILS:', {
-                    student_name: `${student.first_name} ${student.last_name}`,
-                    student_id: student.student_id,
-                    submission_id: student.submission.id,
-                    submission_text: student.submission.submission_text,
-                    submission_file: student.submission.submission_file,
-                    submitted_at: student.submission.submitted_at,
-                    grade: student.submission.grade,
-                    feedback: student.submission.feedback,
-                    status: student.submission.status
-                });
-                
-                // Show submission text if available
-                if (student.submission.submission_text) {
-                    console.log('📄 SUBMISSION TEXT:', student.submission.submission_text);
+            // Get the assignment ID from the current assignment context
+            // We need to find which assignment this student belongs to
+            const assignmentsData = this.get('assignmentsData');
+            let assignmentId = null;
+            
+            // Find the assignment that contains this student
+            for (const assignment of assignmentsData) {
+                if (assignment.students && assignment.students.some(s => s.id === student.id)) {
+                    assignmentId = assignment.id;
+                    break;
+                }
+            }
+            
+            if (!assignmentId) {
+                console.log('❌ ERROR: Could not find assignment ID for this student');
+                return;
+            }
+            
+            console.log('📋 Assignment ID:', assignmentId);
+            console.log('👤 Student ID:', student.id);
+            
+            try {
+                // Get token from localStorage
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.log('❌ ERROR: No authentication token found');
+                    return;
                 }
                 
-                // Show file info if available
-                if (student.submission.submission_file) {
-                    console.log('📎 SUBMISSION FILE:', student.submission.submission_file);
+                // Call the new API endpoint
+                const endpoint = `/teachers/assignments/${assignmentId}/students/${student.id}/submission`;
+                console.log('🌐 API Endpoint:', endpoint);
+                
+                const response = await api.withToken(token).get(endpoint);
+                
+                if (response.data && response.data.success) {
+                    const submissionData = response.data.data;
+                    
+                    console.log('✅ API Response Success!');
+                    console.log('📊 Full Submission Data:', submissionData);
+                    
+                    // Log assignment details
+                    if (submissionData.assignment) {
+                        console.log('📚 ASSIGNMENT DETAILS:', {
+                            title: submissionData.assignment.title,
+                            description: submissionData.assignment.description,
+                            due_date: submissionData.assignment.due_date,
+                            total_points: submissionData.assignment.total_points,
+                            assignment_type: submissionData.assignment.assignment_type,
+                            status: submissionData.assignment.status
+                        });
+                    }
+                    
+                    // Log student details
+                    if (submissionData.submission) {
+                        console.log('👤 STUDENT DETAILS:', {
+                            name: `${submissionData.submission.first_name} ${submissionData.submission.last_name}`,
+                            student_id: submissionData.submission.student_id,
+                            email: submissionData.submission.email,
+                            phone: submissionData.submission.phone,
+                            gender: submissionData.submission.gender,
+                            date_of_birth: submissionData.submission.date_of_birth,
+                            address: submissionData.submission.address
+                        });
+                        
+                        console.log('📝 SUBMISSION DETAILS:', {
+                            submission_id: submissionData.submission.submission_id,
+                            submission_text: submissionData.submission.submission_text,
+                            submission_file: submissionData.submission.submission_file,
+                            submitted_at: submissionData.submission.submitted_at,
+                            grade: submissionData.submission.grade,
+                            feedback: submissionData.submission.feedback,
+                            status: submissionData.submission.submission_status
+                        });
+                        
+                        // Show submission text if available
+                        if (submissionData.submission.submission_text) {
+                            console.log('📄 SUBMISSION TEXT:', submissionData.submission.submission_text);
+                        }
+                        
+                        // Show file info if available
+                        if (submissionData.submission.submission_file) {
+                            console.log('📎 SUBMISSION FILE:', submissionData.submission.submission_file);
+                        }
+                        
+                        // Show grade and feedback if available
+                        if (submissionData.submission.grade) {
+                            console.log('📊 GRADE:', submissionData.submission.grade);
+                        }
+                        
+                        if (submissionData.submission.feedback) {
+                            console.log('💬 FEEDBACK:', submissionData.submission.feedback);
+                        }
+                        
+                    } else {
+                        console.log('❌ NO SUBMISSION: This student has not submitted the assignment yet.');
+                    }
+                    
+                } else {
+                    console.log('❌ API Error:', response.data?.message || 'Unknown error');
                 }
                 
-                // Show grade and feedback if available
-                if (student.submission.grade) {
-                    console.log('📊 GRADE:', student.submission.grade);
+            } catch (error) {
+                console.error('❌ Error fetching student submission:', error);
+                if (error.response) {
+                    console.log('📊 Error Response:', error.response.data);
                 }
-                
-                if (student.submission.feedback) {
-                    console.log('💬 FEEDBACK:', student.submission.feedback);
-                }
-                
-            } else {
-                console.log('❌ NO SUBMISSION: This student has not submitted the assignment yet.');
             }
         }
     }

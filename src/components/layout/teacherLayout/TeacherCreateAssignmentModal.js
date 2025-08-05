@@ -90,7 +90,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         const totalPointsInput = this.querySelector('ui-input[data-field="total_points"]');
         const assignmentTypeDropdown = this.querySelector('ui-dropdown[data-field="assignment_type"]');
         const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
-        const attachmentFileUpload = this.querySelector('ui-file-upload[data-field="attachment_file"]');
+        const attachmentFileUpload = this.querySelector('ui-file-upload[data-field="attachment"]');
 
         // Use the same approach as working admin modals - direct .value access
         const formData = {
@@ -195,31 +195,31 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                 subject_id: this.subjectId
             };
 
-            // Check if we have file uploads
-            const hasFiles = attachmentFileUpload && attachmentFileUpload.getFiles().length > 0;
-            let response;
+            // Prepare form data for multipart request (ALWAYS use FormData like events)
+            const formData = new FormData();
             
-            if (hasFiles) {
-                // Use FormData for file uploads
-                const formData = new FormData();
-                
-                // Add all form fields (following the working pattern from NewsSettingsModal)
-                Object.keys(formDataObj).forEach(key => {
-                    formData.append(key, formDataObj[key]);
-                });
-                
-                // Add files
+            // Add all form fields
+            Object.keys(formDataObj).forEach(key => {
+                formData.append(key, formDataObj[key]);
+            });
+            
+            // Add attachment files if selected
+            if (attachmentFileUpload && attachmentFileUpload.getFiles().length > 0) {
                 const files = attachmentFileUpload.getFiles();
+                // Filter out existing files (which are strings/paths) and only include new File objects
                 const newFiles = files.filter(file => file instanceof File);
                 newFiles.forEach(file => {
                     formData.append('attachment', file, file.name);
                 });
-                
-                response = await api.withToken(token).post('/teachers/assignments', formData);
-            } else {
-                // Use JSON for simpler data without files
-                response = await api.withToken(token).post('/teachers/assignments', formDataObj);
             }
+
+            console.log('FormData entries:'); // Debug log
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+
+            // Create the assignment with multipart data (ALWAYS use FormData like events)
+            const response = await api.withToken(token).post('/teachers/assignments', formData);
 
             if (response.data && response.data.success) {
                 // Show success message
@@ -242,6 +242,9 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             }
         } catch (error) {
             console.error('Error creating assignment:', error);
+            console.error('Error response data:', error.response?.data);
+            console.error('Error response status:', error.response?.status);
+            
             if (error.response && error.response.status === 401) {
                 Toast.show({
                     title: 'Authentication Error',
@@ -369,11 +372,11 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Attachment (Optional)
                             </label>
-                            <ui-file-upload 
-                                data-field="attachment_file"
-                                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
-                                placeholder="Upload assignment file">
-                            </ui-file-upload>
+                                                         <ui-file-upload 
+                                 data-field="attachment"
+                                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                                 placeholder="Upload assignment file">
+                             </ui-file-upload>
                         </div>
                         
 

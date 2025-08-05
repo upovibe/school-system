@@ -1,32 +1,90 @@
 <?php
 // api/utils/assignment_uploads.php - Utility functions for assignment file uploads
 
-require_once __DIR__ . '/../core/UploadCore.php';
-
 /**
  * Upload assignment attachment (for teachers)
  */
 function uploadAssignmentAttachment($file) {
-    $config = [
-        'upload_path' => 'uploads/assignments/attachments/',
-        'max_size' => 10485760, // 10MB
-        'allowed_types' => [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'text/plain',
-            'image/jpeg',
-            'image/png',
-            'image/gif'
-        ],
-        'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif']
+    $uploadDir = __DIR__ . '/../uploads/assignments/attachments/';
+    
+    // Create directories if they don't exist
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // Validate file
+    if (!isValidAssignmentFile($file)) {
+        return [
+            'success' => false,
+            'message' => 'Invalid file. Only PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG, GIF files are allowed (max 10MB).'
+        ];
+    }
+    
+    // Generate unique filename
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $filename = uniqid() . '_' . time() . '.' . $extension;
+    $filepath = $uploadDir . $filename;
+    
+    // Move uploaded file.
+    // move_uploaded_file() is for POST requests. For PUT requests where we parse the body manually,
+    // the file is already in a temporary location, so we can use rename() to move it.
+    if (!rename($file['tmp_name'], $filepath)) {
+        return [
+            'success' => false,
+            'message' => 'Failed to upload file.'
+        ];
+    }
+    
+    return [
+        'success' => true,
+        'message' => 'File uploaded successfully',
+        'filepath' => 'uploads/assignments/attachments/' . $filename,
+        'filename' => $filename,
+        'size' => $file['size']
+    ];
+}
+
+/**
+ * Validate assignment file
+ * 
+ * @param array $file The uploaded file array
+ * @return bool True if valid, false otherwise
+ */
+function isValidAssignmentFile($file) {
+    // Check file size (max 10MB)
+    if ($file['size'] > 10 * 1024 * 1024) {
+        return false;
+    }
+    
+    // Check file type
+    $allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif'
     ];
     
-    return UploadCore::uploadFile($file, $config);
+    if (!in_array($file['type'], $allowedTypes)) {
+        return false;
+    }
+    
+    // Check file extension
+    $allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif'];
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    
+    if (!in_array($extension, $allowedExtensions)) {
+        return false;
+    }
+    
+    return true;
 }
 
 /**

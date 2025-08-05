@@ -8,7 +8,6 @@ import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
-import '@/components/layout/teacherLayout/TeacherStudentAssignmentView.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
 
@@ -95,19 +94,9 @@ class TeacherAssignmentsPage extends App {
         document.title = 'My Assignments | School System';
         await this.loadAssignments();
         
-        // Add event listeners for table events
-        this.addEventListener('table-row-click', this.onStudentClick.bind(this));
+
         
-        // Debug: Check if component is created
-        setTimeout(() => {
-            const component = this.querySelector('teacher-student-assignment-view');
-            console.log('🔍 Component in DOM:', component);
-            if (component) {
-                console.log('🔍 Component found in DOM');
-            } else {
-                console.error('❌ Component not found in DOM');
-            }
-        }, 1000);
+
         
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
@@ -196,42 +185,7 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
-    // Handle student row click
-    onStudentClick(event) {
-        const { detail } = event;
-        const studentId = detail.row.student_id;
-        
-        console.log('🔍 Student clicked:', studentId);
-        console.log('🔍 Event detail:', detail);
-        
-        // Find the student data from the assignments data
-        const assignments = this.get('assignmentsData') || [];
-        let foundStudent = null;
-        
-        for (const assignment of assignments) {
-            const students = assignment.students || [];
-            foundStudent = students.find(s => s.student_id === studentId);
-            if (foundStudent) break;
-        }
-        
-        console.log('🔍 Found student:', foundStudent);
-        
-        if (foundStudent) {
-            // Open the student assignment view modal
-            setTimeout(() => {
-                const modal = this.querySelector('teacher-student-assignment-view');
-                console.log('🔍 Modal element:', modal);
-                console.log('🔍 All elements in component:', this.querySelectorAll('*'));
-                if (modal) {
-                    console.log('🔍 Opening modal with student data...');
-                    modal.openStudentAssignments(studentId, foundStudent);
-                } else {
-                    console.error('❌ Modal not found!');
-                    console.log('🔍 Available elements:', Array.from(this.querySelectorAll('*')).map(el => el.tagName));
-                }
-            }, 0);
-        }
-    }
+
 
 
 
@@ -264,12 +218,10 @@ class TeacherAssignmentsPage extends App {
         this.set('showEditModal', true);
         
         // Open the modal
-        setTimeout(() => {
-            const modal = this.querySelector('teacher-edit-assignment-modal');
-            if (modal) {
-                modal.open(assignmentId);
-            }
-        }, 0);
+        const modal = this.querySelector('teacher-edit-assignment-modal');
+        if (modal) {
+            modal.open(assignmentId);
+        }
     }
 
     // Handle assignment updated
@@ -585,9 +537,7 @@ class TeacherAssignmentsPage extends App {
                                         striped
                                         print
                                         sortable
-                                        clickable
-                                        refresh
-                                        row-clickable="true">
+                                        refresh>
                                     </ui-table>
                                 ` : `
                                     <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
@@ -909,12 +859,7 @@ class TeacherAssignmentsPage extends App {
                 </div>
             </div>
             
-            <!-- Student Assignment View Modal -->
-            <teacher-student-assignment-view></teacher-student-assignment-view>
-            <!-- Debug: Check if component exists -->
-            <div id="debug-component-check" style="display: none;">
-                Component should be created above
-            </div>
+
             
             <!-- Assignment View Dialog -->
             <teacher-assignment-view-dialog></teacher-assignment-view-dialog>

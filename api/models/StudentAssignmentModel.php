@@ -141,7 +141,7 @@ class StudentAssignmentModel extends BaseModel
                 MAX(sa.grade) as highest_grade,
                 MIN(sa.grade) as lowest_grade
             FROM class_assignments ca
-            JOIN students s ON ca.class_id = s.class_id
+            JOIN students s ON ca.class_id = s.current_class_id
             LEFT JOIN student_assignments sa ON ca.id = sa.assignment_id AND sa.student_id = s.id
             WHERE ca.id = ?
         ";

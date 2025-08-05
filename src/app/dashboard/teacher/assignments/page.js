@@ -10,6 +10,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
+import '@/components/layout/teacherLayout/TeacherStudentAssignmentDialog.js';
 
 /**
  * Teacher Assignments Page Component (/dashboard/teacher/assignments)
@@ -233,27 +234,10 @@ class TeacherAssignmentsPage extends App {
                 return;
             }
             
-            try {
-                // Get token from localStorage
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    return;
-                }
-                
-                // Call the API endpoint
-                const endpoint = `/teachers/assignments/${assignmentId}/students/${student.id}/submission`;
-                const response = await api.withToken(token).get(endpoint);
-                
-                if (response.data && response.data.success) {
-                    const submissionData = response.data.data;
-                    
-                    // Console log the assignment and student details
-                    console.log('📚 ASSIGNMENT DETAILS:', submissionData.assignment);
-                    console.log('👤 STUDENT DETAILS:', submissionData.submission);
-                }
-                
-            } catch (error) {
-                console.error('Error fetching student submission:', error);
+            // Open the student assignment dialog
+            const dialog = this.querySelector('teacher-student-assignment-dialog');
+            if (dialog) {
+                await dialog.openStudentAssignment(assignmentId, student.id);
             }
         }
     }
@@ -900,6 +884,9 @@ class TeacherAssignmentsPage extends App {
             
             <!-- Assignment Edit Modal -->
             <teacher-edit-assignment-modal ${this.get('showEditModal') ? 'open' : ''}></teacher-edit-assignment-modal>
+            
+            <!-- Student Assignment Dialog -->
+            <teacher-student-assignment-dialog></teacher-student-assignment-dialog>
         `;
     }
 }

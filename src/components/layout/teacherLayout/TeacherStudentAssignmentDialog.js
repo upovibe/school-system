@@ -62,7 +62,81 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         this.render();
     }
 
-    formatDate(dateString) {
+    openGradingDialog() {
+        console.log('Opening grading dialog...');
+        const gradingDialog = this.querySelector('#grading-dialog');
+        console.log('Grading dialog element:', gradingDialog);
+        if (gradingDialog) {
+            gradingDialog.classList.remove('hidden');
+            gradingDialog.classList.add('flex');
+            console.log('Grading dialog should now be visible');
+        } else {
+            console.error('Grading dialog element not found');
+        }
+    }
+
+    async submitGrade() {
+        const gradeInput = this.querySelector('#grade-input');
+        const feedbackInput = this.querySelector('#feedback-input');
+        const gradingDialog = this.querySelector('#grading-dialog');
+
+        const grade = parseFloat(gradeInput.value);
+        const feedback = feedbackInput.value.trim();
+
+        if (!grade || grade < 0 || grade > 100) {
+            alert('Please enter a valid grade between 0 and 100');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+
+            const { assignment, submission } = this.submissionData;
+            const assignmentId = assignment.id;
+            const studentId = submission.id;
+
+            const response = await api.withToken(token).post(`/teachers/assignments/${assignmentId}/grade/${studentId}`, {
+                grade: grade,
+                feedback: feedback
+            });
+
+                         if (response.data && response.data.success) {
+                 // Update the local data with the new grade
+                 this.submissionData = response.data.data;
+                 this.render();
+                 
+                 // Close the grading dialog
+                 gradingDialog.classList.add('hidden');
+                 
+                 // Refresh the parent page data to update the table
+                 this.refreshParentPageData();
+                 
+                 // Show success message
+                 alert('Grade submitted successfully!');
+             } else {
+                 alert('Failed to submit grade. Please try again.');
+             }
+        } catch (error) {
+            console.error('Error submitting grade:', error);
+            alert('Error submitting grade. Please try again.');
+        }
+         }
+ 
+     // Refresh the parent page data to update the table
+     refreshParentPageData() {
+         // Find the parent page component
+         const parentPage = this.closest('app-teacher-assignments-page');
+         if (parentPage) {
+             // Trigger a reload of assignments data
+             parentPage.loadAssignments();
+         }
+     }
+ 
+     formatDate(dateString) {
         if (!dateString) return 'No date set';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -251,7 +325,60 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                         </div>
                     `}
                 </div>
-            </ui-dialog>
+                
+                <div slot="footer" class="flex justify-between">
+                    <button onclick="this.closest('teacher-student-assignment-dialog').close()" 
+                            class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    ${submission?.submission_id ? `
+                        <button onclick="console.log('Grade button clicked'); this.closest('teacher-student-assignment-dialog').openGradingDialog()" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-star mr-1"></i>
+                            ${grade ? 'Update Grade' : 'Grade Submission'}
+                        </button>
+                    ` : ''}
+                                 </div>
+             </ui-dialog>
+             
+             <!-- Grading Dialog - Outside the ui-dialog component -->
+             <div id="grading-dialog" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-[9999] hidden">
+                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                     <div class="p-6">
+                         <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                             ${grade ? 'Update Grade' : 'Grade Submission'}
+                         </h3>
+                         
+                         <div class="space-y-4">
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">Grade (%)</label>
+                                 <input type="number" id="grade-input" min="0" max="100" step="0.1" 
+                                        value="${grade || ''}" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter grade (0-100)">
+                             </div>
+                             
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">Feedback</label>
+                                 <textarea id="feedback-input" rows="4" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="Enter feedback for the student">${submission?.feedback || ''}</textarea>
+                             </div>
+                         </div>
+                         
+                         <div class="flex justify-end space-x-3 mt-6">
+                             <button onclick="this.closest('#grading-dialog').classList.add('hidden')" 
+                                     class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                                 Cancel
+                             </button>
+                             <button onclick="this.closest('teacher-student-assignment-dialog').submitGrade()" 
+                                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                 ${grade ? 'Update Grade' : 'Submit Grade'}
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
         `;
     }
 }

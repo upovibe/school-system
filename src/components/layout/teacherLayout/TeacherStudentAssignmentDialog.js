@@ -268,7 +268,7 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                     </div>
                     ${grade ? `
                          <div class="p-2">
-                             <div class="size-18 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                             <div class="size-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
                                  <div class="text-white font-bold text-center">
                                      <div>${grade}</div>
                                      <div class="border-t border-white border-opacity-50">${assignment?.total_points || 100}</div>
@@ -289,7 +289,7 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                               grade
                                 ? `
                                 <div class="absolute top-0 right-0 z-10">
-                                    <div class="size-18 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                                    <div class="size-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
                                         <div class="text-white font-bold text-center">
                                             <div>${grade}</div>
                                             <div class="border-t border-white border-opacity-50">${assignment?.total_points || 100}</div>

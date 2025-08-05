@@ -80,8 +80,11 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         const grade = parseFloat(gradeInput.value || gradeInput.getValue());
         const feedback = (feedbackInput.value || feedbackInput.getValue() || '').trim();
 
-        if (!grade || grade < 0 || grade > 100) {
-            alert('Please enter a valid grade between 0 and 100');
+        const { assignment, submission } = this.submissionData;
+        const maxPoints = parseFloat(assignment.total_points);
+        
+        if (!grade || grade < 0 || grade > maxPoints) {
+            alert(`Please enter a valid grade between 0 and ${maxPoints} points`);
             return;
         }
 
@@ -92,7 +95,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                 return;
             }
 
-            const { assignment, submission } = this.submissionData;
             const assignmentId = assignment.id;
             const studentId = submission.id;
 
@@ -101,27 +103,31 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                 feedback: feedback
             });
 
-                         if (response.data && response.data.success) {
-                 // Update the local data with the new grade
-                 this.submissionData = response.data.data;
-                 this.render();
-                 
-                 // Close the grading dialog
-                 gradingDialog.classList.add('hidden');
-                 
-                 // Refresh the parent page data to update the table
-                 this.refreshParentPageData();
-                 
-                 // Show success message
-                 alert('Grade submitted successfully!');
-             } else {
-                 alert('Failed to submit grade. Please try again.');
-             }
+            if (response.data && response.data.success) {
+                // Update the local data with the new grade, but preserve the assignment data
+                const updatedData = response.data.data;
+                if (!updatedData.assignment && this.submissionData.assignment) {
+                    updatedData.assignment = this.submissionData.assignment;
+                }
+                this.submissionData = updatedData;
+                this.render();
+                
+                // Close the grading dialog
+                gradingDialog.classList.add('hidden');
+                
+                // Refresh the parent page data to update the table
+                this.refreshParentPageData();
+                
+                // Show success message
+                alert('Grade submitted successfully!');
+            } else {
+                alert('Failed to submit grade. Please try again.');
+            }
         } catch (error) {
             console.error('Error submitting grade:', error);
             alert('Error submitting grade. Please try again.');
         }
-         }
+    }
  
      // Refresh the parent page data to update the table
      refreshParentPageData() {
@@ -341,13 +347,13 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                          </h3>
                          
                                                    <div class="space-y-4">
-                              <div>
-                                  <label class="block text-sm font-medium text-gray-700 mb-2">Grade (%)</label>
-                                  <ui-input type="number" id="grade-input" min="0" max="100" step="0.1" 
-                                           value="${grade || ''}" 
-                                           placeholder="Enter grade (0-100)">
-                                  </ui-input>
-                              </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade (out of ${assignment?.total_points || 100} points)</label>
+                                    <ui-input type="number" id="grade-input" min="0" max="${assignment?.total_points || 100}" step="0.1" 
+                                             value="${grade || ''}" 
+                                             placeholder="Enter grade (0-${assignment?.total_points || 100})">
+                                    </ui-input>
+                                </div>
                               
                                                              <div>
                                    <label class="block text-sm font-medium text-gray-700 mb-2">Feedback</label>
@@ -357,19 +363,18 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                                </div>
                           </div>
                           
-                          <div class="flex justify-end space-x-3 mt-6">
+                          <div class="flex justify-end space-x-3 mt-6 gap-2">
                               <button onclick="this.closest('#grading-dialog').classList.add('hidden')" 
-                                      class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                                      class="px-2 py-1.5 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
                                   Cancel
                               </button>
                               <button onclick="this.closest('teacher-student-assignment-dialog').submitGrade()" 
-                                      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                      class="px-2 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                                   ${grade ? 'Update Grade' : 'Submit Grade'}
                               </button>
                           </div>
                      </div>
                  </div>
-             </div>
         `;
     }
 }

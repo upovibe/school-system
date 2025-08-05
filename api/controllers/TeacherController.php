@@ -1340,6 +1340,75 @@ class TeacherController {
     }
 
     /**
+     * Get a specific student's submission for an assignment (teacher only)
+     */
+    public function getStudentSubmission($assignmentId, $studentId) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            require_once __DIR__ . '/../models/StudentAssignmentModel.php';
+            
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            $studentAssignmentModel = new StudentAssignmentModel($this->pdo);
+            
+            $assignment = $assignmentModel->findById($assignmentId);
+            if (!$assignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($assignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only view submissions for your own assignments'
+                ]);
+                return;
+            }
+            
+            // Get student submission details
+            $submission = $studentAssignmentModel->getStudentSubmissionForTeacher($assignmentId, $studentId);
+            
+            if (!$submission) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student submission not found'
+                ]);
+                return;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'assignment' => $assignment,
+                    'submission' => $submission
+                ],
+                'message' => 'Student submission retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving student submission: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Grade a student submission (teacher only)
      */
     public function gradeSubmission($assignmentId, $studentId) {

@@ -84,6 +84,46 @@ class StudentAssignmentModel extends BaseModel
     }
 
     /**
+     * Get detailed student submission with student info (for teachers)
+     */
+    public function getStudentSubmissionForTeacher($assignmentId, $studentId)
+    {
+        $sql = "
+            SELECT 
+                s.id,
+                s.student_id,
+                s.first_name,
+                s.last_name,
+                s.gender,
+                s.email,
+                s.phone,
+                s.date_of_birth,
+                s.address,
+                sa.id as submission_id,
+                sa.submission_text,
+                sa.submission_file,
+                sa.submitted_at,
+                sa.grade,
+                sa.feedback,
+                sa.status as submission_status,
+                ca.title as assignment_title,
+                ca.description as assignment_description,
+                ca.due_date as assignment_due_date,
+                ca.total_points as assignment_total_points,
+                ca.assignment_type,
+                ca.status as assignment_status
+            FROM students s
+            LEFT JOIN student_assignments sa ON s.id = sa.student_id AND sa.assignment_id = ?
+            LEFT JOIN class_assignments ca ON sa.assignment_id = ca.id
+            WHERE s.id = ?
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$assignmentId, $studentId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Get all students in the class with their submission status for an assignment
      */
     public function getAssignmentSubmissions($assignmentId)

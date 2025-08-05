@@ -883,22 +883,58 @@ class StudentController {
             // Get assignments for the student's class
             $assignments = $this->classAssignmentModel->getByClassId($student['class_id']);
             
-            // For each assignment, check if student has submitted
-            foreach ($assignments as &$assignment) {
+            // Restructure the response with better grouping
+            $restructuredAssignments = [];
+            
+            foreach ($assignments as $assignment) {
                 $submission = $this->studentAssignmentModel->getByStudentAndAssignment(
                     $student['id'], 
                     $assignment['id']
                 );
                 
-                $assignment['submission_status'] = $submission ? $submission['status'] : 'not_submitted';
-                $assignment['submission_grade'] = $submission ? $submission['grade'] : null;
-                $assignment['submitted_at'] = $submission ? $submission['submitted_at'] : null;
+                $restructuredAssignment = [
+                    'id' => $assignment['id'],
+                    'title' => $assignment['title'],
+                    'description' => $assignment['description'],
+                    'due_date' => $assignment['due_date'],
+                    'total_points' => $assignment['total_points'],
+                    'assignment_type' => $assignment['assignment_type'],
+                    'status' => $assignment['status'],
+                    'attachment_file' => $assignment['attachment_file'],
+                    'created_at' => $assignment['created_at'],
+                    'updated_at' => $assignment['updated_at'],
+                    'subject' => [
+                        'id' => $assignment['subject_id'],
+                        'name' => $assignment['subject_name']
+                    ],
+                    'teacher' => [
+                        'id' => $assignment['teacher_id'],
+                        'first_name' => $assignment['teacher_first_name'],
+                        'last_name' => $assignment['teacher_last_name'],
+                        'full_name' => $assignment['teacher_first_name'] . ' ' . $assignment['teacher_last_name'],
+                        'gender' => $assignment['teacher_gender']
+                    ],
+                    'submission' => $submission ? [
+                        'id' => $submission['id'],
+                        'status' => $submission['status'],
+                        'grade' => $submission['grade'],
+                        'feedback' => $submission['feedback'],
+                        'submitted_at' => $submission['submitted_at'],
+                        'submission_text' => $submission['submission_text'],
+                        'submission_file' => $submission['submission_file']
+                    ] : null,
+                    'submission_status' => $submission ? $submission['status'] : 'not_submitted',
+                    'submission_grade' => $submission ? $submission['grade'] : null,
+                    'submitted_at' => $submission ? $submission['submitted_at'] : null
+                ];
+                
+                $restructuredAssignments[] = $restructuredAssignment;
             }
             
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'data' => $assignments,
+                'data' => $restructuredAssignments,
                 'message' => 'Student assignments retrieved successfully'
             ]);
         } catch (Exception $e) {

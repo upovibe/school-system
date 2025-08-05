@@ -480,11 +480,11 @@ class TeacherAssignmentsPage extends App {
                             </div>
                             <!-- Badges -->
                             <div class="flex items-center gap-2">
-                                <ui-badge color="${this.getStatusColor(assignment.status)}" size="sm">
-                                    ${assignment.status?.toUpperCase() || 'UNKNOWN'}
+                                <ui-badge color="${this.getStatusColor(assignment.status)}">
+                                    <i class="fas fa-circle mr-1"></i>${assignment.status?.toUpperCase() || 'UNKNOWN'}
                                 </ui-badge>
-                                <ui-badge color="${this.getTypeColor(assignment.assignment_type)}" size="sm">
-                                    ${assignment.assignment_type?.toUpperCase() || 'GENERAL'}
+                                <ui-badge color="${this.getTypeColor(assignment.assignment_type)}">
+                                    <i class="fas fa-tag mr-1"></i>${assignment.assignment_type?.toUpperCase() || 'GENERAL'}
                                 </ui-badge>
                             </div>
                         </div>

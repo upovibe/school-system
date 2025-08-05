@@ -116,6 +116,7 @@ class ClassAssignmentModel extends BaseModel {
                 ca.*,
                 t.first_name as teacher_first_name,
                 t.last_name as teacher_last_name,
+                t.gender as teacher_gender,
                 s.name as subject_name
             FROM class_assignments ca
             LEFT JOIN teachers t ON ca.teacher_id = t.id

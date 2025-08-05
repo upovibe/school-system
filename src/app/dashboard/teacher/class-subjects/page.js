@@ -303,7 +303,7 @@ class TeacherClassesSubjectsPage extends App {
                                                                                  <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Subject${assignment.subjects.length > 1 ? 's' : ''} Taught</h3>
                                     </div>
                                     <div class="sm:ml-auto">
-                                        <ui-badge color="success" size="sm">${assignment.subjects.length} Subject${assignment.subjects.length > 1 ? 's' : ''}</ui-badge>
+                                        <ui-badge color="success"><i class="fas fa-book mr-1"></i>${assignment.subjects.length} Subject${assignment.subjects.length > 1 ? 's' : ''}</ui-badge>
                                     </div>
                                 </div>
                                 
@@ -314,8 +314,8 @@ class TeacherClassesSubjectsPage extends App {
                                                 <div class="flex-1 min-w-0">
                                                     <h4 class="font-semibold text-gray-900 text-base sm:text-lg mb-1 truncate">${subject.subject_name}</h4>
                                                     <div class="flex items-center gap-2">
-                                                        <ui-badge color="info" size="sm">${subject.subject_code}</ui-badge>
-                                                        <ui-badge color="warning" size="sm">${subject.subject_category.toUpperCase()}</ui-badge>
+                                                        <ui-badge color="info"><i class="fas fa-code mr-1"></i>${subject.subject_code}</ui-badge>
+                                                        <ui-badge color="warning"><i class="fas fa-tag mr-1"></i>${subject.subject_category.toUpperCase()}</ui-badge>
                                                     </div>
                                                 </div>
                                                 <div class="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">

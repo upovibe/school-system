@@ -358,12 +358,14 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                           </div>
                           
                           <div class="flex justify-end space-x-3 mt-6">
-                              <ui-button variant="secondary" onclick="this.closest('#grading-dialog').classList.add('hidden')">
+                              <button onclick="this.closest('#grading-dialog').classList.add('hidden')" 
+                                      class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
                                   Cancel
-                              </ui-button>
-                              <ui-button variant="primary" onclick="this.closest('teacher-student-assignment-dialog').submitGrade()">
+                              </button>
+                              <button onclick="this.closest('teacher-student-assignment-dialog').submitGrade()" 
+                                      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                                   ${grade ? 'Update Grade' : 'Submit Grade'}
-                              </ui-button>
+                              </button>
                           </div>
                      </div>
                  </div>

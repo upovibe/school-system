@@ -886,14 +886,15 @@ class TeacherController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                require_once __DIR__ . '/../core/MultipartFormParser.php';
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+                // For POST requests with multipart data, PHP automatically populates $_POST and $_FILES
+                $data = $_POST ?? [];
+                // $_FILES is already populated by PHP
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];
             }
+            
+
             
             // Validate required fields
             if (empty($data['title'])) {
@@ -973,6 +974,13 @@ class TeacherController {
                 $attachmentData = uploadAssignmentAttachment($_FILES['attachment']);
                 if ($attachmentData['success']) {
                     $data['attachment_file'] = $attachmentData['filepath'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $attachmentData['message']
+                    ]);
+                    return;
                 }
             }
             
@@ -1126,10 +1134,17 @@ class TeacherController {
             $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                require_once __DIR__ . '/../core/MultipartFormParser.php';
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+                // Handle PUT/PATCH requests with multipart/form-data
+                if (in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'PATCH'])) {
+                    // For PUT/PATCH requests, PHP doesn't populate $_POST and $_FILES
+                    require_once __DIR__ . '/../core/MultipartFormParser.php';
+                    MultipartFormParser::processRequest($rawData, $content_type);
+                    $data = $_POST ?? [];
+                } else {
+                    // For POST requests with multipart data, PHP automatically populates $_POST and $_FILES
+                    $data = $_POST ?? [];
+                    // $_FILES is already populated by PHP
+                }
             } else {
                 // Fall back to JSON
                 $data = json_decode($rawData, true) ?? [];

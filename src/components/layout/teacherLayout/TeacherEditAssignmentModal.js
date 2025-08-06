@@ -121,6 +121,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
         const totalPointsInput = this.querySelector('[data-field="total_points"]');
         const assignmentTypeDropdown = this.querySelector('[data-field="assignment_type"]');
         const statusDropdown = this.querySelector('[data-field="status"]');
+        const fileUploadElement = this.querySelector('[data-field="attachment_file"]');
 
         // Populate fields
         if (titleInput) {
@@ -143,6 +144,12 @@ class TeacherEditAssignmentModal extends HTMLElement {
         if (statusDropdown) {
             statusDropdown.value = this.assignmentData.status || 'published';
         }
+        
+        // Handle existing attachment file
+        if (fileUploadElement && this.assignmentData.attachment_file) {
+            // Use the FileUpload component's setValue method to display the existing file
+            fileUploadElement.setValue(this.assignmentData.attachment_file);
+        }
     }
 
     // Get form data for submission
@@ -155,6 +162,23 @@ class TeacherEditAssignmentModal extends HTMLElement {
         const statusElement = this.querySelector('[data-field="status"]');
         const fileUploadElement = this.querySelector('[data-field="attachment_file"]');
 
+        // Get file data - check for new files first, then existing file
+        let attachmentFile = null;
+        if (fileUploadElement) {
+            const files = fileUploadElement.getFiles();
+            // Look for new files (not existing ones)
+            const newFiles = files.filter(file => !file.isExisting);
+            if (newFiles.length > 0) {
+                attachmentFile = newFiles[0]; // Use the first new file
+            } else {
+                // No new file uploaded, preserve existing file path
+                const existingFiles = files.filter(file => file.isExisting);
+                if (existingFiles.length > 0) {
+                    attachmentFile = existingFiles[0].path || existingFiles[0].name;
+                }
+            }
+        }
+
         return {
             title: titleElement?.value || '',
             description: descriptionElement?.value || '',
@@ -162,7 +186,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
             total_points: totalPointsElement?.value || '',
             assignment_type: assignmentTypeElement?.value || 'homework',
             status: statusElement?.value || 'published',
-            attachment_file: fileUploadElement?.files?.[0] || null
+            attachment_file: attachmentFile
         };
     }
 
@@ -209,8 +233,10 @@ class TeacherEditAssignmentModal extends HTMLElement {
 
             let response;
 
-            // Check if there's a file attachment
-            if (formData.attachment_file) {
+            // Check if there's a new file attachment (File object)
+            const hasNewFile = formData.attachment_file && formData.attachment_file instanceof File;
+            
+            if (hasNewFile) {
                 // Use FormData for file upload
                 const submitFormData = new FormData();
                 Object.entries(formData).forEach(([key, value]) => {
@@ -225,8 +251,14 @@ class TeacherEditAssignmentModal extends HTMLElement {
                     }
                 });
             } else {
-                // Use JSON for text-only data
+                // Use JSON for text-only data or when preserving existing file
                 const { attachment_file, ...jsonData } = formData;
+                
+                // If there's an existing file path, include it in the JSON data
+                if (formData.attachment_file && typeof formData.attachment_file === 'string') {
+                    jsonData.attachment_file = formData.attachment_file;
+                }
+                
                 response = await api.withToken(token).put(`/teachers/assignments/${this.assignmentId}`, jsonData);
             }
 

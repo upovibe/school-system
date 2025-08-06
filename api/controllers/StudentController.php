@@ -881,7 +881,7 @@ class StudentController {
             $student = $_REQUEST['current_student'];
             
             // Get assignments for the student's class
-            $assignments = $this->classAssignmentModel->getByClassId($student['class_id']);
+            $assignments = $this->classAssignmentModel->getByClassId($student['current_class_id']);
             
             // Restructure the response with better grouping
             $restructuredAssignments = [];
@@ -970,7 +970,7 @@ class StudentController {
             }
             
             // Check if assignment belongs to student's class
-            if ($assignment['class_id'] != $student['class_id']) {
+            if ($assignment['class_id'] != $student['current_class_id']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -1056,7 +1056,7 @@ class StudentController {
             }
             
             // Check if assignment belongs to student's class
-            if ($assignment['class_id'] != $student['class_id']) {
+            if ($assignment['class_id'] != $student['current_class_id']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -1093,7 +1093,18 @@ class StudentController {
                 return;
             }
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle multipart form data
+            $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+            $rawData = file_get_contents('php://input');
+            
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                // For POST requests with multipart data, PHP automatically populates $_POST and $_FILES
+                $data = $_POST ?? [];
+                // $_FILES is already populated by PHP
+            } else {
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
+            }
             
             // Validate required fields
             if (empty($data['submission_text']) && empty($_FILES['submission_file'])) {
@@ -1115,17 +1126,18 @@ class StudentController {
             ];
             
             // Handle file upload if provided
-            if (!empty($_FILES['submission_file'])) {
-                $uploadDir = __DIR__ . '/../uploads/assignments/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                
-                $fileName = time() . '_' . $_FILES['submission_file']['name'];
-                $filePath = $uploadDir . $fileName;
-                
-                if (move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath)) {
-                    $submissionData['submission_file'] = $fileName;
+            if (!empty($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
+                require_once __DIR__ . '/../utils/assignment_uploads.php';
+                $attachmentData = uploadStudentSubmission($_FILES['submission_file']);
+                if ($attachmentData['success']) {
+                    $submissionData['submission_file'] = $attachmentData['filepath'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $attachmentData['message']
+                    ]);
+                    return;
                 }
             }
             
@@ -1188,7 +1200,7 @@ class StudentController {
             }
             
             // Check if assignment belongs to student's class
-            if ($assignment['class_id'] != $student['class_id']) {
+            if ($assignment['class_id'] != $student['current_class_id']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -1225,7 +1237,24 @@ class StudentController {
                 return;
             }
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle multipart form data
+            $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+            $rawData = file_get_contents('php://input');
+            
+            if (strpos($content_type, 'multipart/form-data') !== false) {
+                // For PUT/PATCH requests with multipart data, PHP doesn't populate $_POST and $_FILES
+                if (in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'PATCH'])) {
+                    require_once __DIR__ . '/../core/MultipartFormParser.php';
+                    MultipartFormParser::processRequest($rawData, $content_type);
+                    $data = $_POST ?? [];
+                } else {
+                    // For POST requests with multipart data, PHP automatically populates $_POST and $_FILES
+                    $data = $_POST ?? [];
+                }
+            } else {
+                // Fall back to JSON
+                $data = json_decode($rawData, true) ?? [];
+            }
             
             $updateData = [
                 'submission_text' => $data['submission_text'] ?? $existingSubmission['submission_text'],
@@ -1233,17 +1262,25 @@ class StudentController {
             ];
             
             // Handle file upload if provided
-            if (!empty($_FILES['submission_file'])) {
-                $uploadDir = __DIR__ . '/../uploads/assignments/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
+            if (!empty($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
+                require_once __DIR__ . '/../utils/assignment_uploads.php';
+                
+                // Delete old submission file if exists
+                if (!empty($existingSubmission['submission_file'])) {
+                    deleteAssignmentFiles($existingSubmission['submission_file']);
                 }
                 
-                $fileName = time() . '_' . $_FILES['submission_file']['name'];
-                $filePath = $uploadDir . $fileName;
-                
-                if (move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath)) {
-                    $updateData['submission_file'] = $fileName;
+                // Upload new submission file
+                $attachmentData = uploadStudentSubmission($_FILES['submission_file']);
+                if ($attachmentData['success']) {
+                    $updateData['submission_file'] = $attachmentData['filepath'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $attachmentData['message']
+                    ]);
+                    return;
                 }
             }
             

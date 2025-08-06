@@ -91,29 +91,43 @@ function isValidAssignmentFile($file) {
  * Upload student submission file
  */
 function uploadStudentSubmission($file) {
-    $config = [
-        'upload_path' => 'uploads/assignments/submissions/',
-        'max_size' => 10485760, // 10MB
-        'allowed_types' => [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'text/plain',
-            'image/jpeg',
-            'image/png',
-            'image/gif',
-            'application/zip',
-            'application/x-rar-compressed',
-            'application/x-7z-compressed'
-        ],
-        'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar', '7z']
-    ];
+    $uploadDir = __DIR__ . '/../uploads/assignments/submissions/';
     
-    return UploadCore::uploadFile($file, $config);
+    // Create directories if they don't exist
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // Validate file
+    if (!isValidAssignmentFile($file)) {
+        return [
+            'success' => false,
+            'message' => 'Invalid file. Only PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG, GIF files are allowed (max 10MB).'
+        ];
+    }
+    
+    // Generate unique filename
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $filename = uniqid() . '_' . time() . '.' . $extension;
+    $filepath = $uploadDir . $filename;
+    
+    // Move uploaded file.
+    // move_uploaded_file() is for POST requests. For PUT requests where we parse the body manually,
+    // the file is already in a temporary location, so we can use rename() to move it.
+    if (!rename($file['tmp_name'], $filepath)) {
+        return [
+            'success' => false,
+            'message' => 'Failed to upload file.'
+        ];
+    }
+    
+    return [
+        'success' => true,
+        'message' => 'File uploaded successfully',
+        'filepath' => 'uploads/assignments/submissions/' . $filename,
+        'filename' => $filename,
+        'size' => $file['size']
+    ];
 }
 
 /**

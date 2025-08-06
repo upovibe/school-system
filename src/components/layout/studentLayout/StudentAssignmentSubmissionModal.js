@@ -117,9 +117,48 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
         const fileUploadElement = this.querySelector('[data-field="submission_file"]');
 
         return {
-            comments: commentsElement?.value || '',
+            submission_text: commentsElement?.value || '',
             submission_file: fileUploadElement?.files?.[0] || null
         };
+    }
+
+    // Check if assignment is past due
+    isAssignmentPastDue() {
+        if (!this.assignmentData || !this.assignmentData.due_date) {
+            return false;
+        }
+        
+        const dueDate = new Date(this.assignmentData.due_date);
+        const now = new Date();
+        
+        return now > dueDate;
+    }
+
+    // Get time remaining until due date
+    getTimeRemaining() {
+        if (!this.assignmentData || !this.assignmentData.due_date) {
+            return null;
+        }
+        
+        const dueDate = new Date(this.assignmentData.due_date);
+        const now = new Date();
+        const timeDiff = dueDate - now;
+        
+        if (timeDiff <= 0) {
+            return 'Past due';
+        }
+        
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (days > 0) {
+            return `${days} day${days > 1 ? 's' : ''} remaining`;
+        } else if (hours > 0) {
+            return `${hours} hour${hours > 1 ? 's' : ''} remaining`;
+        } else {
+            return `${minutes} minute${minutes > 1 ? 's' : ''} remaining`;
+        }
     }
 
     // Submit assignment
@@ -127,14 +166,25 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
         try {
             this.set('loading', true);
 
+            // Check if assignment is past due
+            if (this.isAssignmentPastDue()) {
+                Toast.show({
+                    title: 'Submission Closed',
+                    message: 'This assignment is past due and submissions are no longer accepted.',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
             // Get form data
             const formData = this.getFormData();
 
-            // Validate that at least one file is uploaded
-            if (!formData.submission_file) {
+            // Validate that at least text or file is provided
+            if (!formData.submission_text && !formData.submission_file) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please upload your assignment file',
+                    message: 'Please provide either text or upload a file for your submission',
                     variant: 'error',
                     duration: 3000
                 });
@@ -155,7 +205,7 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
 
             // Use FormData for file upload
             const submitFormData = new FormData();
-            submitFormData.append('comments', formData.comments);
+            submitFormData.append('submission_text', formData.submission_text);
             submitFormData.append('submission_file', formData.submission_file);
 
             const response = await api.withToken(token).post(`/students/assignments/${this.assignmentId}/submit`, submitFormData, {
@@ -229,6 +279,8 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
 
     render() {
         const { loading, assignmentData } = this;
+        const isPastDue = this.isAssignmentPastDue();
+        const timeRemaining = this.getTimeRemaining();
 
         this.innerHTML = `
             <ui-modal 
@@ -240,14 +292,17 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
                 
                 ${assignmentData ? `
                     <!-- Assignment Info Header -->
-                    <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="mb-6 p-4 ${isPastDue ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} rounded-lg border">
                         <div class="flex items-center gap-3 mb-3">
-                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <div class="w-10 h-10 ${isPastDue ? 'bg-red-500' : 'bg-blue-500'} rounded-lg flex items-center justify-center">
                                 <i class="fas fa-file-alt text-white text-sm"></i>
                             </div>
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900">${assignmentData.title}</h3>
-                                <p class="text-sm text-gray-600">Due: ${this.formatDate(assignmentData.due_date)}</p>
+                                <p class="text-sm ${isPastDue ? 'text-red-600' : 'text-gray-600'}">
+                                    Due: ${this.formatDate(assignmentData.due_date)}
+                                    ${timeRemaining ? ` • ${timeRemaining}` : ''}
+                                </p>
                             </div>
                         </div>
                         <div class="text-sm text-gray-700">
@@ -255,6 +310,15 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
                             <p><strong>Teacher:</strong> ${assignmentData.teacher?.full_name || 'N/A'}</p>
                             <p><strong>Points:</strong> ${assignmentData.total_points} pts</p>
                         </div>
+                        ${isPastDue ? `
+                            <div class="mt-3 p-3 bg-red-100 border border-red-200 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                    <span class="text-sm font-medium text-red-800">This assignment is past due</span>
+                                </div>
+                                <p class="text-xs text-red-700 mt-1">Submissions are no longer accepted for this assignment.</p>
+                            </div>
+                        ` : ''}
                     </div>
                 ` : ''}
                 
@@ -262,13 +326,12 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
                     <!-- File Upload -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Assignment File <span class="text-red-500">*</span>
+                            Assignment File (Optional)
                         </label>
                         <ui-file-upload 
                             data-field="submission_file"
                             accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
-                            placeholder="Upload your assignment file"
-                            required>
+                            placeholder="Upload your assignment file">
                         </ui-file-upload>
                         <p class="text-xs text-gray-500 mt-1">
                             Accepted formats: PDF, DOC, DOCX, TXT, Images, ZIP, RAR
@@ -303,6 +366,23 @@ class StudentAssignmentSubmissionModal extends HTMLElement {
                         </div>
                     </div>
                 </form>
+                
+                <!-- Custom Footer with Submit Button -->
+                <div slot="footer" class="flex justify-end space-x-3">
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        onclick="this.closest('student-assignment-submission-modal').close()">
+                        Cancel
+                    </button>
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${isPastDue ? 'opacity-50 cursor-not-allowed' : ''}"
+                        onclick="this.closest('student-assignment-submission-modal').submitAssignment()"
+                        ${isPastDue ? 'disabled' : ''}>
+                        ${loading ? '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...' : 'Submit Assignment'}
+                    </button>
+                </div>
             </ui-modal>
         `;
     }

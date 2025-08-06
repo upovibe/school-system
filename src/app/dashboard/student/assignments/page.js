@@ -3,6 +3,7 @@ import api from '@/services/api.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Card.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/Toast.js';
 import '@/components/layout/studentLayout/StudentAssignmentViewDialog.js';
 import '@/components/layout/studentLayout/StudentAssignmentSubmissionModal.js';
 
@@ -119,6 +120,12 @@ class StudentAssignmentsPage extends App {
         return `Due in ${diffDays} days`;
     }
 
+    isAssignmentPastDue(dueDate) {
+        const today = new Date();
+        const due = new Date(dueDate);
+        return today > due;
+    }
+
     formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -156,6 +163,16 @@ class StudentAssignmentsPage extends App {
         if (button.classList.contains('view-assignment-btn')) {
             this.openAssignmentDialog(assignmentId);
         } else if (button.classList.contains('submit-assignment-btn')) {
+            // Check if button is disabled (past due)
+            if (button.disabled) {
+                Toast.show({
+                    title: 'Submission Closed',
+                    message: 'This assignment is past due and submissions are no longer accepted.',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
             this.openSubmitModal(assignmentId);
         }
     }
@@ -485,9 +502,10 @@ class StudentAssignmentsPage extends App {
                                         </button>
                                         ${assignment.submission_status === 'not_submitted' ? `
                                             <button 
-                                                class="submit-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
-                                                title="Submit Assignment"
-                                                data-assignment-id="${assignment.id}">
+                                                class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
+                                                title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
+                                                data-assignment-id="${assignment.id}"
+                                                ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
                                                 <i class="fas fa-upload text-xs"></i>
                                             </button>
                                         ` : ''}

@@ -4,6 +4,8 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Card.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Input.js';
+import '@/components/ui/Dropdown.js';
 import '@/components/layout/studentLayout/StudentAssignmentViewDialog.js';
 import '@/components/layout/studentLayout/StudentAssignmentSubmissionModal.js';
 
@@ -19,6 +21,68 @@ class StudentAssignmentsPage extends App {
         this.loading = true;
         this.error = null;
         this.showSubmitModal = false;
+        this.searchTerm = '';
+        this.sortBy = 'due_date';
+        this.sortOrder = 'asc';
+        this.filters = {
+            status: '',
+            assignment_type: ''
+        };
+        this.filteredAssignments = null;
+    }
+
+    // Override set method to prevent re-rendering for search updates
+    set(property, value) {
+        // For filteredAssignments, update without re-rendering to maintain input focus
+        if (property === 'filteredAssignments') {
+            this.state = this.state || {};
+            this.state[property] = value;
+            // Only update the assignments list part of the DOM, not the entire component
+            this.updateAssignmentsList(value);
+            return;
+        }
+        
+        // For other properties, use the normal set method
+        super.set(property, value);
+    }
+
+    // Update only the assignments list without full re-render
+    updateAssignmentsList(filteredAssignments) {
+        const assignments = this.get('assignments');
+        const assignmentsContainer = this.querySelector('.assignments-list-container');
+        
+        if (!assignmentsContainer || !assignments) return;
+        
+        // Generate the assignments HTML
+        const assignmentsHTML = (filteredAssignments && filteredAssignments.length > 0) ? 
+            filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
+            this.generateNoAssignmentsHTML();
+            
+        assignmentsContainer.innerHTML = assignmentsHTML;
+        
+        // Update the results count
+        const resultsCount = this.querySelector('.results-count');
+        if (resultsCount) {
+            resultsCount.innerHTML = `
+                Showing <span class="font-medium text-gray-900">${filteredAssignments?.length || 0}</span> 
+                of <span class="font-medium text-gray-900">${assignments.length}</span> assignments
+            `;
+        }
+        
+        // Update filters applied indicator
+        const filtersIndicator = this.querySelector('.filters-indicator');
+        if (filtersIndicator) {
+            if ((filteredAssignments?.length || 0) !== assignments.length) {
+                filtersIndicator.innerHTML = `
+                    <span class="text-blue-600 font-medium">
+                        <i class="fas fa-filter mr-1"></i>
+                        Filters Applied
+                    </span>
+                `;
+            } else {
+                filtersIndicator.innerHTML = '';
+            }
+        }
     }
 
     async connectedCallback() {
@@ -36,6 +100,10 @@ class StudentAssignmentsPage extends App {
                 this.set('showSubmitModal', false);
             }
         });
+        
+        // Add event listeners for filtering and search
+        this.addEventListener('input', this.onFilterChange.bind(this));
+        this.addEventListener('change', this.onFilterChange.bind(this));
     }
 
     async loadAssignments() {
@@ -54,6 +122,7 @@ class StudentAssignmentsPage extends App {
             
             if (response.data && response.data.success) {
                 this.set('assignments', response.data.data);
+                this.applyFiltersAndSearch();
             } else {
                 this.set('error', 'Failed to load assignments');
             }
@@ -67,6 +136,118 @@ class StudentAssignmentsPage extends App {
         } finally {
             this.set('loading', false);
         }
+    }
+
+    // Handle filter and search changes
+    onFilterChange(event) {
+        const target = event.target;
+        
+        if (target.matches('[data-filter="search"]')) {
+            this.searchTerm = target.value;
+            // Use debounced search to avoid too many re-renders
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                this.applyFiltersAndSearch();
+            }, 300);
+            return; // Don't call applyFiltersAndSearch immediately for search
+        } else if (target.matches('[data-filter="status"]')) {
+            this.filters.status = target.value;
+        } else if (target.matches('[data-filter="assignment_type"]')) {
+            this.filters.assignment_type = target.value;
+        } else if (target.matches('[data-filter="sort"]')) {
+            const [sortBy, sortOrder] = target.value.split(':');
+            this.sortBy = sortBy;
+            this.sortOrder = sortOrder;
+        }
+        
+        this.applyFiltersAndSearch();
+    }
+
+    // Apply filters and search
+    applyFiltersAndSearch() {
+        const assignments = this.get('assignments') || [];
+        let filtered = [...assignments];
+
+        // Apply search filter
+        if (this.searchTerm) {
+            const search = this.searchTerm.toLowerCase();
+            filtered = filtered.filter(assignment => 
+                assignment.title?.toLowerCase().includes(search) ||
+                assignment.description?.toLowerCase().includes(search) ||
+                assignment.subject?.name?.toLowerCase().includes(search) ||
+                assignment.teacher?.full_name?.toLowerCase().includes(search) ||
+                assignment.assignment_type?.toLowerCase().includes(search)
+            );
+        }
+
+        // Apply status filter
+        if (this.filters.status) {
+            filtered = filtered.filter(assignment => assignment.submission_status === this.filters.status);
+        }
+
+        // Apply assignment type filter
+        if (this.filters.assignment_type) {
+            filtered = filtered.filter(assignment => assignment.assignment_type === this.filters.assignment_type);
+        }
+
+        // Apply sorting
+        filtered.sort((a, b) => {
+            let aValue = a[this.sortBy];
+            let bValue = b[this.sortBy];
+
+            // Handle date sorting
+            if (this.sortBy.includes('date') || this.sortBy.includes('at')) {
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+            }
+
+            // Handle string sorting
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+
+            // Handle numeric sorting
+            if (this.sortBy === 'total_points' || this.sortBy === 'submission_grade') {
+                aValue = parseFloat(aValue) || 0;
+                bValue = parseFloat(bValue) || 0;
+            }
+
+            if (this.sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        this.set('filteredAssignments', filtered);
+    }
+
+    // Get unique values for filter options
+    getUniqueAssignmentTypes() {
+        const assignments = this.get('assignments') || [];
+        const types = [...new Set(assignments.map(a => a.assignment_type).filter(Boolean))];
+        return types.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }));
+    }
+
+    // Clear all filters
+    clearFilters() {
+        this.searchTerm = '';
+        this.filters = {
+            status: '',
+            assignment_type: ''
+        };
+        this.sortBy = 'due_date';
+        this.sortOrder = 'asc';
+        
+        // Reset form elements
+        const searchInput = this.querySelector('[data-filter="search"]');
+        if (searchInput) searchInput.value = '';
+        
+        const filterElements = this.querySelectorAll('[data-filter]:not([data-filter="search"])');
+        filterElements.forEach(el => el.value = '');
+        
+        this.applyFiltersAndSearch();
     }
 
     getStatusBadge(status) {
@@ -151,6 +332,202 @@ class StudentAssignmentsPage extends App {
         return `<ui-badge color="${config.color}"><i class="${config.icon} mr-1"></i>${config.text}</ui-badge>`;
     }
 
+    // Generate HTML for a single assignment
+    generateAssignmentHTML(assignment) {
+        return `
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                <!-- Assignment Header -->
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="size-10 min-w-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-alt text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">${assignment.title}</h3>
+                                <div class="flex items-center space-x-2">
+                                    ${this.getStatusBadge(assignment.submission_status)}
+                                    ${this.getAssignmentTypeBadge(assignment.assignment_type)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Assignment Content -->
+                <div class="p-6">
+                    <!-- Description -->
+                    <div class="mb-6">
+                        <p class="text-gray-700 leading-relaxed">${assignment.description}</p>
+                    </div>
+                    
+                    <!-- Assignment Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-blue-50 rounded-lg p-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-book text-blue-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-600 font-medium">Subject</p>
+                                    <p class="text-sm font-semibold text-gray-900">${assignment.subject.name}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-user-tie text-green-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-green-600 font-medium">Teacher</p>
+                                    <p class="text-sm font-semibold text-gray-900">${assignment.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${assignment.teacher.full_name}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-purple-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-purple-600 font-medium">Due Date</p>
+                                    <p class="text-sm font-semibold text-gray-900">${this.formatDate(assignment.due_date)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-lg p-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-star text-orange-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-orange-600 font-medium">Points</p>
+                                    <p class="text-sm font-semibold text-gray-900">${assignment.total_points} pts</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grade Display Section -->
+                    ${assignment.submission_grade ? `
+                        <div class="mb-6">
+                            <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-trophy text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-emerald-700">Grade</p>
+                                            <p class="text-lg font-bold text-gray-900">${assignment.submission_grade}/${assignment.total_points} points</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        ${this.getGradeBadge(assignment.submission_grade, assignment.total_points)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Submission Info -->
+                    ${assignment.submission ? `
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <div class="flex flex-col lg:flex-row lg:items-center md:justify-between space-y-3 md:space-y-0">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Submitted</p>
+                                        <p class="text-xs text-gray-500 text-nowrap">${this.formatDate(assignment.submitted_at)}</p>
+                                    </div>
+                                </div>
+                                ${assignment.submission.feedback ? `
+                                    <div class="md:text-right">
+                                        <p class="text-xs text-gray-500 mb-1">Feedback</p>
+                                        <p class="text-sm font-medium text-blue-600">${assignment.submission.feedback}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="bg-yellow-50 rounded-lg p-4 mb-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Not Submitted</p>
+                                    <p class="text-xs text-gray-500">${this.getDaysUntilDue(assignment.due_date)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `}
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span class="flex items-center space-x-1">
+                                <i class="fas fa-clock"></i>
+                                <span>${this.getDaysUntilDue(assignment.due_date)}</span>
+                            </span>
+                            ${assignment.submission_status === 'graded' ? `
+                                <span class="flex items-center space-x-1 text-green-600">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Graded</span>
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button 
+                                class="view-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
+                                title="View Details"
+                                data-assignment-id="${assignment.id}">
+                                <i class="fas fa-eye text-xs"></i>
+                            </button>
+                            ${assignment.submission_status === 'not_submitted' ? `
+                                <button 
+                                    class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
+                                    title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
+                                    data-assignment-id="${assignment.id}"
+                                    ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
+                                    <i class="fas fa-upload text-xs"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Generate HTML for no assignments found
+    generateNoAssignmentsHTML() {
+        return `
+            <div class="bg-white shadow-sm rounded-xl p-8 text-center border border-gray-100">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-search text-2xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Assignments Found</h3>
+                <p class="text-gray-500 max-w-md mx-auto mb-4">
+                    No assignments match your current filters. Try adjusting your search criteria or clearing the filters.
+                </p>
+                <button 
+                    onclick="this.closest('app-student-assignments-page').clearFilters()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200">
+                    <i class="fas fa-times mr-2"></i>
+                    Clear Filters
+                </button>
+            </div>
+        `;
+    }
+
     // Handle button clicks for view assignment
     onButtonClick(event) {
         const button = event.target.closest('button');
@@ -206,6 +583,7 @@ class StudentAssignmentsPage extends App {
         const loading = this.get('loading');
         const error = this.get('error');
         const assignments = this.get('assignments');
+        const filteredAssignments = this.get('filteredAssignments') || assignments;
 
         if (loading) {
             return `
@@ -334,186 +712,104 @@ class StudentAssignmentsPage extends App {
                     </div>
                 </div>
 
-                <!-- Assignments List -->
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-semibold text-gray-900">All Assignments</h2>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm text-gray-500">${assignments.length} assignments</span>
+                <!-- Filters and Search Section -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-filter text-white text-sm"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900">Filter & Search Assignments</h3>
+                            </div>
+                            <button 
+                                onclick="this.closest('app-student-assignments-page').clearFilters()"
+                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                                <i class="fas fa-times mr-1"></i>
+                                Clear All
+                            </button>
                         </div>
                     </div>
                     
-                    ${assignments.map(assignment => `
-                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                            <!-- Assignment Header -->
-                            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="size-10 min-w-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-file-alt text-white text-sm"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-900">${assignment.title}</h3>
-                                            <div class="flex items-center space-x-2">
-                                                ${this.getStatusBadge(assignment.submission_status)}
-                                                ${this.getAssignmentTypeBadge(assignment.assignment_type)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Search Bar -->
+                        <div class="w-full">
+                            <ui-input 
+                                type="search"
+                                data-filter="search"
+                                placeholder="Search assignments by title, description, subject, or teacher..."
+                                value="${this.searchTerm}">
+                            </ui-input>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Status Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <ui-dropdown data-filter="status" value="${this.filters.status}">
+                                    <ui-option value="">All Status</ui-option>
+                                    <ui-option value="not_submitted">Not Submitted</ui-option>
+                                    <ui-option value="submitted">Submitted</ui-option>
+                                    <ui-option value="graded">Graded</ui-option>
+                                    <ui-option value="late">Late</ui-option>
+                                </ui-dropdown>
                             </div>
                             
-                            <!-- Assignment Content -->
-                            <div class="p-6">
-                                <!-- Description -->
-                                <div class="mb-6">
-                                    <p class="text-gray-700 leading-relaxed">${assignment.description}</p>
-                                </div>
-                                
-                                <!-- Assignment Details Grid -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                    <div class="bg-blue-50 rounded-lg p-3">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-book text-blue-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-blue-600 font-medium">Subject</p>
-                                                <p class="text-sm font-semibold text-gray-900">${assignment.subject.name}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-green-50 rounded-lg p-3">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-user-tie text-green-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-green-600 font-medium">Teacher</p>
-                                                <p class="text-sm font-semibold text-gray-900">${assignment.teacher.gender === 'female' ? 'Madam' : 'Sir'} ${assignment.teacher.full_name}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-purple-50 rounded-lg p-3">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-calendar-alt text-purple-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-purple-600 font-medium">Due Date</p>
-                                                <p class="text-sm font-semibold text-gray-900">${this.formatDate(assignment.due_date)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-orange-50 rounded-lg p-3">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-star text-orange-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-orange-600 font-medium">Points</p>
-                                                <p class="text-sm font-semibold text-gray-900">${assignment.total_points} pts</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Grade Display Section -->
-                                ${assignment.submission_grade ? `
-                                    <div class="mb-6">
-                                        <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center space-x-3">
-                                                    <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                                                        <i class="fas fa-trophy text-white text-sm"></i>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-sm font-medium text-emerald-700">Grade</p>
-                                                        <p class="text-lg font-bold text-gray-900">${assignment.submission_grade}/${assignment.total_points} points</p>
-                                                    </div>
-                                                </div>
-                                                <div class="text-right">
-                                                    ${this.getGradeBadge(assignment.submission_grade, assignment.total_points)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                <!-- Submission Info -->
-                                ${assignment.submission ? `
-                                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                                        <div class="flex flex-col lg:flex-row lg:items-center md:justify-between space-y-3 md:space-y-0">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                                    <i class="fas fa-check-circle text-green-600"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">Submitted</p>
-                                                    <p class="text-xs text-gray-500 text-nowrap">${this.formatDate(assignment.submitted_at)}</p>
-                                                </div>
-                                            </div>
-                                            ${assignment.submission.feedback ? `
-                                                <div class="md:text-right">
-                                                    <p class="text-xs text-gray-500 mb-1">Feedback</p>
-                                                    <p class="text-sm font-medium text-blue-600">${assignment.submission.feedback}</p>
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                ` : `
-                                    <div class="bg-yellow-50 rounded-lg p-4 mb-6">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                                <i class="fas fa-clock text-yellow-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-900">Not Submitted</p>
-                                                <p class="text-xs text-gray-500">${this.getDaysUntilDue(assignment.due_date)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `}
-                                
-                                <!-- Action Buttons -->
-                                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                    <div class="flex items-center space-x-4 text-sm text-gray-500">
-                                        <span class="flex items-center space-x-1">
-                                            <i class="fas fa-clock"></i>
-                                            <span>${this.getDaysUntilDue(assignment.due_date)}</span>
-                                        </span>
-                                        ${assignment.submission_status === 'graded' ? `
-                                            <span class="flex items-center space-x-1 text-green-600">
-                                                <i class="fas fa-check-circle"></i>
-                                                <span>Graded</span>
-                                            </span>
-                                        ` : ''}
-                                    </div>
-                                    
-                                    <div class="flex space-x-3">
-                                        <button 
-                                            class="view-assignment-btn size-8 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200" 
-                                            title="View Details"
-                                            data-assignment-id="${assignment.id}">
-                                            <i class="fas fa-eye text-xs"></i>
-                                        </button>
-                                        ${assignment.submission_status === 'not_submitted' ? `
-                                            <button 
-                                                class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
-                                                title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
-                                                data-assignment-id="${assignment.id}"
-                                                ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
-                                                <i class="fas fa-upload text-xs"></i>
-                                            </button>
-                                        ` : ''}
-                                    </div>
-                                </div>
+                            <!-- Assignment Type Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <ui-dropdown data-filter="assignment_type" value="${this.filters.assignment_type}">
+                                    <ui-option value="">All Types</ui-option>
+                                    ${this.getUniqueAssignmentTypes().map(type => 
+                                        `<ui-option value="${type.value}">${type.label}</ui-option>`
+                                    ).join('')}
+                                </ui-dropdown>
+                            </div>
+                            
+                            <!-- Sort Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                                <ui-dropdown data-filter="sort" value="${this.sortBy}:${this.sortOrder}">
+                                    <ui-option value="due_date:asc">Due Date (Earliest)</ui-option>
+                                    <ui-option value="due_date:desc">Due Date (Latest)</ui-option>
+                                    <ui-option value="title:asc">Title A-Z</ui-option>
+                                    <ui-option value="title:desc">Title Z-A</ui-option>
+                                    <ui-option value="total_points:desc">Points (High to Low)</ui-option>
+                                    <ui-option value="total_points:asc">Points (Low to High)</ui-option>
+                                    <ui-option value="submission_grade:desc">Grade (High to Low)</ui-option>
+                                    <ui-option value="submission_grade:asc">Grade (Low to High)</ui-option>
+                                    <ui-option value="created_at:desc">Newest First</ui-option>
+                                    <ui-option value="created_at:asc">Oldest First</ui-option>
+                                </ui-dropdown>
                             </div>
                         </div>
-                    `).join('')}
+                        
+                        <!-- Results Count -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
+                            <span class="results-count">
+                                Showing <span class="font-medium text-gray-900">${filteredAssignments?.length || 0}</span> 
+                                of <span class="font-medium text-gray-900">${assignments.length}</span> assignments
+                            </span>
+                            <span class="filters-indicator">
+                                ${(filteredAssignments?.length || 0) !== assignments.length ? 
+                                    `<span class="text-blue-600 font-medium">
+                                        <i class="fas fa-filter mr-1"></i>
+                                        Filters Applied
+                                    </span>` : 
+                                    ''
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignments List -->
+                <div class="assignments-list-container space-y-6">
+                    ${(filteredAssignments && filteredAssignments.length > 0) ? 
+                        filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
+                        this.generateNoAssignmentsHTML()
+                    }
                 </div>
             </div>
             

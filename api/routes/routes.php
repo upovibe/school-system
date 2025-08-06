@@ -172,6 +172,9 @@ Router::get('/teachers/students/{studentId}/assignments', 'TeacherController@get
 
 // File download routes
 Router::get('/uploads/assignments/attachments/{filename}', 'TeacherController@downloadAssignmentAttachment');
+Router::get('/students/download/assignments/attachments/{filename}', 'StudentController@downloadAssignmentAttachment');
+
+// Teacher Management Routes
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');

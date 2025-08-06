@@ -260,7 +260,7 @@ class StudentAssignmentViewDialog extends HTMLElement {
                                             ${assignment.attachment_file.split('/').pop()}
                                         </span>
                                     </div>
-                                    <ui-button variant="secondary" size="sm" onclick="window.open('${assignment.attachment_file}', '_blank')">
+                                    <ui-button variant="secondary" size="sm" onclick="(function(){const token=localStorage.getItem('token');if(token){window.open('/api/students/download/assignments/attachments/${assignment.attachment_file.split('/').pop()}?token='+encodeURIComponent(token),'_blank');}else{alert('Authentication required');}})()">
                                         <i class="fas fa-download mr-1"></i>
                                         Download
                                     </ui-button>

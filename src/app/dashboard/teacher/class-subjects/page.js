@@ -223,7 +223,7 @@ class TeacherClassesSubjectsPage extends App {
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                             <h1 class="text-2xl sm:text-3xl font-bold">My Classes & Subjects</h1>
                             <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacher_name}</p>
-                        </div>
+                    </div>
                     
                     <!-- Enhanced Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -277,7 +277,7 @@ class TeacherClassesSubjectsPage extends App {
                                     <div class="min-w-0 flex-1">
                                         <h2 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                                             ${assignment.class_name}-${assignment.class_section}
-                                        </h2>
+                                </h2>
                                         <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm">
                                             <span class="flex items-center">
                                                 <i class="fas fa-calendar mr-1"></i>
@@ -289,7 +289,7 @@ class TeacherClassesSubjectsPage extends App {
                                             </span>
                                         </div>
                                     </div>
-                                </div>
+                            </div>
                         </div>
 
                         <div class="p-5">
@@ -342,40 +342,40 @@ class TeacherClassesSubjectsPage extends App {
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
+                                    </div>
+                                `).join('')}
                             </div>
+                        </div>
 
                                                          <!-- Enhanced Students Section with Accordion -->
-                             <div>
+                        <div>
                                  <ui-accordion>
                                      <ui-accordion-item title="Class Students (${assignment.students.length} Student${assignment.students.length > 1 ? 's' : ''})">
-                                         ${assignment.students.length > 0 ? `
-                                             <ui-table 
-                                                         data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
-                                                         columns='${JSON.stringify(this.getStudentTableColumns())}'
+                            ${assignment.students.length > 0 ? `
+                                    <ui-table 
+                                        data='${JSON.stringify(this.prepareStudentTableData(assignment.students))}'
+                                        columns='${JSON.stringify(this.getStudentTableColumns())}'
                                                          title="Students in ${assignment.class_name}-${assignment.class_section}"
-                                                         searchable
-                                                         search-placeholder="Search students..."
-                                                         striped
-                                                         print
-                                                         sortable
-                                                         clickable
-                                                         refresh
-                                                         row-clickable="true"
-                                                         >
-                                                     </ui-table>
-                                             </div>
-                                         ` : `
+                                        searchable
+                                        search-placeholder="Search students..."
+                                        striped
+                                        print
+                                        sortable
+                                        clickable
+                                        refresh
+                                        row-clickable="true"
+                                        >
+                                    </ui-table>
+                                </div>
+                            ` : `
                                              <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
                                                  <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                                                      <i class="fas fa-user-graduate text-gray-400 text-xl sm:text-2xl"></i>
                                                  </div>
                                                  <h4 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Students Enrolled</h4>
                                                  <p class="text-gray-500 text-sm sm:text-base">This class currently has no enrolled students.</p>
-                                             </div>
-                                         `}
+                                </div>
+                            `}
                                      </ui-accordion-item>
                                  </ui-accordion>
                              </div>

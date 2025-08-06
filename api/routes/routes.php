@@ -169,6 +169,9 @@ Router::get('/teachers/assignments/{id}/submissions', 'TeacherController@getAssi
 Router::get('/teachers/assignments/{assignmentId}/students/{studentId}/submission', 'TeacherController@getStudentSubmission');
 Router::post('/teachers/assignments/{assignmentId}/grade/{studentId}', 'TeacherController@gradeSubmission');
 Router::get('/teachers/students/{studentId}/assignments', 'TeacherController@getStudentAssignments');
+
+// File download routes
+Router::get('/uploads/assignments/attachments/{filename}', 'TeacherController@downloadAssignmentAttachment');
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');

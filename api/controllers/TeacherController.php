@@ -1551,5 +1551,100 @@ class TeacherController {
             ]);
         }
     }
+
+    /**
+     * Download assignment attachment (teacher only)
+     */
+    public function downloadAssignmentAttachment($filename) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            
+            // Check for token in Authorization header or query parameter
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+            $token = null;
+            
+            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = $matches[1];
+            } else {
+                // Fallback: check query parameter for token (for window.open requests)
+                $token = $_GET['token'] ?? null;
+            }
+            
+            if (!$token) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Authentication token required'
+                ]);
+                return;
+            }
+            
+            // Validate token and get teacher
+            require_once __DIR__ . '/../models/UserSessionModel.php';
+            $userSessionModel = new UserSessionModel($pdo);
+            $session = $userSessionModel->findActiveSession($token);
+            
+            if (!$session) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid or expired token'
+                ]);
+                return;
+            }
+            
+            // Check if user is a teacher
+            $teacher = $this->teacherModel->findByUserId($session['user_id']);
+            if (!$teacher) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. Teachers only.'
+                ]);
+                return;
+            }
+
+            // Sanitize filename
+            $filename = basename($filename);
+
+            // Define the file path
+            $filePath = __DIR__ . '/../uploads/assignments/attachments/' . $filename;
+
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'File not found'
+                ]);
+                return;
+            }
+
+            // Get file info
+            $fileInfo = pathinfo($filePath);
+
+            // Set headers to force download instead of displaying in browser
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . filesize($filePath));
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            // Output file content
+            readfile($filePath);
+            exit;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error downloading file: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?> 

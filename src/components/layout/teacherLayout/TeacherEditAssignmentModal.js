@@ -25,7 +25,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
     }
 
     connectedCallback() {
-        console.log('TeacherEditAssignmentModal connected to DOM');
+
         this.render();
         this.setupEventListeners();
     }
@@ -48,23 +48,19 @@ class TeacherEditAssignmentModal extends HTMLElement {
     }
 
     async open(assignmentId = null) {
-        console.log('Edit modal open() called with assignmentId:', assignmentId);
+
         this.assignmentId = assignmentId;
         
         if (assignmentId) {
-            console.log('Loading assignment data...');
             await this.loadAssignmentData(assignmentId);
-            console.log('Assignment data loaded, now opening modal');
         }
         
         // Render with the loaded data, then set the open attribute
         this.render();
         this.setAttribute('open', '');
-        console.log('Set open attribute on edit modal');
         
         // Populate form after a small delay to ensure components are initialized
         setTimeout(() => {
-            console.log('Populating form...');
             this.populateForm();
         }, 100);
     }
@@ -89,26 +85,20 @@ class TeacherEditAssignmentModal extends HTMLElement {
     // Load assignment data from API
     async loadAssignmentData(assignmentId) {
         try {
-            console.log('Loading assignment data from API for ID:', assignmentId);
-            
             // Get token from localStorage
             const token = localStorage.getItem('token');
             if (!token) {
                 throw new Error('Authentication required');
             }
 
-            console.log('Making API request to:', `/teachers/assignments/${assignmentId}`);
             const response = await api.withToken(token).get(`/teachers/assignments/${assignmentId}`);
-            console.log('API response:', response);
             
             if (response.data && response.data.success) {
                 this.assignmentData = response.data.data;
-                console.log('Assignment data loaded:', this.assignmentData);
             } else {
                 throw new Error('Failed to load assignment data');
             }
         } catch (error) {
-            console.error('Error loading assignment data:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to load assignment data. Please try again.',
@@ -121,11 +111,8 @@ class TeacherEditAssignmentModal extends HTMLElement {
     // Populate form with assignment data
     populateForm() {
         if (!this.assignmentData) {
-            console.log('No assignment data to populate');
             return;
         }
-
-        console.log('Populating form with data:', this.assignmentData);
 
         // Get form elements
         const titleInput = this.querySelector('[data-field="title"]');
@@ -264,7 +251,6 @@ class TeacherEditAssignmentModal extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('Error updating assignment:', error);
             if (error.response && error.response.status === 401) {
                 Toast.show({
                     title: 'Authentication Error',

@@ -213,10 +213,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                 });
             }
 
-            console.log('FormData entries:'); // Debug log
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
+
 
             // Create the assignment with multipart data (ALWAYS use FormData like events)
             const response = await api.withToken(token).post('/teachers/assignments', formData);
@@ -241,9 +238,6 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                 this.set('error', response.data?.message || 'Failed to create assignment.');
             }
         } catch (error) {
-            console.error('Error creating assignment:', error);
-            console.error('Error response data:', error.response?.data);
-            console.error('Error response status:', error.response?.status);
             
             if (error.response && error.response.status === 401) {
                 Toast.show({

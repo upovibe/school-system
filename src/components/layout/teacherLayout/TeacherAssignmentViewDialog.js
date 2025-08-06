@@ -21,7 +21,7 @@ class TeacherAssignmentViewDialog extends HTMLElement {
     }
 
     async openAssignment(assignmentId) {
-        console.log('Opening assignment dialog for ID:', assignmentId);
+
 
         // Show loading dialog first
         this.loading = true;
@@ -30,16 +30,16 @@ class TeacherAssignmentViewDialog extends HTMLElement {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                console.error('No token found');
+    
                 return;
             }
 
-            console.log('Loading assignment data...');
+
             const response = await api.withToken(token).get(`/teachers/assignments/${assignmentId}`);
 
             if (response.data && response.data.success) {
                 this.assignmentData = response.data.data;
-                console.log('Assignment loaded:', this.assignmentData);
+
                 this.loading = false;
                 this.render();
 
@@ -50,7 +50,7 @@ class TeacherAssignmentViewDialog extends HTMLElement {
                 }
             }
         } catch (error) {
-            console.error('Error loading assignment:', error);
+
             this.loading = false;
             this.render();
         }

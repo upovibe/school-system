@@ -31,7 +31,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found");
         return;
       }
 
@@ -50,7 +49,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         }
       }
     } catch (error) {
-      console.error("Error loading student assignment:", error);
       this.loading = false;
       this.render();
     }
@@ -100,7 +98,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found");
         return;
       }
 
@@ -143,7 +140,6 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
         });
       }
     } catch (error) {
-      console.error("Error submitting grade:", error);
       Toast.show({
         message: "Error submitting grade. Please try again.",
         variant: "error",

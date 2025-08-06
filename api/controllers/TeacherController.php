@@ -1174,9 +1174,23 @@ class TeacherController {
             // Handle attachment upload if present
             if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
                 require_once __DIR__ . '/../utils/assignment_uploads.php';
+                
+                // Delete old attachment file if exists
+                if (!empty($existingAssignment['attachment_file'])) {
+                    deleteAssignmentFiles($existingAssignment['attachment_file']);
+                }
+                
+                // Upload new attachment
                 $attachmentData = uploadAssignmentAttachment($_FILES['attachment']);
                 if ($attachmentData['success']) {
                     $data['attachment_file'] = $attachmentData['filepath'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $attachmentData['message']
+                    ]);
+                    return;
                 }
             }
             

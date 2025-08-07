@@ -24,3 +24,5 @@ return [
 // cd school-system; php -S localhost:8000
 
 // cd school-system; php api/index.php --help
+
+// cd school-system; php api/index.php --fresh

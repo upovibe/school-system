@@ -208,10 +208,20 @@ class Seed {
     private function seedGradingSystem() {
         echo "📊 Seeding grading system...\n";
         
-        // Include the grading system seeder
-        require_once __DIR__ . '/grading_system_seeder.php';
-        $gradingSystemSeeder = new GradingSystemSeeder($this->pdo);
-        $gradingSystemSeeder->run();
+        // Include the grading period seeder
+        require_once __DIR__ . '/grading_period_seeder.php';
+        $gradingPeriodSeeder = new GradingPeriodSeeder($this->pdo);
+        $gradingPeriodSeeder->run();
+        
+        // Include the grading policy seeder
+        require_once __DIR__ . '/grading_policy_seeder.php';
+        $gradingPolicySeeder = new GradingPolicySeeder($this->pdo);
+        $gradingPolicySeeder->run();
+        
+        // Include the student grade seeder
+        require_once __DIR__ . '/student_grade_seeder.php';
+        $studentGradeSeeder = new StudentGradeSeeder($this->pdo);
+        $studentGradeSeeder->run();
     }
     
 }

@@ -5,7 +5,7 @@
  * This table stores student grades with calculated percentages and letter grades
  */
 
-class Migration_20241001000041createstudentgradestable {
+class Migration_20241001000043createstudentgradestable {
     private $pdo;
 
     public function __construct($pdo) {
@@ -22,11 +22,9 @@ class Migration_20241001000041createstudentgradestable {
             grading_period_id INT NOT NULL,
             grading_policy_id INT NOT NULL, -- References school-wide policy
             
-            -- Raw Scores (Teachers enter these)
+            -- Raw Scores (Teachers enter these - max scores come from policy)
             assignment_total DECIMAL(5,2) DEFAULT 0,
-            assignment_max DECIMAL(5,2) DEFAULT 0,
             exam_total DECIMAL(5,2) DEFAULT 0,
-            exam_max DECIMAL(5,2) DEFAULT 0,
             
             -- Calculated Scores (System calculates these)
             assignment_percentage DECIMAL(5,2) DEFAULT 0,

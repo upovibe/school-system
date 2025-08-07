@@ -25,6 +25,10 @@ class Migration_20241001000040creategradingpoliciestable {
             assignment_weight DECIMAL(3,2) DEFAULT 0.60,
             exam_weight DECIMAL(3,2) DEFAULT 0.40,
             
+            -- Maximum Scores (Subject-specific)
+            assignment_max_score INT DEFAULT 60,
+            exam_max_score INT DEFAULT 40,
+            
             -- Dynamic Grade Boundaries (JSON) - Subject-specific
             grade_boundaries JSON NOT NULL,
             

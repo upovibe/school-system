@@ -87,11 +87,20 @@ try {
 echo "🌱 Step 2: Seeding grading system...\n";
 
 try {
-    // Include the grading system seeder
-    require_once __DIR__ . '/api/database/seeders/grading_system_seeder.php';
+    // Include the grading period seeder
+    require_once __DIR__ . '/api/database/seeders/grading_period_seeder.php';
+    $gradingPeriodSeeder = new GradingPeriodSeeder($pdo);
+    $gradingPeriodSeeder->run();
     
-    $gradingSystemSeeder = new GradingSystemSeeder($pdo);
-    $gradingSystemSeeder->run();
+    // Include the grading policy seeder
+    require_once __DIR__ . '/api/database/seeders/grading_policy_seeder.php';
+    $gradingPolicySeeder = new GradingPolicySeeder($pdo);
+    $gradingPolicySeeder->run();
+    
+    // Include the student grade seeder
+    require_once __DIR__ . '/api/database/seeders/student_grade_seeder.php';
+    $studentGradeSeeder = new StudentGradeSeeder($pdo);
+    $studentGradeSeeder->run();
     
     echo "✅ Grading system seeded successfully!\n\n";
     

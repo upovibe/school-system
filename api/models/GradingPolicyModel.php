@@ -8,7 +8,7 @@ class GradingPolicyModel extends BaseModel {
     
     protected static $fillable = [
         'name', 'description', 'subject_id', 'is_active', 
-        'assignment_weight', 'exam_weight', 'grade_boundaries',
+        'assignment_weight', 'exam_weight', 'assignment_max_score', 'exam_max_score', 'grade_boundaries',
         'created_by'
     ];
     
@@ -17,6 +17,8 @@ class GradingPolicyModel extends BaseModel {
         'is_active' => 'boolean',
         'assignment_weight' => 'float',
         'exam_weight' => 'float',
+        'assignment_max_score' => 'integer',
+        'exam_max_score' => 'integer',
         'grade_boundaries' => 'json',
         'created_by' => 'integer',
         'created_at' => 'datetime',
@@ -136,7 +138,10 @@ class GradingPolicyModel extends BaseModel {
      * Calculate letter grade based on percentage and policy
      */
     public function calculateLetterGrade($percentage, $policy) {
-        $boundaries = json_decode($policy['grade_boundaries'], true);
+        // Handle both JSON string and array formats
+        $boundaries = is_string($policy['grade_boundaries']) 
+            ? json_decode($policy['grade_boundaries'], true) 
+            : $policy['grade_boundaries'];
         
         // Sort boundaries from highest to lowest
         arsort($boundaries);
@@ -153,7 +158,11 @@ class GradingPolicyModel extends BaseModel {
     /**
      * Calculate final grade based on raw scores and policy
      */
-    public function calculateFinalGrade($assignmentTotal, $assignmentMax, $examTotal, $examMax, $policy) {
+    public function calculateFinalGrade($assignmentTotal, $examTotal, $policy) {
+        // Get max scores from policy
+        $assignmentMax = $policy['assignment_max_score'];
+        $examMax = $policy['exam_max_score'];
+        
         // Calculate percentages
         $assignmentPercentage = $assignmentMax > 0 ? ($assignmentTotal / $assignmentMax) * 100 : 0;
         $examPercentage = $examMax > 0 ? ($examTotal / $examMax) * 100 : 0;
@@ -198,7 +207,10 @@ class GradingPolicyModel extends BaseModel {
      * Get grade boundaries as array
      */
     public function getGradeBoundaries($policy) {
-        return json_decode($policy['grade_boundaries'], true);
+        // Handle both JSON string and array formats
+        return is_string($policy['grade_boundaries']) 
+            ? json_decode($policy['grade_boundaries'], true) 
+            : $policy['grade_boundaries'];
     }
 }
 ?>

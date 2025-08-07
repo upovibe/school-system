@@ -8,7 +8,7 @@ class StudentGradeModel extends BaseModel {
     
     protected static $fillable = [
         'student_id', 'class_id', 'subject_id', 'grading_period_id', 'grading_policy_id',
-        'assignment_total', 'assignment_max', 'exam_total', 'exam_max',
+        'assignment_total', 'exam_total',
         'assignment_percentage', 'exam_percentage', 'final_percentage', 'final_letter_grade',
         'remarks', 'created_by', 'updated_by'
     ];

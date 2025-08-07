@@ -273,14 +273,14 @@ class TeacherAssignmentsPage extends App {
 
             const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/delete`);
             
-            if (response.success) {
+            if (response.data && response.data.success) {
                 // Show success message
                 this.showToast('Assignment deleted successfully', 'success');
                 
                 // Reload assignments to reflect the change
                 await this.loadAssignments();
             } else {
-                this.showToast(response.message || 'Failed to delete assignment', 'error');
+                this.showToast(response.data?.message || 'Failed to delete assignment', 'error');
             }
         } catch (error) {
             console.error('Error deleting assignment:', error);
@@ -303,14 +303,14 @@ class TeacherAssignmentsPage extends App {
 
             const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/restore`);
             
-            if (response.success) {
+            if (response.data && response.data.success) {
                 // Show success message
                 this.showToast('Assignment restored successfully', 'success');
                 
                 // Reload assignments to reflect the change
                 await this.loadAssignments();
             } else {
-                this.showToast(response.message || 'Failed to restore assignment', 'error');
+                this.showToast(response.data?.message || 'Failed to restore assignment', 'error');
             }
         } catch (error) {
             console.error('Error restoring assignment:', error);
@@ -322,7 +322,11 @@ class TeacherAssignmentsPage extends App {
     showToast(message, type = 'info') {
         // Check if Toast component is available
         if (window.Toast) {
-            window.Toast.show(message, type);
+            window.Toast.show({
+                message: message,
+                variant: type,
+                duration: 3000
+            });
         } else {
             // Fallback to alert
             alert(message);

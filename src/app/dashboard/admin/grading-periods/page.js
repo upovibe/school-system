@@ -117,6 +117,7 @@ class GradingPeriodManagementPage extends App {
             
             this.set('gradingPeriods', response.data.data);
             this.updateTableData();
+            this.set('loading', false);
         } catch (error) {
             console.error('❌ Error loading data:', error);
             this.set('loading', false);

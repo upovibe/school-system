@@ -22,7 +22,7 @@ class GradingPeriodDeleteDialog extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open', 'grading-period-data'];
+        return ['open'];
     }
 
     connectedCallback() {
@@ -48,6 +48,11 @@ class GradingPeriodDeleteDialog extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+    }
+
+    // Set grading period data for deletion
+    setGradingPeriodData(gradingPeriodItem) {
+        this.gradingPeriodData = gradingPeriodItem;
     }
 
     // Delete the grading period
@@ -131,75 +136,24 @@ class GradingPeriodDeleteDialog extends HTMLElement {
         }
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'grading-period-data' && newValue) {
-            try {
-                this.gradingPeriodData = JSON.parse(newValue);
-            } catch (error) {
-                console.error('Error parsing grading period data:', error);
-            }
-        }
-    }
+
 
     render() {
-        const period = this.gradingPeriodData;
+        const periodName = this.gradingPeriodData ? this.gradingPeriodData.name : 'this grading period';
         
-        if (!period) {
-            return `
-                <ui-dialog 
-                    title="Delete Grading Period"
-                    ${this.hasAttribute('open') ? 'open' : ''}>
-                    
-                    <div class="text-center py-8">
-                        <p class="text-gray-500">No grading period data to delete</p>
-                    </div>
-
-                    <ui-button slot="cancel" variant="secondary">
-                        Cancel
-                    </ui-button>
-                </ui-dialog>
-            `;
-        }
-
-        return `
+        this.innerHTML = `
             <ui-dialog 
-                title="Delete Grading Period"
-                ${this.hasAttribute('open') ? 'open' : ''}>
-                
-                <div class="text-center">
-                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                    </div>
-                    
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">
-                        Are you sure you want to delete this grading period?
-                    </h3>
-                    
-                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-600 mb-2">
-                            <strong>Period Name:</strong> ${period.name}
-                        </p>
-                        <p class="text-sm text-gray-600 mb-2">
-                            <strong>Academic Year:</strong> ${period.academic_year}
-                        </p>
-                        <p class="text-sm text-gray-600">
-                            <strong>Duration:</strong> ${this.formatDateRange(period.start_date, period.end_date)}
-                        </p>
-                    </div>
-                    
-                    <p class="text-sm text-gray-500 mt-4">
-                        This action cannot be undone. All associated data will be permanently deleted.
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                variant="danger">
+                <div slot="title">Delete Grading Period</div>
+                <div slot="content">
+                    <p class="text-gray-700 mb-4">
+                        Are you sure you want to delete <strong>${periodName}</strong>?
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        This action cannot be undone. If this grading period has associated grades, the deletion will be prevented.
                     </p>
                 </div>
-
-                <ui-button slot="confirm" variant="danger">
-                    Delete Grading Period
-                </ui-button>
-                <ui-button slot="cancel" variant="secondary">
-                    Cancel
-                </ui-button>
             </ui-dialog>
         `;
     }

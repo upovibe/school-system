@@ -53,6 +53,37 @@ class GradingPeriodUpdateModal extends HTMLElement {
         this.removeAttribute('open');
     }
 
+    // Set grading period data for editing
+    setGradingPeriodData(gradingPeriodItem) {
+        this.gradingPeriodData = gradingPeriodItem;
+        this.populateForm();
+    }
+
+    // Populate form with existing grading period data
+    populateForm() {
+        if (!this.gradingPeriodData) return;
+
+        const nameInput = this.querySelector('ui-input[data-field="name"]');
+        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
+        const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
+        const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
+        const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
+        const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
+
+        if (nameInput) nameInput.value = this.gradingPeriodData.name || '';
+        if (academicYearInput) academicYearInput.value = this.gradingPeriodData.academic_year || '';
+        if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
+        if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
+        if (descriptionTextarea) descriptionTextarea.value = this.gradingPeriodData.description || '';
+        if (statusSwitch) {
+            if (this.gradingPeriodData.is_active == 1) {
+                statusSwitch.setAttribute('checked', '');
+            } else {
+                statusSwitch.removeAttribute('checked');
+            }
+        }
+    }
+
     // Update the grading period
     async updateGradingPeriod() {
         try {
@@ -219,121 +250,73 @@ class GradingPeriodUpdateModal extends HTMLElement {
         }
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'grading-period-data' && newValue) {
-            try {
-                this.gradingPeriodData = JSON.parse(newValue);
-                this.populateForm();
-            } catch (error) {
-                console.error('Error parsing grading period data:', error);
-            }
-        }
-    }
 
-    populateForm() {
-        if (!this.gradingPeriodData) return;
-
-        const nameInput = this.querySelector('ui-input[data-field="name"]');
-        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
-        const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
-        const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
-        const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
-        const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
-
-        if (nameInput) nameInput.value = this.gradingPeriodData.name || '';
-        if (academicYearInput) academicYearInput.value = this.gradingPeriodData.academic_year || '';
-        if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
-        if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
-        if (descriptionTextarea) descriptionTextarea.value = this.gradingPeriodData.description || '';
-        if (statusSwitch) statusSwitch.checked = this.gradingPeriodData.is_active == 1;
-    }
 
     render() {
-        return `
+        this.innerHTML = `
             <ui-modal 
-                title="Update Grading Period"
-                size="lg"
-                ${this.hasAttribute('open') ? 'open' : ''}>
-                
-                <div class="space-y-6">
-                    <!-- Period Name -->
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Update Grading Period</div>
+                <form id="grading-period-update-form" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Period Name *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Period Name</label>
                         <ui-input 
                             data-field="name"
+                            type="text" 
                             placeholder="e.g., First Term, Second Term, Final Term"
-                            required>
+                            class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Academic Year -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Academic Year *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
                         <ui-input 
                             data-field="academic_year"
+                            type="text" 
                             placeholder="e.g., 2024-2025"
-                            required>
+                            class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Date Range -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Start Date *
-                            </label>
-                            <ui-input 
-                                data-field="start_date"
-                                type="date"
-                                required>
-                            </ui-input>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                End Date *
-                            </label>
-                            <ui-input 
-                                data-field="end_date"
-                                type="date"
-                                required>
-                            </ui-input>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <ui-input 
+                            data-field="start_date"
+                            type="date" 
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <ui-input 
+                            data-field="end_date"
+                            type="date" 
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <ui-textarea 
                             data-field="description"
                             placeholder="Optional description for this grading period..."
-                            rows="3">
+                            rows="3"
+                            class="w-full">
                         </ui-textarea>
                     </div>
-
-                    <!-- Active Status -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Status
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <ui-switch 
-                            name="is_active">
-                            Active
+                            name="is_active"
+                            class="w-full">
+                            <span slot="label">Active</span>
                         </ui-switch>
                     </div>
-                </div>
-
-                <ui-button slot="confirm" variant="primary">
-                    Update Grading Period
-                </ui-button>
-                <ui-button slot="cancel" variant="secondary">
-                    Cancel
-                </ui-button>
+                </form>
             </ui-modal>
         `;
     }

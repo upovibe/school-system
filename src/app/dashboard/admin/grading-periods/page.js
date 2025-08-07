@@ -141,7 +141,7 @@ class GradingPeriodManagementPage extends App {
             setTimeout(() => {
                 const viewModal = this.querySelector('grading-period-view-modal');
                 if (viewModal) {
-                    viewModal.setAttribute('grading-period-data', JSON.stringify(viewGradingPeriod));
+                    viewModal.setGradingPeriodData(viewGradingPeriod);
                 }
             }, 0);
         }
@@ -158,7 +158,7 @@ class GradingPeriodManagementPage extends App {
             setTimeout(() => {
                 const updateModal = this.querySelector('grading-period-update-modal');
                 if (updateModal) {
-                    updateModal.setAttribute('grading-period-data', JSON.stringify(editGradingPeriod));
+                    updateModal.setGradingPeriodData(editGradingPeriod);
                 }
             }, 0);
         }
@@ -175,7 +175,7 @@ class GradingPeriodManagementPage extends App {
             setTimeout(() => {
                 const deleteDialog = this.querySelector('grading-period-delete-dialog');
                 if (deleteDialog) {
-                    deleteDialog.setAttribute('grading-period-data', JSON.stringify(deleteGradingPeriod));
+                    deleteDialog.setGradingPeriodData(deleteGradingPeriod);
                 }
             }, 0);
         }

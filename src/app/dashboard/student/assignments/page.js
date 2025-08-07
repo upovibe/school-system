@@ -26,7 +26,8 @@ class StudentAssignmentsPage extends App {
         this.sortOrder = 'asc';
         this.filters = {
             status: '',
-            assignment_type: ''
+            assignment_type: '',
+            subject_id: ''
         };
         this.filteredAssignments = null;
     }
@@ -154,6 +155,8 @@ class StudentAssignmentsPage extends App {
             this.filters.status = target.value;
         } else if (target.matches('[data-filter="assignment_type"]')) {
             this.filters.assignment_type = target.value;
+        } else if (target.matches('[data-filter="subject"]')) {
+            this.filters.subject_id = target.value;
         } else if (target.matches('[data-filter="sort"]')) {
             const [sortBy, sortOrder] = target.value.split(':');
             this.sortBy = sortBy;
@@ -190,6 +193,11 @@ class StudentAssignmentsPage extends App {
             filtered = filtered.filter(assignment => assignment.assignment_type === this.filters.assignment_type);
         }
 
+        // Apply subject filter
+        if (this.filters.subject_id) {
+            filtered = filtered.filter(assignment => assignment.subject_id == this.filters.subject_id);
+        }
+
         // Apply sorting
         filtered.sort((a, b) => {
             let aValue = a[this.sortBy];
@@ -224,6 +232,15 @@ class StudentAssignmentsPage extends App {
     }
 
     // Get unique values for filter options
+    getUniqueSubjects() {
+        const assignments = this.get('assignments') || [];
+        const subjects = assignments.map(a => ({ 
+            id: a.subject_id, 
+            name: a.subject.name 
+        }));
+        return [...new Map(subjects.map(s => [s.id, s])).values()];
+    }
+
     getUniqueAssignmentTypes() {
         const assignments = this.get('assignments') || [];
         const types = [...new Set(assignments.map(a => a.assignment_type).filter(Boolean))];
@@ -235,7 +252,8 @@ class StudentAssignmentsPage extends App {
         this.searchTerm = '';
         this.filters = {
             status: '',
-            assignment_type: ''
+            assignment_type: '',
+            subject_id: ''
         };
         this.sortBy = 'due_date';
         this.sortOrder = 'asc';
@@ -743,45 +761,56 @@ class StudentAssignmentsPage extends App {
                         </div>
                         
                         <!-- Filter Options -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <!-- Status Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <ui-dropdown data-filter="status" value="${this.filters.status}">
-                                    <ui-option value="">All Status</ui-option>
-                                    <ui-option value="not_submitted">Not Submitted</ui-option>
-                                    <ui-option value="submitted">Submitted</ui-option>
-                                    <ui-option value="graded">Graded</ui-option>
-                                    <ui-option value="late">Late</ui-option>
-                                </ui-dropdown>
+                                <select data-filter="status" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Status</option>
+                                    <option value="not_submitted" ${this.filters.status === 'not_submitted' ? 'selected' : ''}>Not Submitted</option>
+                                    <option value="submitted" ${this.filters.status === 'submitted' ? 'selected' : ''}>Submitted</option>
+                                    <option value="graded" ${this.filters.status === 'graded' ? 'selected' : ''}>Graded</option>
+                                    <option value="late" ${this.filters.status === 'late' ? 'selected' : ''}>Late</option>
+                                </select>
                             </div>
                             
                             <!-- Assignment Type Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                <ui-dropdown data-filter="assignment_type" value="${this.filters.assignment_type}">
-                                    <ui-option value="">All Types</ui-option>
+                                <select data-filter="status" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Types</option>
                                     ${this.getUniqueAssignmentTypes().map(type => 
-                                        `<ui-option value="${type.value}">${type.label}</ui-option>`
+                                        `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
                                     ).join('')}
-                                </ui-dropdown>
+                                </select>
+                            </div>
+                            
+                            <!-- Subject Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <select data-filter="status" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Subjects</option>
+                                    ${this.getUniqueSubjects().map(subject => 
+                                        `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
+                                    ).join('')}
+                                </select>
                             </div>
                             
                             <!-- Sort Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                                <ui-dropdown data-filter="sort" value="${this.sortBy}:${this.sortOrder}">
-                                    <ui-option value="due_date:asc">Due Date (Earliest)</ui-option>
-                                    <ui-option value="due_date:desc">Due Date (Latest)</ui-option>
-                                    <ui-option value="title:asc">Title A-Z</ui-option>
-                                    <ui-option value="title:desc">Title Z-A</ui-option>
-                                    <ui-option value="total_points:desc">Points (High to Low)</ui-option>
-                                    <ui-option value="total_points:asc">Points (Low to High)</ui-option>
-                                    <ui-option value="submission_grade:desc">Grade (High to Low)</ui-option>
-                                    <ui-option value="submission_grade:asc">Grade (Low to High)</ui-option>
-                                    <ui-option value="created_at:desc">Newest First</ui-option>
-                                    <ui-option value="created_at:asc">Oldest First</ui-option>
-                                </ui-dropdown>
+                                <select data-filter="status" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
+                                    <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
+                                    <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
+                                    <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
+                                    <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
+                                    <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
+                                    <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
+                                    <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
+                                    <option value="submission_grade:desc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'desc' ? 'selected' : ''}>Grade (High to Low)</option>
+                                    <option value="submission_grade:asc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'asc' ? 'selected' : ''}>Grade (Low to High)</option>
+                                </select>
                             </div>
                         </div>
                         
@@ -805,11 +834,20 @@ class StudentAssignmentsPage extends App {
                 </div>
 
                 <!-- Assignments List -->
-                <div class="assignments-list-container space-y-6">
-                    ${(filteredAssignments && filteredAssignments.length > 0) ? 
-                        filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
-                        this.generateNoAssignmentsHTML()
-                    }
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-gray-900">All Assignments</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-500">${assignments.length} assignments</span>
+                        </div>
+                    </div>
+                    
+                    <div class="assignments-list-container space-y-6">
+                        ${(filteredAssignments && filteredAssignments.length > 0) ? 
+                            filteredAssignments.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
+                            this.generateNoAssignmentsHTML()
+                        }
+                    </div>
                 </div>
             </div>
             

@@ -27,6 +27,7 @@ class Seed {
         $this->seedClassAssignments();
         $this->seedStudentAssignments();
         $this->assignStudentsToClasses();
+        $this->seedGradingSystem();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -202,6 +203,15 @@ class Seed {
         }
         
         echo "📊 Total students assigned to classes: " . count($students) . "\n";
+    }
+    
+    private function seedGradingSystem() {
+        echo "📊 Seeding grading system...\n";
+        
+        // Include the grading system seeder
+        require_once __DIR__ . '/grading_system_seeder.php';
+        $gradingSystemSeeder = new GradingSystemSeeder($this->pdo);
+        $gradingSystemSeeder->run();
     }
     
 }

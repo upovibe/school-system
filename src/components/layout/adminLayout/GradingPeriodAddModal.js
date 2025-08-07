@@ -67,7 +67,7 @@ class GradingPeriodAddModal extends HTMLElement {
                 academic_year: academicYearInput ? academicYearInput.value : '',
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
-                description: descriptionTextarea ? descriptionTextarea.value : '',
+                description: descriptionTextarea ? descriptionTextarea.getValue() : '',
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 

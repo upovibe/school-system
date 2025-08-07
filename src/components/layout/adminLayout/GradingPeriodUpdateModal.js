@@ -74,7 +74,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
         if (academicYearInput) academicYearInput.value = this.gradingPeriodData.academic_year || '';
         if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
         if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
-        if (descriptionTextarea) descriptionTextarea.value = this.gradingPeriodData.description || '';
+        if (descriptionTextarea) descriptionTextarea.setValue(this.gradingPeriodData.description || '');
         if (statusSwitch) {
             if (this.gradingPeriodData.is_active == 1) {
                 statusSwitch.setAttribute('checked', '');
@@ -110,7 +110,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 academic_year: academicYearInput ? academicYearInput.value : '',
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
-                description: descriptionTextarea ? descriptionTextarea.value : '',
+                description: descriptionTextarea ? descriptionTextarea.getValue() : '',
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 

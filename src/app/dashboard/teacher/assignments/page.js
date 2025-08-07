@@ -1005,36 +1005,25 @@ class TeacherAssignmentsPage extends App {
                 </div>
 
                 <!-- Tabs Interface -->
-                <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-layer-group text-white text-sm"></i>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-900">Assignment Status</h3>
-                            </div>
-                        </div>
-                    </div>
-                    
+                <div class="rounded-xl overflow-hidden">                    
                     <div class="pt-4">
                         <ui-tabs>
-                            <ui-tab-list>
+                            <ui-tab-list class="flex items-center justify-center">
                                 <ui-tab value="published">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    Published (${tabCounts.published})
+                                    <i class="fas fa-check-circle text-green-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Published (${tabCounts.published})</span>
                                 </ui-tab>
                                 <ui-tab value="draft">
-                                    <i class="fas fa-edit mr-2"></i>
-                                    Draft (${tabCounts.draft})
+                                    <i class="fas fa-edit text-amber-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Draft (${tabCounts.draft})</span>
                                 </ui-tab>
                                 <ui-tab value="archived">
-                                    <i class="fas fa-archive mr-2"></i>
-                                    Archived (${tabCounts.archived})
+                                    <i class="fas fa-archive text-blue-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Archived (${tabCounts.archived})</span>
                                 </ui-tab>
                                 <ui-tab value="deleted">
-                                    <i class="fas fa-trash mr-2"></i>
-                                    Deleted (${tabCounts.deleted})
+                                    <i class="fas fa-trash text-red-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Deleted (${tabCounts.deleted})</span>
                                 </ui-tab>
                             </ui-tab-list>
                             
@@ -1087,7 +1076,7 @@ class TeacherAssignmentsPage extends App {
             <div class="space-y-6">
                 <!-- Filters and Search Section (only for active tab) -->
                 ${isActiveTab ? `
-                    <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+                    <div class="overflow-hidden">
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div class="flex items-center space-x-3">

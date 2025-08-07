@@ -152,16 +152,21 @@ class Tab extends HTMLElement {
             .map(node => node.textContent || '')
             .join('').trim();
 
-        // Move any existing children (except our button) to avoid duplication
+        // Move any existing children (except our button) to the button content
         const children = Array.from(this.childNodes);
         children.forEach(child => {
             if (child !== this.tabButton) {
+                // Clone the child to preserve HTML structure
+                const clonedChild = child.cloneNode(true);
+                this.tabButton.appendChild(clonedChild);
                 this.removeChild(child);
             }
         });
 
-        // Set the button content
-        this.tabButton.textContent = originalContent;
+        // If no HTML content was found, fall back to text content
+        if (this.tabButton.children.length === 0) {
+            this.tabButton.textContent = originalContent;
+        }
         
         // Add click event listener
         this.tabButton.addEventListener('click', this._handleClick.bind(this));

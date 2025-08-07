@@ -1017,7 +1017,7 @@ class TeacherAssignmentsPage extends App {
                         </div>
                     </div>
                     
-                    <div class="p-4">
+                    <div class="pt-4">
                         <ui-tabs>
                             <ui-tab-list>
                                 <ui-tab value="published">

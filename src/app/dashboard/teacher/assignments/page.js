@@ -207,8 +207,12 @@ class TeacherAssignmentsPage extends App {
         } else if (button.classList.contains('edit-assignment-btn')) {
             this.openEditModal(assignmentId);
         } else if (button.classList.contains('archive-assignment-btn')) {
-            this.softDeleteAssignment(assignmentId);
+            this.archiveAssignment(assignmentId);
         } else if (button.classList.contains('unarchive-assignment-btn')) {
+            this.unarchiveAssignment(assignmentId);
+        } else if (button.classList.contains('delete-assignment-btn')) {
+            this.softDeleteAssignment(assignmentId);
+        } else if (button.classList.contains('restore-assignment-btn')) {
             this.restoreAssignment(assignmentId);
         }
     }
@@ -315,6 +319,66 @@ class TeacherAssignmentsPage extends App {
         } catch (error) {
             console.error('Error restoring assignment:', error);
             this.showToast(error.response?.data?.message || 'Failed to restore assignment', 'error');
+        }
+    }
+
+    // Archive assignment
+    async archiveAssignment(assignmentId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Authentication required');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to archive this assignment? It will be hidden from students but can be unarchived later.')) {
+                return;
+            }
+
+            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/archive`);
+            
+            if (response.data && response.data.success) {
+                // Show success message
+                this.showToast('Assignment archived successfully', 'success');
+                
+                // Reload assignments to reflect the change
+                await this.loadAssignments();
+            } else {
+                this.showToast(response.data?.message || 'Failed to archive assignment', 'error');
+            }
+        } catch (error) {
+            console.error('Error archiving assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to archive assignment', 'error');
+        }
+    }
+
+    // Unarchive assignment
+    async unarchiveAssignment(assignmentId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Authentication required');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to unarchive this assignment? It will be visible to students again.')) {
+                return;
+            }
+
+            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/unarchive`);
+            
+            if (response.data && response.data.success) {
+                // Show success message
+                this.showToast('Assignment unarchived successfully', 'success');
+                
+                // Reload assignments to reflect the change
+                await this.loadAssignments();
+            } else {
+                this.showToast(response.data?.message || 'Failed to unarchive assignment', 'error');
+            }
+        } catch (error) {
+            console.error('Error unarchiving assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to unarchive assignment', 'error');
         }
     }
 
@@ -558,17 +622,30 @@ class TeacherAssignmentsPage extends App {
                                 </button>
                                 ${assignment.deleted_at ? `
                                     <button 
-                                        class="unarchive-assignment-btn size-8 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200" 
+                                        class="restore-assignment-btn size-8 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200" 
                                         title="Restore Assignment"
                                         data-assignment-id="${assignment.id}">
                                         <i class="fas fa-undo text-xs"></i>
                                     </button>
-                                ` : `
+                                ` : assignment.status === 'archived' ? `
                                     <button 
-                                        class="archive-assignment-btn size-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200" 
+                                        class="unarchive-assignment-btn size-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200" 
+                                        title="Unarchive Assignment"
+                                        data-assignment-id="${assignment.id}">
+                                        <i class="fas fa-folder-open text-xs"></i>
+                                    </button>
+                                    <button 
+                                        class="delete-assignment-btn size-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200" 
                                         title="Delete Assignment"
                                         data-assignment-id="${assignment.id}">
                                         <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                ` : `
+                                    <button 
+                                        class="archive-assignment-btn size-8 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors duration-200" 
+                                        title="Archive Assignment"
+                                        data-assignment-id="${assignment.id}">
+                                        <i class="fas fa-archive text-xs"></i>
                                     </button>
                                 `}
                             </div>

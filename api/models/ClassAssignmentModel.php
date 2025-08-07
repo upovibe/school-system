@@ -328,6 +328,15 @@ class ClassAssignmentModel extends BaseModel {
     }
 
     /**
+     * Update assignment status
+     */
+    public function updateStatus($id, $status) {
+        $sql = "UPDATE class_assignments SET status = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$status, $id]);
+    }
+
+    /**
      * Get assignments including soft deleted ones (for admin)
      */
     public function getAllAssignmentsWithDetails($filters = []) {

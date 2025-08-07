@@ -1071,107 +1071,107 @@ class TeacherAssignmentsPage extends App {
                 <!-- Filters and Search Section (only for active tab) -->
                 ${isActiveTab ? `
                     <div class="overflow-hidden">
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-filter text-white text-sm"></i>
-                                    </div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Filter & Search ${status.charAt(0).toUpperCase() + status.slice(1)} Assignments</h3>
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-filter text-white text-sm"></i>
                                 </div>
-                                <button 
-                                    onclick="this.closest('app-teacher-assignments-page').clearFilters()"
-                                    class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
-                                    <i class="fas fa-times mr-1"></i>
-                                    Clear All
-                                </button>
+                                    <h3 class="text-lg font-semibold text-gray-900">Filter & Search ${status.charAt(0).toUpperCase() + status.slice(1)} Assignments</h3>
+                            </div>
+                            <button 
+                                onclick="this.closest('app-teacher-assignments-page').clearFilters()"
+                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                                <i class="fas fa-times mr-1"></i>
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 space-y-4">
+                        <!-- Search Bar -->
+                        <div class="w-full">
+                            <ui-input 
+                                type="search"
+                                data-filter="search"
+                                placeholder="Search assignments by title, description, class, or subject..."
+                                value="${this.searchTerm}">
+                            </ui-input>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <!-- Assignment Type Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <select data-filter="assignment_type" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Types</option>
+                                    ${this.getUniqueAssignmentTypes().map(type => 
+                                        `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Class Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                                <select data-filter="class" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Classes</option>
+                                    ${this.getUniqueClasses().map(cls => 
+                                        `<option value="${cls.id}" ${this.filters.class_id == cls.id ? 'selected' : ''}>${cls.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Subject Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <select data-filter="subject" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Subjects</option>
+                                    ${this.getUniqueSubjects().map(subject => 
+                                        `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Sort Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                                <select data-filter="sort" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
+                                    <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
+                                    <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
+                                    <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
+                                    <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
+                                    <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
+                                    <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
+                                    <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
+                                    <option value="submission_count:desc" ${this.sortBy === 'submission_count' && this.sortOrder === 'desc' ? 'selected' : ''}>Most Submissions</option>
+                                    <option value="submission_count:asc" ${this.sortBy === 'submission_count' && this.sortOrder === 'asc' ? 'selected' : ''}>Least Submissions</option>
+                                </select>
                             </div>
                         </div>
                         
-                        <div class="p-4 space-y-4">
-                            <!-- Search Bar -->
-                            <div class="w-full">
-                                <ui-input 
-                                    type="search"
-                                    data-filter="search"
-                                    placeholder="Search assignments by title, description, class, or subject..."
-                                    value="${this.searchTerm}">
-                                </ui-input>
-                            </div>
-                            
-                            <!-- Filter Options -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                <!-- Assignment Type Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                    <select data-filter="assignment_type" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="">All Types</option>
-                                        ${this.getUniqueAssignmentTypes().map(type => 
-                                            `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                
-                                <!-- Class Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                                    <select data-filter="class" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="">All Classes</option>
-                                        ${this.getUniqueClasses().map(cls => 
-                                            `<option value="${cls.id}" ${this.filters.class_id == cls.id ? 'selected' : ''}>${cls.name}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                
-                                <!-- Subject Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                    <select data-filter="subject" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="">All Subjects</option>
-                                        ${this.getUniqueSubjects().map(subject => 
-                                            `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                
-                                <!-- Sort Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                                    <select data-filter="sort" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
-                                        <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
-                                        <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
-                                        <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
-                                        <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
-                                        <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
-                                        <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
-                                        <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
-                                        <option value="submission_count:desc" ${this.sortBy === 'submission_count' && this.sortOrder === 'desc' ? 'selected' : ''}>Most Submissions</option>
-                                        <option value="submission_count:asc" ${this.sortBy === 'submission_count' && this.sortOrder === 'asc' ? 'selected' : ''}>Least Submissions</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Results Count -->
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
-                                <span class="results-count">
+                        <!-- Results Count -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
+                            <span class="results-count">
                                     Showing <span class="font-medium text-gray-900">${assignmentsToShow?.length || 0}</span> 
                                     of <span class="font-medium text-gray-900">${assignmentsInTab.length}</span> assignments
-                                </span>
-                                <span class="filters-indicator">
+                            </span>
+                            <span class="filters-indicator">
                                     ${(assignmentsToShow?.length || 0) !== assignmentsInTab.length ? 
-                                        `<span class="text-blue-600 font-medium">
-                                            <i class="fas fa-filter mr-1"></i>
-                                            Filters Applied
-                                        </span>` : 
-                                        ''
-                                    }
-                                </span>
-                            </div>
+                                    `<span class="text-blue-600 font-medium">
+                                        <i class="fas fa-filter mr-1"></i>
+                                        Filters Applied
+                                    </span>` : 
+                                    ''
+                                }
+                            </span>
                         </div>
                     </div>
+                </div>
                 ` : ''}
-                
+
                 <!-- Assignments List -->
                 <div class="assignments-list-container space-y-6">
                     ${(assignmentsToShow && assignmentsToShow.length > 0) ? 

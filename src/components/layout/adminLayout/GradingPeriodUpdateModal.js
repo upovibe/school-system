@@ -114,7 +114,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 
-            console.log('Grading period update data being sent:', gradingPeriodData); // Debug log
+            //console.log('Grading period update data being sent:', gradingPeriodData); // Debug log
 
             // Validate required fields
             if (!gradingPeriodData.name) {

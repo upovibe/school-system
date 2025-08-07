@@ -9,11 +9,7 @@ import '@/components/ui/Dropdown.js';
 import '@/components/layout/studentLayout/StudentAssignmentViewDialog.js';
 import '@/components/layout/studentLayout/StudentAssignmentSubmissionModal.js';
 
-/**
- * Student Assignments Page Component (/dashboard/student/assignments)
- * 
- * Displays student assignments with status, due dates, and submission details.
- */
+k
 class StudentAssignmentsPage extends App {
     constructor() {
         super();

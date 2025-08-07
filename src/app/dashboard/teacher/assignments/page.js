@@ -784,62 +784,62 @@ class TeacherAssignmentsPage extends App {
                             <!-- Status Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <ui-dropdown data-filter="status" value="${this.filters.status}">
-                                    <ui-option value="">All Status</ui-option>
-                                    <ui-option value="published">Published</ui-option>
-                                    <ui-option value="draft">Draft</ui-option>
-                                    <ui-option value="archived">Archived</ui-option>
-                                </ui-dropdown>
+                                <select data-filter="status" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Status</option>
+                                    <option value="published" ${this.filters.status === 'published' ? 'selected' : ''}>Published</option>
+                                    <option value="draft" ${this.filters.status === 'draft' ? 'selected' : ''}>Draft</option>
+                                    <option value="archived" ${this.filters.status === 'archived' ? 'selected' : ''}>Archived</option>
+                                </select>
                             </div>
                             
                             <!-- Assignment Type Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                <ui-dropdown data-filter="assignment_type" value="${this.filters.assignment_type}">
-                                    <ui-option value="">All Types</ui-option>
+                                <select data-filter="assignment_type" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Types</option>
                                     ${this.getUniqueAssignmentTypes().map(type => 
-                                        `<ui-option value="${type.value}">${type.label}</ui-option>`
+                                        `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
                                     ).join('')}
-                                </ui-dropdown>
+                                </select>
                             </div>
                             
                             <!-- Class Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                                <ui-dropdown data-filter="class" value="${this.filters.class_id}">
-                                    <ui-option value="">All Classes</ui-option>
+                                <select data-filter="class" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Classes</option>
                                     ${this.getUniqueClasses().map(cls => 
-                                        `<ui-option value="${cls.id}">${cls.name}</ui-option>`
+                                        `<option value="${cls.id}" ${this.filters.class_id == cls.id ? 'selected' : ''}>${cls.name}</option>`
                                     ).join('')}
-                                </ui-dropdown>
+                                </select>
                             </div>
                             
                             <!-- Subject Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                <ui-dropdown data-filter="subject" value="${this.filters.subject_id}">
-                                    <ui-option value="">All Subjects</ui-option>
+                                <select data-filter="subject" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Subjects</option>
                                     ${this.getUniqueSubjects().map(subject => 
-                                        `<ui-option value="${subject.id}">${subject.name}</ui-option>`
+                                        `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
                                     ).join('')}
-                                </ui-dropdown>
+                                </select>
                             </div>
                             
                             <!-- Sort Filter -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                                <ui-dropdown data-filter="sort" value="${this.sortBy}:${this.sortOrder}">
-                                    <ui-option value="created_at:desc">Newest First</ui-option>
-                                    <ui-option value="created_at:asc">Oldest First</ui-option>
-                                    <ui-option value="title:asc">Title A-Z</ui-option>
-                                    <ui-option value="title:desc">Title Z-A</ui-option>
-                                    <ui-option value="due_date:asc">Due Date (Earliest)</ui-option>
-                                    <ui-option value="due_date:desc">Due Date (Latest)</ui-option>
-                                    <ui-option value="total_points:desc">Points (High to Low)</ui-option>
-                                    <ui-option value="total_points:asc">Points (Low to High)</ui-option>
-                                    <ui-option value="submission_count:desc">Most Submissions</ui-option>
-                                    <ui-option value="submission_count:asc">Least Submissions</ui-option>
-                                </ui-dropdown>
+                                <select data-filter="sort" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
+                                    <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
+                                    <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
+                                    <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
+                                    <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
+                                    <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
+                                    <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
+                                    <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
+                                    <option value="submission_count:desc" ${this.sortBy === 'submission_count' && this.sortOrder === 'desc' ? 'selected' : ''}>Most Submissions</option>
+                                    <option value="submission_count:asc" ${this.sortBy === 'submission_count' && this.sortOrder === 'asc' ? 'selected' : ''}>Least Submissions</option>
+                                </select>
                             </div>
                         </div>
                         

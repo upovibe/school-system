@@ -189,9 +189,10 @@ class GradingPeriodManagementPage extends App {
 
     updateTableData() {
         const gradingPeriods = this.get('gradingPeriods');
-        
+        if (!gradingPeriods) return;
+
         // Prepare table data for grading periods
-        const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
+        const tableData = gradingPeriods.map((period, index) => ({
             id: period.id,
             index: index + 1,
             name: period.name,
@@ -202,7 +203,7 @@ class GradingPeriodManagementPage extends App {
             description: period.description || 'No description',
             created: new Date(period.created_at).toLocaleDateString(),
             updated: new Date(period.updated_at).toLocaleDateString()
-        })) : [];
+        }));
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');

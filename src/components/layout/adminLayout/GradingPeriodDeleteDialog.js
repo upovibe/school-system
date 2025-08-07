@@ -102,7 +102,9 @@ class GradingPeriodDeleteDialog extends HTMLElement {
                 this.dispatchEvent(new CustomEvent('grading-period-deleted', {
                     detail: {
                         gradingPeriodId: this.gradingPeriodData.id
-                    }
+                    },
+                    bubbles: true,
+                    composed: true
                 }));
 
                 this.close();

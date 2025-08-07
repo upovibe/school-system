@@ -172,7 +172,9 @@ class GradingPeriodAddModal extends HTMLElement {
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         }
-                    }
+                    },
+                    bubbles: true,
+                    composed: true
                 }));
 
                 // Reset form

@@ -215,7 +215,9 @@ class GradingPeriodUpdateModal extends HTMLElement {
                             created_at: this.gradingPeriodData.created_at,
                             updated_at: new Date().toISOString()
                         }
-                    }
+                    },
+                    bubbles: true,
+                    composed: true
                 }));
 
                 this.close();

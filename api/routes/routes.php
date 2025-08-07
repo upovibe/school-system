@@ -243,3 +243,11 @@ Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentControl
 Router::get('/db/test', 'DbController@test');
 Router::get('/db/check', 'DbController@check');
 Router::post('/db/fresh', 'DbController@fresh');
+
+// Grading Policy Management Routes (admin only)
+Router::get('/grading-policies', 'GradingPolicyController@index');
+Router::post('/grading-policies', 'GradingPolicyController@store');
+Router::get('/grading-policies/{id}', 'GradingPolicyController@show');
+Router::put('/grading-policies/{id}', 'GradingPolicyController@update');
+Router::delete('/grading-policies/{id}', 'GradingPolicyController@destroy');
+Router::get('/grading-policies/subjects/without-policies', 'GradingPolicyController@getSubjectsWithoutPolicies');

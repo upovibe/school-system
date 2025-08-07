@@ -28,16 +28,21 @@ class Migration_20241001000037createclassassignmentstable {
             subject_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at TIMESTAMP NULL DEFAULT NULL,
+            deleted_by INT NULL,
             FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
             FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
             FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+            FOREIGN KEY (deleted_by) REFERENCES teachers(id) ON DELETE SET NULL,
             INDEX idx_teacher_id (teacher_id),
             INDEX idx_class_id (class_id),
             INDEX idx_subject_id (subject_id),
             INDEX idx_status (status),
             INDEX idx_due_date (due_date),
             INDEX idx_assignment_type (assignment_type),
-            INDEX idx_created_at (created_at)
+            INDEX idx_created_at (created_at),
+            INDEX idx_deleted_at (deleted_at),
+            INDEX idx_deleted_by (deleted_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
         $this->pdo->exec($sql);

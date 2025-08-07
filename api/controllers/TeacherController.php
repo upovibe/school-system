@@ -728,8 +728,23 @@ class TeacherController {
             // Get current teacher from middleware
             $teacher = $_REQUEST['current_teacher'];
             
+            // Get filters from query parameters
+            $filters = [];
+            if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
+                $filters['include_deleted'] = true;
+            }
+            if (isset($_GET['class_id']) && !empty($_GET['class_id'])) {
+                $filters['class_id'] = $_GET['class_id'];
+            }
+            if (isset($_GET['subject_id']) && !empty($_GET['subject_id'])) {
+                $filters['subject_id'] = $_GET['subject_id'];
+            }
+            if (isset($_GET['assignment_type']) && !empty($_GET['assignment_type'])) {
+                $filters['assignment_type'] = $_GET['assignment_type'];
+            }
+            
             // Get teacher assignments with class and subject details
-            $assignments = $this->teacherModel->getTeacherAssignments($teacher['id']);
+            $assignments = $this->teacherModel->getTeacherAssignments($teacher['id'], $filters);
             
             if (empty($assignments)) {
                 http_response_code(200);
@@ -1553,9 +1568,9 @@ class TeacherController {
     }
 
     /**
-     * Archive assignment (teacher only)
+     * Soft delete assignment (teacher only)
      */
-    public function archiveAssignment($id) {
+    public function softDeleteAssignment($id) {
         try {
             // Require teacher authentication
             global $pdo;
@@ -1583,57 +1598,57 @@ class TeacherController {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'You can only archive your own assignments'
+                    'message' => 'You can only delete your own assignments'
                 ]);
                 return;
             }
             
-            // Check if assignment is already archived
-            if ($existingAssignment['status'] === 'archived') {
+            // Check if assignment is already soft deleted
+            if ($existingAssignment['deleted_at'] !== null) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Assignment is already archived'
+                    'message' => 'Assignment is already deleted'
                 ]);
                 return;
             }
             
-            // Update assignment status to archived
-            $result = $assignmentModel->update($id, ['status' => 'archived']);
+            // Soft delete the assignment
+            $result = $assignmentModel->softDelete($id, $teacher['id']);
             
             if ($result) {
                 // Log the action
-                $this->logAction('assignment_archived', "Archived assignment: {$existingAssignment['title']}", [
+                $this->logAction('assignment_soft_deleted', "Soft deleted assignment: {$existingAssignment['title']}", [
                     'assignment_id' => $id,
                     'title' => $existingAssignment['title'],
-                    'previous_status' => $existingAssignment['status']
+                    'deleted_by' => $teacher['id']
                 ]);
                 
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Assignment archived successfully'
+                    'message' => 'Assignment deleted successfully'
                 ]);
             } else {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Failed to archive assignment'
+                    'message' => 'Failed to delete assignment'
                 ]);
             }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error archiving assignment: ' . $e->getMessage()
+                'message' => 'Error deleting assignment: ' . $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Unarchive assignment (teacher only)
+     * Restore soft deleted assignment (teacher only)
      */
-    public function unarchiveAssignment($id) {
+    public function restoreAssignment($id) {
         try {
             // Require teacher authentication
             global $pdo;
@@ -1647,7 +1662,13 @@ class TeacherController {
             require_once __DIR__ . '/../models/ClassAssignmentModel.php';
             $assignmentModel = new ClassAssignmentModel($this->pdo);
             
-            $existingAssignment = $assignmentModel->findById($id);
+            // Get assignment including soft deleted ones
+            $existingAssignment = $assignmentModel->getAllAssignmentsWithDetails(['include_deleted' => true]);
+            $existingAssignment = array_filter($existingAssignment, function($assignment) use ($id) {
+                return $assignment['id'] == $id;
+            });
+            $existingAssignment = reset($existingAssignment);
+            
             if (!$existingAssignment) {
                 http_response_code(404);
                 echo json_encode([
@@ -1661,49 +1682,49 @@ class TeacherController {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'You can only unarchive your own assignments'
+                    'message' => 'You can only restore your own assignments'
                 ]);
                 return;
             }
             
-            // Check if assignment is archived
-            if ($existingAssignment['status'] !== 'archived') {
+            // Check if assignment is soft deleted
+            if ($existingAssignment['deleted_at'] === null) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Assignment is not archived'
+                    'message' => 'Assignment is not deleted'
                 ]);
                 return;
             }
             
-            // Update assignment status to draft (default state)
-            $result = $assignmentModel->update($id, ['status' => 'draft']);
+            // Restore the assignment
+            $result = $assignmentModel->restore($id);
             
             if ($result) {
                 // Log the action
-                $this->logAction('assignment_unarchived', "Unarchived assignment: {$existingAssignment['title']}", [
+                $this->logAction('assignment_restored', "Restored assignment: {$existingAssignment['title']}", [
                     'assignment_id' => $id,
                     'title' => $existingAssignment['title'],
-                    'new_status' => 'draft'
+                    'restored_by' => $teacher['id']
                 ]);
                 
                 http_response_code(200);
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Assignment unarchived successfully'
+                    'message' => 'Assignment restored successfully'
                 ]);
             } else {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Failed to unarchive assignment'
+                    'message' => 'Failed to restore assignment'
                 ]);
             }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error unarchiving assignment: ' . $e->getMessage()
+                'message' => 'Error restoring assignment: ' . $e->getMessage()
             ]);
         }
     }

@@ -8,7 +8,8 @@ class ClassAssignmentModel extends BaseModel {
     
     protected static $fillable = [
         'title', 'description', 'due_date', 'total_points', 'assignment_type',
-        'status', 'attachment_file', 'teacher_id', 'class_id', 'subject_id'
+        'status', 'attachment_file', 'teacher_id', 'class_id', 'subject_id',
+        'deleted_at', 'deleted_by'
     ];
     
     protected static $casts = [
@@ -60,6 +61,13 @@ class ClassAssignmentModel extends BaseModel {
             $params[] = $filters['status'];
         }
         
+        // Exclude soft deleted records by default
+        if (!empty($filters['include_deleted'])) {
+            // Include soft deleted records
+        } else {
+            $whereConditions[] = "ca.deleted_at IS NULL";
+        }
+        
         if (!empty($whereConditions)) {
             $sql .= " WHERE " . implode(' AND ', $whereConditions);
         }
@@ -89,7 +97,7 @@ class ClassAssignmentModel extends BaseModel {
             LEFT JOIN teachers t ON ca.teacher_id = t.id
             LEFT JOIN classes c ON ca.class_id = c.id
             LEFT JOIN subjects s ON ca.subject_id = s.id
-            WHERE ca.id = ?
+            WHERE ca.id = ? AND ca.deleted_at IS NULL
         ";
         
         $stmt = $this->pdo->prepare($sql);
@@ -101,7 +109,7 @@ class ClassAssignmentModel extends BaseModel {
      * Get assignment by ID (simple version)
      */
     public function getById($id) {
-        $sql = "SELECT * FROM class_assignments WHERE id = ?";
+        $sql = "SELECT * FROM class_assignments WHERE id = ? AND deleted_at IS NULL";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -121,7 +129,7 @@ class ClassAssignmentModel extends BaseModel {
             FROM class_assignments ca
             LEFT JOIN teachers t ON ca.teacher_id = t.id
             LEFT JOIN subjects s ON ca.subject_id = s.id
-            WHERE ca.class_id = ?
+            WHERE ca.class_id = ? AND ca.deleted_at IS NULL
             ORDER BY ca.due_date ASC
         ";
         
@@ -151,6 +159,13 @@ class ClassAssignmentModel extends BaseModel {
         
         $params = [$teacherId];
         
+        // Handle soft delete filter
+        if (!empty($filters['include_deleted'])) {
+            // Include soft deleted records
+        } else {
+            $sql .= " AND ca.deleted_at IS NULL";
+        }
+        
         if (!empty($filters['status'])) {
             $sql .= " AND ca.status = ?";
             $params[] = $filters['status'];
@@ -159,6 +174,16 @@ class ClassAssignmentModel extends BaseModel {
         if (!empty($filters['class_id'])) {
             $sql .= " AND ca.class_id = ?";
             $params[] = $filters['class_id'];
+        }
+        
+        if (!empty($filters['subject_id'])) {
+            $sql .= " AND ca.subject_id = ?";
+            $params[] = $filters['subject_id'];
+        }
+        
+        if (!empty($filters['assignment_type'])) {
+            $sql .= " AND ca.assignment_type = ?";
+            $params[] = $filters['assignment_type'];
         }
         
         $sql .= " GROUP BY ca.id ORDER BY ca.created_at DESC";
@@ -183,7 +208,7 @@ class ClassAssignmentModel extends BaseModel {
                     CASE 
                         WHEN sa.id IS NOT NULL THEN 'submitted'
                         ELSE 'not_submitted'
-                    END as overall_status
+                        END as overall_status
                 FROM students s
                 LEFT JOIN student_assignments sa ON s.id = sa.student_id AND sa.assignment_id = ?
                 WHERE s.current_class_id = ?
@@ -222,6 +247,7 @@ class ClassAssignmentModel extends BaseModel {
             LEFT JOIN student_assignments sa ON ca.id = sa.assignment_id AND sa.student_id = ?
             WHERE ca.class_id = (SELECT class_id FROM students WHERE id = ?)
             AND ca.status = 'published'
+            AND ca.deleted_at IS NULL
         ";
         
         $params = [$studentId, $studentId];
@@ -251,7 +277,7 @@ class ClassAssignmentModel extends BaseModel {
             SELECT COUNT(*) as count
             FROM class_assignments ca
             JOIN students s ON ca.class_id = s.class_id
-            WHERE ca.id = ? AND s.id = ? AND ca.status = 'published'
+            WHERE ca.id = ? AND s.id = ? AND ca.status = 'published' AND ca.deleted_at IS NULL
         ";
         
         $stmt = $this->pdo->prepare($sql);
@@ -275,12 +301,93 @@ class ClassAssignmentModel extends BaseModel {
             FROM class_assignments ca
             JOIN students s ON ca.class_id = s.class_id
             LEFT JOIN student_assignments sa ON ca.id = sa.assignment_id AND sa.student_id = s.id
-            WHERE ca.id = ?
+            WHERE ca.id = ? AND ca.deleted_at IS NULL
         ";
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$assignmentId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Soft delete an assignment
+     */
+    public function softDelete($id, $deletedBy) {
+        $sql = "UPDATE class_assignments SET deleted_at = NOW(), deleted_by = ? WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$deletedBy, $id]);
+    }
+
+    /**
+     * Restore a soft deleted assignment
+     */
+    public function restore($id) {
+        $sql = "UPDATE class_assignments SET deleted_at = NULL, deleted_by = NULL WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$id]);
+    }
+
+    /**
+     * Get assignments including soft deleted ones (for admin)
+     */
+    public function getAllAssignmentsWithDetails($filters = []) {
+        $sql = "
+            SELECT 
+                ca.*,
+                t.first_name as teacher_first_name,
+                t.last_name as teacher_last_name,
+                t.email as teacher_email,
+                c.name as class_name,
+                c.section as class_section,
+                s.name as subject_name,
+                s.code as subject_code,
+                dt.first_name as deleted_by_first_name,
+                dt.last_name as deleted_by_last_name
+            FROM class_assignments ca
+            LEFT JOIN teachers t ON ca.teacher_id = t.id
+            LEFT JOIN classes c ON ca.class_id = c.id
+            LEFT JOIN subjects s ON ca.subject_id = s.id
+            LEFT JOIN teachers dt ON ca.deleted_by = dt.id
+        ";
+        
+        $whereConditions = [];
+        $params = [];
+        
+        if (!empty($filters['teacher_id'])) {
+            $whereConditions[] = "ca.teacher_id = ?";
+            $params[] = $filters['teacher_id'];
+        }
+        
+        if (!empty($filters['class_id'])) {
+            $whereConditions[] = "ca.class_id = ?";
+            $params[] = $filters['class_id'];
+        }
+        
+        if (!empty($filters['subject_id'])) {
+            $whereConditions[] = "ca.subject_id = ?";
+            $params[] = $filters['subject_id'];
+        }
+        
+        if (!empty($filters['status'])) {
+            $whereConditions[] = "ca.status = ?";
+            $params[] = $filters['status'];
+        }
+        
+        if (!empty($filters['include_deleted'])) {
+            // Include soft deleted records
+        } else {
+            $whereConditions[] = "ca.deleted_at IS NULL";
+        }
+        
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE " . implode(' AND ', $whereConditions);
+        }
+        
+        $sql .= " ORDER BY ca.created_at DESC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?> 

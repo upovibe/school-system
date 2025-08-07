@@ -207,9 +207,9 @@ class TeacherAssignmentsPage extends App {
         } else if (button.classList.contains('edit-assignment-btn')) {
             this.openEditModal(assignmentId);
         } else if (button.classList.contains('archive-assignment-btn')) {
-            this.archiveAssignment(assignmentId);
+            this.softDeleteAssignment(assignmentId);
         } else if (button.classList.contains('unarchive-assignment-btn')) {
-            this.unarchiveAssignment(assignmentId);
+            this.restoreAssignment(assignmentId);
         }
     }
 
@@ -258,8 +258,8 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
-    // Archive assignment
-    async archiveAssignment(assignmentId) {
+    // Soft delete assignment
+    async softDeleteAssignment(assignmentId) {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -267,29 +267,29 @@ class TeacherAssignmentsPage extends App {
                 return;
             }
 
-            if (!confirm('Are you sure you want to archive this assignment? It will be hidden from students but can be unarchived later.')) {
+            if (!confirm('Are you sure you want to delete this assignment? It will be hidden from students but can be restored later.')) {
                 return;
             }
 
-            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/archive`);
+            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/delete`);
             
             if (response.success) {
                 // Show success message
-                this.showToast('Assignment archived successfully', 'success');
+                this.showToast('Assignment deleted successfully', 'success');
                 
                 // Reload assignments to reflect the change
                 await this.loadAssignments();
             } else {
-                this.showToast(response.message || 'Failed to archive assignment', 'error');
+                this.showToast(response.message || 'Failed to delete assignment', 'error');
             }
         } catch (error) {
-            console.error('Error archiving assignment:', error);
-            this.showToast(error.response?.data?.message || 'Failed to archive assignment', 'error');
+            console.error('Error deleting assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to delete assignment', 'error');
         }
     }
 
-    // Unarchive assignment
-    async unarchiveAssignment(assignmentId) {
+    // Restore assignment
+    async restoreAssignment(assignmentId) {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -297,24 +297,24 @@ class TeacherAssignmentsPage extends App {
                 return;
             }
 
-            if (!confirm('Are you sure you want to unarchive this assignment? It will be visible to students again.')) {
+            if (!confirm('Are you sure you want to restore this assignment? It will be visible to students again.')) {
                 return;
             }
 
-            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/unarchive`);
+            const response = await api.withToken(token).patch(`/teachers/assignments/${assignmentId}/restore`);
             
             if (response.success) {
                 // Show success message
-                this.showToast('Assignment unarchived successfully', 'success');
+                this.showToast('Assignment restored successfully', 'success');
                 
                 // Reload assignments to reflect the change
                 await this.loadAssignments();
             } else {
-                this.showToast(response.message || 'Failed to unarchive assignment', 'error');
+                this.showToast(response.message || 'Failed to restore assignment', 'error');
             }
         } catch (error) {
-            console.error('Error unarchiving assignment:', error);
-            this.showToast(error.response?.data?.message || 'Failed to unarchive assignment', 'error');
+            console.error('Error restoring assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to restore assignment', 'error');
         }
     }
 
@@ -552,19 +552,19 @@ class TeacherAssignmentsPage extends App {
                                     data-assignment-id="${assignment.id}">
                                     <i class="fas fa-edit text-xs"></i>
                                 </button>
-                                ${assignment.status === 'archived' ? `
+                                ${assignment.deleted_at ? `
                                     <button 
                                         class="unarchive-assignment-btn size-8 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200" 
-                                        title="Unarchive Assignment"
+                                        title="Restore Assignment"
                                         data-assignment-id="${assignment.id}">
-                                        <i class="fas fa-box-open text-xs"></i>
+                                        <i class="fas fa-undo text-xs"></i>
                                     </button>
                                 ` : `
                                     <button 
-                                        class="archive-assignment-btn size-8 flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors duration-200" 
-                                        title="Archive Assignment"
+                                        class="archive-assignment-btn size-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200" 
+                                        title="Delete Assignment"
                                         data-assignment-id="${assignment.id}">
-                                        <i class="fas fa-archive text-xs"></i>
+                                        <i class="fas fa-trash text-xs"></i>
                                     </button>
                                 `}
                             </div>
@@ -878,7 +878,7 @@ class TeacherAssignmentsPage extends App {
                                     <option value="">All Status</option>
                                     <option value="published" ${this.filters.status === 'published' ? 'selected' : ''}>Published</option>
                                     <option value="draft" ${this.filters.status === 'draft' ? 'selected' : ''}>Draft</option>
-                                    <option value="archived" ${this.filters.status === 'archived' ? 'selected' : ''}>Archived</option>
+                                    <option value="deleted" ${this.filters.status === 'deleted' ? 'selected' : ''}>Deleted</option>
                                 </select>
                             </div>
                             

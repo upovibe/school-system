@@ -90,7 +90,7 @@ class GradingPeriodDeleteDialog extends HTMLElement {
             // Send the request
             const response = await api.withToken(token).delete(`/grading-periods/${this.gradingPeriodData.id}`);
 
-            if (response.success) {
+            if (response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Grading period deleted successfully',
@@ -109,7 +109,7 @@ class GradingPeriodDeleteDialog extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.message || 'Failed to delete grading period',
+                    message: response.data.message || 'Failed to delete grading period',
                     variant: 'error',
                     duration: 3000
                 });

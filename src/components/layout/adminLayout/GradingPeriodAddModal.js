@@ -150,7 +150,7 @@ class GradingPeriodAddModal extends HTMLElement {
             // Send the request
             const response = await api.withToken(token).post('/grading-periods', gradingPeriodData);
 
-            if (response.success) {
+            if (response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Grading period created successfully',
@@ -162,7 +162,7 @@ class GradingPeriodAddModal extends HTMLElement {
                 this.dispatchEvent(new CustomEvent('grading-period-saved', {
                     detail: {
                         gradingPeriod: {
-                            id: response.data.id,
+                            id: response.data.data.id,
                             name: gradingPeriodData.name,
                             academic_year: gradingPeriodData.academic_year,
                             start_date: gradingPeriodData.start_date,
@@ -181,7 +181,7 @@ class GradingPeriodAddModal extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.message || 'Failed to create grading period',
+                    message: response.data.message || 'Failed to create grading period',
                     variant: 'error',
                     duration: 3000
                 });

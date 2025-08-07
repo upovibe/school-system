@@ -193,7 +193,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
             // Send the request
             const response = await api.withToken(token).put(`/grading-periods/${this.gradingPeriodData.id}`, gradingPeriodData);
 
-            if (response.success) {
+            if (response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Grading period updated successfully',
@@ -222,7 +222,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.message || 'Failed to update grading period',
+                    message: response.data.message || 'Failed to update grading period',
                     variant: 'error',
                     duration: 3000
                 });

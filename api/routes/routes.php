@@ -251,3 +251,10 @@ Router::get('/grading-policies/{id}', 'GradingPolicyController@show');
 Router::put('/grading-policies/{id}', 'GradingPolicyController@update');
 Router::delete('/grading-policies/{id}', 'GradingPolicyController@destroy');
 Router::get('/grading-policies/subjects/without-policies', 'GradingPolicyController@getSubjectsWithoutPolicies');
+
+// Grading Period Management Routes (admin only)
+Router::get('/grading-periods', 'GradingPeriodController@index');
+Router::post('/grading-periods', 'GradingPeriodController@store');
+Router::get('/grading-periods/{id}', 'GradingPeriodController@show');
+Router::put('/grading-periods/{id}', 'GradingPeriodController@update');
+Router::delete('/grading-periods/{id}', 'GradingPeriodController@destroy');

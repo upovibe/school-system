@@ -277,6 +277,7 @@ class DashboardLayout extends App {
                         { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
                         { label: 'Class Subjects', icon: 'fas fa-link', href: '/dashboard/admin/class-subjects' },
                         { label: 'Teacher Assignments', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
+                        { label: 'Grading Periods', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/grading-periods' },
                     ]
                 },
                 {
@@ -395,6 +396,7 @@ class DashboardLayout extends App {
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
             'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
+            'grading-periods': 'Grading Period Management',
             'class': 'My Class',
             'class-subjects': 'My Classes & Subjects'
         };

@@ -1553,6 +1553,162 @@ class TeacherController {
     }
 
     /**
+     * Archive assignment (teacher only)
+     */
+    public function archiveAssignment($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $existingAssignment = $assignmentModel->findById($id);
+            if (!$existingAssignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($existingAssignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only archive your own assignments'
+                ]);
+                return;
+            }
+            
+            // Check if assignment is already archived
+            if ($existingAssignment['status'] === 'archived') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment is already archived'
+                ]);
+                return;
+            }
+            
+            // Update assignment status to archived
+            $result = $assignmentModel->update($id, ['status' => 'archived']);
+            
+            if ($result) {
+                // Log the action
+                $this->logAction('assignment_archived', "Archived assignment: {$existingAssignment['title']}", [
+                    'assignment_id' => $id,
+                    'title' => $existingAssignment['title'],
+                    'previous_status' => $existingAssignment['status']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Assignment archived successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to archive assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error archiving assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Unarchive assignment (teacher only)
+     */
+    public function unarchiveAssignment($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if assignment exists and teacher owns it
+            require_once __DIR__ . '/../models/ClassAssignmentModel.php';
+            $assignmentModel = new ClassAssignmentModel($this->pdo);
+            
+            $existingAssignment = $assignmentModel->findById($id);
+            if (!$existingAssignment) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found'
+                ]);
+                return;
+            }
+            
+            if ($existingAssignment['teacher_id'] != $teacher['id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only unarchive your own assignments'
+                ]);
+                return;
+            }
+            
+            // Check if assignment is archived
+            if ($existingAssignment['status'] !== 'archived') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment is not archived'
+                ]);
+                return;
+            }
+            
+            // Update assignment status to draft (default state)
+            $result = $assignmentModel->update($id, ['status' => 'draft']);
+            
+            if ($result) {
+                // Log the action
+                $this->logAction('assignment_unarchived', "Unarchived assignment: {$existingAssignment['title']}", [
+                    'assignment_id' => $id,
+                    'title' => $existingAssignment['title'],
+                    'new_status' => 'draft'
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Assignment unarchived successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to unarchive assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error unarchiving assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Download assignment attachment (teacher only)
      */
     public function downloadAssignmentAttachment($filename) {

@@ -165,6 +165,8 @@ Router::post('/teachers/assignments', 'TeacherController@createAssignment');
 Router::get('/teachers/assignments/{id}', 'TeacherController@getAssignment');
 Router::put('/teachers/assignments/{id}', 'TeacherController@updateAssignment');
 Router::delete('/teachers/assignments/{id}', 'TeacherController@deleteAssignment');
+Router::patch('/teachers/assignments/{id}/archive', 'TeacherController@archiveAssignment');
+Router::patch('/teachers/assignments/{id}/unarchive', 'TeacherController@unarchiveAssignment');
 Router::get('/teachers/assignments/{id}/submissions', 'TeacherController@getAssignmentSubmissions');
 Router::get('/teachers/assignments/{assignmentId}/students/{studentId}/submission', 'TeacherController@getStudentSubmission');
 Router::post('/teachers/assignments/{assignmentId}/grade/{studentId}', 'TeacherController@gradeSubmission');

@@ -21,7 +21,7 @@ class Migration_20241001000037createclassassignmentstable {
             due_date DATETIME,
             total_points DECIMAL(5,2) DEFAULT 100.00,
             assignment_type ENUM('homework', 'quiz', 'project', 'exam', 'other') DEFAULT 'homework',
-            status ENUM('draft', 'published', 'closed') DEFAULT 'draft',
+            status ENUM('draft', 'published', 'closed', 'archived') DEFAULT 'draft',
             attachment_file VARCHAR(255),
             teacher_id INT,
             class_id INT,

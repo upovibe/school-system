@@ -82,6 +82,24 @@ const api = {
     },
 
     /**
+     * Performs a PATCH request.
+     * @param {string} endpoint - The API endpoint to call.
+     * @param {object} data - The data to send in the request body.
+     * @returns {Promise<axios.AxiosResponse<any>>}
+     */
+    patch: (endpoint, data) => {
+        // Handle FormData for multipart requests
+        const isFormData = data instanceof FormData;
+        const config = isFormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        
+        return apiClient.patch(endpoint, data, config);
+    },
+
+    /**
      * Creates a new Axios instance with an authorization token.
      * This is useful for making requests to protected endpoints.
      * @param {string} token - The JWT or bearer token.
@@ -121,6 +139,17 @@ const api = {
                 } : {};
                 
                 return authedApiClient.put(endpoint, data, config);
+            },
+            patch: (endpoint, data) => {
+                // Handle FormData for multipart requests
+                const isFormData = data instanceof FormData;
+                const config = isFormData ? {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    }
+                } : {};
+                
+                return authedApiClient.patch(endpoint, data, config);
             },
             delete: (endpoint) => authedApiClient.delete(endpoint),
         };

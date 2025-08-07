@@ -921,11 +921,13 @@ class StudentController {
                         'feedback' => $submission['feedback'],
                         'submitted_at' => $submission['submitted_at'],
                         'submission_text' => $submission['submission_text'],
-                        'submission_file' => $submission['submission_file']
+                        'submission_file' => $submission['submission_file'],
+                        'archived_at' => $submission['archived_at']
                     ] : null,
                     'submission_status' => $submission ? $submission['status'] : 'not_submitted',
                     'submission_grade' => $submission ? $submission['grade'] : null,
-                    'submitted_at' => $submission ? $submission['submitted_at'] : null
+                    'submitted_at' => $submission ? $submission['submitted_at'] : null,
+                    'archived_at' => $submission ? $submission['archived_at'] : null
                 ];
                 
                 $restructuredAssignments[] = $restructuredAssignment;
@@ -1479,6 +1481,122 @@ class StudentController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error downloading file: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Archive a student assignment submission
+     */
+    public function archiveAssignment($assignmentId) {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Check if assignment exists and belongs to student's class
+            $assignment = $this->classAssignmentModel->getAssignmentWithDetails($assignmentId);
+            if (!$assignment || $assignment['class_id'] != $student['current_class_id']) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found or access denied'
+                ]);
+                return;
+            }
+            
+            // Check if student has submitted this assignment
+            $submission = $this->studentAssignmentModel->getByStudentAndAssignment($student['id'], $assignmentId);
+            if (!$submission || !in_array($submission['status'], ['submitted', 'graded', 'late'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Can only archive submitted assignments'
+                ]);
+                return;
+            }
+            
+            // Archive the submission
+            $success = $this->studentAssignmentModel->archiveSubmission($student['id'], $assignmentId);
+            
+            if ($success) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Assignment archived successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to archive assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error archiving assignment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Unarchive a student assignment submission
+     */
+    public function unarchiveAssignment($assignmentId) {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            $student = $_REQUEST['current_student'];
+            
+            // Check if assignment exists and belongs to student's class
+            $assignment = $this->classAssignmentModel->getAssignmentWithDetails($assignmentId);
+            if (!$assignment || $assignment['class_id'] != $student['current_class_id']) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment not found or access denied'
+                ]);
+                return;
+            }
+            
+            // Check if student has submitted this assignment
+            $submission = $this->studentAssignmentModel->getByStudentAndAssignment($student['id'], $assignmentId);
+            if (!$submission) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assignment submission not found'
+                ]);
+                return;
+            }
+            
+            // Unarchive the submission
+            $success = $this->studentAssignmentModel->unarchiveSubmission($student['id'], $assignmentId);
+            
+            if ($success) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Assignment unarchived successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to unarchive assignment'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error unarchiving assignment: ' . $e->getMessage()
             ]);
         }
     }

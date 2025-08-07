@@ -195,6 +195,8 @@ Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
 // Student Assignment Management Routes (student only) - Must come before /students/{id}
 Router::get('/students/my-assignments', 'StudentController@getMyAssignments');
 Router::get('/students/assignments/{id}', 'StudentController@getAssignment');
+Router::patch('/students/assignments/{id}/archive', 'StudentController@archiveAssignment');
+Router::patch('/students/assignments/{id}/unarchive', 'StudentController@unarchiveAssignment');
 Router::post('/students/assignments/{id}/submit', 'StudentController@submitAssignment');
 Router::put('/students/assignments/{id}/submission', 'StudentController@updateSubmission');
 Router::get('/students/submission-history', 'StudentController@getSubmissionHistory');

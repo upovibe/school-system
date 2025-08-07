@@ -15,7 +15,8 @@ class StudentAssignmentModel extends BaseModel
         'submitted_at',
         'grade',
         'feedback',
-        'status'
+        'status',
+        'archived_at'
     ];
 
     protected static $casts = [
@@ -23,6 +24,7 @@ class StudentAssignmentModel extends BaseModel
         'assignment_id' => 'integer',
         'grade' => 'float',
         'submitted_at' => 'datetime',
+        'archived_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -321,6 +323,39 @@ class StudentAssignmentModel extends BaseModel
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$studentId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Archive a student assignment submission
+     */
+    public function archiveSubmission($studentId, $assignmentId)
+    {
+        $sql = "UPDATE student_assignments SET archived_at = NOW() WHERE student_id = ? AND assignment_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$studentId, $assignmentId]);
+    }
+
+    /**
+     * Unarchive a student assignment submission
+     */
+    public function unarchiveSubmission($studentId, $assignmentId)
+    {
+        $sql = "UPDATE student_assignments SET archived_at = NULL WHERE student_id = ? AND assignment_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$studentId, $assignmentId]);
+    }
+
+    /**
+     * Check if submission is archived
+     */
+    public function isSubmissionArchived($studentId, $assignmentId)
+    {
+        $sql = "SELECT archived_at FROM student_assignments WHERE student_id = ? AND assignment_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$studentId, $assignmentId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result && $result['archived_at'] !== null;
     }
 }
 ?>

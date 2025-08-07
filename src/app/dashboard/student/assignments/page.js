@@ -145,11 +145,13 @@ class StudentAssignmentsPage extends App {
         
         switch (status) {
             case 'submitted':
-                return publishedAssignments.filter(a => a.submission_status === 'submitted' || a.submission_status === 'graded');
+                return publishedAssignments.filter(a => (a.submission_status === 'submitted' || a.submission_status === 'graded'));
             case 'not_submitted':
-                return publishedAssignments.filter(a => a.submission_status === 'not_submitted' || a.submission_status === 'late');
+                return publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late'));
+            case 'archived':
+                return publishedAssignments.filter(a => a.archived_at);
             default:
-                return publishedAssignments;
+                return publishedAssignments.filter(a => !a.archived_at);
         }
     }
 
@@ -161,8 +163,9 @@ class StudentAssignmentsPage extends App {
         const publishedAssignments = assignments.filter(a => a.status === 'published' && !a.deleted_at);
         
         return {
-            submitted: publishedAssignments.filter(a => a.submission_status === 'submitted' || a.submission_status === 'graded').length,
-            not_submitted: publishedAssignments.filter(a => a.submission_status === 'not_submitted' || a.submission_status === 'late').length
+            submitted: publishedAssignments.filter(a => (a.submission_status === 'submitted' || a.submission_status === 'graded')).length,
+            not_submitted: publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late')).length,
+            archived: publishedAssignments.filter(a => a.archived_at).length
         };
     }
 
@@ -564,12 +567,43 @@ class StudentAssignmentsPage extends App {
                                 <i class="fas fa-eye text-xs"></i>
                             </button>
                             ${assignment.submission_status === 'not_submitted' ? `
+                                <div class="flex space-x-3">
+                                    <button 
+                                        class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
+                                        title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
+                                        data-assignment-id="${assignment.id}"
+                                        ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
+                                        <i class="fas fa-upload text-xs"></i>
+                                    </button>
+                                    ${this.isAssignmentPastDue(assignment.due_date) && !assignment.archived_at ? `
+                                        <button 
+                                            class="archive-assignment-btn size-8 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors duration-200" 
+                                            title="Archive Assignment"
+                                            data-assignment-id="${assignment.id}">
+                                            <i class="fas fa-archive text-xs"></i>
+                                        </button>
+                                    ` : this.isAssignmentPastDue(assignment.due_date) && assignment.archived_at ? `
+                                        <button 
+                                            class="unarchive-assignment-btn size-8 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200" 
+                                            title="Unarchive Assignment"
+                                            data-assignment-id="${assignment.id}">
+                                            <i class="fas fa-folder-open text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            ` : (assignment.submission_status === 'submitted' || assignment.submission_status === 'graded' || assignment.submission_status === 'late') && !assignment.archived_at ? `
                                 <button 
-                                    class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
-                                    title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
-                                    data-assignment-id="${assignment.id}"
-                                    ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
-                                    <i class="fas fa-upload text-xs"></i>
+                                    class="archive-assignment-btn size-8 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors duration-200" 
+                                    title="Archive Assignment"
+                                    data-assignment-id="${assignment.id}">
+                                    <i class="fas fa-archive text-xs"></i>
+                                </button>
+                            ` : (assignment.submission_status === 'submitted' || assignment.submission_status === 'graded' || assignment.submission_status === 'late') && assignment.archived_at ? `
+                                <button 
+                                    class="unarchive-assignment-btn size-8 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200" 
+                                    title="Unarchive Assignment"
+                                    data-assignment-id="${assignment.id}">
+                                    <i class="fas fa-folder-open text-xs"></i>
                                 </button>
                             ` : ''}
                         </div>
@@ -598,17 +632,20 @@ class StudentAssignmentsPage extends App {
     generateEmptyTabHTML(status) {
         const statusLabels = {
             'submitted': 'Submitted',
-            'not_submitted': 'Not Submitted'
+            'not_submitted': 'Not Submitted',
+            'archived': 'Archived'
         };
         
         const statusDescriptions = {
             'submitted': 'You haven\'t submitted any assignments yet. Complete your assignments to see them here.',
-            'not_submitted': 'You don\'t have any pending assignments. All your assignments have been completed.'
+            'not_submitted': 'You don\'t have any pending assignments. All your assignments have been completed.',
+            'archived': 'You haven\'t archived any assignments yet. Archive completed assignments to organize your view.'
         };
         
         const statusIcons = {
             'submitted': 'fas fa-check-circle',
-            'not_submitted': 'fas fa-clock'
+            'not_submitted': 'fas fa-clock',
+            'archived': 'fas fa-archive'
         };
         
         return `
@@ -647,6 +684,10 @@ class StudentAssignmentsPage extends App {
                 return;
             }
             this.openSubmitModal(assignmentId);
+        } else if (button.classList.contains('archive-assignment-btn')) {
+            this.archiveAssignment(assignmentId);
+        } else if (button.classList.contains('unarchive-assignment-btn')) {
+            this.unarchiveAssignment(assignmentId);
         }
     }
 
@@ -673,6 +714,81 @@ class StudentAssignmentsPage extends App {
     onAssignmentSubmitted(event) {
         // Reload assignments to get updated status
         this.loadAssignments();
+    }
+
+    // Archive assignment
+    async archiveAssignment(assignmentId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Authentication required');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to archive this assignment? It will be hidden from your main view but can be unarchived later.')) {
+                return;
+            }
+
+            const response = await api.withToken(token).patch(`/students/assignments/${assignmentId}/archive`);
+            
+            if (response.data && response.data.success) {
+                // Show success message
+                this.showToast('Assignment archived successfully', 'success');
+                
+                // Reload assignments to reflect the change
+                await this.loadAssignments();
+            } else {
+                this.showToast(response.data?.message || 'Failed to archive assignment', 'error');
+            }
+        } catch (error) {
+            console.error('Error archiving assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to archive assignment', 'error');
+        }
+    }
+
+    // Unarchive assignment
+    async unarchiveAssignment(assignmentId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Authentication required');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to unarchive this assignment? It will be visible in your main view again.')) {
+                return;
+            }
+
+            const response = await api.withToken(token).patch(`/students/assignments/${assignmentId}/unarchive`);
+            
+            if (response.data && response.data.success) {
+                // Show success message
+                this.showToast('Assignment unarchived successfully', 'success');
+                
+                // Reload assignments to reflect the change
+                await this.loadAssignments();
+            } else {
+                this.showToast(response.data?.message || 'Failed to unarchive assignment', 'error');
+            }
+        } catch (error) {
+            console.error('Error unarchiving assignment:', error);
+            this.showToast(error.response?.data?.message || 'Failed to unarchive assignment', 'error');
+        }
+    }
+
+    // Show toast notification
+    showToast(message, type = 'info') {
+        // Check if Toast component is available
+        if (window.Toast) {
+            window.Toast.show({
+                message: message,
+                variant: type,
+                duration: 3000
+            });
+        } else {
+            // Fallback to alert
+            alert(message);
+        }
     }
 
     render() {
@@ -761,7 +877,7 @@ class StudentAssignmentsPage extends App {
                     </div>
                     
                     <!-- Enhanced Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -785,6 +901,18 @@ class StudentAssignmentsPage extends App {
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-archive text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${tabCounts.archived}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Archived</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -801,6 +929,10 @@ class StudentAssignmentsPage extends App {
                                     <i class="fas fa-check-circle text-green-600 text-lg lg:text-base"></i>
                                     <span class="hidden lg:inline ml-1 font-medium">Submitted (${tabCounts.submitted})</span>
                                 </ui-tab>
+                                <ui-tab value="archived">
+                                    <i class="fas fa-archive text-blue-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Archived (${tabCounts.archived})</span>
+                                </ui-tab>
                             </ui-tab-list>
                             
                             <!-- Not Submitted Tab -->
@@ -811,6 +943,11 @@ class StudentAssignmentsPage extends App {
                             <!-- Submitted Tab -->
                             <ui-tab-panel value="submitted">
                                 ${this.renderTabContent('submitted', filteredAssignments)}
+                            </ui-tab-panel>
+                            
+                            <!-- Archived Tab -->
+                            <ui-tab-panel value="archived">
+                                ${this.renderTabContent('archived', filteredAssignments)}
                             </ui-tab-panel>
                         </ui-tabs>
                     </div>

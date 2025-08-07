@@ -26,6 +26,7 @@ class Migration_20241001000038createstudentassignmentstable {
             status ENUM('not_submitted', 'submitted', 'graded', 'late') DEFAULT 'not_submitted',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            archived_at TIMESTAMP NULL DEFAULT NULL,
             FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
             FOREIGN KEY (assignment_id) REFERENCES class_assignments(id) ON DELETE CASCADE,
             UNIQUE (student_id, assignment_id), -- A student can only submit to an assignment once
@@ -34,7 +35,8 @@ class Migration_20241001000038createstudentassignmentstable {
             INDEX idx_status (status),
             INDEX idx_submitted_at (submitted_at),
             INDEX idx_grade (grade),
-            INDEX idx_created_at (created_at)
+            INDEX idx_created_at (created_at),
+            INDEX idx_archived_at (archived_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
         $this->pdo->exec($sql);

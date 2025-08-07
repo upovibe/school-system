@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import '@/components/ui/Card.js';
+import '@/components/ui/Tab.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';

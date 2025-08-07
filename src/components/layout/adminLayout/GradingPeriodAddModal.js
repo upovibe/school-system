@@ -222,92 +222,71 @@ class GradingPeriodAddModal extends HTMLElement {
     }
 
     render() {
-        return `
+        this.innerHTML = `
             <ui-modal 
-                title="Add New Grading Period"
-                size="lg"
-                ${this.hasAttribute('open') ? 'open' : ''}>
-                
-                <div class="space-y-6">
-                    <!-- Period Name -->
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Add New Grading Period</div>
+                <form id="grading-period-form" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Period Name *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Period Name</label>
                         <ui-input 
                             data-field="name"
+                            type="text" 
                             placeholder="e.g., First Term, Second Term, Final Term"
-                            required>
+                            class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Academic Year -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Academic Year *
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
                         <ui-input 
                             data-field="academic_year"
+                            type="text" 
                             placeholder="e.g., 2024-2025"
-                            required>
+                            class="w-full">
                         </ui-input>
                     </div>
-
-                    <!-- Date Range -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Start Date *
-                            </label>
-                            <ui-input 
-                                data-field="start_date"
-                                type="date"
-                                required>
-                            </ui-input>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                End Date *
-                            </label>
-                            <ui-input 
-                                data-field="end_date"
-                                type="date"
-                                required>
-                            </ui-input>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <ui-input 
+                            data-field="start_date"
+                            type="date" 
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <ui-input 
+                            data-field="end_date"
+                            type="date" 
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <ui-textarea 
                             data-field="description"
                             placeholder="Optional description for this grading period..."
-                            rows="3">
+                            rows="3"
+                            class="w-full">
                         </ui-textarea>
                     </div>
-
-                    <!-- Active Status -->
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Status
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <ui-switch 
                             name="is_active"
-                            checked>
-                            Active
+                            checked
+                            class="w-full">
+                            <span slot="label">Active</span>
                         </ui-switch>
                     </div>
-                </div>
-
-                <ui-button slot="confirm" variant="primary">
-                    Create Grading Period
-                </ui-button>
-                <ui-button slot="cancel" variant="secondary">
-                    Cancel
-                </ui-button>
+                </form>
             </ui-modal>
         `;
     }

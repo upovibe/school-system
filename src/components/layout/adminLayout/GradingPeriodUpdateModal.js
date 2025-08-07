@@ -25,7 +25,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open', 'grading-period-data'];
+        return ['open'];
     }
 
     connectedCallback() {

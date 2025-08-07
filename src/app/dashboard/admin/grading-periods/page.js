@@ -132,36 +132,58 @@ class GradingPeriodManagementPage extends App {
     }
 
     onView(event) {
-        const gradingPeriodId = event.detail.id;
-        const gradingPeriod = this.get('gradingPeriods').find(period => period.id === gradingPeriodId);
-        
-        if (gradingPeriod) {
-            this.set('viewGradingPeriodData', gradingPeriod);
+        const { detail } = event;
+        const viewGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
+        if (viewGradingPeriod) {
+            this.closeAllModals();
+            this.set('viewGradingPeriodData', viewGradingPeriod);
             this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('grading-period-view-modal');
+                if (viewModal) {
+                    viewModal.setAttribute('grading-period-data', JSON.stringify(viewGradingPeriod));
+                }
+            }, 0);
         }
     }
 
     onEdit(event) {
-        const gradingPeriodId = event.detail.id;
-        const gradingPeriod = this.get('gradingPeriods').find(period => period.id === gradingPeriodId);
-        
-        if (gradingPeriod) {
-            this.set('updateGradingPeriodData', gradingPeriod);
+        const { detail } = event;
+        const editGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
+        if (editGradingPeriod) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('updateGradingPeriodData', editGradingPeriod);
             this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('grading-period-update-modal');
+                if (updateModal) {
+                    updateModal.setAttribute('grading-period-data', JSON.stringify(editGradingPeriod));
+                }
+            }, 0);
         }
     }
 
     onDelete(event) {
-        const gradingPeriodId = event.detail.id;
-        const gradingPeriod = this.get('gradingPeriods').find(period => period.id === gradingPeriodId);
-        
-        if (gradingPeriod) {
-            this.set('deleteGradingPeriodData', gradingPeriod);
+        const { detail } = event;
+        const deleteGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
+        if (deleteGradingPeriod) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('deleteGradingPeriodData', deleteGradingPeriod);
             this.set('showDeleteDialog', true);
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('grading-period-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setAttribute('grading-period-data', JSON.stringify(deleteGradingPeriod));
+                }
+            }, 0);
         }
     }
 
     onAdd(event) {
+        // Close any open modals first
+        this.closeAllModals();
         this.set('showAddModal', true);
     }
 
@@ -269,23 +291,13 @@ class GradingPeriodManagementPage extends App {
             <grading-period-add-modal ${showAddModal ? 'open' : ''}></grading-period-add-modal>
             
             <!-- Update Grading Period Modal -->
-            <grading-period-update-modal 
-                ${showUpdateModal ? 'open' : ''} 
-                grading-period-data='${this.get('updateGradingPeriodData') ? JSON.stringify(this.get('updateGradingPeriodData')) : ''}'>
-            </grading-period-update-modal>
+            <grading-period-update-modal ${showUpdateModal ? 'open' : ''}></grading-period-update-modal>
             
             <!-- View Grading Period Modal -->
-            <grading-period-view-modal 
-                id="view-modal" 
-                ${showViewModal ? 'open' : ''} 
-                grading-period-data='${this.get('viewGradingPeriodData') ? JSON.stringify(this.get('viewGradingPeriodData')) : ''}'>
-            </grading-period-view-modal>
+            <grading-period-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></grading-period-view-modal>
             
             <!-- Delete Grading Period Dialog -->
-            <grading-period-delete-dialog 
-                ${showDeleteDialog ? 'open' : ''} 
-                grading-period-data='${this.get('deleteGradingPeriodData') ? JSON.stringify(this.get('deleteGradingPeriodData')) : ''}'>
-            </grading-period-delete-dialog>
+            <grading-period-delete-dialog ${showDeleteDialog ? 'open' : ''}></grading-period-delete-dialog>
         `;
     }
 }

@@ -191,12 +191,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
             }
 
             // Send the request
-            const response = await api.put(`/grading-periods/${this.gradingPeriodData.id}`, gradingPeriodData, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await api.withToken(token).put(`/grading-periods/${this.gradingPeriodData.id}`, gradingPeriodData);
 
             if (response.success) {
                 Toast.show({

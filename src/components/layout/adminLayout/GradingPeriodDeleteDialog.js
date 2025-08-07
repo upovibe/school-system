@@ -88,11 +88,7 @@ class GradingPeriodDeleteDialog extends HTMLElement {
             }
 
             // Send the request
-            const response = await api.delete(`/grading-periods/${this.gradingPeriodData.id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.withToken(token).delete(`/grading-periods/${this.gradingPeriodData.id}`);
 
             if (response.success) {
                 Toast.show({

@@ -809,6 +809,41 @@ class TeacherAssignmentsPage extends App {
         `;
     }
 
+    generateEmptyTabHTML(status) {
+        const statusLabels = {
+            'published': 'Published',
+            'draft': 'Draft',
+            'archived': 'Archived',
+            'deleted': 'Deleted'
+        };
+        
+        const statusDescriptions = {
+            'published': 'You haven\'t published any assignments yet. Create and publish assignments to see them here.',
+            'draft': 'You don\'t have any draft assignments. Start creating assignments and save them as drafts.',
+            'archived': 'No archived assignments found. Assignments will appear here when you archive them.',
+            'deleted': 'No deleted assignments found. Deleted assignments will appear here.'
+        };
+        
+        const statusIcons = {
+            'published': 'fas fa-check-circle',
+            'draft': 'fas fa-edit',
+            'archived': 'fas fa-archive',
+            'deleted': 'fas fa-trash'
+        };
+        
+        return `
+            <div class="bg-white shadow-sm rounded-xl p-8 text-center border border-gray-100">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="${statusIcons[status]} text-2xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No ${statusLabels[status]} Assignments</h3>
+                <p class="text-gray-500 max-w-md mx-auto">
+                    ${statusDescriptions[status]}
+                </p>
+            </div>
+        `;
+    }
+
     // Clear all filters
     clearFilters() {
         this.searchTerm = '';
@@ -1158,7 +1193,7 @@ class TeacherAssignmentsPage extends App {
                 <div class="assignments-list-container space-y-6">
                     ${(assignmentsToShow && assignmentsToShow.length > 0) ? 
                         assignmentsToShow.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
-                        this.generateNoAssignmentsHTML()
+                        (assignmentsInTab.length === 0 ? this.generateEmptyTabHTML(status) : this.generateNoAssignmentsHTML())
                     }
                 </div>
             </div>

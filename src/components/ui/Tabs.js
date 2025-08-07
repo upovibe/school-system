@@ -262,6 +262,13 @@ class Tabs extends HTMLElement {
                 panel.removeAttribute('active');
             }
         });
+        
+        // Dispatch custom event for tab change
+        this.dispatchEvent(new CustomEvent('tab-changed', {
+            detail: { activeTab: value },
+            bubbles: true,
+            composed: true
+        }));
     }
 }
 

@@ -27,8 +27,6 @@ class Migration_20241001000043createstudentgradestable {
             exam_total DECIMAL(5,2) DEFAULT 0,
             
             -- Calculated Scores (System calculates these)
-            assignment_percentage DECIMAL(5,2) DEFAULT 0,
-            exam_percentage DECIMAL(5,2) DEFAULT 0,
             final_percentage DECIMAL(5,2) DEFAULT 0,
             final_letter_grade VARCHAR(3),
             

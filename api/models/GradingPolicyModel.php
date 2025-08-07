@@ -8,15 +8,13 @@ class GradingPolicyModel extends BaseModel {
     
     protected static $fillable = [
         'name', 'description', 'subject_id', 'is_active', 
-        'assignment_weight', 'exam_weight', 'assignment_max_score', 'exam_max_score', 'grade_boundaries',
+        'assignment_max_score', 'exam_max_score', 'grade_boundaries',
         'created_by'
     ];
     
     protected static $casts = [
         'subject_id' => 'integer',
         'is_active' => 'boolean',
-        'assignment_weight' => 'float',
-        'exam_weight' => 'float',
         'assignment_max_score' => 'integer',
         'exam_max_score' => 'integer',
         'grade_boundaries' => 'json',
@@ -167,11 +165,8 @@ class GradingPolicyModel extends BaseModel {
         $assignmentPercentage = $assignmentMax > 0 ? ($assignmentTotal / $assignmentMax) * 100 : 0;
         $examPercentage = $examMax > 0 ? ($examTotal / $examMax) * 100 : 0;
         
-        // Calculate weighted final grade
-        $finalPercentage = (
-            ($assignmentPercentage * $policy['assignment_weight']) +
-            ($examPercentage * $policy['exam_weight'])
-        );
+        // Calculate final grade (simple average since max scores define the weight)
+        $finalPercentage = ($assignmentPercentage + $examPercentage) / 2;
         
         // Round to 2 decimal places
         $finalPercentage = round($finalPercentage, 2);
@@ -180,8 +175,6 @@ class GradingPolicyModel extends BaseModel {
         $letterGrade = $this->calculateLetterGrade($finalPercentage, $policy);
         
         return [
-            'assignment_percentage' => round($assignmentPercentage, 2),
-            'exam_percentage' => round($examPercentage, 2),
             'final_percentage' => $finalPercentage,
             'final_letter_grade' => $letterGrade
         ];

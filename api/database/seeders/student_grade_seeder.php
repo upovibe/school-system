@@ -241,9 +241,8 @@ class StudentGradeSeeder
         
         // Insert grade
         $sql = "INSERT INTO student_grades (student_id, class_id, subject_id, grading_period_id, grading_policy_id, 
-                assignment_total, exam_total, assignment_percentage, exam_percentage, 
-                final_percentage, final_letter_grade, remarks, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                assignment_total, exam_total, final_percentage, final_letter_grade, remarks, created_by) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $insertData['student_id'],
@@ -253,8 +252,6 @@ class StudentGradeSeeder
             $insertData['grading_policy_id'],
             $insertData['assignment_total'],
             $insertData['exam_total'],
-            $insertData['assignment_percentage'],
-            $insertData['exam_percentage'],
             $insertData['final_percentage'],
             $insertData['final_letter_grade'],
             $insertData['remarks'],

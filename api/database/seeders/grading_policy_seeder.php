@@ -22,8 +22,6 @@ class GradingPolicySeeder
                 'description' => 'Mathematics grading policy with emphasis on assignments and problem-solving',
                 'subject_id' => $this->getSubjectId('Mathematics'),
                 'is_active' => 1, // Use integer instead of boolean
-                'assignment_weight' => 0.70,
-                'exam_weight' => 0.30,
                 'assignment_max_score' => 70,
                 'exam_max_score' => 30,
                 'grade_boundaries' => json_encode([
@@ -49,8 +47,6 @@ class GradingPolicySeeder
                 'description' => 'English Language grading policy with balanced assessment',
                 'subject_id' => $this->getSubjectId('English Language'),
                 'is_active' => 1, // Use integer instead of boolean
-                'assignment_weight' => 0.60,
-                'exam_weight' => 0.40,
                 'assignment_max_score' => 60,
                 'exam_max_score' => 40,
                 'grade_boundaries' => json_encode([
@@ -76,8 +72,6 @@ class GradingPolicySeeder
                 'description' => 'Integrated Science grading policy with emphasis on practical work',
                 'subject_id' => $this->getSubjectId('Integrated Science'),
                 'is_active' => 1, // Use integer instead of boolean
-                'assignment_weight' => 0.65,
-                'exam_weight' => 0.35,
                 'assignment_max_score' => 65,
                 'exam_max_score' => 35,
                 'grade_boundaries' => json_encode([
@@ -103,8 +97,6 @@ class GradingPolicySeeder
                 'description' => 'Social Studies grading policy with balanced assessment',
                 'subject_id' => $this->getSubjectId('Social Studies'),
                 'is_active' => 1, // Use integer instead of boolean
-                'assignment_weight' => 0.60,
-                'exam_weight' => 0.40,
                 'assignment_max_score' => 60,
                 'exam_max_score' => 40,
                 'grade_boundaries' => json_encode([
@@ -130,8 +122,6 @@ class GradingPolicySeeder
                 'description' => 'ICT grading policy with emphasis on practical skills',
                 'subject_id' => $this->getSubjectId('Information and Communication Technology'),
                 'is_active' => 1, // Use integer instead of boolean
-                'assignment_weight' => 0.75,
-                'exam_weight' => 0.25,
                 'assignment_max_score' => 75,
                 'exam_max_score' => 25,
                 'grade_boundaries' => json_encode([
@@ -230,16 +220,14 @@ class GradingPolicySeeder
         }
         
         // Insert policy
-        $sql = "INSERT INTO grading_policies (name, description, subject_id, is_active, assignment_weight, exam_weight, assignment_max_score, exam_max_score, grade_boundaries, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO grading_policies (name, description, subject_id, is_active, assignment_max_score, exam_max_score, grade_boundaries, created_by) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $policyData['name'],
             $policyData['description'],
             $policyData['subject_id'],
             $policyData['is_active'],
-            $policyData['assignment_weight'],
-            $policyData['exam_weight'],
             $policyData['assignment_max_score'],
             $policyData['exam_max_score'],
             $policyData['grade_boundaries'],

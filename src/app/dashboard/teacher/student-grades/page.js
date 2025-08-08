@@ -8,7 +8,7 @@ import '@/components/ui/Button.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeAddModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeUpdateModal.js';
-import '@/components/layout/adminLayout/StudentGradeViewModal.js';
+import '@/components/layout/teacherLayout/TeacherStudentGradeViewModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeDeleteDialog.js';
 import api from '@/services/api.js';
 
@@ -203,7 +203,7 @@ class TeacherStudentGradesPage extends App {
       this.set('viewGradeData', item);
       this.set('showViewModal', true);
       setTimeout(() => {
-        const modal = this.querySelector('student-grade-view-modal');
+        const modal = this.querySelector('teacher-student-grade-view-modal');
         if (modal) { modal.setGradeData(item); modal.open?.(); }
       }, 0);
     }
@@ -384,7 +384,7 @@ class TeacherStudentGradesPage extends App {
 
       <teacher-student-grade-add-modal ${showAddModal ? 'open' : ''}></teacher-student-grade-add-modal>
       <teacher-student-grade-update-modal ${showUpdateModal ? 'open' : ''}></teacher-student-grade-update-modal>
-      <student-grade-view-modal ${showViewModal ? 'open' : ''}></student-grade-view-modal>
+      <teacher-student-grade-view-modal ${showViewModal ? 'open' : ''}></teacher-student-grade-view-modal>
       <teacher-student-grade-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-student-grade-delete-dialog>
     `;
   }

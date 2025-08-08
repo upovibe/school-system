@@ -31,8 +31,8 @@ class StudentGradeDeleteDialog extends HTMLElement {
             if (!this.gradeData?.id) { return; }
             const token = localStorage.getItem('token');
             if (!token) { Toast.show({ title: 'Authentication Error', message: 'Please log in', variant: 'error', duration: 3000 }); return; }
-            const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmBtn) { confirmBtn.setAttribute('loading', ''); confirmBtn.textContent = 'Deleting...'; }
+            const dialog = this.querySelector('ui-dialog');
+            if (dialog) dialog.setAttribute('variant', 'danger');
             const resp = await api.withToken(token).delete(`/student-grades/${this.gradeData.id}`);
             if (resp.data.success) {
                 Toast.show({ title: 'Success', message: 'Grade deleted', variant: 'success', duration: 2000 });
@@ -43,20 +43,29 @@ class StudentGradeDeleteDialog extends HTMLElement {
             }
         } catch (error) {
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to delete', variant: 'error', duration: 3000 });
-        } finally {
-            const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmBtn) { confirmBtn.removeAttribute('loading'); confirmBtn.textContent = 'Delete'; }
         }
     }
 
     render() {
         const g = this.gradeData || {};
+        const studentName = [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || '';
+        const classLabel = g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '';
+        const subjectName = g.subject_name || '';
+        const periodName = g.grading_period_name || '';
         this.innerHTML = `
-            <ui-dialog ${this.hasAttribute('open') ? 'open' : ''}>
-                <div slot="title">Delete Grade</div>
-                <div>Are you sure you want to delete this grade for <strong>${[g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || 'the student'}</strong>?</div>
-                <ui-button slot="confirm" variant="danger">Delete</ui-button>
-                <ui-button slot="cancel" variant="secondary">Cancel</ui-button>
+            <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Delete Student Grade" variant="danger">
+                <div slot="content">
+                    <div class="space-y-3">
+                        <p class="text-gray-700">Are you sure you want to delete this grade? This action cannot be undone.</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+                            <div><strong>Student:</strong> ${studentName || '—'}</div>
+                            <div><strong>Class:</strong> ${classLabel || '—'}</div>
+                            <div><strong>Subject:</strong> ${subjectName || '—'}</div>
+                            <div><strong>Grading Period:</strong> ${periodName || '—'}</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Use default footer buttons from ui-dialog so confirm/cancel events are wired -->
             </ui-dialog>
         `;
     }

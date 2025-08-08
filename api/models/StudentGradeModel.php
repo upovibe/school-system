@@ -101,6 +101,8 @@ class StudentGradeModel extends BaseModel {
                 sg.*,
                 s.name as subject_name,
                 s.code as subject_code,
+                c.name as class_name,
+                c.section as class_section,
                 st.first_name as student_first_name,
                 st.last_name as student_last_name,
                 st.student_id as student_number,
@@ -110,6 +112,7 @@ class StudentGradeModel extends BaseModel {
                 u1.email as created_by_email
             FROM student_grades sg
             LEFT JOIN subjects s ON sg.subject_id = s.id
+            LEFT JOIN classes c ON sg.class_id = c.id
             LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
             LEFT JOIN users u1 ON sg.created_by = u1.id

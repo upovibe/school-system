@@ -102,12 +102,7 @@ class TeacherDashboardPage extends App {
                 ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
-            <div class="mt-4 sm:mt-0">
-              <div class="text-right">
-                <div class="text-xl sm:text-2xl font-bold">${subjects.length}</div>
-                <div class="text-blue-100 text-xs sm:text-sm">Total Subjects</div>
-              </div>
-            </div>
+            
           </div>
 
           ${!loading && (className || classSection) ? `
@@ -164,12 +159,12 @@ class TeacherDashboardPage extends App {
 
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
-                <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                  <i class="fas fa-chart-line text-white text-lg sm:text-xl"></i>
+                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-archive text-white text-lg sm:text-xl"></i>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <div class="text-xl sm:text-2xl font-bold">${gradeCounts.total}</div>
-                  <div class="text-blue-100 text-xs sm:text-sm">Total Grades</div>
+                  <div class="text-xl sm:text-2xl font-bold">${assignments.archived}</div>
+                  <div class="text-blue-100 text-xs sm:text-sm">Archived Assignments</div>
                 </div>
               </div>
             </div>

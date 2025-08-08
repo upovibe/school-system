@@ -145,9 +145,18 @@ class StudentAssignmentsPage extends App {
         
         switch (status) {
             case 'submitted':
-                return publishedAssignments.filter(a => (a.submission_status === 'submitted' || a.submission_status === 'graded'));
+                return publishedAssignments.filter(a => a.submission_status === 'submitted');
+            case 'graded':
+                return publishedAssignments.filter(a => a.submission_status === 'graded');
             case 'not_submitted':
                 return publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late'));
+            case 'overdue':
+                return publishedAssignments.filter(a => {
+                    if (a.submission_status === 'not_submitted' || a.submission_status === 'late') {
+                        return a.due_date && new Date(a.due_date) < new Date();
+                    }
+                    return false;
+                });
             case 'archived':
                 return publishedAssignments.filter(a => a.archived_at);
             default:
@@ -171,7 +180,8 @@ class StudentAssignmentsPage extends App {
         }).length;
         
         return {
-            submitted: publishedAssignments.filter(a => (a.submission_status === 'submitted' || a.submission_status === 'graded')).length,
+            submitted: publishedAssignments.filter(a => a.submission_status === 'submitted').length,
+            graded: publishedAssignments.filter(a => a.submission_status === 'graded').length,
             not_submitted: publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late')).length,
             archived: publishedAssignments.filter(a => a.archived_at).length,
             overdue: overdueCount
@@ -577,12 +587,12 @@ class StudentAssignmentsPage extends App {
                             </button>
                             ${assignment.submission_status === 'not_submitted' ? `
                                 <div class="flex space-x-3">
-                                    <button 
-                                        class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
-                                        title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
-                                        data-assignment-id="${assignment.id}"
-                                        ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
-                                        <i class="fas fa-upload text-xs"></i>
+                                <button 
+                                    class="submit-assignment-btn size-8 flex items-center justify-center ${this.isAssignmentPastDue(assignment.due_date) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors duration-200" 
+                                    title="${this.isAssignmentPastDue(assignment.due_date) ? 'Assignment is past due' : 'Submit Assignment'}"
+                                    data-assignment-id="${assignment.id}"
+                                    ${this.isAssignmentPastDue(assignment.due_date) ? 'disabled' : ''}>
+                                    <i class="fas fa-upload text-xs"></i>
                                     </button>
                                     ${this.isAssignmentPastDue(assignment.due_date) && !assignment.archived_at ? `
                                         <button 
@@ -641,19 +651,25 @@ class StudentAssignmentsPage extends App {
     generateEmptyTabHTML(status) {
         const statusLabels = {
             'submitted': 'Submitted',
-            'not_submitted': 'Not Submitted',
+            'graded': 'Graded',
+            'not_submitted': 'Pending',
+            'overdue': 'Overdue',
             'archived': 'Archived'
         };
         
         const statusDescriptions = {
             'submitted': 'You haven\'t submitted any assignments yet. Complete your assignments to see them here.',
+            'graded': 'You don\'t have any graded assignments yet. Teachers will grade your submissions here.',
             'not_submitted': 'You don\'t have any pending assignments. All your assignments have been completed.',
+            'overdue': 'You don\'t have any overdue assignments. Keep up with your deadlines!',
             'archived': 'You haven\'t archived any assignments yet. Archive completed assignments to organize your view.'
         };
         
         const statusIcons = {
             'submitted': 'fas fa-check-circle',
+            'graded': 'fas fa-check-double',
             'not_submitted': 'fas fa-clock',
+            'overdue': 'fas fa-exclamation-triangle',
             'archived': 'fas fa-archive'
         };
         
@@ -873,28 +889,28 @@ class StudentAssignmentsPage extends App {
                 <!-- Enhanced Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-                        <div>
+                            <div>
                             <h1 class="text-2xl sm:text-3xl font-bold">My Assignments</h1>
                             <p class="text-blue-100 text-base sm:text-lg">Track your academic tasks and submissions</p>
-                        </div>
+                            </div>
                         <div class="mt-4 sm:mt-0">
-                            <div class="text-right">
+                        <div class="text-right">
                                 <div class="text-xl sm:text-2xl font-bold">${publishedAssignments.length}</div>
                                 <div class="text-blue-100 text-xs sm:text-sm">Total Assignments</div>
-                            </div>
                         </div>
                     </div>
-                    
+                </div>
+
                     <!-- Enhanced Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-clock text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${tabCounts.not_submitted}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Not Submitted</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Pending</div>
                                 </div>
                             </div>
                         </div>
@@ -913,12 +929,12 @@ class StudentAssignmentsPage extends App {
                         
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-archive text-white text-lg sm:text-xl"></i>
+                                <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-check-double text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${tabCounts.archived}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Archived</div>
+                                    <div class="text-xl sm:text-2xl font-bold">${tabCounts.graded}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Graded</div>
                                 </div>
                             </div>
                         </div>
@@ -944,11 +960,19 @@ class StudentAssignmentsPage extends App {
                             <ui-tab-list class="flex items-center justify-center">
                                 <ui-tab value="not_submitted">
                                     <i class="fas fa-clock text-amber-600 text-lg lg:text-base"></i>
-                                    <span class="hidden lg:inline ml-1 font-medium">Not Submitted (${tabCounts.not_submitted})</span>
+                                    <span class="hidden lg:inline ml-1 font-medium">Pending (${tabCounts.not_submitted})</span>
                                 </ui-tab>
                                 <ui-tab value="submitted">
                                     <i class="fas fa-check-circle text-green-600 text-lg lg:text-base"></i>
                                     <span class="hidden lg:inline ml-1 font-medium">Submitted (${tabCounts.submitted})</span>
+                                </ui-tab>
+                                <ui-tab value="graded">
+                                    <i class="fas fa-check-double text-purple-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Graded (${tabCounts.graded})</span>
+                                </ui-tab>
+                                <ui-tab value="overdue">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Overdue (${tabCounts.overdue})</span>
                                 </ui-tab>
                                 <ui-tab value="archived">
                                     <i class="fas fa-archive text-blue-600 text-lg lg:text-base"></i>
@@ -966,6 +990,16 @@ class StudentAssignmentsPage extends App {
                                 ${this.renderTabContent('submitted', filteredAssignments)}
                             </ui-tab-panel>
                             
+                            <!-- Graded Tab -->
+                            <ui-tab-panel value="graded">
+                                ${this.renderTabContent('graded', filteredAssignments)}
+                            </ui-tab-panel>
+
+                            <!-- Overdue Tab -->
+                            <ui-tab-panel value="overdue">
+                                ${this.renderTabContent('overdue', filteredAssignments)}
+                            </ui-tab-panel>
+
                             <!-- Archived Tab -->
                             <ui-tab-panel value="archived">
                                 ${this.renderTabContent('archived', filteredAssignments)}
@@ -996,104 +1030,104 @@ class StudentAssignmentsPage extends App {
                 <!-- Filters and Search Section (only for active tab) -->
                 ${isActiveTab ? `
                     <div class="overflow-hidden">
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-filter text-white text-sm"></i>
-                                    </div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Filter & Search ${status === 'submitted' ? 'Submitted' : 'Not Submitted'} Assignments</h3>
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-filter text-white text-sm"></i>
                                 </div>
-                                <button 
-                                    onclick="this.closest('app-student-assignments-page').clearFilters()"
-                                    class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
-                                    <i class="fas fa-times mr-1"></i>
-                                    Clear All
-                                </button>
+                                    <h3 class="text-lg font-semibold text-gray-900">Filter & Search ${status === 'submitted' ? 'Submitted' : 'Not Submitted'} Assignments</h3>
+                            </div>
+                            <button 
+                                onclick="this.closest('app-student-assignments-page').clearFilters()"
+                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                                <i class="fas fa-times mr-1"></i>
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 space-y-4">
+                        <!-- Search Bar -->
+                        <div class="w-full">
+                            <ui-input 
+                                type="search"
+                                data-filter="search"
+                                placeholder="Search assignments by title, description, subject, or teacher..."
+                                value="${this.searchTerm}">
+                            </ui-input>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Assignment Type Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                    <select data-filter="assignment_type" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Types</option>
+                                    ${this.getUniqueAssignmentTypes().map(type => 
+                                        `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Subject Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                    <select data-filter="subject" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="">All Subjects</option>
+                                    ${this.getUniqueSubjects().map(subject => 
+                                        `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Sort Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                                    <select data-filter="sort" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
+                                    <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
+                                    <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
+                                    <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
+                                    <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
+                                    <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
+                                    <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
+                                    <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
+                                    <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
+                                    <option value="submission_grade:desc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'desc' ? 'selected' : ''}>Grade (High to Low)</option>
+                                    <option value="submission_grade:asc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'asc' ? 'selected' : ''}>Grade (Low to High)</option>
+                                </select>
                             </div>
                         </div>
                         
-                        <div class="p-4 space-y-4">
-                            <!-- Search Bar -->
-                            <div class="w-full">
-                                <ui-input 
-                                    type="search"
-                                    data-filter="search"
-                                    placeholder="Search assignments by title, description, subject, or teacher..."
-                                    value="${this.searchTerm}">
-                                </ui-input>
-                            </div>
-                            
-                            <!-- Filter Options -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Assignment Type Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                    <select data-filter="assignment_type" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="">All Types</option>
-                                        ${this.getUniqueAssignmentTypes().map(type => 
-                                            `<option value="${type.value}" ${this.filters.assignment_type === type.value ? 'selected' : ''}>${type.label}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                
-                                <!-- Subject Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                    <select data-filter="subject" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="">All Subjects</option>
-                                        ${this.getUniqueSubjects().map(subject => 
-                                            `<option value="${subject.id}" ${this.filters.subject_id == subject.id ? 'selected' : ''}>${subject.name}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                
-                                <!-- Sort Filter -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                                    <select data-filter="sort" class="w-full px-[0.75rem] h-9 border-[1px] border-gray-300/50 rounded-md font-[0.875rem] focus:outline-gray-300 focus:ring-[0.1px] focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900">
-                                        <option value="due_date:asc" ${this.sortBy === 'due_date' && this.sortOrder === 'asc' ? 'selected' : ''}>Due Date (Earliest)</option>
-                                        <option value="due_date:desc" ${this.sortBy === 'due_date' && this.sortOrder === 'desc' ? 'selected' : ''}>Due Date (Latest)</option>
-                                        <option value="title:asc" ${this.sortBy === 'title' && this.sortOrder === 'asc' ? 'selected' : ''}>Title A-Z</option>
-                                        <option value="title:desc" ${this.sortBy === 'title' && this.sortOrder === 'desc' ? 'selected' : ''}>Title Z-A</option>
-                                        <option value="created_at:desc" ${this.sortBy === 'created_at' && this.sortOrder === 'desc' ? 'selected' : ''}>Newest First</option>
-                                        <option value="created_at:asc" ${this.sortBy === 'created_at' && this.sortOrder === 'asc' ? 'selected' : ''}>Oldest First</option>
-                                        <option value="total_points:desc" ${this.sortBy === 'total_points' && this.sortOrder === 'desc' ? 'selected' : ''}>Points (High to Low)</option>
-                                        <option value="total_points:asc" ${this.sortBy === 'total_points' && this.sortOrder === 'asc' ? 'selected' : ''}>Points (Low to High)</option>
-                                        <option value="submission_grade:desc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'desc' ? 'selected' : ''}>Grade (High to Low)</option>
-                                        <option value="submission_grade:asc" ${this.sortBy === 'submission_grade' && this.sortOrder === 'asc' ? 'selected' : ''}>Grade (Low to High)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Results Count -->
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
-                                <span class="results-count">
+                        <!-- Results Count -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-sm text-gray-600">
+                            <span class="results-count">
                                     Showing <span class="font-medium text-gray-900">${assignmentsToShow?.length || 0}</span> 
                                     of <span class="font-medium text-gray-900">${assignmentsInTab.length}</span> assignments
-                                </span>
-                                <span class="filters-indicator">
+                            </span>
+                            <span class="filters-indicator">
                                     ${(assignmentsToShow?.length || 0) !== assignmentsInTab.length ? 
-                                        `<span class="text-blue-600 font-medium">
-                                            <i class="fas fa-filter mr-1"></i>
-                                            Filters Applied
-                                        </span>` : 
-                                        ''
-                                    }
-                                </span>
-                            </div>
+                                    `<span class="text-blue-600 font-medium">
+                                        <i class="fas fa-filter mr-1"></i>
+                                        Filters Applied
+                                    </span>` : 
+                                    ''
+                                }
+                            </span>
                         </div>
                     </div>
+                </div>
                 ` : ''}
-                
+
                 <!-- Assignments List -->
-                <div class="assignments-list-container space-y-6">
+                    <div class="assignments-list-container space-y-6">
                     ${(assignmentsToShow && assignmentsToShow.length > 0) ? 
                         assignmentsToShow.map(assignment => this.generateAssignmentHTML(assignment)).join('') :
                         (this.getAssignmentsByStatus(status).length === 0 ? this.generateEmptyTabHTML(status) : this.generateNoAssignmentsHTML())
-                    }
+                        }
+                    </div>
                 </div>
-            </div>
         `;
     }
 }

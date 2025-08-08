@@ -22,7 +22,6 @@ class TeacherStudentGradesPage extends App {
     super();
     this.grades = [];
     this.loading = false;
-    this.filters = { subject_id: '', grading_period_id: '', student_id: '' };
     this.teacherClass = null;
     this.subjects = [];
     this.periods = [];
@@ -47,6 +46,12 @@ class TeacherStudentGradesPage extends App {
   connectedCallback() {
     super.connectedCallback();
     document.title = 'My Class Grades | School System';
+    
+    // Initialize state
+    this.set('filters', { subject_id: '', grading_period_id: '', student_id: '' });
+    this.set('grades', []);
+    this.set('loading', false);
+    
     this.bootstrap();
 
     this.addEventListener('table-view', this.onView.bind(this));
@@ -146,7 +151,9 @@ class TeacherStudentGradesPage extends App {
       try {
         const periodsResp = await api.withToken(token).get('/teachers/grading-periods');
         this.periods = periodsResp.data?.data || [];
-      } catch (_) { this.periods = []; }
+      } catch (e) { 
+        this.periods = []; 
+      }
 
       // Initial load if we have class
       if (this.teacherClass?.class_id) {
@@ -163,7 +170,9 @@ class TeacherStudentGradesPage extends App {
     try {
       this.set('loading', true);
       const token = localStorage.getItem('token');
-      if (!token) { return; }
+      if (!token) { 
+        return; 
+      }
       if (!this.teacherClass?.class_id) {
         this.set('grades', []);
         this.updateTableData();
@@ -171,7 +180,8 @@ class TeacherStudentGradesPage extends App {
         return;
       }
 
-      const { subject_id, grading_period_id, student_id } = this.get('filters');
+      const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+      const { subject_id, grading_period_id, student_id } = filters;
       const params = {};
       if (student_id) params.student_id = student_id;
       if (subject_id) params.subject_id = subject_id;
@@ -340,7 +350,8 @@ class TeacherStudentGradesPage extends App {
       { key: 'updated', label: 'Updated' }
     ];
 
-    const canAdd = Boolean(this.teacherClass?.class_id && this.filters.subject_id && this.filters.grading_period_id && this.filters.student_id);
+    const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+    const canAdd = Boolean(this.teacherClass?.class_id && filters.subject_id && filters.grading_period_id && filters.student_id);
 
     return `
       ${this.renderFilters()}

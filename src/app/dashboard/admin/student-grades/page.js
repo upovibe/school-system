@@ -50,6 +50,10 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
 
+        // Keep page state in sync when modals close via backdrop/X
+        this.addEventListener('modal-close', () => this.closeAllModals());
+        this.addEventListener('modal-closed', () => this.closeAllModals());
+
         // Modal events (live updates)
         this.addEventListener('student-grade-deleted', (event) => {
             const deletedId = event.detail.gradeId;
@@ -88,6 +92,8 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('change', (e) => {
             const dd = e.target.closest('ui-search-dropdown');
             if (!dd) return;
+            // Any dropdown change should close any open modal
+            this.closeAllModals();
             const name = dd.getAttribute('name');
             if (!name) return;
             const next = { ...this.get('filters'), [name]: dd.value };
@@ -104,10 +110,11 @@ class StudentGradesManagementPage extends App {
 
         this.addEventListener('click', (e) => {
             const applyBtn = e.target.closest('[data-action="apply-filters"]');
-            if (applyBtn) { e.preventDefault(); this.loadGrades(); return; }
+            if (applyBtn) { e.preventDefault(); this.closeAllModals(); this.loadGrades(); return; }
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
+                this.closeAllModals();
                 const defaults = { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
                 this.set('filters', defaults);
                 this.students = [];

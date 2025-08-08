@@ -59,10 +59,13 @@ class SearchDropdown extends HTMLElement {
 
     // --- Event Setup ---
     _setupEventListeners() {
-        this.trigger.addEventListener('click', () => this.toggleDropdown());
+        this.trigger.addEventListener('click', (e) => { e.stopPropagation(); this.toggleDropdown(); });
         this.searchInput.addEventListener('input', (e) => this._onSearch(e));
         this.searchInput.addEventListener('keydown', (e) => this._onSearchKeydown(e));
         this.slotEl.addEventListener('slotchange', () => this._onSlotChange());
+
+        // Prevent clicks within the dropdown from bubbling to parent layers
+        this.container.addEventListener('click', (e) => { e.stopPropagation(); });
 
         document.addEventListener('click', (e) => {
             if (!e.composedPath().includes(this)) {
@@ -258,15 +261,9 @@ class SearchDropdown extends HTMLElement {
 
         this.optionsContainer.querySelectorAll('.UpoSearchDropdown__option').forEach(el => {
             // Prevent click-through to underlying elements (e.g., buttons behind the dropdown)
-            el.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const option = this._options.find(o => o.getAttribute('value') === el.dataset.value);
-                if (option) this._selectOption(option);
-            });
+            el.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); });
+            el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const option = this._options.find(o => o.getAttribute('value') === el.dataset.value); if (option) this._selectOption(option); });
+            el.addEventListener('mouseup', (e) => { e.stopPropagation(); });
         });
     }
 

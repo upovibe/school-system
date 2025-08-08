@@ -66,6 +66,11 @@ class Input extends HTMLElement {
         
         // Forward events from the internal input to the custom element
         this.input.addEventListener('input', (e) => {
+            // Don't dispatch input events if the input is disabled or readonly
+            if (this.input.disabled || this.input.readOnly) {
+                e.preventDefault();
+                return;
+            }
             this.dispatchEvent(new CustomEvent('input', { 
                 bubbles: true, 
                 detail: { value: e.target.value } 
@@ -80,11 +85,49 @@ class Input extends HTMLElement {
         });
         
         this.input.addEventListener('focus', (e) => {
+            // Prevent focus if the input is disabled
+            if (this.input.disabled) {
+                e.preventDefault();
+                this.input.blur();
+                return;
+            }
             this.dispatchEvent(new CustomEvent('focus', { bubbles: true }));
         });
         
         this.input.addEventListener('blur', (e) => {
             this.dispatchEvent(new CustomEvent('blur', { bubbles: true }));
+        });
+        
+        // Prevent keydown events on disabled/readonly inputs
+        this.input.addEventListener('keydown', (e) => {
+            if (this.input.disabled || this.input.readOnly) {
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Prevent paste events on disabled/readonly inputs
+        this.input.addEventListener('paste', (e) => {
+            if (this.input.disabled || this.input.readOnly) {
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Prevent cut events on disabled/readonly inputs
+        this.input.addEventListener('cut', (e) => {
+            if (this.input.disabled || this.input.readOnly) {
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Prevent context menu on disabled/readonly inputs
+        this.input.addEventListener('contextmenu', (e) => {
+            if (this.input.disabled || this.input.readOnly) {
+                e.preventDefault();
+                return;
+            }
         });
     }
     
@@ -542,9 +585,9 @@ class Input extends HTMLElement {
             }
         });
         
-        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value', 'type', and 'data-field'
+        // Remove all attributes from the wrapper to avoid duplication, EXCEPT 'value', 'type', 'data-field', 'readonly', and 'disabled'
         attributes.forEach(attr => {
-            if (attr !== 'value' && attr !== 'type' && attr !== 'data-field') this.removeAttribute(attr);
+            if (attr !== 'value' && attr !== 'type' && attr !== 'data-field' && attr !== 'readonly' && attr !== 'disabled') this.removeAttribute(attr);
         });
         
         // Setup input type-specific functionality

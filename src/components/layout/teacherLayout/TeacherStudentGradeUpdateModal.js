@@ -78,6 +78,28 @@ class TeacherStudentGradeUpdateModal extends HTMLElement {
 
   populate() {
     if (!this.gradeData) return;
+    // Read-only displays
+    const classInput = this.querySelector('ui-input[data-field="class_display"]');
+    if (classInput) {
+      const name = this.gradeData.class_name || '';
+      const section = this.gradeData.class_section ? ` - ${this.gradeData.class_section}` : '';
+      classInput.value = `${name}${section}`.trim();
+    }
+    const studentInput = this.querySelector('ui-input[data-field="student_display"]');
+    if (studentInput) {
+      const fn = this.gradeData.student_first_name || '';
+      const ln = this.gradeData.student_last_name || '';
+      const num = this.gradeData.student_number ? ` (${this.gradeData.student_number})` : '';
+      studentInput.value = `${[fn, ln].filter(Boolean).join(' ')}${num}`.trim();
+    }
+    const subjectInput = this.querySelector('ui-input[data-field="subject_display"]');
+    if (subjectInput) {
+      subjectInput.value = this.gradeData.subject_name || this.gradeData.subject_code || '';
+    }
+    const periodInput = this.querySelector('ui-input[data-field="period_display"]');
+    if (periodInput) {
+      periodInput.value = this.gradeData.grading_period_name || '';
+    }
     const assignInput = this.querySelector('ui-input[data-field="assignment_total"]');
     const examInput = this.querySelector('ui-input[data-field="exam_total"]');
     const remarksTa = this.querySelector('ui-textarea[data-field="remarks"]');
@@ -139,6 +161,26 @@ class TeacherStudentGradeUpdateModal extends HTMLElement {
       <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
         <div slot="title">Update Student Grade</div>
         <form class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+              <ui-input data-field="class_display" type="text" readonly disabled class="w-full"></ui-input>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+              <ui-input data-field="student_display" type="text" readonly disabled class="w-full"></ui-input>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <ui-input data-field="subject_display" type="text" readonly disabled class="w-full"></ui-input>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
+              <ui-input data-field="period_display" type="text" readonly disabled class="w-full"></ui-input>
+            </div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1" data-label="assignment">Assignment Total</label>

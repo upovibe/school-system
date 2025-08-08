@@ -47,14 +47,13 @@ class StudentGradeModel extends BaseModel {
                 gp.academic_year,
                 gp.start_date as period_start,
                 gp.end_date as period_end,
-                gp.name as policy_name,
                 st.first_name as student_first_name,
                 st.last_name as student_last_name,
                 st.student_id as student_number,
-                u1.first_name as created_by_first_name,
-                u1.last_name as created_by_last_name,
-                u2.first_name as updated_by_first_name,
-                u2.last_name as updated_by_last_name
+                u1.name as created_by_name,
+                u1.email as created_by_email,
+                u2.name as updated_by_name,
+                u2.email as updated_by_email
             FROM student_grades sg
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
@@ -107,8 +106,8 @@ class StudentGradeModel extends BaseModel {
                 st.student_id as student_number,
                 gp.name as grading_period_name,
                 gp.academic_year,
-                u1.first_name as created_by_first_name,
-                u1.last_name as created_by_last_name
+                u1.name as created_by_name,
+                u1.email as created_by_email
             FROM student_grades sg
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN students st ON sg.student_id = st.id
@@ -152,10 +151,10 @@ class StudentGradeModel extends BaseModel {
                 st.first_name as student_first_name,
                 st.last_name as student_last_name,
                 st.student_id as student_number,
-                u1.first_name as created_by_first_name,
-                u1.last_name as created_by_last_name,
-                u2.first_name as updated_by_first_name,
-                u2.last_name as updated_by_last_name
+                u1.name as created_by_name,
+                u1.email as created_by_email,
+                u2.name as updated_by_name,
+                u2.email as updated_by_email
             FROM student_grades sg
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id

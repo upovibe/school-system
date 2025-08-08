@@ -134,7 +134,7 @@ class StudentGradesManagementPage extends App {
         try {
             const token = localStorage.getItem('token');
             if (!token || !classId) { this.students = []; return; }
-            const resp = await api.withToken(token).get('/students/by-class', { params: { class_id: classId } });
+            const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
             // If student filter was set but not in new list, clear it
             const flt = this.get('filters');
@@ -170,7 +170,7 @@ class StudentGradesManagementPage extends App {
             if (subject_id) params.subject_id = subject_id;
             if (grading_period_id) params.grading_period_id = grading_period_id;
 
-            const response = await api.withToken(token).get('/student-grades', { params });
+            const response = await api.withToken(token).get('/student-grades', params);
             this.set('grades', response.data.data || []);
             this.updateTableData();
             this.set('loading', false);

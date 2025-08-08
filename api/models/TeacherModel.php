@@ -578,9 +578,14 @@ class TeacherModel extends BaseModel {
     /**
      * Get teacher assignments with class, subject, and student details (grouped by class)
      */
-    public function getTeacherAssignments($teacherId) {
+    public function getTeacherAssignments($teacherId, $filters = []) {
         try {
-            $stmt = $this->pdo->prepare("
+            $where = 'WHERE ta.teacher_id = ?';
+            $params = [$teacherId];
+            if (!empty($filters['class_id'])) { $where .= ' AND ta.class_id = ?'; $params[] = $filters['class_id']; }
+            if (!empty($filters['subject_id'])) { $where .= ' AND ta.subject_id = ?'; $params[] = $filters['subject_id']; }
+
+            $sql = "
                 SELECT 
                     ta.id,
                     ta.created_at,
@@ -598,10 +603,11 @@ class TeacherModel extends BaseModel {
                 FROM teacher_assignments ta
                 JOIN classes c ON ta.class_id = c.id
                 JOIN subjects s ON ta.subject_id = s.id
-                WHERE ta.teacher_id = ?
+                $where
                 ORDER BY c.name ASC, c.section ASC, s.name ASC
-            ");
-            $stmt->execute([$teacherId]);
+            ";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Group results by class

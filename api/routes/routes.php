@@ -267,3 +267,8 @@ Router::post('/student-grades', 'StudentGradeController@store');
 Router::get('/student-grades/{id}', 'StudentGradeController@show');
 Router::put('/student-grades/{id}', 'StudentGradeController@update');
 Router::delete('/student-grades/{id}', 'StudentGradeController@destroy');
+
+// Teacher Student Grades (teacher-only protected in controller)
+Router::post('/teacher/student-grades', 'TeacherController@createStudentGrade');
+Router::put('/teacher/student-grades/{id}', 'TeacherController@updateStudentGrade');
+Router::delete('/teacher/student-grades/{id}', 'TeacherController@deleteStudentGrade');

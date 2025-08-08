@@ -2009,5 +2009,194 @@ class TeacherController {
             ]);
         }
     }
+
+    // ========================================
+    // TEACHER STUDENT GRADING (TERMINAL REPORT)
+    // ========================================
+
+    /**
+     * Create a student grade (teacher only)
+     */
+    public function createStudentGrade() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            $teacher = $_REQUEST['current_teacher'];
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+            $required = ['student_id', 'class_id', 'subject_id', 'grading_period_id', 'assignment_total', 'exam_total'];
+            foreach ($required as $field) {
+                if (!isset($data[$field]) || $data[$field] === '') {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => "$field is required"]);
+                    return;
+                }
+            }
+
+            // Verify teacher assignment to class+subject
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
+            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$data['class_id'], (int)$data['subject_id']);
+            if (!$assignment) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                return;
+            }
+
+            // Resolve grading policy by subject
+            require_once __DIR__ . '/../models/GradingPolicyModel.php';
+            $policyModel = new GradingPolicyModel($pdo);
+            $policy = $policyModel->getBySubjectId((int)$data['subject_id']);
+            if (!$policy) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No active grading policy for this subject']);
+                return;
+            }
+
+            // Prepare payload
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $payload = [
+                'student_id' => (int)$data['student_id'],
+                'class_id' => (int)$data['class_id'],
+                'subject_id' => (int)$data['subject_id'],
+                'grading_period_id' => (int)$data['grading_period_id'],
+                'grading_policy_id' => (int)$policy['id'],
+                'assignment_total' => (float)$data['assignment_total'],
+                'exam_total' => (float)$data['exam_total'],
+                'remarks' => $data['remarks'] ?? null,
+                'created_by' => $this->getCurrentUserId()
+            ];
+
+            $id = $gradeModel->createGradeWithCalculation($payload);
+
+            $this->logAction('teacher_student_grade_created', 'Teacher created student grade', [ 'grade_id' => $id ]);
+
+            http_response_code(201);
+            echo json_encode(['success' => true, 'message' => 'Grade created successfully', 'data' => ['id' => $id]]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error creating grade: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update a student grade (teacher only)
+     */
+    public function updateStudentGrade($id) {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+
+            $teacher = $_REQUEST['current_teacher'];
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $existing = $gradeModel->findById($id);
+            if (!$existing) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Grade not found']);
+                return;
+            }
+
+            // Verify teacher assignment to class+subject for this grade
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
+            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$existing['class_id'], (int)$existing['subject_id']);
+            if (!$assignment) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                return;
+            }
+
+            // Resolve policy by existing subject
+            require_once __DIR__ . '/../models/GradingPolicyModel.php';
+            $policyModel = new GradingPolicyModel($pdo);
+            $policy = $policyModel->getBySubjectId((int)$existing['subject_id']);
+            if (!$policy) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No active grading policy for this subject']);
+                return;
+            }
+
+            $payload = [
+                'grading_policy_id' => (int)$policy['id'],
+                'assignment_total' => isset($data['assignment_total']) ? (float)$data['assignment_total'] : (float)$existing['assignment_total'],
+                'exam_total' => isset($data['exam_total']) ? (float)$data['exam_total'] : (float)$existing['exam_total'],
+                'remarks' => $data['remarks'] ?? $existing['remarks'],
+                'updated_by' => $this->getCurrentUserId()
+            ];
+
+            $gradeModel->updateGradeWithCalculation($id, $payload);
+
+            $this->logAction('teacher_student_grade_updated', 'Teacher updated student grade', [ 'grade_id' => $id ]);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'message' => 'Grade updated successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error updating grade: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete a student grade (teacher only)
+     */
+    public function deleteStudentGrade($id) {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+
+            $teacher = $_REQUEST['current_teacher'];
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $existing = $gradeModel->findById($id);
+            if (!$existing) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Grade not found']);
+                return;
+            }
+
+            // Verify teacher assignment to class+subject for this grade
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
+            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$existing['class_id'], (int)$existing['subject_id']);
+            if (!$assignment) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                return;
+            }
+
+            $gradeModel->delete($id);
+
+            $this->logAction('teacher_student_grade_deleted', 'Teacher deleted student grade', [ 'grade_id' => $id ]);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'message' => 'Grade deleted successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting grade: ' . $e->getMessage()]);
+        }
+    }
+
+    private function getCurrentUserId() {
+        try {
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = $matches[1];
+                $parts = explode('.', $token);
+                $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+                return $payload['user_id'] ?? null;
+            }
+        } catch (Exception $e) { return null; }
+        return null;
+    }
 }
 ?> 

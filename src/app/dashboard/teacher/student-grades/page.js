@@ -138,23 +138,15 @@ class TeacherStudentGradesPage extends App {
       this.teacherClass = myClassResp.data.data; // contains class_id, students, etc.
       this.students = this.teacherClass.students || [];
 
-      // Subjects for this class
-      try {
-        const csResp = await api.withToken(token).get('/class-subjects/by-class', { class_id: this.teacherClass.class_id });
-        const classSubjects = csResp.data?.data || [];
-        this.subjects = classSubjects.map(cs => ({ id: cs.subject_id ?? cs.id, name: cs.subject_name || cs.name || cs.code || String(cs.subject_id ?? cs.id) }))
-                                     .filter(s => s.id);
-      } catch (_) {
-        this.subjects = [];
-      }
+      // Subjects for this class (from teacher scoped endpoint)
+      const subjectsFromMyClass = Array.isArray(this.teacherClass.subjects) ? this.teacherClass.subjects : [];
+      this.subjects = subjectsFromMyClass;
 
-      // Grading periods (admin-only endpoint; attempt and degrade gracefully)
+      // Grading periods (teacher-friendly endpoint)
       try {
-        const periodsResp = await api.withToken(token).get('/grading-periods');
+        const periodsResp = await api.withToken(token).get('/teachers/grading-periods');
         this.periods = periodsResp.data?.data || [];
-      } catch (_) {
-        this.periods = [];
-      }
+      } catch (_) { this.periods = []; }
 
       // Initial load if we have class
       if (this.teacherClass?.class_id) {

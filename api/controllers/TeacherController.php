@@ -689,6 +689,19 @@ class TeacherController {
             $studentModel = new StudentModel($pdo);
             $students = $studentModel->getStudentsByClass($teacher['class_id']);
 
+            // Get subjects this teacher teaches in this class
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $taModel = new TeacherAssignmentModel($pdo);
+            $assignments = $taModel->getByTeacherAndClass($teacher['id'], $teacher['class_id']);
+            $subjects = [];
+            foreach ($assignments as $row) {
+                $subjects[] = [
+                    'id' => (int)$row['subject_id'],
+                    'name' => $row['subject_name'] ?? ($row['subject_code'] ?? (string)$row['subject_id']),
+                    'code' => $row['subject_code'] ?? null,
+                ];
+            }
+
             http_response_code(200);
             echo json_encode([
                 'success' => true,
@@ -702,7 +715,8 @@ class TeacherController {
                     'capacity' => $class['capacity'],
                     'status' => $class['status'],
                     'students' => $students,
-                    'student_count' => count($students)
+                    'student_count' => count($students),
+                    'subjects' => $subjects
                 ],
                 'message' => 'Teacher class retrieved successfully'
             ]);
@@ -2209,12 +2223,39 @@ class TeacherController {
             $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
             if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
                 $token = $matches[1];
+                require_once __DIR__ . '/../models/UserSessionModel.php';
+                $userSessionModel = new UserSessionModel($this->pdo);
+                $session = $userSessionModel->findActiveSession($token);
+                if ($session && !empty($session['user_id'])) {
+                    return (int)$session['user_id'];
+                }
                 $parts = explode('.', $token);
-                $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
-                return $payload['user_id'] ?? null;
+                if (count($parts) >= 2) {
+                    $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+                    return $payload['user_id'] ?? null;
+                }
             }
         } catch (Exception $e) { return null; }
         return null;
+    }
+
+    /**
+     * Get grading periods (teacher only, read-only)
+     */
+    public function getGradingPeriods() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            require_once __DIR__ . '/../models/GradingPeriodModel.php';
+            $gpm = new GradingPeriodModel($pdo);
+            $periods = $gpm->findAll();
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $periods, 'message' => 'Grading periods retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grading periods: ' . $e->getMessage()]);
+        }
     }
 }
 ?> 

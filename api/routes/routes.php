@@ -161,6 +161,9 @@ Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasse
 Router::get('/teachers/my-class', 'TeacherController@getMyClass');
 Router::get('/teachers/my-assignments', 'TeacherController@getMyAssignments');
 Router::get('/teachers/my-class-assignments', 'TeacherController@getMyClassAssignments');
+// Teacher utilities
+Router::get('/teachers/grading-periods', 'TeacherController@getGradingPeriods');
+Router::get('/teachers/class-subjects', 'TeacherController@getMyClass');
 Router::post('/teachers/assignments', 'TeacherController@createAssignment');
 Router::get('/teachers/assignments/{id}', 'TeacherController@getAssignment');
 Router::put('/teachers/assignments/{id}', 'TeacherController@updateAssignment');

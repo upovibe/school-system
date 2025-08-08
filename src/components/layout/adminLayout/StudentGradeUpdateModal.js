@@ -138,9 +138,16 @@ class StudentGradeUpdateModal extends HTMLElement {
 
             const resp = await api.withToken(token).put(`/student-grades/${this.gradeData.id}`, payload);
             if (resp.data.success) {
+                // Fetch full, recalculated details (final % and letter) so table updates immediately
+                let full = null;
+                try {
+                    const showResp = await api.withToken(token).get(`/student-grades/${this.gradeData.id}`);
+                    full = showResp?.data?.data || null;
+                } catch (_) { /* ignore, fallback below */ }
+                const enriched = full || { ...this.gradeData, ...payload, updated_at: new Date().toISOString() };
                 Toast.show({ title: 'Success', message: 'Grade updated successfully', variant: 'success', duration: 3000 });
                 this.dispatchEvent(new CustomEvent('student-grade-updated', {
-                    detail: { grade: { ...this.gradeData, ...payload, updated_at: new Date().toISOString() } },
+                    detail: { grade: enriched },
                     bubbles: true,
                     composed: true
                 }));

@@ -23,15 +23,34 @@ class StudentDashboardPage extends App {
         this.set('assignmentsData', null);
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        document.title = 'Student Dashboard | School System';
-        this.loadUserData();
-        this.loadClassData();
-        this.loadGradesData();
-        this.loadAssignmentsData();
-        this.simulateLoading();
-    }
+         connectedCallback() {
+         super.connectedCallback();
+         document.title = 'Student Dashboard | School System';
+         this.loadUserData();
+         this.loadClassData();
+         this.loadGradesData();
+         this.loadAssignmentsData();
+         this.simulateLoading();
+         
+         // Add event listeners for help buttons
+         this.addEventListener('click', this.handleButtonClick.bind(this));
+     }
+
+     handleButtonClick(event) {
+         const button = event.target.closest('button[data-action]');
+         if (!button) return;
+         
+         const action = button.getAttribute('data-action');
+         
+         switch (action) {
+             case 'show-level-info':
+                 this.showLevelInfo();
+                 break;
+             case 'show-academic-info':
+                 this.showAcademicInfo();
+                 break;
+         }
+     }
 
     async simulateLoading() {
         // Simulate API loading time
@@ -232,14 +251,124 @@ class StudentDashboardPage extends App {
         const currentLevelXP = xp % 500;
         const progressToNextLevel = (currentLevelXP / 500) * 100;
         
-        return {
-            level,
-            xp,
-            xpForNextLevel,
-            currentLevelXP,
-            progressToNextLevel
-        };
-    }
+                 return {
+             level,
+             xp,
+             xpForNextLevel,
+             currentLevelXP,
+             progressToNextLevel
+         };
+     }
+
+     showLevelInfo() {
+         const dialog = document.createElement('ui-dialog');
+         dialog.setAttribute('open', '');
+         dialog.innerHTML = `
+             <div slot="header" class="flex items-center">
+                 <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                 <span class="font-semibold">My Level System</span>
+             </div>
+             <div slot="content" class="space-y-4">
+                 <div>
+                     <h4 class="font-semibold text-gray-900 mb-2">How Your Level is Calculated</h4>
+                     <p class="text-gray-600 mb-3">Your level is based on your academic performance and assignment completion. Here's how it works:</p>
+                     
+                     <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">A+ Grades:</span>
+                             <span class="text-sm text-green-600">100 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">A Grades:</span>
+                             <span class="text-sm text-green-600">80 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">B+ Grades:</span>
+                             <span class="text-sm text-blue-600">60 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">B Grades:</span>
+                             <span class="text-sm text-blue-600">50 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">C+ Grades:</span>
+                             <span class="text-sm text-yellow-600">30 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">C Grades:</span>
+                             <span class="text-sm text-yellow-600">20 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">Graded Assignments:</span>
+                             <span class="text-sm text-purple-600">10 XP each</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">Submitted Assignments:</span>
+                             <span class="text-sm text-blue-600">5 XP each</span>
+                         </div>
+                     </div>
+                     
+                     <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                         <p class="text-sm text-yellow-800">
+                             <i class="fas fa-lightbulb mr-1"></i>
+                             <strong>Level Up:</strong> Every 500 XP = 1 level increase
+                         </p>
+                     </div>
+                 </div>
+             </div>
+             <div slot="footer" class="flex justify-end">
+                 <ui-button variant="primary" onclick="this.closest('ui-dialog').close()">Got it!</ui-button>
+             </div>
+         `;
+         document.body.appendChild(dialog);
+     }
+
+     showAcademicInfo() {
+         const dialog = document.createElement('ui-dialog');
+         dialog.setAttribute('open', '');
+         dialog.innerHTML = `
+             <div slot="header" class="flex items-center">
+                 <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                 <span class="font-semibold">Academic Performance</span>
+             </div>
+             <div slot="content" class="space-y-4">
+                 <div>
+                     <h4 class="font-semibold text-gray-900 mb-2">How Your Performance is Calculated</h4>
+                     <p class="text-gray-600 mb-3">Your academic performance is based on your grades across all subjects. Here's what each section means:</p>
+                     
+                     <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">Average Percentage:</span>
+                             <span class="text-sm text-gray-600">Overall grade average</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">A Grades:</span>
+                             <span class="text-sm text-green-600">A+ and A grades combined</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">B Grades:</span>
+                             <span class="text-sm text-blue-600">B+ and B grades combined</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span class="text-sm font-medium">C Grades:</span>
+                             <span class="text-sm text-yellow-600">C+ and C grades combined</span>
+                         </div>
+                     </div>
+                     
+                     <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                         <p class="text-sm text-green-800">
+                             <i class="fas fa-star mr-1"></i>
+                             <strong>Tip:</strong> Focus on maintaining high grades to improve your overall performance score!
+                         </p>
+                     </div>
+                 </div>
+             </div>
+             <div slot="footer" class="flex justify-end">
+                 <ui-button variant="primary" onclick="this.closest('ui-dialog').close()">Got it!</ui-button>
+             </div>
+         `;
+         document.body.appendChild(dialog);
+     }
 
     render() {
         const loading = this.get('loading');
@@ -278,18 +407,7 @@ class StudentDashboardPage extends App {
                         </div>
                     </div>
                     
-                    ${loading ? `
-                        <!-- Class Information Skeleton -->
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-12 bg-white bg-opacity-30 rounded-lg mr-4 flex-shrink-0 animate-pulse"></div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2 animate-pulse"></div>
-                                    <div class="h-4 bg-white bg-opacity-30 rounded w-2/3 animate-pulse"></div>
-                                </div>
-                            </div>
-                        </div>
-                    ` : classInfo.name ? `
+                    ${classInfo.name ? `
                         <!-- Class Information -->
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
                             <div class="flex items-center">
@@ -305,43 +423,7 @@ class StudentDashboardPage extends App {
                     ` : ''}
                 </div>
 
-                ${loading ? `
-                    <!-- Loading Skeleton -->
-                    <div class="space-y-6">
-                        <div class="bg-white shadow rounded-lg p-6 animate-pulse">
-                            <div class="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div class="bg-white shadow rounded-lg p-6">
-                                <div class="animate-pulse">
-                                    <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                    <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-                                </div>
-                            </div>
-                            <div class="bg-white shadow rounded-lg p-6">
-                                <div class="animate-pulse">
-                                    <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                    <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-                                </div>
-                            </div>
-                            <div class="bg-white shadow rounded-lg p-6">
-                                <div class="animate-pulse">
-                                    <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                    <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-                                </div>
-                            </div>
-                            <div class="bg-white shadow rounded-lg p-6">
-                                <div class="animate-pulse">
-                                    <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                    <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ` : `
+                ${!loading ? `
                     <!-- Gamification Section -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Level & XP Card -->
@@ -350,10 +432,13 @@ class StudentDashboardPage extends App {
                                 <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-trophy text-xl"></i>
                                 </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Student Level</p>
-                                    <p class="text-2xl font-bold text-gray-900">Level ${levelData.level}</p>
-                                </div>
+                                                                 <div class="ml-4">
+                                     <p class="text-sm font-medium text-gray-600">Student Level</p>
+                                     <p class="text-2xl font-bold text-gray-900">Level ${levelData.level}</p>
+                                 </div>
+                                 <button class="ml-auto text-gray-400 hover:text-gray-600 transition-colors" data-action="show-level-info">
+                                     <i class="fas fa-question-circle text-lg"></i>
+                                 </button>
                             </div>
                             <div class="mb-4">
                                 <div class="flex justify-between text-sm text-gray-600 mb-1">
@@ -376,10 +461,13 @@ class StudentDashboardPage extends App {
                                 <div class="p-3 rounded-full bg-green-100 text-green-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-chart-line text-xl"></i>
                                 </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Academic Performance</p>
-                                    <p class="text-2xl font-bold text-gray-900">${gradeStats.average_percentage.toFixed(1)}%</p>
-                                </div>
+                                                                 <div class="ml-4">
+                                     <p class="text-sm font-medium text-gray-600">Academic Performance</p>
+                                     <p class="text-2xl font-bold text-gray-900">${gradeStats.average_percentage.toFixed(1)}%</p>
+                                 </div>
+                                 <button class="ml-auto text-gray-400 hover:text-gray-600 transition-colors" data-action="show-academic-info">
+                                     <i class="fas fa-question-circle text-lg"></i>
+                                 </button>
                             </div>
                             <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
@@ -478,10 +566,10 @@ class StudentDashboardPage extends App {
                                 <div class="text-xs opacity-90">Update information</div>
                             </a>
                         </div>
-                    </div>
-                `}
-            </div>
-        `;
+                                         </div>
+                 ` : ''}
+             </div>
+         `;
     }
 }
 

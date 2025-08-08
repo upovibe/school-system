@@ -88,7 +88,7 @@ class StudentDashboardPage extends App {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await api.withToken(token).get('/student/assignments');
+            const response = await api.withToken(token).get('/students/my-assignments');
             this.set('assignmentsData', response.data?.data || []);
         } catch (error) {
             console.error('❌ Error loading assignments data:', error);
@@ -143,26 +143,10 @@ class StudentDashboardPage extends App {
         
         const stats = {
             total: publishedAssignments.length,
-            pending: 0,
-            submitted: 0,
-            graded: 0,
-            overdue: 0
+            pending: publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late')).length,
+            submitted: publishedAssignments.filter(a => a.submission_status === 'submitted').length,
+            graded: publishedAssignments.filter(a => a.submission_status === 'graded').length
         };
-        
-        publishedAssignments.forEach(assignment => {
-            // Count by submission status (matching assignments page logic)
-            if (assignment.submission_status === 'not_submitted' || assignment.submission_status === 'late') {
-                stats.pending++;
-                // Check if overdue
-                if (assignment.due_date && new Date(assignment.due_date) < new Date()) {
-                    stats.overdue++;
-                }
-            } else if (assignment.submission_status === 'submitted') {
-                stats.submitted++;
-            } else if (assignment.submission_status === 'graded') {
-                stats.graded++;
-            }
-        });
         
         return stats;
     }
@@ -433,8 +417,8 @@ class StudentDashboardPage extends App {
                                     <span class="font-medium text-blue-600">${assignmentStats.submitted}</span>
                                 </div>
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Overdue</span>
-                                    <span class="font-medium text-red-600">${assignmentStats.overdue}</span>
+                                    <span class="text-gray-600">Graded</span>
+                                    <span class="font-medium text-purple-600">${assignmentStats.graded}</span>
                                 </div>
                             </div>
                         </div>

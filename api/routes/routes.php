@@ -258,3 +258,10 @@ Router::post('/grading-periods', 'GradingPeriodController@store');
 Router::get('/grading-periods/{id}', 'GradingPeriodController@show');
 Router::put('/grading-periods/{id}', 'GradingPeriodController@update');
 Router::delete('/grading-periods/{id}', 'GradingPeriodController@destroy');
+
+// Student Grades Management Routes (admin + teacher)
+Router::get('/student-grades', 'StudentGradeController@index');
+Router::post('/student-grades', 'StudentGradeController@store');
+Router::get('/student-grades/{id}', 'StudentGradeController@show');
+Router::put('/student-grades/{id}', 'StudentGradeController@update');
+Router::delete('/student-grades/{id}', 'StudentGradeController@destroy');

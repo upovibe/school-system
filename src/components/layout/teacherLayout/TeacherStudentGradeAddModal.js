@@ -188,7 +188,7 @@ class TeacherStudentGradeAddModal extends HTMLElement {
       const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
       if (confirmBtn) { confirmBtn.setAttribute('loading', ''); confirmBtn.textContent = 'Creating...'; }
 
-      const resp = await api.withToken(token).post('/teacher/student-grades', { ...payload, class_id: classId });
+      const resp = await api.withToken(token).post('/teacher/student-grades', payload);
       if (resp.data.success) {
         const id = resp.data?.data?.id;
         let full = null;

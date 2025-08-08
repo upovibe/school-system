@@ -172,7 +172,7 @@ class TeacherStudentGradesPage extends App {
       }
 
       const { subject_id, grading_period_id, student_id } = this.get('filters');
-      const params = { class_id: this.teacherClass.class_id };
+      const params = {};
       if (student_id) params.student_id = student_id;
       if (subject_id) params.subject_id = subject_id;
       if (grading_period_id) params.grading_period_id = grading_period_id;

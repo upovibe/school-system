@@ -173,34 +173,71 @@ class StudentClassPage extends App {
         ];
 
         return `
-            <div class="space-y-6">
-                <!-- Class Information -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h1 class="text-2xl font-bold text-gray-900">My Class</h1>
-                        <ui-badge variant="primary">${classInfo?.academic_year || 'Current Year'}</ui-badge>
+            <div class="space-y-8">
+                <!-- Enhanced Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold">My Class</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">View your class information and subjects</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-xl sm:text-2xl font-bold">${subjects?.length || 0}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Subjects</div>
+                            </div>
+                        </div>
                     </div>
                     
                     ${classInfo ? `
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h3 class="text-sm font-medium text-blue-600 mb-1">Class Name</h3>
-                                <p class="text-lg font-semibold text-blue-900">${classInfo.name}</p>
+                        <!-- Enhanced Summary Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">${classInfo.name}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Class Name</div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <h3 class="text-sm font-medium text-green-600 mb-1">Section</h3>
-                                <p class="text-lg font-semibold text-green-900">${classInfo.section}</p>
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-users text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">${classInfo.section}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Section</div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="bg-purple-50 p-4 rounded-lg">
-                                <h3 class="text-sm font-medium text-purple-600 mb-1">Academic Year</h3>
-                                <p class="text-lg font-semibold text-purple-900">${classInfo.academic_year}</p>
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-calendar-alt text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">${classInfo.academic_year}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Academic Year</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ` : `
-                        <ui-alert variant="warning" title="No Class Assigned" message="You are not currently assigned to any class. Please contact your administrator.">
-                        </ui-alert>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-300 mr-3"></i>
+                                <div>
+                                    <div class="text-lg font-semibold">No Class Assigned</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Please contact your administrator</div>
+                                </div>
+                            </div>
+                        </div>
                     `}
                 </div>
 

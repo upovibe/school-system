@@ -159,6 +159,112 @@ class StudentGradesPage extends App {
         }
     }
 
+    // Get basic grade counts
+    getGradeCounts() {
+        const grades = this.get('grades') || [];
+        
+        const counts = {
+            total: grades.length,
+            a_plus: 0,
+            a: 0,
+            b_plus: 0,
+            b: 0,
+            c_plus: 0,
+            c: 0,
+            d: 0,
+            f: 0
+        };
+
+        grades.forEach(grade => {
+            const letterGrade = grade.final_letter_grade?.toUpperCase();
+            if (letterGrade === 'A+') counts.a_plus++;
+            else if (letterGrade === 'A') counts.a++;
+            else if (letterGrade === 'B+') counts.b_plus++;
+            else if (letterGrade === 'B') counts.b++;
+            else if (letterGrade === 'C+') counts.c_plus++;
+            else if (letterGrade === 'C') counts.c++;
+            else if (letterGrade === 'D') counts.d++;
+            else if (letterGrade === 'F') counts.f++;
+        });
+
+        return counts;
+    }
+
+    renderHeader() {
+        const counts = this.getGradeCounts();
+        
+        return `
+            <div class="space-y-8">
+                <!-- Enhanced Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold">My Grades</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">Track your academic performance and achievements</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-xl sm:text-2xl font-bold">${counts.total}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Grades</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-star text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${counts.a_plus + counts.a}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">A Grades</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-star-half-alt text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${counts.b_plus + counts.b}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">B Grades</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-orange-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-circle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${counts.c_plus + counts.c}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">C Grades</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${counts.d + counts.f}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">D/F Grades</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     renderFilters() {
         const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.subject_id}">${s.subject_name}</ui-option>`).join('');
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name} (${p.academic_year})</ui-option>`).join('');
@@ -167,7 +273,7 @@ class StudentGradesPage extends App {
         const { subject_id, grading_period_id } = filters;
         
         return `
-            <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
+            <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300 my-10">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Subject</label>
@@ -226,6 +332,7 @@ class StudentGradesPage extends App {
         ];
 
         return `
+            ${this.renderHeader()}
             ${this.renderFilters()}
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `

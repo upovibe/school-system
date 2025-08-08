@@ -269,9 +269,7 @@ class StudentGradeModel extends BaseModel {
         // Calculate grades using policy
         $calculatedGrades = $policyModel->calculateFinalGrade(
             $data['assignment_total'],
-            $data['assignment_max'],
             $data['exam_total'],
-            $data['exam_max'],
             $policy
         );
         
@@ -296,9 +294,7 @@ class StudentGradeModel extends BaseModel {
         // Calculate grades using policy
         $calculatedGrades = $policyModel->calculateFinalGrade(
             $data['assignment_total'],
-            $data['assignment_max'],
             $data['exam_total'],
-            $data['exam_max'],
             $policy
         );
         

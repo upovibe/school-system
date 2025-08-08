@@ -10,6 +10,7 @@ class StudentGradeAddModal extends HTMLElement {
         super();
         this.prefill = { filters: {}, classes: [], subjects: [], periods: [] };
         this.students = [];
+        this.allSubjects = [];
     }
 
     static get observedAttributes() { return ['open']; }
@@ -31,6 +32,7 @@ class StudentGradeAddModal extends HTMLElement {
     close() { this.removeAttribute('open'); }
 
     setFilterPrefill(filters, lists) {
+        this.allSubjects = lists.subjects || [];
         this.prefill = { filters: filters || {}, classes: lists.classes || [], subjects: lists.subjects || [], periods: lists.periods || [] };
         this.render();
         this.populateDropdowns();
@@ -105,8 +107,18 @@ class StudentGradeAddModal extends HTMLElement {
             if (!token || !classId) return;
             const resp = await api.withToken(token).get('/class-subjects/by-class', { class_id: classId });
             const classSubjects = resp.data.data || [];
-            // Expect format with subject_id and subject name
-            const mapped = classSubjects.map(cs => ({ id: cs.subject_id || cs.id, name: cs.subject_name || cs.name })).filter(s => s.id);
+            // Map to {id, name} using global subjects to resolve names when API doesn't provide
+            const full = Array.isArray(this.allSubjects) ? this.allSubjects : [];
+            const mapped = classSubjects
+                .map(cs => {
+                    const sid = cs.subject_id ?? cs.id;
+                    const found = full.find(s => String(s.id) === String(sid));
+                    return {
+                        id: sid,
+                        name: (found && found.name) || cs.subject_name || cs.name || cs.code || String(sid)
+                    };
+                })
+                .filter(s => s.id);
             if (mapped.length) {
                 this.prefill.subjects = mapped;
                 this.populateDropdowns();

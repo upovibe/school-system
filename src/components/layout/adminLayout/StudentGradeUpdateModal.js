@@ -37,13 +37,10 @@ class StudentGradeUpdateModal extends HTMLElement {
         try {
             const token = localStorage.getItem('token');
             if (!token || !subjectId) return;
-            console.log('[StudentGradeUpdateModal] GET /grading-policies/by-subject subject_id=', subjectId);
             const resp = await api.withToken(token).get('/grading-policies/by-subject', { subject_id: subjectId });
-            console.log('[StudentGradeUpdateModal] Policy response:', resp?.data);
             this.policy = resp?.data?.data || null;
             this.applyMaxConstraints();
         } catch (e) {
-            console.warn('[StudentGradeUpdateModal] Failed to load policy:', e?.response?.data || e?.message);
             this.policy = null;
             this.applyMaxConstraints();
         }
@@ -56,18 +53,27 @@ class StudentGradeUpdateModal extends HTMLElement {
         const examLabel = this.querySelector('[data-label="exam"]');
         const assignMax = this.policy?.assignment_max_score ?? null;
         const examMax = this.policy?.exam_max_score ?? null;
-        console.log('[StudentGradeUpdateModal] applyMaxConstraints policy:', this.policy);
         if (assignInput) {
             if (assignMax != null) assignInput.setAttribute('max', String(assignMax)); else assignInput.removeAttribute('max');
             assignInput.setAttribute('min', '0');
             const val = Number(assignInput.value || 0);
             if (assignMax != null && val > assignMax) assignInput.value = String(assignMax);
+            assignInput.addEventListener('input', () => {
+                const v = Number(assignInput.value || 0);
+                if (v < 0) assignInput.value = '0';
+                if (assignMax != null && v > assignMax) assignInput.value = String(assignMax);
+            });
         }
         if (examInput) {
             if (examMax != null) examInput.setAttribute('max', String(examMax)); else examInput.removeAttribute('max');
             examInput.setAttribute('min', '0');
             const val = Number(examInput.value || 0);
             if (examMax != null && val > examMax) examInput.value = String(examMax);
+            examInput.addEventListener('input', () => {
+                const v = Number(examInput.value || 0);
+                if (v < 0) examInput.value = '0';
+                if (examMax != null && v > examMax) examInput.value = String(examMax);
+            });
         }
         if (assignLabel) assignLabel.textContent = `Assignment Total${assignMax != null ? ` (Max: ${assignMax})` : ' (No policy set)'}`;
         if (examLabel) examLabel.textContent = `Exam Total${examMax != null ? ` (Max: ${examMax})` : ' (No policy set)'}`;

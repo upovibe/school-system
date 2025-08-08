@@ -37,7 +37,6 @@ class StudentGradeAddModal extends HTMLElement {
     setFilterPrefill(filters, lists) {
         this.allSubjects = lists.subjects || [];
         this.prefill = { filters: filters || {}, classes: lists.classes || [], subjects: lists.subjects || [], periods: lists.periods || [] };
-        console.log('[StudentGradeAddModal] setFilterPrefill filters:', this.prefill.filters);
         this.render();
         this.populateDropdowns();
         // Preselect subject and period if provided
@@ -54,7 +53,6 @@ class StudentGradeAddModal extends HTMLElement {
         this.updateDisplayFields();
         // Load grading policy if subject is present
         if (this.prefill.filters.subject_id) {
-            console.log('[StudentGradeAddModal] Loading policy for subject_id:', this.prefill.filters.subject_id);
             this.loadPolicyForSubject(this.prefill.filters.subject_id);
         }
     }
@@ -63,14 +61,11 @@ class StudentGradeAddModal extends HTMLElement {
         try {
             const token = localStorage.getItem('token');
             if (!token || !subjectId) return;
-            console.log('[StudentGradeAddModal] GET /grading-policies/by-subject subject_id=', subjectId);
             const resp = await api.withToken(token).get('/grading-policies/by-subject', { subject_id: subjectId });
-            console.log('[StudentGradeAddModal] Policy response:', resp?.data);
             const policy = resp?.data?.data;
             this.policy = policy || null;
             this.applyMaxConstraints();
         } catch (e) { 
-            console.warn('[StudentGradeAddModal] Failed to load policy:', e?.response?.data || e?.message);
             this.policy = null; this.applyMaxConstraints(); 
         }
     }
@@ -82,13 +77,18 @@ class StudentGradeAddModal extends HTMLElement {
         const examLabel = this.querySelector('[data-label="exam"]');
         const assignMax = this.policy?.assignment_max_score ?? null;
         const examMax = this.policy?.exam_max_score ?? null;
-        console.log('[StudentGradeAddModal] applyMaxConstraints policy:', this.policy);
         if (assignInput) {
             if (assignMax != null) assignInput.setAttribute('max', String(assignMax)); else assignInput.removeAttribute('max');
             assignInput.setAttribute('min', '0');
             // Clamp current value if it exceeds max
             const val = Number(assignInput.value || 0);
             if (assignMax != null && val > assignMax) assignInput.value = String(assignMax);
+            // Enforce in real-time
+            assignInput.addEventListener('input', () => {
+                const v = Number(assignInput.value || 0);
+                if (v < 0) assignInput.value = '0';
+                if (assignMax != null && v > assignMax) assignInput.value = String(assignMax);
+            });
         }
         if (examInput) {
             if (examMax != null) examInput.setAttribute('max', String(examMax)); else examInput.removeAttribute('max');
@@ -96,6 +96,12 @@ class StudentGradeAddModal extends HTMLElement {
             // Clamp current value if it exceeds max
             const val = Number(examInput.value || 0);
             if (examMax != null && val > examMax) examInput.value = String(examMax);
+            // Enforce in real-time
+            examInput.addEventListener('input', () => {
+                const v = Number(examInput.value || 0);
+                if (v < 0) examInput.value = '0';
+                if (examMax != null && v > examMax) examInput.value = String(examMax);
+            });
         }
         if (assignLabel) {
             assignLabel.textContent = `Assignment Total${assignMax != null ? ` (Max: ${assignMax})` : ' (No policy set)'}`;

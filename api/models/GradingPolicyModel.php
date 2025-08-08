@@ -178,12 +178,10 @@ class GradingPolicyModel extends BaseModel {
         $assignmentMax = $policy['assignment_max_score'];
         $examMax = $policy['exam_max_score'];
         
-        // Calculate percentages
-        $assignmentPercentage = $assignmentMax > 0 ? ($assignmentTotal / $assignmentMax) * 100 : 0;
-        $examPercentage = $examMax > 0 ? ($examTotal / $examMax) * 100 : 0;
-        
-        // Calculate final grade (simple average since max scores define the weight)
-        $finalPercentage = ($assignmentPercentage + $examPercentage) / 2;
+        // Points-based calculation so the relative max values determine the weight automatically
+        $maxTotal = max(0, (float)$assignmentMax + (float)$examMax);
+        $rawTotal = max(0, (float)$assignmentTotal + (float)$examTotal);
+        $finalPercentage = $maxTotal > 0 ? ($rawTotal / $maxTotal) * 100 : 0;
         
         // Round to 2 decimal places
         $finalPercentage = round($finalPercentage, 2);

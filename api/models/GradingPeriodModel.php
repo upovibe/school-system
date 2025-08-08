@@ -37,8 +37,7 @@ class GradingPeriodModel extends BaseModel {
         $sql = "
             SELECT 
                 gp.*,
-                u.first_name as creator_first_name,
-                u.last_name as creator_last_name,
+                u.name as creator_name,
                 u.email as creator_email
             FROM grading_periods gp
             LEFT JOIN users u ON gp.created_by = u.id
@@ -56,8 +55,7 @@ class GradingPeriodModel extends BaseModel {
         $sql = "
             SELECT 
                 gp.*,
-                u.first_name as creator_first_name,
-                u.last_name as creator_last_name,
+                u.name as creator_name,
                 u.email as creator_email
             FROM grading_periods gp
             LEFT JOIN users u ON gp.created_by = u.id

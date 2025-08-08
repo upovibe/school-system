@@ -42,8 +42,7 @@ class GradingPolicyModel extends BaseModel {
                 gp.*,
                 s.name as subject_name,
                 s.code as subject_code,
-                u.first_name as creator_first_name,
-                u.last_name as creator_last_name,
+                u.name as creator_name,
                 u.email as creator_email
             FROM grading_policies gp
             LEFT JOIN subjects s ON gp.subject_id = s.id
@@ -64,8 +63,7 @@ class GradingPolicyModel extends BaseModel {
                 gp.*,
                 s.name as subject_name,
                 s.code as subject_code,
-                u.first_name as creator_first_name,
-                u.last_name as creator_last_name,
+                u.name as creator_name,
                 u.email as creator_email
             FROM grading_policies gp
             LEFT JOIN subjects s ON gp.subject_id = s.id

@@ -280,7 +280,7 @@ class StudentDashboardPage extends App {
                     
                     ${loading ? `
                         <!-- Class Information Skeleton -->
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-12 bg-white bg-opacity-30 rounded-lg mr-4 flex-shrink-0 animate-pulse"></div>
                                 <div class="min-w-0 flex-1">
@@ -291,7 +291,7 @@ class StudentDashboardPage extends App {
                         </div>
                     ` : classInfo.name ? `
                         <!-- Class Information -->
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-12 flex items-center justify-center bg-blue-500 rounded-lg mr-4 flex-shrink-0">
                                     <i class="fas fa-graduation-cap text-white text-xl"></i>
@@ -302,17 +302,7 @@ class StudentDashboardPage extends App {
                                 </div>
                             </div>
                         </div>
-                    ` : `
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <i class="fas fa-exclamation-triangle text-yellow-300 mr-3"></i>
-                                <div>
-                                    <div class="text-lg font-semibold">No Class Assigned</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Please contact your administrator</div>
-                                </div>
-                            </div>
-                        </div>
-                    `}
+                    ` : ''}
                 </div>
 
                 ${loading ? `

@@ -311,7 +311,7 @@ class StudentGradesManagementPage extends App {
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
         const { class_id, subject_id, grading_period_id, student_id } = filters;
         return `
-            <div class="bg-white rounded-md p-3 mb-4 border border-gray-200">
+            <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Class</label>

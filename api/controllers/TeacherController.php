@@ -2026,7 +2026,7 @@ class TeacherController {
             $teacher = $_REQUEST['current_teacher'];
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-            $required = ['student_id', 'class_id', 'subject_id', 'grading_period_id', 'assignment_total', 'exam_total'];
+            $required = ['student_id', 'subject_id', 'grading_period_id', 'assignment_total', 'exam_total'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '') {
                     http_response_code(400);
@@ -2035,13 +2035,26 @@ class TeacherController {
                 }
             }
 
-            // Verify teacher assignment to class+subject
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
-            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$data['class_id'], (int)$data['subject_id']);
-            if (!$assignment) {
+            // Ensure teacher is a class teacher and use their assigned class
+            if (empty($teacher['class_id'])) {
                 http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
+            $classId = (int)$teacher['class_id'];
+
+            // Validate student belongs to the teacher's class
+            require_once __DIR__ . '/../models/StudentModel.php';
+            $studentModel = new StudentModel($pdo);
+            $student = $studentModel->findById((int)$data['student_id']);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Student not found']);
+                return;
+            }
+            if ((int)($student['current_class_id'] ?? 0) !== $classId) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Student does not belong to your assigned class']);
                 return;
             }
 
@@ -2055,12 +2068,12 @@ class TeacherController {
                 return;
             }
 
-            // Prepare payload
+            // Prepare payload (force class_id to teacher's class)
             require_once __DIR__ . '/../models/StudentGradeModel.php';
             $gradeModel = new StudentGradeModel($pdo);
             $payload = [
                 'student_id' => (int)$data['student_id'],
-                'class_id' => (int)$data['class_id'],
+                'class_id' => $classId,
                 'subject_id' => (int)$data['subject_id'],
                 'grading_period_id' => (int)$data['grading_period_id'],
                 'grading_policy_id' => (int)$policy['id'],
@@ -2092,6 +2105,12 @@ class TeacherController {
             TeacherMiddleware::requireTeacher($pdo);
 
             $teacher = $_REQUEST['current_teacher'];
+            if (empty($teacher['class_id'])) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
+
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
             require_once __DIR__ . '/../models/StudentGradeModel.php';
@@ -2103,13 +2122,10 @@ class TeacherController {
                 return;
             }
 
-            // Verify teacher assignment to class+subject for this grade
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
-            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$existing['class_id'], (int)$existing['subject_id']);
-            if (!$assignment) {
+            // Ensure the grade belongs to the teacher's class
+            if ((int)$existing['class_id'] !== (int)$teacher['class_id']) {
                 http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                echo json_encode(['success' => false, 'message' => 'Access denied: Grade is not for your assigned class']);
                 return;
             }
 
@@ -2153,6 +2169,11 @@ class TeacherController {
             TeacherMiddleware::requireTeacher($pdo);
 
             $teacher = $_REQUEST['current_teacher'];
+            if (empty($teacher['class_id'])) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
 
             require_once __DIR__ . '/../models/StudentGradeModel.php';
             $gradeModel = new StudentGradeModel($pdo);
@@ -2163,13 +2184,10 @@ class TeacherController {
                 return;
             }
 
-            // Verify teacher assignment to class+subject for this grade
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $teacherAssignmentModel = new TeacherAssignmentModel($pdo);
-            $assignment = $teacherAssignmentModel->findByUniqueKey((int)$teacher['id'], (int)$existing['class_id'], (int)$existing['subject_id']);
-            if (!$assignment) {
+            // Ensure the grade belongs to the teacher's class
+            if ((int)$existing['class_id'] !== (int)$teacher['class_id']) {
                 http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to this class and subject']);
+                echo json_encode(['success' => false, 'message' => 'Access denied: Grade is not for your assigned class']);
                 return;
             }
 

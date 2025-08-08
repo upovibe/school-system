@@ -278,7 +278,18 @@ class StudentDashboardPage extends App {
                         </div>
                     </div>
                     
-                    ${classInfo.name ? `
+                    ${loading ? `
+                        <!-- Class Information Skeleton -->
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-12 bg-white bg-opacity-30 rounded-lg mr-4 flex-shrink-0 animate-pulse"></div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2 animate-pulse"></div>
+                                    <div class="h-4 bg-white bg-opacity-30 rounded w-2/3 animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : classInfo.name ? `
                         <!-- Class Information -->
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
@@ -346,7 +357,7 @@ class StudentDashboardPage extends App {
                         <!-- Level & XP Card -->
                         <div class="bg-white shadow rounded-lg p-6 border-l-4 border-yellow-500">
                             <div class="flex items-center mb-4">
-                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-trophy text-xl"></i>
                                 </div>
                                 <div class="ml-4">
@@ -372,7 +383,7 @@ class StudentDashboardPage extends App {
                         <!-- Academic Performance Card -->
                         <div class="bg-white shadow rounded-lg p-6 border-l-4 border-green-500">
                             <div class="flex items-center mb-4">
-                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-chart-line text-xl"></i>
                                 </div>
                                 <div class="ml-4">
@@ -399,7 +410,7 @@ class StudentDashboardPage extends App {
                         <!-- Assignment Progress Card -->
                         <div class="bg-white shadow rounded-lg p-6 border-l-4 border-blue-500">
                             <div class="flex items-center mb-4">
-                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-tasks text-xl"></i>
                                 </div>
                                 <div class="ml-4">

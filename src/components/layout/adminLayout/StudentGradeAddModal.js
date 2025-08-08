@@ -14,6 +14,18 @@ class StudentGradeAddModal extends HTMLElement {
 
     static get observedAttributes() { return ['open']; }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            const modal = this.querySelector('ui-modal');
+            if (modal) {
+                if (this.hasAttribute('open')) modal.setAttribute('open', '');
+                else modal.removeAttribute('open');
+            } else {
+                this.render();
+            }
+        }
+    }
+
     connectedCallback() { this.render(); this.setup(); }
     open() { this.setAttribute('open', ''); }
     close() { this.removeAttribute('open'); }
@@ -22,7 +34,16 @@ class StudentGradeAddModal extends HTMLElement {
         this.prefill = { filters: filters || {}, classes: lists.classes || [], subjects: lists.subjects || [], periods: lists.periods || [] };
         this.render();
         this.populateDropdowns();
+        // Preselect subject and period if provided
+        const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
+        const periodDd = this.querySelector('ui-search-dropdown[name="grading_period_id"]');
+        if (subjDd && this.prefill.filters.subject_id) subjDd.value = String(this.prefill.filters.subject_id);
+        if (periodDd && this.prefill.filters.grading_period_id) periodDd.value = String(this.prefill.filters.grading_period_id);
         if (this.prefill.filters.class_id) { this.loadStudentsByClass(this.prefill.filters.class_id); }
+        // Filter subjects by class if available (requires endpoint mapping class->subjects)
+        if (this.prefill.filters.class_id) {
+            this.loadSubjectsByClass(this.prefill.filters.class_id);
+        }
     }
 
     setup() {
@@ -76,6 +97,23 @@ class StudentGradeAddModal extends HTMLElement {
             this.students = resp.data.data || [];
             this.populateDropdowns();
         } catch (_) { this.students = []; this.populateDropdowns(); }
+    }
+
+    async loadSubjectsByClass(classId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token || !classId) return;
+            const resp = await api.withToken(token).get('/class-subjects/by-class', { params: { class_id: classId } });
+            const classSubjects = resp.data.data || [];
+            // Expect format with subject_id and subject name
+            const mapped = classSubjects.map(cs => ({ id: cs.subject_id || cs.id, name: cs.subject_name || cs.name })).filter(s => s.id);
+            if (mapped.length) {
+                this.prefill.subjects = mapped;
+                this.populateDropdowns();
+                const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
+                if (subjDd && this.prefill.filters.subject_id) subjDd.value = String(this.prefill.filters.subject_id);
+            }
+        } catch (_) { /* ignore */ }
     }
 
     async save() {

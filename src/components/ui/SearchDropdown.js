@@ -257,6 +257,11 @@ class SearchDropdown extends HTMLElement {
         }).join('');
 
         this.optionsContainer.querySelectorAll('.UpoSearchDropdown__option').forEach(el => {
+            // Prevent click-through to underlying elements (e.g., buttons behind the dropdown)
+            el.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const option = this._options.find(o => o.getAttribute('value') === el.dataset.value);

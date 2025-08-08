@@ -5,6 +5,17 @@ import api from '@/services/api.js';
 class StudentGradeDeleteDialog extends HTMLElement {
     constructor() { super(); this.gradeData = null; }
     static get observedAttributes() { return ['open']; }
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            const dialog = this.querySelector('ui-dialog');
+            if (dialog) {
+                if (this.hasAttribute('open')) dialog.setAttribute('open', '');
+                else dialog.removeAttribute('open');
+            } else {
+                this.render();
+            }
+        }
+    }
     connectedCallback() { this.render(); this.setup(); }
     open() { this.setAttribute('open', ''); }
     close() { this.removeAttribute('open'); }

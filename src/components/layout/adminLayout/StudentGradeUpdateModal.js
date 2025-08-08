@@ -11,6 +11,18 @@ class StudentGradeUpdateModal extends HTMLElement {
     }
 
     static get observedAttributes() { return ['open']; }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            const modal = this.querySelector('ui-modal');
+            if (modal) {
+                if (this.hasAttribute('open')) modal.setAttribute('open', '');
+                else modal.removeAttribute('open');
+            } else {
+                this.render();
+            }
+        }
+    }
     connectedCallback() { this.render(); this.setup(); }
     open() { this.setAttribute('open', ''); }
     close() { this.removeAttribute('open'); }

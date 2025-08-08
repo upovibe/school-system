@@ -219,7 +219,7 @@ class StudentGradesManagementPage extends App {
             this.set('showViewModal', true);
             setTimeout(() => {
                 const modal = this.querySelector('student-grade-view-modal');
-                if (modal) modal.setGradeData(item);
+                if (modal) { modal.setGradeData(item); modal.open?.(); }
             }, 0);
         }
     }
@@ -233,7 +233,7 @@ class StudentGradesManagementPage extends App {
             this.set('showUpdateModal', true);
             setTimeout(() => {
                 const modal = this.querySelector('student-grade-update-modal');
-                if (modal) modal.setGradeData(item);
+                if (modal) { modal.setGradeData(item); modal.open?.(); }
             }, 0);
         }
     }
@@ -247,7 +247,7 @@ class StudentGradesManagementPage extends App {
             this.set('showDeleteDialog', true);
             setTimeout(() => {
                 const dialog = this.querySelector('student-grade-delete-dialog');
-                if (dialog) dialog.setGradeData(item);
+                if (dialog) { dialog.setGradeData(item); dialog.open?.(); }
             }, 0);
         }
     }
@@ -257,7 +257,10 @@ class StudentGradesManagementPage extends App {
         this.set('showAddModal', true);
         setTimeout(() => {
             const modal = this.querySelector('student-grade-add-modal');
-            if (modal) modal.setFilterPrefill(this.filters, { classes: this.classes, subjects: this.subjects, periods: this.periods });
+            if (modal) {
+                modal.setFilterPrefill(this.get('filters') || {}, { classes: this.classes, subjects: this.subjects, periods: this.periods });
+                modal.open?.();
+            }
         }, 0);
     }
 
@@ -405,6 +408,16 @@ class StudentGradesManagementPage extends App {
             <student-grade-view-modal ${showViewModal ? 'open' : ''}></student-grade-view-modal>
             <student-grade-delete-dialog ${showDeleteDialog ? 'open' : ''}></student-grade-delete-dialog>
         `;
+    }
+
+    closeAllModals() {
+        this.set('showAddModal', false);
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
+        this.set('showDeleteDialog', false);
+        this.set('updateGradeData', null);
+        this.set('viewGradeData', null);
+        this.set('deleteGradeData', null);
     }
 }
 

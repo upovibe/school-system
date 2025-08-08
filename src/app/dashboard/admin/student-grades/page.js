@@ -95,15 +95,27 @@ class StudentGradesManagementPage extends App {
             if (name === 'class_id') {
                 this.loadStudentsByClass(dd.value);
             }
-            // Auto load when key filters change and at least one primary filter is set
-            if ((name === 'class_id' || name === 'student_id') && (dd.value && String(dd.value).length > 0)) {
+            // Auto load when any filter changes if a primary filter (class or student) is set
+            const primarySet = (next.class_id && String(next.class_id).length > 0) || (next.student_id && String(next.student_id).length > 0);
+            if (primarySet) {
                 this.loadGrades();
             }
         });
 
         this.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action="apply-filters"]');
-            if (btn) { e.preventDefault(); this.loadGrades(); }
+            const applyBtn = e.target.closest('[data-action="apply-filters"]');
+            if (applyBtn) { e.preventDefault(); this.loadGrades(); return; }
+            const clearBtn = e.target.closest('[data-action="clear-filters"]');
+            if (clearBtn) {
+                e.preventDefault();
+                const defaults = { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+                this.set('filters', defaults);
+                this.students = [];
+                this.set('grades', []);
+                this.updateTableData();
+                // Re-render to reset dropdowns
+                this.render();
+            }
         });
     }
 
@@ -291,9 +303,12 @@ class StudentGradesManagementPage extends App {
                         </ui-search-dropdown>
                     </div>
                 </div>
-                <div class="flex justify-end mt-3">
+                <div class="flex justify-end gap-2 mt-3">
                     <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
                         <i class="fas fa-filter mr-1"></i> Apply Filters
+                    </ui-button>
+                    <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+                        <i class="fas fa-times mr-1"></i> Clear Filters
                     </ui-button>
                 </div>
             </div>

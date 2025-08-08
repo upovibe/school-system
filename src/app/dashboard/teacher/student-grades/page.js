@@ -177,7 +177,7 @@ class TeacherStudentGradesPage extends App {
       if (subject_id) params.subject_id = subject_id;
       if (grading_period_id) params.grading_period_id = grading_period_id;
 
-      const response = await api.withToken(token).get('/student-grades', params);
+      const response = await api.withToken(token).get('/teacher/student-grades', params);
       this.set('grades', response.data?.data || []);
       this.updateTableData();
       this.set('loading', false);

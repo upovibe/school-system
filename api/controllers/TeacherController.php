@@ -2029,6 +2029,84 @@ class TeacherController {
     // ========================================
 
     /**
+     * List student grades for the teacher's class (teacher only)
+     */
+    public function listStudentGrades() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+
+            $teacher = $_REQUEST['current_teacher'];
+            if (empty($teacher['class_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No class assigned to this teacher']);
+                return;
+            }
+
+            $query = $_GET ?? [];
+            $subjectId = isset($query['subject_id']) ? (int)$query['subject_id'] : null;
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+            $studentId = isset($query['student_id']) ? (int)$query['student_id'] : null;
+
+            $filters = [];
+            if ($subjectId) { $filters['subject_id'] = $subjectId; }
+            if ($periodId) { $filters['grading_period_id'] = $periodId; }
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grades = $gradeModel->getClassGradesWithDetails((int)$teacher['class_id'], $filters);
+            if ($studentId) {
+                $grades = array_values(array_filter($grades, function($g) use ($studentId) { return (int)$g['student_id'] === $studentId; }));
+            }
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $grades, 'message' => 'Grades retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grades: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show a single student grade if it belongs to teacher's class (teacher only)
+     */
+    public function showStudentGrade($id) {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+
+            $teacher = $_REQUEST['current_teacher'];
+            if (empty($teacher['class_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No class assigned to this teacher']);
+                return;
+            }
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grade = $gradeModel->getGradeWithDetails($id);
+            if (!$grade) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Grade not found']);
+                return;
+            }
+            if ((int)$grade['class_id'] !== (int)$teacher['class_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: Grade is not for your assigned class']);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $grade, 'message' => 'Grade retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grade: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Create a student grade (teacher only)
      */
     public function createStudentGrade() {

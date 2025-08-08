@@ -275,3 +275,5 @@ Router::delete('/student-grades/{id}', 'StudentGradeController@destroy');
 Router::post('/teacher/student-grades', 'TeacherController@createStudentGrade');
 Router::put('/teacher/student-grades/{id}', 'TeacherController@updateStudentGrade');
 Router::delete('/teacher/student-grades/{id}', 'TeacherController@deleteStudentGrade');
+Router::get('/teacher/student-grades', 'TeacherController@listStudentGrades');
+Router::get('/teacher/student-grades/{id}', 'TeacherController@showStudentGrade');

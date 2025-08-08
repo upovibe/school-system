@@ -193,10 +193,25 @@ class StudentGradeAddModal extends HTMLElement {
 
             const resp = await api.withToken(token).post('/student-grades', payload);
             if (resp.data.success) {
-                Toast.show({ title: 'Success', message: 'Grade created successfully', variant: 'success', duration: 3000 });
                 const id = resp.data?.data?.id;
+                // Fetch full details so table shows names and computed fields immediately
+                let full = null;
+                try {
+                    const showResp = await api.withToken(token).get(`/student-grades/${id}`);
+                    full = showResp?.data?.data || null;
+                } catch (_) { /* fallback to minimal */ }
+
+                Toast.show({ title: 'Success', message: 'Grade created successfully', variant: 'success', duration: 3000 });
+                const enriched = full || {
+                    id,
+                    ...payload,
+                    final_percentage: resp.data?.data?.final_percentage,
+                    final_letter_grade: resp.data?.data?.final_letter_grade,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
                 this.dispatchEvent(new CustomEvent('student-grade-saved', {
-                    detail: { grade: { id, ...payload, final_percentage: resp.data?.data?.final_percentage, final_letter_grade: resp.data?.data?.final_letter_grade, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } },
+                    detail: { grade: enriched },
                     bubbles: true,
                     composed: true
                 }));

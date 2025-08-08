@@ -240,6 +240,17 @@ Router::delete('/assignments/{id}', 'AssignmentController@destroy');
 Router::get('/assignments/{id}/submissions', 'AssignmentController@getSubmissions');
 Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentController@gradeSubmission');
 
+// Teacher Assignment Management Routes (admin only)
+Router::get('/teacher-assignments', 'TeacherAssignmentController@index');
+Router::post('/teacher-assignments', 'TeacherAssignmentController@store');
+Router::get('/teacher-assignments/{id}', 'TeacherAssignmentController@show');
+Router::put('/teacher-assignments/{id}', 'TeacherAssignmentController@update');
+Router::delete('/teacher-assignments/{id}', 'TeacherAssignmentController@destroy');
+// Bulk operations for teacher assignments
+Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}', 'TeacherAssignmentController@deleteByTeacherAndClass');
+Router::put('/teacher-assignments/teacher/{teacherId}/class/{classId}', 'TeacherAssignmentController@updateByTeacherAndClass');
+Router::delete('/teacher-assignments/teacher/{teacherId}/class/{classId}/subject/{subjectId}', 'TeacherAssignmentController@deleteByTeacherClassAndSubject');
+
 // Teacher Assignment Management Routes (teacher only) - Moved to teacher management section above
 
 // DB setup endpoints

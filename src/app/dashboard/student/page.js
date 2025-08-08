@@ -23,14 +23,14 @@ class StudentDashboardPage extends App {
         this.set('assignmentsData', null);
     }
 
-         connectedCallback() {
-         super.connectedCallback();
-         document.title = 'Student Dashboard | School System';
-         this.loadUserData();
+    connectedCallback() {
+        super.connectedCallback();
+        document.title = 'Student Dashboard | School System';
+        this.loadUserData();
          this.loadClassData();
          this.loadGradesData();
          this.loadAssignmentsData();
-         this.simulateLoading();
+        this.simulateLoading();
          
          // Add event listeners for help buttons
          this.addEventListener('click', this.handleButtonClick.bind(this));
@@ -50,7 +50,7 @@ class StudentDashboardPage extends App {
                  this.showAcademicInfo();
                  break;
          }
-     }
+    }
 
     async simulateLoading() {
         // Simulate API loading time
@@ -368,7 +368,7 @@ class StudentDashboardPage extends App {
              </div>
          `;
          document.body.appendChild(dialog);
-     }
+    }
 
     render() {
         const loading = this.get('loading');
@@ -405,12 +405,12 @@ class StudentDashboardPage extends App {
                                 <div class="text-blue-100 text-xs sm:text-sm">Total Subjects</div>
                             </div>
                         </div>
-                    </div>
-                    
+                </div>
+
                     ${classInfo.name ? `
                         <!-- Class Information -->
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
-                            <div class="flex items-center">
+                        <div class="flex items-center">
                                 <div class="size-12 flex items-center justify-center bg-blue-500 rounded-lg mr-4 flex-shrink-0">
                                     <i class="fas fa-graduation-cap text-white text-xl"></i>
                                 </div>
@@ -481,17 +481,17 @@ class StudentDashboardPage extends App {
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">C Grades</span>
                                     <span class="font-medium text-yellow-600">${gradeStats.c_plus + gradeStats.c}</span>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
                         <!-- Assignment Progress Card -->
                         <div class="bg-white shadow rounded-lg p-6 border-l-4 border-blue-500">
                             <div class="flex items-center mb-4">
                                 <div class="p-3 rounded-full bg-blue-100 text-blue-600 size-10 min-w-10 flex items-center justify-center">
                                     <i class="fas fa-tasks text-xl"></i>
-                                </div>
-                                <div class="ml-4">
+                            </div>
+                            <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-600">Assignment Progress</p>
                                     <p class="text-2xl font-bold text-gray-900">${assignmentStats.graded}/${assignmentStats.total}</p>
                                 </div>
@@ -566,10 +566,10 @@ class StudentDashboardPage extends App {
                                 <div class="text-xs opacity-90">Update information</div>
                             </a>
                         </div>
-                                         </div>
+                    </div>
                  ` : ''}
-             </div>
-         `;
+            </div>
+        `;
     }
 }
 

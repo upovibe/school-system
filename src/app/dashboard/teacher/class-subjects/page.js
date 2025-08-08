@@ -220,7 +220,7 @@ class TeacherClassesSubjectsPage extends App {
             <div class="space-y-8">
                 <!-- Enhanced Header with Teacher Info -->
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                    <div class="flex flex-col sm:justify-between mb-4 sm:mb-6">
                             <h1 class="text-2xl sm:text-3xl font-bold">My Classes & Subjects</h1>
                             <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacher_name}</p>
                     </div>
@@ -300,7 +300,7 @@ class TeacherClassesSubjectsPage extends App {
                                         <div class="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                                             <i class="fas fa-book text-white text-xs sm:text-sm"></i>
                                         </div>
-                                                                                 <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Subject${assignment.subjects.length > 1 ? 's' : ''} Taught</h3>
+                                         <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Subject${assignment.subjects.length > 1 ? 's' : ''} Taught</h3>
                                     </div>
                                     <div class="sm:ml-auto">
                                         <ui-badge color="success"><i class="fas fa-book mr-1"></i>${assignment.subjects.length} Subject${assignment.subjects.length > 1 ? 's' : ''}</ui-badge>

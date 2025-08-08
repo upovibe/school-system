@@ -10,6 +10,64 @@ class GradingPolicyAddModal extends HTMLElement {
     constructor() {
         super();
         this.subjects = [];
+        this.gradeBoundaryItems = [
+            { grade: '', min: '' }
+        ];
+    }
+
+    renderBoundaryInputs() {
+        const items = this.gradeBoundaryItems && this.gradeBoundaryItems.length > 0 ? this.gradeBoundaryItems : [{ grade: '', min: '' }];
+        return items.map((item, index) => `
+            <div class="flex justify-between items-center gap-2">
+                <div class="w-full">
+                    <label class="block text-xs text-gray-600 mb-1">Grade</label>
+                    <ui-input data-gb-field="grade" data-index="${index}" type="text" placeholder="e.g., A" value="${item.grade ?? ''}" class="w-full"></ui-input>
+                </div>
+                <div class="w-1/3">
+                    <label class="block text-xs text-gray-600 mb-1">Min</label>
+                    <ui-input data-gb-field="min" data-index="${index}" type="number" min="0" max="100" placeholder="e.g., 80" value="${item.min ?? ''}" class="w-full"></ui-input>
+                </div>
+                <div class="w-10">
+                    ${items.length > 1 ? `
+                        <ui-button type="button" variant="danger-outline" size="sm" data-action="remove-boundary-item" data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </ui-button>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    readBoundaryItemsFromDOM() {
+        const rows = this.querySelectorAll('#gb-inputs [data-gb-field]');
+        const tmp = [];
+        rows.forEach((el) => {
+            const idx = parseInt(el.getAttribute('data-index'), 10);
+            const field = el.getAttribute('data-gb-field');
+            if (!tmp[idx]) tmp[idx] = { grade: '', min: '' };
+            const val = el.getAttribute('type') === 'number' ? Number(el.value || el.getAttribute('value') || 0) : (el.value || el.getAttribute('value') || '');
+            tmp[idx][field] = val;
+        });
+        // filter out empty rows and coerce min to number
+        const cleaned = (tmp || []).filter(it => (String(it.grade).trim() !== '' && !Number.isNaN(Number(it.min)))).map(it => ({ grade: String(it.grade).trim(), min: Number(it.min) }));
+        this.gradeBoundaryItems = tmp.length ? tmp : this.gradeBoundaryItems;
+        return cleaned;
+    }
+
+    addBoundaryItem() {
+        this.readBoundaryItemsFromDOM();
+        this.gradeBoundaryItems.push({ grade: '', min: '' });
+        const container = this.querySelector('#gb-inputs');
+        if (container) container.innerHTML = this.renderBoundaryInputs();
+    }
+
+    removeBoundaryItem(index) {
+        this.readBoundaryItemsFromDOM();
+        if (this.gradeBoundaryItems.length > 1) {
+            this.gradeBoundaryItems.splice(index, 1);
+            const container = this.querySelector('#gb-inputs');
+            if (container) container.innerHTML = this.renderBoundaryInputs();
+        }
     }
 
     static get observedAttributes() {
@@ -30,6 +88,21 @@ class GradingPolicyAddModal extends HTMLElement {
         this.addEventListener('change', (e) => {
             if (e.target && e.target.matches('ui-search-dropdown[name="subject_id"]')) {
                 // no-op; value read on submit
+            }
+        });
+
+        // Dynamic grade boundary rows: add/remove
+        this.addEventListener('click', (e) => {
+            const addBtn = e.target.closest('[data-action="add-boundary-item"]');
+            if (addBtn) {
+                e.preventDefault();
+                this.addBoundaryItem();
+            }
+            const removeBtn = e.target.closest('[data-action="remove-boundary-item"]');
+            if (removeBtn) {
+                e.preventDefault();
+                const index = parseInt(removeBtn.getAttribute('data-index'), 10);
+                this.removeBoundaryItem(index);
             }
         });
     }
@@ -70,16 +143,11 @@ class GradingPolicyAddModal extends HTMLElement {
             const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
             const assignMaxInput = this.querySelector('ui-input[data-field="assignment_max_score"]');
             const examMaxInput = this.querySelector('ui-input[data-field="exam_max_score"]');
-            const boundariesTextarea = this.querySelector('ui-textarea[data-field="grade_boundaries"]');
+            // Build grade boundaries array from dynamic inputs
+            const boundaries = this.readBoundaryItemsFromDOM();
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
-            let gradeBoundaries;
-            try {
-                gradeBoundaries = JSON.parse(boundariesTextarea ? boundariesTextarea.getValue() : '[]');
-            } catch (_) {
-                Toast.show({ title: 'Validation Error', message: 'Grade boundaries must be valid JSON array', variant: 'error', duration: 3000 });
-                return;
-            }
+            const gradeBoundaries = boundaries;
 
             const payload = {
                 name: nameInput?.value || '',
@@ -167,15 +235,19 @@ class GradingPolicyAddModal extends HTMLElement {
                         <ui-textarea data-field="description" rows="3" placeholder="Short description..." class="w-full"></ui-textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Grade Boundaries (JSON array)</label>
-                        <ui-textarea data-field="grade_boundaries" rows="5" class="w-full">[
-  { "grade": "A", "min": 80 },
-  { "grade": "B", "min": 70 },
-  { "grade": "C", "min": 60 },
-  { "grade": "D", "min": 50 },
-  { "grade": "E", "min": 40 },
-  { "grade": "F", "min": 0 }
-]</ui-textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Grade Boundaries</label>
+                        <div class="space-y-2">
+                            <div id="gb-inputs" class="space-y-2">
+                                ${this.renderBoundaryInputs()}
+                            </div>
+                            <div class="flex justify-end mt-2">
+                                <ui-button type="button" variant="outline" size="sm" data-action="add-boundary-item" class="px-3">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Add Boundary
+                                </ui-button>
+                            </div>
+                            <p class="text-xs text-gray-500">Enter entries like Grade and Minimum percentage. Example: A and 80.</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>

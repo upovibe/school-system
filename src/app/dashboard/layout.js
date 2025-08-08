@@ -279,6 +279,7 @@ class DashboardLayout extends App {
                         { label: 'Teacher Assignments', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
                         { label: 'Grading Periods', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/grading-periods' },
                         { label: 'Grading Policies', icon: 'fas fa-balance-scale', href: '/dashboard/admin/grading-policies' },
+                        { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
                     ]
                 },
                 {
@@ -399,6 +400,7 @@ class DashboardLayout extends App {
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
             'grading-periods': 'Grading Period Management',
             'grading-policies': 'Grading Policy Management',
+            'student-grades': 'Student Grades Management',
             'class': 'My Class',
             'class-subjects': 'My Classes & Subjects'
         };

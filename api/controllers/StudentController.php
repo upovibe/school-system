@@ -1453,6 +1453,55 @@ class StudentController {
     }
 
     /**
+     * Get grading periods for student (student-only)
+     */
+    public function getGradingPeriods() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+            require_once __DIR__ . '/../models/GradingPeriodModel.php';
+            $gpm = new GradingPeriodModel($pdo);
+            $periods = $gpm->findAll();
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $periods, 'message' => 'Grading periods retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grading periods: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get subjects assigned to student's class (student-only)
+     */
+    public function getMyClassSubjects() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+
+            $student = $_REQUEST['current_student'];
+            $classId = $student['current_class_id'] ?? null;
+
+            if (!$classId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Student not assigned to any class']);
+                return;
+            }
+
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $subjects = $classSubjectModel->getByClassId($classId);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $subjects, 'message' => 'Class subjects retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving class subjects: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Download assignment attachment (student only)
      */
     public function downloadAssignmentAttachment($filename) {

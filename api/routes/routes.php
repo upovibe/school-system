@@ -281,3 +281,5 @@ Router::get('/teacher/student-grades/{id}', 'TeacherController@showStudentGrade'
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');
+Router::get('/student/grading-periods', 'StudentController@getGradingPeriods');
+Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects');

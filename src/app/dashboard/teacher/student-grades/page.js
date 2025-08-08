@@ -147,6 +147,12 @@ class TeacherStudentGradesPage extends App {
       const subjectsFromMyClass = Array.isArray(this.teacherClass.subjects) ? this.teacherClass.subjects : [];
       this.subjects = subjectsFromMyClass;
 
+      // Default subject: pick the first subject assigned to the class if none selected
+      const existingFilters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+      if (!existingFilters.subject_id && this.subjects && this.subjects.length > 0) {
+        this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
+      }
+
       // Grading periods (teacher-friendly endpoint)
       try {
         const periodsResp = await api.withToken(token).get('/teachers/grading-periods');

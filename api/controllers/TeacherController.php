@@ -690,16 +690,28 @@ class TeacherController {
             $students = $studentModel->getStudentsByClass($teacher['class_id']);
 
             // Get subjects this teacher teaches in this class
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $taModel = new TeacherAssignmentModel($pdo);
-            $assignments = $taModel->getByTeacherAndClass($teacher['id'], $teacher['class_id']);
-            $subjects = [];
-            foreach ($assignments as $row) {
-                $subjects[] = [
-                    'id' => (int)$row['subject_id'],
-                    'name' => $row['subject_name'] ?? ($row['subject_code'] ?? (string)$row['subject_id']),
-                    'code' => $row['subject_code'] ?? null,
+            // Prefer all class subjects; if none, fall back to teacher assignments
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubjects = $classSubjectModel->getByClassId($teacher['class_id']);
+            $subjects = array_map(function($cs) {
+                return [
+                    'id' => (int)$cs['subject_id'],
+                    'name' => $cs['subject_name'] ?? ($cs['subject_code'] ?? (string)$cs['subject_id']),
+                    'code' => $cs['subject_code'] ?? null,
                 ];
+            }, $classSubjects);
+            if (empty($subjects)) {
+                require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+                $taModel = new TeacherAssignmentModel($pdo);
+                $assignments = $taModel->getByTeacherAndClass($teacher['id'], $teacher['class_id']);
+                foreach ($assignments as $row) {
+                    $subjects[] = [
+                        'id' => (int)$row['subject_id'],
+                        'name' => $row['subject_name'] ?? ($row['subject_code'] ?? (string)$row['subject_id']),
+                        'code' => $row['subject_code'] ?? null,
+                    ];
+                }
             }
 
             http_response_code(200);

@@ -247,6 +247,8 @@ Router::post('/db/fresh', 'DbController@fresh');
 // Grading Policy Management Routes (admin only)
 Router::get('/grading-policies', 'GradingPolicyController@index');
 Router::post('/grading-policies', 'GradingPolicyController@store');
+// Teacher/Admin helper: get active policy by subject (must come BEFORE /grading-policies/{id})
+Router::get('/grading-policies/by-subject', 'GradingPolicyController@getBySubject');
 Router::get('/grading-policies/{id}', 'GradingPolicyController@show');
 Router::put('/grading-policies/{id}', 'GradingPolicyController@update');
 Router::delete('/grading-policies/{id}', 'GradingPolicyController@destroy');

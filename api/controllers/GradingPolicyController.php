@@ -49,7 +49,7 @@ class GradingPolicyController {
      */
     public function show($id) {
         try {
-            // Require admin authentication
+            
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
@@ -76,6 +76,43 @@ class GradingPolicyController {
                 'success' => false,
                 'message' => 'Error retrieving grading policy: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Teacher/Admin: Get active policy by subject_id
+     */
+    public function getBySubject() {
+        try {
+            global $pdo;
+            // Allow teacher or admin
+            RoleMiddleware::requireTeacher($pdo);
+            $query = $_GET ?? [];
+            $subjectId = isset($query['subject_id']) ? (int)$query['subject_id'] : 0;
+            if ($subjectId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'subject_id is required']);
+                return;
+            }
+            $policy = $this->gradingPolicyModel->getBySubjectId($subjectId);
+            if (!$policy) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No active policy for this subject']);
+                return;
+            }
+            // Return only relevant fields to minimize payload
+            $data = [
+                'id' => (int)$policy['id'],
+                'subject_id' => (int)$policy['subject_id'],
+                'assignment_max_score' => (int)$policy['assignment_max_score'],
+                'exam_max_score' => (int)$policy['exam_max_score'],
+                'grade_boundaries' => $policy['grade_boundaries']
+            ];
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $data, 'message' => 'Policy retrieved']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving policy: ' . $e->getMessage()]);
         }
     }
     

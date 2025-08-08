@@ -220,21 +220,21 @@ class StudentGradeAddModal extends HTMLElement {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                            <ui-input data-field="class_display" type="text" readonly class="w-full"></ui-input>
+                            <ui-input data-field="class_display" type="text" readonly disabled class="w-full"></ui-input>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
-                            <ui-input data-field="student_display" type="text" readonly class="w-full"></ui-input>
+                            <ui-input data-field="student_display" type="text" readonly disabled class="w-full"></ui-input>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                            <ui-input data-field="subject_display" type="text" readonly class="w-full"></ui-input>
+                            <ui-input data-field="subject_display" type="text" readonly disabled class="w-full"></ui-input>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
-                            <ui-input data-field="period_display" type="text" readonly class="w-full"></ui-input>
+                            <ui-input data-field="period_display" type="text" readonly disabled class="w-full"></ui-input>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,5 +269,3 @@ class StudentGradeAddModal extends HTMLElement {
 
 customElements.define('student-grade-add-modal', StudentGradeAddModal);
 export default StudentGradeAddModal;
-
-

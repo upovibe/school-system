@@ -1388,6 +1388,71 @@ class StudentController {
     }
 
     /**
+     * List terminal/student grades for the authenticated student
+     * Filters: subject_id, grading_period_id (optional)
+     */
+    public function listMyStudentGrades() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+
+            $student = $_REQUEST['current_student'];
+
+            $query = $_GET ?? [];
+            $subjectId = isset($query['subject_id']) ? (int)$query['subject_id'] : null;
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+
+            $filters = [];
+            if ($subjectId) { $filters['subject_id'] = $subjectId; }
+            if ($periodId) { $filters['grading_period_id'] = $periodId; }
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grades = $gradeModel->getStudentGradesWithDetails((int)$student['id'], $filters);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $grades, 'message' => 'Grades retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grades: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show one terminal/student grade for the authenticated student
+     */
+    public function showMyStudentGrade($id) {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+
+            $student = $_REQUEST['current_student'];
+
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grade = $gradeModel->getGradeWithDetails($id);
+            if (!$grade) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Grade not found']);
+                return;
+            }
+            if ((int)$grade['student_id'] !== (int)$student['id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: This grade does not belong to you']);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $grade, 'message' => 'Grade retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving grade: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Download assignment attachment (student only)
      */
     public function downloadAssignmentAttachment($filename) {

@@ -29,7 +29,10 @@ class StudentGradeAddModal extends HTMLElement {
 
     connectedCallback() { this.render(); this.setup(); }
     open() { this.setAttribute('open', ''); }
-    close() { this.removeAttribute('open'); }
+    close() { 
+        this.removeAttribute('open');
+        this.dispatchEvent(new CustomEvent('modal-closed', { bubbles: true, composed: true }));
+    }
 
     setFilterPrefill(filters, lists) {
         this.allSubjects = lists.subjects || [];
@@ -46,18 +49,14 @@ class StudentGradeAddModal extends HTMLElement {
         if (this.prefill.filters.class_id) {
             this.loadSubjectsByClass(this.prefill.filters.class_id);
         }
+        // Ensure read-only fields show names immediately
+        this.updateDisplayFields();
     }
 
     setup() {
         this.addEventListener('confirm', () => this.save());
         this.addEventListener('cancel', () => this.close());
-        this.addEventListener('change', (e) => {
-            const dd = e.target.closest('ui-search-dropdown');
-            if (!dd) return;
-            if (dd.getAttribute('name') === 'class_id') {
-                this.loadStudentsByClass(dd.value);
-            }
-        });
+        // No interactive dropdowns; inputs are read-only representations
     }
 
     populateDropdowns() {
@@ -98,6 +97,7 @@ class StudentGradeAddModal extends HTMLElement {
             const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
             this.populateDropdowns();
+            this.updateDisplayFields();
         } catch (_) { this.students = []; this.populateDropdowns(); }
     }
 
@@ -124,25 +124,57 @@ class StudentGradeAddModal extends HTMLElement {
                 this.populateDropdowns();
                 const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
                 if (subjDd && this.prefill.filters.subject_id) subjDd.value = String(this.prefill.filters.subject_id);
+                this.updateDisplayFields();
             }
         } catch (_) { /* ignore */ }
     }
 
+    updateDisplayFields() {
+        // Class
+        const classInput = this.querySelector('ui-input[data-field="class_display"]');
+        if (classInput) {
+            const id = this.prefill?.filters?.class_id;
+            const found = (this.prefill.classes || []).find(c => String(c.id) === String(id));
+            classInput.value = found ? `${found.name}${found.section ? ' - ' + found.section : ''}` : (id || '');
+        }
+        // Student
+        const studentInput = this.querySelector('ui-input[data-field="student_display"]');
+        if (studentInput) {
+            const id = this.prefill?.filters?.student_id;
+            const found = (this.students || []).find(s => String(s.id) === String(id));
+            studentInput.value = found ? `${found.first_name} ${found.last_name} (${found.student_id})` : (id || '');
+        }
+        // Subject
+        const subjectInput = this.querySelector('ui-input[data-field="subject_display"]');
+        if (subjectInput) {
+            const id = this.prefill?.filters?.subject_id;
+            const found = (this.prefill.subjects || []).find(s => String(s.id) === String(id)) || (this.allSubjects || []).find(s => String(s.id) === String(id));
+            subjectInput.value = found ? `${found.name}` : (id || '');
+        }
+        // Period
+        const periodInput = this.querySelector('ui-input[data-field="period_display"]');
+        if (periodInput) {
+            const id = this.prefill?.filters?.grading_period_id;
+            const found = (this.prefill.periods || []).find(p => String(p.id) === String(id));
+            periodInput.value = found ? `${found.name}` : (id || '');
+        }
+    }
+
     async save() {
         try {
-            const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
-            const classDd = this.querySelector('ui-search-dropdown[name="class_id"]');
-            const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
-            const periodDd = this.querySelector('ui-search-dropdown[name="grading_period_id"]');
+            const classId = Number(this.prefill?.filters?.class_id || 0);
+            const studentId = Number(this.prefill?.filters?.student_id || 0);
+            const subjectId = Number(this.prefill?.filters?.subject_id || 0);
+            const periodId = Number(this.prefill?.filters?.grading_period_id || 0);
             const assignInput = this.querySelector('ui-input[data-field="assignment_total"]');
             const examInput = this.querySelector('ui-input[data-field="exam_total"]');
             const remarksTa = this.querySelector('ui-textarea[data-field="remarks"]');
 
             const payload = {
-                student_id: Number(studentDd?.value || 0),
-                class_id: Number(classDd?.value || 0),
-                subject_id: Number(subjDd?.value || 0),
-                grading_period_id: Number(periodDd?.value || 0),
+                student_id: studentId,
+                class_id: classId,
+                subject_id: subjectId,
+                grading_period_id: periodId,
                 assignment_total: Number(assignInput?.value || 0),
                 exam_total: Number(examInput?.value || 0),
                 remarks: remarksTa?.getValue() || ''
@@ -188,21 +220,21 @@ class StudentGradeAddModal extends HTMLElement {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                            <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full"></ui-search-dropdown>
+                            <ui-input data-field="class_display" type="text" readonly class="w-full"></ui-input>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
-                            <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full"></ui-search-dropdown>
+                            <ui-input data-field="student_display" type="text" readonly class="w-full"></ui-input>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                            <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full"></ui-search-dropdown>
+                            <ui-input data-field="subject_display" type="text" readonly class="w-full"></ui-input>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
-                            <ui-search-dropdown name="grading_period_id" placeholder="Select grading period" class="w-full"></ui-search-dropdown>
+                            <ui-input data-field="period_display" type="text" readonly class="w-full"></ui-input>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -224,8 +256,14 @@ class StudentGradeAddModal extends HTMLElement {
                 <ui-button slot="cancel" variant="secondary">Cancel</ui-button>
             </ui-modal>
         `;
-        // Populate dropdowns after render
-        setTimeout(() => this.populateDropdowns(), 0);
+        // Populate student/subject lists for name resolution and update display values
+        setTimeout(() => {
+            if (this.prefill?.filters?.class_id) {
+                this.loadStudentsByClass(this.prefill.filters.class_id);
+                this.loadSubjectsByClass(this.prefill.filters.class_id);
+            }
+            this.updateDisplayFields();
+        }, 0);
     }
 }
 

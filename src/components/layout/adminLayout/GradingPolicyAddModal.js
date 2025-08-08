@@ -20,6 +20,8 @@ class GradingPolicyAddModal extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.loadSubjectsWithoutPolicies();
+        // Re-populate options after render in case dropdown upgrades late
+        setTimeout(() => this.populateSubjectsDropdown(), 0);
     }
 
     setupEventListeners() {
@@ -47,8 +49,6 @@ class GradingPolicyAddModal extends HTMLElement {
     populateSubjectsDropdown() {
         const dd = this.querySelector('ui-search-dropdown[name="subject_id"]');
         if (!dd) return;
-        const slot = dd.querySelector('slot');
-        if (!slot) return;
         const optionsHtml = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
         // Replace hidden slot sibling with options container
         const temp = document.createElement('div');
@@ -56,6 +56,8 @@ class GradingPolicyAddModal extends HTMLElement {
         const existing = dd.querySelectorAll('ui-option');
         existing.forEach(n => n.remove());
         Array.from(temp.children).forEach(el => dd.appendChild(el));
+        // Reset any previous selection so placeholder shows
+        dd.value = '';
     }
 
     open() { this.setAttribute('open', ''); }

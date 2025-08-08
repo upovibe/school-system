@@ -162,10 +162,19 @@ class StudentAssignmentsPage extends App {
         // Filter to only show published assignments
         const publishedAssignments = assignments.filter(a => a.status === 'published' && !a.deleted_at);
         
+        // Count overdue assignments
+        const overdueCount = publishedAssignments.filter(a => {
+            if (a.submission_status === 'not_submitted' || a.submission_status === 'late') {
+                return a.due_date && new Date(a.due_date) < new Date();
+            }
+            return false;
+        }).length;
+        
         return {
             submitted: publishedAssignments.filter(a => (a.submission_status === 'submitted' || a.submission_status === 'graded')).length,
             not_submitted: publishedAssignments.filter(a => (a.submission_status === 'not_submitted' || a.submission_status === 'late')).length,
-            archived: publishedAssignments.filter(a => a.archived_at).length
+            archived: publishedAssignments.filter(a => a.archived_at).length,
+            overdue: overdueCount
         };
     }
 
@@ -877,7 +886,7 @@ class StudentAssignmentsPage extends App {
                     </div>
                     
                     <!-- Enhanced Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -910,6 +919,18 @@ class StudentAssignmentsPage extends App {
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${tabCounts.archived}</div>
                                     <div class="text-blue-100 text-xs sm:text-sm">Archived</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${tabCounts.overdue}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Overdue</div>
                                 </div>
                             </div>
                         </div>

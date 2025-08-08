@@ -32,13 +32,6 @@ class TeacherStudentGradeAddModal extends HTMLElement {
   setFilterPrefill(filters, lists) {
     this.prefill = { filters: filters || {}, classes: lists.classes || [], subjects: lists.subjects || [], periods: lists.periods || [], students: lists.students || [] };
     this.render();
-    this.populateDropdowns();
-    const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
-    const periodDd = this.querySelector('ui-search-dropdown[name="grading_period_id"]');
-    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
-    if (subjDd && this.prefill.filters.subject_id) subjDd.value = String(this.prefill.filters.subject_id);
-    if (periodDd && this.prefill.filters.grading_period_id) periodDd.value = String(this.prefill.filters.grading_period_id);
-    if (studentDd && this.prefill.filters.student_id) studentDd.value = String(this.prefill.filters.student_id);
     if (this.prefill.filters.subject_id) { this.loadPolicyForSubject(this.prefill.filters.subject_id); }
     this.updateDisplayFields();
   }
@@ -91,29 +84,7 @@ class TeacherStudentGradeAddModal extends HTMLElement {
     this.addEventListener('cancel', () => this.close());
   }
 
-  populateDropdowns() {
-    const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
-    const periodDd = this.querySelector('ui-search-dropdown[name="grading_period_id"]');
-    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
-    if (subjDd) {
-      const html = (this.prefill.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
-      subjDd.querySelectorAll('ui-option').forEach(o=>o.remove());
-      const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => subjDd.appendChild(el));
-      subjDd.value = this.prefill.filters.subject_id ? String(this.prefill.filters.subject_id) : '';
-    }
-    if (periodDd) {
-      const html = (this.prefill.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
-      periodDd.querySelectorAll('ui-option').forEach(o=>o.remove());
-      const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => periodDd.appendChild(el));
-      periodDd.value = this.prefill.filters.grading_period_id ? String(this.prefill.filters.grading_period_id) : '';
-    }
-    if (studentDd) {
-      const html = (this.prefill.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
-      studentDd.querySelectorAll('ui-option').forEach(o=>o.remove());
-      const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => studentDd.appendChild(el));
-      studentDd.value = this.prefill.filters.student_id ? String(this.prefill.filters.student_id) : '';
-    }
-  }
+
 
   updateDisplayFields() {
     // Class display (read-only)
@@ -223,17 +194,17 @@ class TeacherStudentGradeAddModal extends HTMLElement {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
-              <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full"></ui-search-dropdown>
+              <ui-input data-field="student_display" type="text" readonly disabled class="w-full"></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-              <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full"></ui-search-dropdown>
+              <ui-input data-field="subject_display" type="text" readonly disabled class="w-full"></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
-              <ui-search-dropdown name="grading_period_id" placeholder="Select period" class="w-full"></ui-search-dropdown>
+              <ui-input data-field="period_display" type="text" readonly disabled class="w-full"></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -256,12 +227,8 @@ class TeacherStudentGradeAddModal extends HTMLElement {
       </ui-modal>
     `;
     setTimeout(() => {
-      this.populateDropdowns();
       this.updateDisplayFields();
       if (this.prefill?.filters?.subject_id) this.loadPolicyForSubject(this.prefill.filters.subject_id);
-      // Listen to dropdown changes to fetch policy immediately
-      const subjDd = this.querySelector('ui-search-dropdown[name="subject_id"]');
-      if (subjDd) subjDd.addEventListener('change', () => this.loadPolicyForSubject(subjDd.value));
     }, 0);
   }
 }

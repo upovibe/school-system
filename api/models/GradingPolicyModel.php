@@ -134,21 +134,40 @@ class GradingPolicyModel extends BaseModel {
      * Calculate letter grade based on percentage and policy
      */
     public function calculateLetterGrade($percentage, $policy) {
-        // Handle both JSON string and array formats
-        $boundaries = is_string($policy['grade_boundaries']) 
-            ? json_decode($policy['grade_boundaries'], true) 
-            : $policy['grade_boundaries'];
+        $boundaries = $this->getGradeBoundaries($policy);
         
-        // Sort boundaries from highest to lowest
-        arsort($boundaries);
-        
-        foreach ($boundaries as $grade => $minPercentage) {
-            if ($percentage >= $minPercentage) {
-                return $grade;
+        // Normalize to array of ['grade' => string, 'min' => number]
+        $normalized = [];
+        if (is_array($boundaries)) {
+            // If associative map: ['A' => 80, 'B' => 70]
+            $isAssoc = array_keys($boundaries) !== range(0, count($boundaries) - 1);
+            if ($isAssoc) {
+                foreach ($boundaries as $grade => $min) {
+                    $normalized[] = [ 'grade' => (string)$grade, 'min' => (float)$min ];
+                }
+            } else {
+                // If array of objects: [ ['grade' => 'A', 'min' => 80], ... ]
+                foreach ($boundaries as $entry) {
+                    if (is_array($entry) && isset($entry['grade']) && isset($entry['min'])) {
+                        $normalized[] = [ 'grade' => (string)$entry['grade'], 'min' => (float)$entry['min'] ];
+                    }
+                }
             }
         }
-        
-        return 'F'; // Default to F if no grade boundary matches
+
+        // Sort by min descending
+        usort($normalized, function($a, $b) {
+            if ($a['min'] === $b['min']) return 0;
+            return ($a['min'] < $b['min']) ? 1 : -1;
+        });
+
+        foreach ($normalized as $boundary) {
+            if ($percentage >= $boundary['min']) {
+                return $boundary['grade'];
+            }
+        }
+
+        return 'F';
     }
 
     /**
@@ -199,9 +218,12 @@ class GradingPolicyModel extends BaseModel {
      */
     public function getGradeBoundaries($policy) {
         // Handle both JSON string and array formats
-        return is_string($policy['grade_boundaries']) 
+        $raw = is_string($policy['grade_boundaries']) 
             ? json_decode($policy['grade_boundaries'], true) 
             : $policy['grade_boundaries'];
+        // Ensure it's an array
+        if (!is_array($raw)) { return []; }
+        return $raw;
     }
 }
 ?>

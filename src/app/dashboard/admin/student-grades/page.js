@@ -135,6 +135,24 @@ class StudentGradesManagementPage extends App {
             this.classes = classesResp.data.data || [];
             this.subjects = subjectsResp.data.data || [];
             this.periods = periodsResp.data.data || [];
+
+            // Default: preselect the last existing class id
+            const currentFilters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+            if (!currentFilters.class_id && (this.classes || []).length > 0) {
+                const lastId = String(
+                    (this.classes || [])
+                        .map(c => Number(c.id))
+                        .filter(n => !Number.isNaN(n))
+                        .sort((a, b) => a - b)
+                        .slice(-1)[0]
+                );
+                if (lastId) {
+                    const next = { ...currentFilters, class_id: lastId };
+                    this.set('filters', next);
+                    await this.loadStudentsByClass(lastId);
+                    this.loadGrades();
+                }
+            }
         } catch (e) {
             Toast.show({ title: 'Error', message: e.response?.data?.message || 'Failed to load filters', variant: 'error', duration: 3000 });
         } finally {

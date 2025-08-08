@@ -32,8 +32,12 @@ class TeacherStudentGradeAddModal extends HTMLElement {
   setFilterPrefill(filters, lists) {
     this.prefill = { filters: filters || {}, classes: lists.classes || [], subjects: lists.subjects || [], periods: lists.periods || [], students: lists.students || [] };
     this.render();
-    if (this.prefill.filters.subject_id) { this.loadPolicyForSubject(this.prefill.filters.subject_id); }
+    // Ensure read-only fields show names immediately
     this.updateDisplayFields();
+    // Load grading policy if subject is present
+    if (this.prefill.filters.subject_id) {
+      this.loadPolicyForSubject(this.prefill.filters.subject_id);
+    }
   }
 
   async loadPolicyForSubject(subjectId) {
@@ -229,6 +233,8 @@ class TeacherStudentGradeAddModal extends HTMLElement {
     setTimeout(() => {
       this.updateDisplayFields();
       if (this.prefill?.filters?.subject_id) this.loadPolicyForSubject(this.prefill.filters.subject_id);
+      // Ensure labels reflect current policy
+      this.applyMaxConstraints();
     }, 0);
   }
 }

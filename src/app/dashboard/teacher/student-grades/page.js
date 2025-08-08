@@ -245,8 +245,9 @@ class TeacherStudentGradesPage extends App {
     setTimeout(() => {
       const modal = this.querySelector('teacher-student-grade-add-modal');
       if (modal) {
-        const filters = { subject_id: this.filters.subject_id, grading_period_id: this.filters.grading_period_id, student_id: this.filters.student_id, class_id: this.teacherClass?.class_id };
-        modal.setFilterPrefill(filters, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
+        const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+        const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, student_id: filters.student_id, class_id: this.teacherClass?.class_id };
+        modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
         modal.open?.();
       }
     }, 0);

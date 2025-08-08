@@ -67,25 +67,25 @@ class StudentGradeAddModal extends HTMLElement {
             const html = (this.prefill.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
             classDd.querySelectorAll('ui-option').forEach(o=>o.remove());
             const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => classDd.appendChild(el));
-            classDd.value = this.prefill.filters.class_id || '';
+            classDd.value = this.prefill.filters.class_id ? String(this.prefill.filters.class_id) : '';
         }
         if (subjDd) {
             const html = (this.prefill.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
             subjDd.querySelectorAll('ui-option').forEach(o=>o.remove());
             const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => subjDd.appendChild(el));
-            subjDd.value = this.prefill.filters.subject_id || '';
+            subjDd.value = this.prefill.filters.subject_id ? String(this.prefill.filters.subject_id) : '';
         }
         if (periodDd) {
             const html = (this.prefill.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
             periodDd.querySelectorAll('ui-option').forEach(o=>o.remove());
             const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => periodDd.appendChild(el));
-            periodDd.value = this.prefill.filters.grading_period_id || '';
+            periodDd.value = this.prefill.filters.grading_period_id ? String(this.prefill.filters.grading_period_id) : '';
         }
         if (studentDd) {
             const html = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
             studentDd.querySelectorAll('ui-option').forEach(o=>o.remove());
             const temp = document.createElement('div'); temp.innerHTML = html; Array.from(temp.children).forEach(el => studentDd.appendChild(el));
-            studentDd.value = this.prefill.filters.student_id || '';
+            studentDd.value = this.prefill.filters.student_id ? String(this.prefill.filters.student_id) : '';
         }
     }
 
@@ -93,7 +93,7 @@ class StudentGradeAddModal extends HTMLElement {
         try {
             const token = localStorage.getItem('token');
             if (!token || !classId) { this.students = []; this.populateDropdowns(); return; }
-            const resp = await api.withToken(token).get('/students/by-class', { params: { class_id: classId } });
+            const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
             this.populateDropdowns();
         } catch (_) { this.students = []; this.populateDropdowns(); }
@@ -103,7 +103,7 @@ class StudentGradeAddModal extends HTMLElement {
         try {
             const token = localStorage.getItem('token');
             if (!token || !classId) return;
-            const resp = await api.withToken(token).get('/class-subjects/by-class', { params: { class_id: classId } });
+            const resp = await api.withToken(token).get('/class-subjects/by-class', { class_id: classId });
             const classSubjects = resp.data.data || [];
             // Expect format with subject_id and subject name
             const mapped = classSubjects.map(cs => ({ id: cs.subject_id || cs.id, name: cs.subject_name || cs.name })).filter(s => s.id);

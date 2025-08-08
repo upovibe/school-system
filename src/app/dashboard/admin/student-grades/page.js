@@ -371,6 +371,9 @@ class StudentGradesManagementPage extends App {
             { key: 'updated', label: 'Updated' }
         ];
 
+        const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+        const canAdd = Boolean(filters.class_id && filters.subject_id && filters.grading_period_id && filters.student_id);
+
         return `
             ${this.renderFilters()}
             <div class="bg-white rounded-lg shadow-lg p-4">
@@ -392,7 +395,7 @@ class StudentGradesManagementPage extends App {
                             pagination
                             page-size="50"
                             action
-                            addable
+                            ${canAdd ? 'addable' : ''}
                             refresh
                             print
                             bordered

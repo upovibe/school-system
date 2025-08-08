@@ -39,6 +39,13 @@ class StudentGradesManagementPage extends App {
         this.deleteGradeData = null;
     }
 
+    formatNumber(value) {
+        if (value === null || value === undefined || value === '') return '—';
+        const num = Number(value);
+        if (Number.isNaN(num)) return String(value);
+        return num.toFixed(2);
+    }
+
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Student Grades | School System';
@@ -282,9 +289,9 @@ class StudentGradesManagementPage extends App {
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
             subject: g.subject_name || g.subject_code || '',
             period: g.grading_period_name || '',
-            assign_total: g.assignment_total,
-            exam_total: g.exam_total,
-            final_pct: g.final_percentage,
+            assign_total: this.formatNumber(g.assignment_total),
+            exam_total: this.formatNumber(g.exam_total),
+            final_pct: this.formatNumber(g.final_percentage),
             final_grade: g.final_letter_grade,
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
         }));
@@ -358,9 +365,9 @@ class StudentGradesManagementPage extends App {
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
             subject: g.subject_name || '',
             period: g.grading_period_name || '',
-            assign_total: g.assignment_total,
-            exam_total: g.exam_total,
-            final_pct: g.final_percentage,
+            assign_total: this.formatNumber(g.assignment_total),
+            exam_total: this.formatNumber(g.exam_total),
+            final_pct: this.formatNumber(g.final_percentage),
             final_grade: g.final_letter_grade,
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
         })) : [];

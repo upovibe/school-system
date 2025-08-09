@@ -305,6 +305,22 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 </div>
               </div>
             ` : ''}
+
+            <!-- How it works -->
+            <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+              <div class="flex items-start space-x-2">
+                <i class="fas fa-info-circle mt-0.5"></i>
+                <div>
+                  <p class="font-medium">How this works</p>
+                  <ul class="list-disc pl-5 mt-1 space-y-1">
+                    <li>Pick a teacher (defaults to current).</li>
+                    <li>Select one or more destination classes.</li>
+                    <li>Select one or more subjects.</li>
+                    <li>If you keep the same single class, it only update the subjects. Otherwise, move the current assignments to the selected class(es).</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </ui-dialog>

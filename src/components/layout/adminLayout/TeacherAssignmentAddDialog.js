@@ -332,6 +332,22 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                                 <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
                             `}
                         </div>
+
+                        <!-- How it works -->
+                        <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <div>
+                                    <p class="font-medium">How this works</p>
+                                    <ul class="list-disc pl-5 mt-1 space-y-1">
+                                        <li>Select a single teacher.</li>
+                                        <li>Select one or more classes.</li>
+                                        <li>Select one or more subjects.</li>
+                                        <li>It will create assignments for every class × subject combination for that teacher.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ui-dialog>

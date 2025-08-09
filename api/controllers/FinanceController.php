@@ -23,7 +23,7 @@ class FinanceController {
 
     /**
      * List fee schedules with optional filters (admin only)
-     * Filters: class_id, academic_year, term, is_active
+     * Filters: class_id, academic_year, term, student_type, is_active
      */
     public function indexSchedules() {
         try {
@@ -44,6 +44,10 @@ class FinanceController {
             if (isset($_GET['term']) && $_GET['term'] !== '') {
                 $conditions[] = 'term = ?';
                 $params[] = $_GET['term'];
+            }
+            if (isset($_GET['student_type']) && $_GET['student_type'] !== '') {
+                $conditions[] = 'student_type = ?';
+                $params[] = $_GET['student_type'];
             }
             if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
                 $conditions[] = 'is_active = ?';
@@ -77,7 +81,7 @@ class FinanceController {
 
     /**
      * Create a fee schedule (admin only)
-     * Required: class_id, academic_year, term, total_fee
+      * Required: class_id, academic_year, term, student_type, total_fee
      */
     public function storeSchedule() {
         try {
@@ -87,7 +91,7 @@ class FinanceController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
             // Validate required fields
-            $required = ['class_id', 'academic_year', 'term', 'total_fee'];
+            $required = ['class_id', 'academic_year', 'term', 'student_type', 'total_fee'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -99,18 +103,22 @@ class FinanceController {
                 }
             }
 
-            // Enforce uniqueness: class_id + academic_year + term
-            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['term']);
+            // Defaults
+            if (!isset($data['student_type']) || $data['student_type'] === '') {
+                $data['student_type'] = 'Day';
+            }
+
+            // Enforce uniqueness: class_id + academic_year + term + student_type
+            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['term'], $data['student_type']);
             if ($existing) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'A schedule already exists for this class, academic year and term'
+                    'message' => 'A schedule already exists for this class, academic year, term and student type'
                 ]);
                 return;
             }
 
-            // Defaults
             if (!isset($data['is_active'])) {
                 $data['is_active'] = 1;
             }
@@ -194,12 +202,13 @@ class FinanceController {
             $newClassId = $data['class_id'] ?? $existing['class_id'];
             $newYear = $data['academic_year'] ?? $existing['academic_year'];
             $newTerm = $data['term'] ?? $existing['term'];
-            $dup = $this->findScheduleByComposite($newClassId, $newYear, $newTerm);
+            $newType = $data['student_type'] ?? ($existing['student_type'] ?? 'Day');
+            $dup = $this->findScheduleByComposite($newClassId, $newYear, $newTerm, $newType);
             if ($dup && (int)$dup['id'] !== (int)$id) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Another schedule already exists for this class, academic year and term'
+                    'message' => 'Another schedule already exists for this class, academic year, term and student type'
                 ]);
                 return;
             }
@@ -279,10 +288,16 @@ class FinanceController {
     }
 
     // --- Helpers ---
-    private function findScheduleByComposite($classId, $academicYear, $term) {
-        $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? LIMIT 1';
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$classId, $academicYear, $term]);
+    private function findScheduleByComposite($classId, $academicYear, $term, $studentType = null) {
+        if ($studentType !== null) {
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? AND student_type = ? LIMIT 1';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$classId, $academicYear, $term, $studentType]);
+        } else {
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? LIMIT 1';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$classId, $academicYear, $term]);
+        }
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -393,11 +408,34 @@ class FinanceController {
                 }
             }
 
-            // If amount_due is empty or 0, try deriving from schedule based on student's current class
+            // Derive student_type and schedule_id; If amount_due is empty or 0, derive from schedule
             if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
                 $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['term']);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
+                }
+            }
+
+            // Attach student_type and schedule_id if possible
+            $studentRow = $this->studentModel->findById($data['student_id']);
+            $studentType = $studentRow['student_type'] ?? null; // assuming column exists; optional
+            if ($studentType) {
+                $data['student_type'] = $studentType;
+            }
+            // Try to find matching schedule id using type if present
+            $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $classIdStmt->execute([(int)$data['student_id']]);
+            $classId = $classIdStmt->fetchColumn();
+            if ($classId) {
+                $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['term'], $data['student_type'] ?? null);
+                if ($schedule) {
+                    $data['schedule_id'] = $schedule['id'];
+                    if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
+                        $data['amount_due'] = (float)($schedule['total_fee'] ?? 0);
+                    }
+                    if (empty($data['student_type']) && !empty($schedule['student_type'])) {
+                        $data['student_type'] = $schedule['student_type'];
+                    }
                 }
             }
 
@@ -487,7 +525,7 @@ class FinanceController {
                 }
             }
 
-            // If amount_due not supplied or zero, attempt derive based on student current class & schedule
+            // Derive student_type/schedule_id and amount_due if omitted
             $studentId = isset($data['student_id']) ? (int)$data['student_id'] : (int)$existing['student_id'];
             $year = $data['academic_year'] ?? $existing['academic_year'];
             $term = $data['term'] ?? $existing['term'];
@@ -495,6 +533,20 @@ class FinanceController {
                 $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$term);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
+                }
+            }
+            $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $classIdStmt->execute([$studentId]);
+            $classId = $classIdStmt->fetchColumn();
+            if ($classId) {
+                $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$term, $data['student_type'] ?? ($existing['student_type'] ?? null));
+                if ($schedule) {
+                    $data['schedule_id'] = $schedule['id'];
+                    if (!isset($data['student_type']) && isset($existing['student_type'])) {
+                        $data['student_type'] = $existing['student_type'];
+                    } elseif (!isset($data['student_type']) && isset($schedule['student_type'])) {
+                        $data['student_type'] = $schedule['student_type'];
+                    }
                 }
             }
 

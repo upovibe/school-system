@@ -6,8 +6,8 @@ class FeeInvoice extends BaseModel {
     protected static $table = 'fee_invoices';
 
     protected static $fillable = [
-        'student_id', 'academic_year', 'term', 'invoice_number', 'status',
-        'issue_date', 'due_date', 'amount_due', 'amount_paid', 'balance', 'notes', 'created_by'
+        'student_id', 'academic_year', 'term', 'student_type', 'invoice_number', 'status',
+        'issue_date', 'due_date', 'amount_due', 'amount_paid', 'balance', 'notes', 'schedule_id', 'created_by'
     ];
 
     protected static $casts = [

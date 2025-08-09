@@ -263,7 +263,7 @@ class TeacherClassPage extends App {
                                     <span class="flex items-center">
                                         <i class="fas fa-calendar mr-1"></i>
                                         ${academic_year}
-                                    </span>
+                                    </span>                                    
                                     <span class="flex items-center">
                                         <i class="fas fa-check-circle mr-1 text-green-500"></i>
                                         ${status || 'Active'}

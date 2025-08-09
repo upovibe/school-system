@@ -122,6 +122,7 @@ class FinanceSchedulesPage extends App {
     this.addEventListener('table-edit', this.onEdit.bind(this));
     this.addEventListener('table-delete', this.onDelete.bind(this));
     this.addEventListener('table-add', this.onAdd.bind(this));
+    this.addEventListener('table-refresh', () => this.loadData());
 
     this.addEventListener('schedule-deleted', (event) => {
       const id = event.detail.id;
@@ -134,8 +135,18 @@ class FinanceSchedulesPage extends App {
     this.addEventListener('schedule-saved', (event) => {
       const newSched = event.detail.schedule;
       if (newSched) {
-        const current = this.get('schedules') || [];
-        this.set('schedules', [...current, newSched]);
+        // Avoid duplicates if backend blocked due to unique key
+        const existingList = this.get('schedules') || [];
+        const dup = existingList.find(s => String(s.class_id) === String(newSched.class_id)
+          && String(s.academic_year) === String(newSched.academic_year)
+          && String(s.term) === String(newSched.term));
+        if (dup) {
+          Toast.show({ title: 'Info', message: 'Schedule already exists for this class/year/term', variant: 'warning', duration: 2500 });
+          this.set('showAddModal', false);
+          return;
+        }
+        const updatedList = [...existingList, newSched];
+        this.set('schedules', updatedList);
         this.updateTableData();
         this.set('showAddModal', false);
       } else {
@@ -157,28 +168,37 @@ class FinanceSchedulesPage extends App {
   }
 
   async loadData() {
-    try {
-      this.set('loading', true);
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        Toast.show({ title: 'Authentication Error', message: 'Please log in to view data', variant: 'error', duration: 3000 });
-        return;
-      }
-
-      const [classesResp, schedulesResp] = await Promise.all([
-        api.withToken(token).get('/classes'),
-        api.withToken(token).get('/finance/schedules'),
-      ]);
-
-      this.classes = (classesResp.data?.data) || [];
-      this.set('schedules', (schedulesResp.data?.data) || []);
+    this.set('loading', true);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Toast.show({ title: 'Authentication Error', message: 'Please log in to view data', variant: 'error', duration: 3000 });
       this.set('loading', false);
-    } catch (error) {
-      console.error('❌ Error loading schedules:', error);
-      this.set('loading', false);
-      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load fee schedules', variant: 'error', duration: 3000 });
+      return;
     }
+
+    // Load schedules first so table can render even if classes fail
+    try {
+      const schedulesResp = await api.withToken(token).get('/finance/schedules');
+      this.set('schedules', (schedulesResp.data?.data) || []);
+    } catch (error) {
+      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load fee schedules', variant: 'error', duration: 3000 });
+      this.set('schedules', []);
+    }
+
+    // Load classes for display names; ignore failure
+    try {
+      const classesResp = await api.withToken(token).get('/classes');
+      const classes = (classesResp.data?.data) || [];
+      this.classes = classes;
+      this.set('classes', classes);
+    } catch (_) {
+      this.classes = [];
+      this.set('classes', []);
+    }
+
+    this.set('loading', false);
+    // Rely on reactive render. Also push data into table explicitly as safety.
+    this.updateTableData();
   }
 
   onView(event) {
@@ -232,7 +252,8 @@ class FinanceSchedulesPage extends App {
   }
 
   classDisplay(classId) {
-    const c = this.classes.find((x) => x.id === classId);
+    const classList = this.get('classes') || this.classes || [];
+    const c = classList.find((x) => String(x.id) === String(classId));
     return c ? `${c.name}${c.section ? ' ' + c.section : ''}` : `Class #${classId}`;
   }
 

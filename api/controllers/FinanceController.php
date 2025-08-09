@@ -1,4 +1,4 @@
-http://localhost:8000/<?php
+<?php
 // api/controllers/FinanceController.php - Finance-related endpoints (schedules first)
 
 require_once __DIR__ . '/../models/FeeSchedule.php';

@@ -9,6 +9,8 @@ class FinanceScheduleAddModal extends HTMLElement {
   constructor() {
     super();
     this._classes = [];
+    this._listenersAttached = false;
+    this._saving = false;
   }
 
   static get observedAttributes() {
@@ -28,14 +30,20 @@ class FinanceScheduleAddModal extends HTMLElement {
   }
 
   setupEventListeners() {
-    this.addEventListener('confirm', () => this.saveSchedule());
-    this.addEventListener('cancel', () => this.close());
+    if (this._listenersAttached) return;
+    this._onConfirm = () => this.saveSchedule();
+    this._onCancel = () => this.close();
+    this.addEventListener('confirm', this._onConfirm);
+    this.addEventListener('cancel', this._onCancel);
+    this._listenersAttached = true;
   }
 
   open() { this.setAttribute('open', ''); }
   close() { this.removeAttribute('open'); }
 
   async saveSchedule() {
+    if (this._saving) return;
+    this._saving = true;
     try {
       const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
@@ -75,6 +83,8 @@ class FinanceScheduleAddModal extends HTMLElement {
       }
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to create schedule', variant: 'error', duration: 3000 });
+    } finally {
+      this._saving = false;
     }
   }
 

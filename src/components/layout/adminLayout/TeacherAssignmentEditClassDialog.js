@@ -295,6 +295,22 @@ class TeacherAssignmentEditClassDialog extends HTMLElement {
                                 </div>
                             </div>
                         ` : ''}
+
+                        <!-- How it works -->
+                        <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <div>
+                                    <p class="font-medium">How this works</p>
+                                    <ul class="list-disc pl-5 mt-1 space-y-1">
+                                        <li>Select one or more subjects to keep for this class.</li>
+                                        <li>It updates the subjects for this teacher in the selected class.</li>
+                                        <li>It does not change the teacher or the class.</li>
+                                        <li>Other classes for this teacher are not affected.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ui-dialog>

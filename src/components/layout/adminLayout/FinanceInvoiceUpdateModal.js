@@ -317,8 +317,8 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const overrideType = typeBadge?.dataset?.type || '';
       // no manual override
 
-      const hint = this.querySelector('#schedule-hint');
-      if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
+      const missBefore = this.querySelector('#schedule-missing');
+      if (missBefore) missBefore.remove();
 
       try {
         const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
@@ -334,10 +334,13 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
           amountDueInput.value = '';
           if (yearInput) yearInput.value = '';
           if (termInput) termInput.value = '';
-          if (hint) {
-            const typeText = overrideType || 'selected type';
-            hint.textContent = `No schedule found for ${typeText}. Amount Due cleared.`;
-            hint.classList.remove('hidden');
+          const typeBadge2 = this.querySelector('#current-student-type');
+          const parent = typeBadge2?.parentElement || this.querySelector('#current-class-info');
+          const typeText = (typeBadge2?.dataset?.type || 'type');
+          if (parent) {
+            const existed = this.querySelector('#schedule-missing');
+            if (existed) existed.remove();
+            parent.insertAdjacentHTML('beforeend', ` <span id="schedule-missing" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">No schedule for ${typeText}</span>`);
           }
         }
       }

@@ -73,11 +73,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
             const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
             const yearInput2 = this.querySelector('ui-input[data-field="academic_year"]');
             const termInput2 = this.querySelector('ui-input[data-field="term"]');
-            const hint2 = this.querySelector('#schedule-hint');
+            const missBadge = this.querySelector('#schedule-missing');
             if (amountDueInput) amountDueInput.value = '';
             if (yearInput2) yearInput2.value = '';
             if (termInput2) termInput2.value = '';
-            if (hint2) { hint2.classList.add('hidden'); hint2.textContent = ''; }
+            if (missBadge) missBadge.remove();
             this.autoFillAmountDueDebounced();
             if (classId) {
               const cls = await api.withToken(token).get(`/classes/${classId}`).catch(() => null);
@@ -237,8 +237,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
       if (term) qs.append('term', term);
       // no manual override; backend derives by student type
 
-      const hint = this.querySelector('#schedule-hint');
-      if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
+      const missBefore = this.querySelector('#schedule-missing');
+      if (missBefore) missBefore.remove();
 
       try {
         const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
@@ -254,10 +254,13 @@ class FinanceInvoiceAddModal extends HTMLElement {
           amountDueInput.value = '';
           if (yearInput) yearInput.value = '';
           if (termInput) termInput.value = '';
-          if (hint) {
-            const typeText = overrideType || 'student type';
-            hint.textContent = `No schedule found for ${typeText}. Amount Due cleared.`;
-            hint.classList.remove('hidden');
+          const typeBadge = this.querySelector('#current-student-type');
+          const parent = typeBadge?.parentElement || this.querySelector('#current-class-info');
+          const typeText = (typeBadge?.dataset?.type || 'type');
+          if (parent) {
+            const existed = this.querySelector('#schedule-missing');
+            if (existed) existed.remove();
+            parent.insertAdjacentHTML('beforeend', ` <span id="schedule-missing" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">No schedule for ${typeText}</span>`);
           }
         }
       }
@@ -291,7 +294,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
             </div>
           </div>
-          <div id="schedule-hint" class="text-xs text-red-600 mt-1 hidden"></div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Due</label>

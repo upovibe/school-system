@@ -225,7 +225,9 @@ class FinanceSchedulesPage extends App {
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('finance-schedule-add-modal');
-      if (modal) modal.setClasses(this.classes);
+      if (modal) {
+        modal.setClasses(this.classes);
+      }
     }, 0);
   }
 

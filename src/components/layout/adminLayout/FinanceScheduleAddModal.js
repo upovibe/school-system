@@ -22,14 +22,9 @@ class FinanceScheduleAddModal extends HTMLElement {
 
   setClasses(classes) {
     this._classes = Array.isArray(classes) ? classes : [];
-    this.renderClassOptions();
-  }
-
-  renderClassOptions() {
-    const dropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
-    if (!dropdown) return;
-    const options = (this._classes || []).map(c => ({ value: String(c.id), label: `${c.name}${c.section ? ' ' + c.section : ''}` }));
-    dropdown.setAttribute('options', JSON.stringify(options));
+    // Re-render so options are slotted as <ui-option>, which SearchDropdown expects
+    this.render();
+    this.setupEventListeners();
   }
 
   setupEventListeners() {
@@ -90,7 +85,11 @@ class FinanceScheduleAddModal extends HTMLElement {
         <form class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-            <ui-search-dropdown name="class_id" placeholder="Select class" options="[]"></ui-search-dropdown>
+            <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
+              ${(this._classes || []).map(c => `
+                <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
+              `).join('')}
+            </ui-search-dropdown>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -128,8 +127,6 @@ class FinanceScheduleAddModal extends HTMLElement {
         </div>
       </ui-modal>
     `;
-
-    setTimeout(() => this.renderClassOptions(), 0);
   }
 }
 

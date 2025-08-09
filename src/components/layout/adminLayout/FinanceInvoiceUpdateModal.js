@@ -59,7 +59,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const trigger = () => this.autoFillAmountDueDebounced();
-      if (studentDd && !studentDd._autoBound) { studentDd.addEventListener('change', trigger); studentDd._autoBound = true; }
+      if (studentDd && !studentDd._autoBound) { studentDd.addEventListener('change', trigger); studentDd.addEventListener('value-change', trigger); studentDd._autoBound = true; }
       if (yearInput && !yearInput._autoBound) { yearInput.addEventListener('input', trigger); yearInput.addEventListener('change', trigger); yearInput._autoBound = true; }
       if (termInput && !termInput._autoBound) { termInput.addEventListener('input', trigger); termInput.addEventListener('change', trigger); termInput._autoBound = true; }
     };
@@ -128,6 +128,8 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
 
   async autoFillAmountDue() {
     try {
+      // console debug
+      console.log('[InvoiceUpdate] autoFillAmountDue start');
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
       if (!amountDueInput) return;
       // Only auto-fill if empty or zero to avoid overriding manual edits
@@ -140,7 +142,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
       const academicYear = yearInput?.value || '';
       const term = termInput?.value || '';
-      if (!studentId || !academicYear || !term) return;
+      if (!studentId) return;
 
       let classId = null;
       const fromList = (this._students || []).find(s => String(s.id) === String(studentId));
@@ -157,14 +159,53 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
 
       const token = localStorage.getItem('token');
       if (!token) return;
-      const qs = new URLSearchParams({ class_id: String(classId), academic_year: academicYear, term: term }).toString();
+      const qs = new URLSearchParams({ class_id: String(classId) }).toString();
+      console.log('[InvoiceUpdate] fetching schedules', `/finance/schedules?${qs}`);
       const schedResp = await api.withToken(token).get(`/finance/schedules?${qs}`);
       const schedules = schedResp?.data?.data || [];
-      if (schedules.length > 0 && schedules[0].total_fee != null) {
-        amountDueInput.value = String(schedules[0].total_fee);
+      console.log('[InvoiceUpdate] schedules length', schedules.length, schedules);
+
+      const norm = (v) => (v || '').toString().trim().toLowerCase();
+      const yearCandidates = (() => {
+        const y = (academicYear || '').toString().trim();
+        const list = [y];
+        if (y.includes('/')) {
+          const parts = y.split('/').map(p => p.replace(/[^0-9]/g, ''));
+          if (parts[0]) list.push(parts[0]);
+          if (parts[1]) list.push(parts[1]);
+        } else {
+          const digits = y.replace(/[^0-9]/g, '');
+          if (digits && digits !== y) list.push(digits);
+        }
+        return Array.from(new Set(list.filter(Boolean)));
+      })();
+      const termCandidates = (() => {
+        const t = (term || '').toString().trim().toLowerCase();
+        const list = [t];
+        const num = t.replace(/[^0-9]/g, '');
+        if (num) list.push(`term${num}`, `term ${num}`, num);
+        if (t.startsWith('term') && num) list.push(num);
+        return Array.from(new Set(list.filter(Boolean)));
+      })();
+
+      let chosen = null;
+      const sorted = [...schedules].sort((a, b) => (Number(b.is_active) - Number(a.is_active)) || (new Date(b.updated_at || 0) - new Date(a.updated_at || 0)));
+      for (const sch of sorted) {
+        const y = norm(sch.academic_year);
+        const t = norm(sch.term);
+        const yOk = yearCandidates.some(c => y.includes(norm(c)) || norm(c).includes(y) || norm(c) === y);
+        const tOk = termCandidates.some(c => t.includes(norm(c)) || norm(c).includes(t) || norm(c) === t);
+        if (yOk && tOk) { chosen = sch; break; }
+      }
+      if (!chosen && sorted.length) chosen = sorted[0];
+      if (chosen && chosen.total_fee != null) {
+        amountDueInput.value = String(chosen.total_fee);
+        if (yearInput && !yearInput.value) yearInput.value = chosen.academic_year || '';
+        if (termInput && !termInput.value) termInput.value = chosen.term || '';
       }
     } catch (_) {
       // Silent fail
+      console.log('[InvoiceUpdate] autoFillAmountDue error', _);
     }
   }
 
@@ -195,7 +236,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Due</label>
-              <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full"></ui-input>
+              <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid</label>

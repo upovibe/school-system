@@ -588,10 +588,43 @@ class FinanceController {
             $classId = $row['current_class_id'] ?? null;
             if (!$classId) return null;
 
-            // Find schedule for class/year/term
-            $schedule = $this->findScheduleByComposite($classId, $academicYear, $term);
-            if (!$schedule) return null;
-            return isset($schedule['total_fee']) ? (float)$schedule['total_fee'] : null;
+            // Normalize inputs and try multiple candidates for year/term
+            $yearCandidates = [];
+            $trimYear = trim($academicYear);
+            $yearCandidates[] = $trimYear;
+            if (preg_match('/(\d{4})$/', $trimYear, $m)) {
+                $yearCandidates[] = $m[1];
+            }
+            $yearCandidates = array_values(array_unique($yearCandidates));
+
+            $termCandidates = [];
+            $termLower = strtolower(trim($term));
+            $termCandidates[] = $termLower;
+            // If numeric like '1', add 'term1'
+            if (preg_match('/^\s*(\d+)\s*$/', $termLower, $tm)) {
+                $termCandidates[] = 'term' . $tm[1];
+            }
+            // Also remove spaces variant
+            $termCandidates[] = str_replace(' ', '', $termLower);
+            $termCandidates = array_values(array_unique($termCandidates));
+
+            foreach ($yearCandidates as $y) {
+                foreach ($termCandidates as $t) {
+                    $schedule = $this->findScheduleByComposite($classId, $y, $t);
+                    if ($schedule && isset($schedule['total_fee'])) {
+                        return (float)$schedule['total_fee'];
+                    }
+                }
+            }
+
+            // Fallback: choose the most recent schedule for the class if available
+            $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+            $stmt2->execute([$classId]);
+            $fallback = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($fallback && isset($fallback['total_fee'])) {
+                return (float)$fallback['total_fee'];
+            }
+            return null;
         } catch (Exception $e) {
             return null;
         }

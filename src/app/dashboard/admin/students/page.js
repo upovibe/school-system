@@ -207,34 +207,59 @@ class StudentManagementPage extends App {
     // Action handlers
     onView(event) {
         const { detail } = event;
-        const viewStudent = this.get('students').find(student => student.id === detail.row.id);
-        if (viewStudent) {
-            this.closeAllModals();
-            this.set('viewStudentData', viewStudent);
-            this.set('showViewModal', true);
-            setTimeout(() => {
-                const viewDialog = this.querySelector('student-view-dialog');
-                if (viewDialog) {
-                    viewDialog.setStudentData(viewStudent);
-                }
-            }, 0);
-        }
+        const existing = this.get('students').find(student => student.id === detail.row.id);
+        const token = localStorage.getItem('token');
+        const loadAndOpen = async () => {
+            try {
+                const resp = await api.withToken(token).get(`/students/${detail.row.id}`);
+                const full = resp?.data?.data || existing;
+                this.closeAllModals();
+                this.set('viewStudentData', full);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewDialog = this.querySelector('student-view-dialog');
+                    if (viewDialog) {
+                        viewDialog.setStudentData(full);
+                    }
+                }, 0);
+            } catch (_) {
+                // fallback to existing
+                this.closeAllModals();
+                this.set('viewStudentData', existing);
+                this.set('showViewModal', true);
+                setTimeout(() => {
+                    const viewDialog = this.querySelector('student-view-dialog');
+                    if (viewDialog) {
+                        viewDialog.setStudentData(existing);
+                    }
+                }, 0);
+            }
+        };
+        if (token) { loadAndOpen(); }
     }
 
     onEdit(event) {
         const { detail } = event;
-        const editStudent = this.get('students').find(student => student.id === detail.row.id);
-        if (editStudent) {
-            // Close any open modals first
+        const existing = this.get('students').find(student => student.id === detail.row.id);
+        const token = localStorage.getItem('token');
+        const needsHydrate = !existing?.parent_name || !existing?.blood_group || !existing?.medical_conditions || !existing?.emergency_contact || !existing?.emergency_phone || !existing?.parent_phone || !existing?.parent_email;
+        const openWith = (stu) => {
             this.closeAllModals();
-            this.set('updateStudentData', editStudent);
+            this.set('updateStudentData', stu);
             this.set('showUpdateModal', true);
             setTimeout(() => {
                 const updateModal = this.querySelector('student-update-dialog');
                 if (updateModal) {
-                    updateModal.setStudentData(editStudent);
+                    updateModal.setStudentData(stu);
                 }
             }, 0);
+        };
+        if (token && needsHydrate) {
+            api.withToken(token).get(`/students/${detail.row.id}`)
+                .then(resp => openWith(resp?.data?.data || existing))
+                .catch(() => openWith(existing));
+        } else if (existing) {
+            openWith(existing);
         }
     }
 
@@ -273,6 +298,7 @@ class StudentManagementPage extends App {
             name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
             email: student.email || 'N/A',
             class_name: student.class_name || 'N/A',
+            student_type: student.student_type || 'Day',
             phone: student.phone || 'N/A',
             status: student.status === 'active' ? 'Active' : 'Inactive',
             admission_date: student.admission_date ? new Date(student.admission_date).toLocaleDateString() : 'N/A',
@@ -313,6 +339,7 @@ class StudentManagementPage extends App {
             name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
             email: student.email || 'N/A',
             class_name: student.class_name || 'N/A',
+            student_type: student.student_type || 'Day',
             phone: student.phone || 'N/A',
             status: student.status === 'active' ? 'Active' : 'Inactive',
             admission_date: student.admission_date ? new Date(student.admission_date).toLocaleDateString() : 'N/A',
@@ -326,6 +353,7 @@ class StudentManagementPage extends App {
             { key: 'name', label: 'Name' },
             { key: 'email', label: 'Email' },
             { key: 'class_name', label: 'Class' },
+            { key: 'student_type', label: 'Type' },
             { key: 'phone', label: 'Phone' },
             { key: 'status', label: 'Status' },
             { key: 'admission_date', label: 'Admission Date' },

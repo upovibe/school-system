@@ -97,6 +97,7 @@ class StudentAddDialog extends HTMLElement {
             const addressInput = this.querySelector('ui-input[data-field="address"]');
             const dateOfBirthInput = this.querySelector('ui-input[data-field="date_of_birth"]');
             const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+            const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
             const admissionDateInput = this.querySelector('ui-input[data-field="admission_date"]');
             const parentNameInput = this.querySelector('ui-input[data-field="parent_name"]');
             const parentPhoneInput = this.querySelector('ui-input[data-field="parent_phone"]');
@@ -118,6 +119,7 @@ class StudentAddDialog extends HTMLElement {
                 address: addressInput ? addressInput.value : '',
                 date_of_birth: dateOfBirthInput ? dateOfBirthInput.value : '',
                 gender: genderDropdown ? genderDropdown.value : '',
+                student_type: studentTypeDropdown ? studentTypeDropdown.value : 'Day',
                 admission_date: admissionDateInput ? admissionDateInput.value : '',
                 parent_name: parentNameInput ? parentNameInput.value : '',
                 parent_phone: parentPhoneInput ? parentPhoneInput.value : '',
@@ -231,7 +233,8 @@ class StudentAddDialog extends HTMLElement {
                                  // Find the selected class to get class name
                  const selectedClass = this.classes.find(cls => cls.id == studentData.current_class_id);
 
-                 // Construct the new student data from response
+                 // Construct the new student data from response (include all fields used by Update/View modals)
+                 const nowTs = new Date().toISOString().slice(0, 19).replace('T', ' ');
                  const newStudent = {
                      id: response.data.data.student_id,
                      student_id: studentData.student_id,
@@ -239,12 +242,23 @@ class StudentAddDialog extends HTMLElement {
                      last_name: studentData.last_name,
                      email: studentData.email,
                      phone: studentData.phone,
-                     class_name: selectedClass ? `${selectedClass.name}-${selectedClass.section}` : 'N/A',
+                     address: studentData.address,
+                     date_of_birth: studentData.date_of_birth,
+                     gender: studentData.gender,
+                     student_type: studentData.student_type || 'Day',
                      current_class_id: studentData.current_class_id,
+                     class_name: selectedClass ? `${selectedClass.name}-${selectedClass.section}` : 'N/A',
                      admission_date: studentData.admission_date,
+                     parent_name: studentData.parent_name,
+                     parent_phone: studentData.parent_phone,
+                     parent_email: studentData.parent_email,
+                     emergency_contact: studentData.emergency_contact,
+                     emergency_phone: studentData.emergency_phone,
+                     blood_group: studentData.blood_group,
+                     medical_conditions: studentData.medical_conditions,
                      status: studentData.status,
-                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                     created_at: nowTs,
+                     updated_at: nowTs
                  };
 
                 // Close modal and dispatch event
@@ -275,6 +289,16 @@ class StudentAddDialog extends HTMLElement {
                 title="Add New Student">
                 <div slot="content">
                     <form id="student-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+                            <ui-search-dropdown 
+                                name="student_type" 
+                                placeholder="Select student type..."
+                                class="w-full">
+                                <ui-option value="Day">Day</ui-option>
+                                <ui-option value="Boarding">Boarding</ui-option>
+                            </ui-search-dropdown>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>
                             ${this.classes.length > 0 ? `

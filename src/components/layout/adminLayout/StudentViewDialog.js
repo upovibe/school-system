@@ -148,6 +148,12 @@ class StudentViewDialog extends HTMLElement {
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.studentData.class_name || 'N/A'}</p>
                                 </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-user-graduate mr-1"></i>Student Type
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.studentData.student_type || 'Day'}</p>
+                                </div>
                             </div>
                         </div>
 

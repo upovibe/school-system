@@ -65,6 +65,7 @@ class StudentUpdateDialog extends HTMLElement {
         setTimeout(() => {
             const classDropdown = this.querySelector('ui-search-dropdown[name="current_class_id"]');
             const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+            const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
             const bloodGroupDropdown = this.querySelector('ui-search-dropdown[name="blood_group"]');
             const medicalConditionsDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
             
@@ -107,6 +108,7 @@ class StudentUpdateDialog extends HTMLElement {
             const addressInput = this.querySelector('ui-input[data-field="address"]');
             const dateOfBirthInput = this.querySelector('ui-input[data-field="date_of_birth"]');
             const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+            const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
             const admissionDateInput = this.querySelector('ui-input[data-field="admission_date"]');
             const parentNameInput = this.querySelector('ui-input[data-field="parent_name"]');
             const parentPhoneInput = this.querySelector('ui-input[data-field="parent_phone"]');
@@ -128,6 +130,7 @@ class StudentUpdateDialog extends HTMLElement {
                 address: addressInput ? addressInput.value : '',
                 date_of_birth: dateOfBirthInput ? dateOfBirthInput.value : '',
                 gender: genderDropdown ? genderDropdown.value : '',
+                student_type: studentTypeDropdown ? studentTypeDropdown.value : undefined,
                 admission_date: admissionDateInput ? admissionDateInput.value : '',
                 parent_name: parentNameInput ? parentNameInput.value : '',
                 parent_phone: parentPhoneInput ? parentPhoneInput.value : '',
@@ -213,6 +216,17 @@ class StudentUpdateDialog extends HTMLElement {
                 title="Update Student">
                 <div slot="content">
                     <form id="student-update-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+                            <ui-search-dropdown 
+                                name="student_type" 
+                                placeholder="Select student type..."
+                                value="${student?.student_type || 'Day'}"
+                                class="w-full">
+                                <ui-option value="Day" ${student && student.student_type === 'Day' ? 'selected' : ''}>Day</ui-option>
+                                <ui-option value="Boarding" ${student && student.student_type === 'Boarding' ? 'selected' : ''}>Boarding</ui-option>
+                            </ui-search-dropdown>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>
                             ${this.classes.length > 0 ? `

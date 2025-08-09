@@ -308,3 +308,5 @@ Router::post('/finance/invoices', 'FinanceController@storeInvoice');
 Router::get('/finance/invoices/{id}', 'FinanceController@showInvoice');
 Router::put('/finance/invoices/{id}', 'FinanceController@updateInvoice');
 Router::delete('/finance/invoices/{id}', 'FinanceController@destroyInvoice');
+// Finance - Helpers
+Router::get('/finance/amount-due', 'FinanceController@getAmountDue');

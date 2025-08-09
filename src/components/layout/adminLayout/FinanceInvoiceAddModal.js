@@ -4,8 +4,6 @@ import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
 import api from '@/services/api.js';
 
-const DEBUG_FIN_INVOICE = true;
-
 class FinanceInvoiceAddModal extends HTMLElement {
   constructor() {
     super();
@@ -18,7 +16,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] connectedCallback');
     this.setupEventListeners();
   }
 
@@ -30,7 +27,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
   setupEventListeners() {
     if (this._listenersAttached) return;
-    if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] setupEventListeners');
     this.addEventListener('confirm', () => this.saveInvoice());
     this.addEventListener('cancel', () => this.close());
     // Auto-fill amount_due when student/year/term changes (debounced)
@@ -39,20 +35,19 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const trigger = () => this.autoFillAmountDueDebounced();
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] rebindAuto', { hasStudent: !!studentDd, hasYear: !!yearInput, hasTerm: !!termInput });
       if (studentDd && !studentDd._autoBound) {
-        studentDd.addEventListener('change', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] student change', e.target?.value); trigger(); });
-        studentDd.addEventListener('value-change', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] student value-change', e.detail || e.target?.value); trigger(); });
+        studentDd.addEventListener('change', () => { trigger(); });
+        studentDd.addEventListener('value-change', () => { trigger(); });
         studentDd._autoBound = true;
       }
       if (yearInput && !yearInput._autoBound) {
-        yearInput.addEventListener('input', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] year input', e.target?.value); trigger(); });
-        yearInput.addEventListener('change', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] year change', e.target?.value); trigger(); });
+        yearInput.addEventListener('input', () => { trigger(); });
+        yearInput.addEventListener('change', () => { trigger(); });
         yearInput._autoBound = true;
       }
       if (termInput && !termInput._autoBound) {
-        termInput.addEventListener('input', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] term input', e.target?.value); trigger(); });
-        termInput.addEventListener('change', (e) => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] term change', e.target?.value); trigger(); });
+        termInput.addEventListener('input', () => { trigger(); });
+        termInput.addEventListener('change', () => { trigger(); });
         termInput._autoBound = true;
       }
     };
@@ -121,19 +116,17 @@ class FinanceInvoiceAddModal extends HTMLElement {
   }
 
   autoFillAmountDueDebounced() {
-    if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] autoFillAmountDueDebounced');
     clearTimeout(this._autoDueTimeout);
     this._autoDueTimeout = setTimeout(() => this.autoFillAmountDue(), 200);
   }
 
   async autoFillAmountDue() {
     try {
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] autoFillAmountDue start');
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
       if (!amountDueInput) return;
       // Only auto-fill if empty or zero to avoid overriding manual edits
       const current = parseFloat(amountDueInput.value || '0');
-      if (current > 0) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] amount_due already > 0, skipping'); return; }
+      if (current > 0) { return; }
 
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
@@ -141,8 +134,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
       const academicYear = yearInput?.value || '';
       const term = termInput?.value || '';
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] inputs', { studentId, academicYear, term });
-      if (!studentId) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no studentId, abort'); return; }
+      if (!studentId) { return; }
 
       let classId = null;
       const fromList = (this._students || []).find(s => String(s.id) === String(studentId));
@@ -151,69 +143,29 @@ class FinanceInvoiceAddModal extends HTMLElement {
       }
       if (!classId) {
         const token = localStorage.getItem('token');
-        if (!token) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no token to fetch student, abort'); return; }
+        if (!token) { return; }
         // Fallback: fetch the student to get current_class_id
-        if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] fetching student for classId');
-        const resp = await api.withToken(token).get(`/students/${studentId}`).catch(err => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] fetch student error', err); return null; });
+        const resp = await api.withToken(token).get(`/students/${studentId}`).catch(() => null);
         classId = resp?.data?.data?.current_class_id || null;
       }
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] resolved classId', classId);
-      if (!classId) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no classId, abort'); return; }
+      if (!classId) { return; }
 
-      // Fetch schedules by class; then fuzzy match year/term
+      // Simple backend computation endpoint
       const token = localStorage.getItem('token');
-      if (!token) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no token for schedules, abort'); return; }
-      const qsClass = new URLSearchParams({ class_id: String(classId) }).toString();
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] fetching schedules', `/finance/schedules?${qsClass}`);
-      const schedResp = await api.withToken(token).get(`/finance/schedules?${qsClass}`).catch(err => { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] fetch schedules error', err); return null; });
-      const schedules = schedResp?.data?.data || [];
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] schedules length', schedules.length, schedules);
-
-      const norm = (v) => (v || '').toString().trim().toLowerCase();
-      const yearCandidates = (() => {
-        const y = (academicYear || '').toString().trim();
-        const list = [y];
-        if (y.includes('/')) {
-          const parts = y.split('/').map(p => p.replace(/[^0-9]/g, ''));
-          if (parts[0]) list.push(parts[0]);
-          if (parts[1]) list.push(parts[1]);
-        } else {
-          const digits = y.replace(/[^0-9]/g, '');
-          if (digits && digits !== y) list.push(digits);
-        }
-        return Array.from(new Set(list.filter(Boolean)));
-      })();
-      const termCandidates = (() => {
-        const t = (term || '').toString().trim().toLowerCase();
-        const list = [t];
-        const num = t.replace(/[^0-9]/g, '');
-        if (num) list.push(`term${num}`, `term ${num}`, num);
-        if (t.startsWith('term') && num) list.push(num);
-        return Array.from(new Set(list.filter(Boolean)));
-      })();
-
-      let chosen = null;
-      const sorted = [...schedules].sort((a, b) => (Number(b.is_active) - Number(a.is_active)) || (new Date(b.updated_at || 0) - new Date(a.updated_at || 0)));
-      for (const sch of sorted) {
-        const y = norm(sch.academic_year);
-        const t = norm(sch.term);
-        const yOk = yearCandidates.some(c => y.includes(norm(c)) || norm(c).includes(y) || norm(c) === y);
-        const tOk = termCandidates.some(c => t.includes(norm(c)) || norm(c).includes(t) || norm(c) === t);
-        if (yOk && tOk) { chosen = sch; break; }
-      }
-      if (!chosen && sorted.length) { if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no exact schedule match, using first sorted'); chosen = sorted[0]; }
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] chosen schedule', chosen);
-      if (chosen && chosen.total_fee != null) {
-        amountDueInput.value = String(chosen.total_fee);
-        if (yearInput && !yearInput.value) yearInput.value = chosen.academic_year || '';
-        if (termInput && !termInput.value) termInput.value = chosen.term || '';
-        if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] set amount_due', amountDueInput.value);
-      } else {
-        if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] no schedule found to set amount_due');
+      if (!token) { return; }
+      const qs = new URLSearchParams({ student_id: String(studentId) });
+      if (academicYear) qs.append('academic_year', academicYear);
+      if (term) qs.append('term', term);
+      const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`).catch(() => null);
+      const amountDue = amtResp?.data?.data?.amount_due;
+      const schedule = amtResp?.data?.data?.schedule || {};
+      if (amountDue != null) {
+        amountDueInput.value = String(amountDue);
+        if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
+        if (termInput && !termInput.value) termInput.value = schedule.term || '';
       }
     } catch (_) {
       // Silent fail; user can still enter manually
-      if (DEBUG_FIN_INVOICE) console.log('[InvoiceAdd] autoFillAmountDue error', _);
     }
   }
 

@@ -629,6 +629,99 @@ class FinanceController {
             return null;
         }
     }
+
+    /**
+     * Compute amount due for a student based on current class and schedules.
+     * Params: student_id (required), academic_year (optional), term (optional)
+     */
+    public function getAmountDue() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $studentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
+            $year = isset($_GET['academic_year']) ? (string)$_GET['academic_year'] : '';
+            $term = isset($_GET['term']) ? (string)$_GET['term'] : '';
+            if ($studentId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'student_id is required']);
+                return;
+            }
+
+            // Resolve class_id
+            $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $stmt->execute([$studentId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $classId = $row['current_class_id'] ?? null;
+            if (!$classId) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Student has no current class']);
+                return;
+            }
+
+            // Build candidate years/terms similar to derive method
+            $yearCandidates = [];
+            $trimYear = trim($year);
+            if ($trimYear !== '') {
+                $yearCandidates[] = $trimYear;
+                if (preg_match('/(\\d{4})$/', $trimYear, $m)) {
+                    $yearCandidates[] = $m[1];
+                }
+            }
+
+            $termCandidates = [];
+            $termLower = strtolower(trim($term));
+            if ($termLower !== '') {
+                $termCandidates[] = $termLower;
+                if (preg_match('/^\\s*(\\d+)\\s*$/', $termLower, $tm)) {
+                    $termCandidates[] = 'term' . $tm[1];
+                }
+                $termCandidates[] = str_replace(' ', '', $termLower);
+            }
+
+            $chosen = null;
+            if (!empty($yearCandidates) && !empty($termCandidates)) {
+                foreach ($yearCandidates as $y) {
+                    foreach ($termCandidates as $t) {
+                        $s = $this->findScheduleByComposite($classId, $y, $t);
+                        if ($s) { $chosen = $s; break 2; }
+                    }
+                }
+            }
+
+            if (!$chosen) {
+                // Fallback pick most recent/active for the class
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2->execute([$classId]);
+                $chosen = $stmt2->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+
+            if (!$chosen) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No schedule found for class']);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'amount_due' => isset($chosen['total_fee']) ? (float)$chosen['total_fee'] : 0,
+                    'schedule' => [
+                        'class_id' => (int)$chosen['class_id'],
+                        'academic_year' => $chosen['academic_year'] ?? null,
+                        'term' => $chosen['term'] ?? null,
+                        'total_fee' => $chosen['total_fee'] ?? null,
+                        'is_active' => isset($chosen['is_active']) ? (int)$chosen['is_active'] : null,
+                    ]
+                ],
+                'message' => 'Amount due computed successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error computing amount due: ' . $e->getMessage()]);
+        }
+    }
 }
 
 

@@ -296,6 +296,15 @@ class DashboardLayout extends App {
                     ]
                 },
                 {
+                group: 'Finance',
+                items: [
+                    { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
+                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
+                    { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
+                    { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
+                ]
+            },
+            {
                     group: 'Settings',
                     items: [
                         { label: 'Page Settings', icon: 'fas fa-file-alt', href: '/dashboard/admin/page-settings' },
@@ -400,6 +409,12 @@ class DashboardLayout extends App {
             'grading-periods': 'Grading Period Management',
             'grading-policies': 'Grading Policy Management',
             'student-grades': 'Student Grades Management',
+            // Finance
+            'finance': 'Finance',
+            'schedules': 'Fee Schedules',
+            'invoices': 'Invoices',
+            'payments': 'Payments',
+            'receipts': 'Receipts',
             'class': 'My Class',
             'class-subjects': 'My Classes & Subjects'
         };

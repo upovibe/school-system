@@ -216,13 +216,6 @@ Router::get('/students/{id}', 'StudentController@show');
 Router::put('/students/{id}', 'StudentController@update');
 Router::delete('/students/{id}', 'StudentController@destroy');
 
-// Finance Routes
-Router::get('/finance/fee-schedules', 'FinanceController@listSchedules');
-Router::post('/finance/fee-schedules', 'FinanceController@createSchedule');
-Router::get('/finance/invoices', 'FinanceController@listInvoices');
-Router::post('/finance/invoices', 'FinanceController@createInvoice');
-Router::post('/finance/payments', 'FinanceController@recordPayment');
-
 // Class Subject Management Routes (admin only for create/update/delete, public for view)
 Router::get('/class-subjects', 'ClassSubjectController@index');
 Router::post('/class-subjects', 'ClassSubjectController@store');

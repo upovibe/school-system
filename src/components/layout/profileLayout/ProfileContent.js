@@ -317,7 +317,7 @@ class ProfileContent extends App {
             <div class="space-y-6">
                 <!-- Profile Picture and Basic Info -->
                 <div class="bg-white shadow rounded-lg">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between p-6">
                         <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
                         <ui-button 
                             data-action="edit-profile"
@@ -330,7 +330,7 @@ class ProfileContent extends App {
                         </ui-button>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6">
                         <!-- Profile Picture (Left) -->
                         <div class="flex-shrink-0 lg:col-span-1" style="aspect-ratio: 1; min-width: 8rem;">
                             <ui-profile-image-uploader 

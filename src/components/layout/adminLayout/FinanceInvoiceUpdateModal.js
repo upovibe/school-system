@@ -76,17 +76,17 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       );
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const trigger = () => this.autoFillAmountDueDebounced();
-      if (studentDd && !studentDd._autoBound) {
+      if (studentDd && !studentDd._autoBound && !studentDd.hasAttribute('disabled')) {
         studentDd.addEventListener("change", trigger);
         studentDd.addEventListener("value-change", trigger);
         studentDd._autoBound = true;
       }
-      if (yearInput && !yearInput._autoBound) {
+      if (yearInput && !yearInput._autoBound && !yearInput.hasAttribute('disabled')) {
         yearInput.addEventListener("input", trigger);
         yearInput.addEventListener("change", trigger);
         yearInput._autoBound = true;
       }
-      if (termInput && !termInput._autoBound) {
+      if (termInput && !termInput._autoBound && !termInput.hasAttribute('disabled')) {
         termInput.addEventListener("input", trigger);
         termInput.addEventListener("change", trigger);
         termInput._autoBound = true;
@@ -358,7 +358,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         <form class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
-            <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full">
+            <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full" disabled>
               ${(this._students || [])
                 .map((s) => {
                   const name =
@@ -377,17 +377,17 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full" disabled></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
+              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full" disabled></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Due</label>
-              <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
+              <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly disabled></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid</label>

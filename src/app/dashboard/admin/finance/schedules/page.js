@@ -222,7 +222,10 @@ class FinanceSchedulesPage extends App {
       this.set('showUpdateModal', true);
       setTimeout(() => {
         const modal = this.querySelector('finance-schedule-update-modal');
-        if (modal) modal.setScheduleData(editItem);
+        if (modal) {
+          modal.setClasses(this.classes);
+          modal.setScheduleData(editItem);
+        }
       }, 0);
     }
   }

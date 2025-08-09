@@ -2,12 +2,14 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
+import '@/components/ui/SearchDropdown.js';
 import api from '@/services/api.js';
 
 class FinanceScheduleUpdateModal extends HTMLElement {
   constructor() {
     super();
     this._schedule = null;
+    this._classes = [];
   }
 
   static get observedAttributes() { return ['open']; }
@@ -22,13 +24,22 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     this.fillForm();
   }
 
+  setClasses(classes) {
+    this._classes = Array.isArray(classes) ? classes : [];
+    this.render();
+    this.setupEventListeners();
+    this.fillForm();
+  }
+
   fillForm() {
     const s = this._schedule;
     if (!s) return;
+    const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
     const termInput = this.querySelector('ui-input[data-field="term"]');
     const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
     const activeSwitch = this.querySelector('ui-switch[name="is_active"]');
+    if (classDropdown && s.class_id != null) classDropdown.value = String(s.class_id);
     if (yearInput) yearInput.value = s.academic_year || '';
     if (termInput) termInput.value = s.term || '';
     if (totalFeeInput) totalFeeInput.value = s.total_fee;
@@ -46,12 +57,14 @@ class FinanceScheduleUpdateModal extends HTMLElement {
   async updateSchedule() {
     try {
       if (!this._schedule) return;
+      const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
       const activeSwitch = this.querySelector('ui-switch[name="is_active"]');
 
       const payload = {
+        class_id: classDropdown?.value ? Number(classDropdown.value) : undefined,
         academic_year: yearInput?.value || '',
         term: termInput?.value || '',
         total_fee: totalFeeInput?.value ? Number(totalFeeInput.value) : 0,
@@ -84,6 +97,14 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
         <div slot="title">Update Fee Schedule</div>
         <form class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+            <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
+              ${(this._classes || []).map(c => `
+                <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
+              `).join('')}
+            </ui-search-dropdown>
+          </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
@@ -101,7 +122,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Active</label>
-            <ui-switch name="is_active" class="w-full"><span slot="label">Active</span></ui-switch>
+            <ui-switch name="is_active" class="w-full"><span slot="label">Active (1 or 0)</span></ui-switch>
           </div>
         </form>
 

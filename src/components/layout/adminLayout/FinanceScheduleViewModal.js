@@ -1,4 +1,5 @@
 import '@/components/ui/Modal.js';
+import '@/components/ui/Badge.js';
 
 class FinanceScheduleViewModal extends HTMLElement {
   constructor() {
@@ -19,32 +20,39 @@ class FinanceScheduleViewModal extends HTMLElement {
 
   render() {
     const s = this._schedule || {};
+    const statusActive = Number(s.is_active) === 1;
     this.innerHTML = `
-      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
-        <div slot="title">View Fee Schedule</div>
-        <div class="space-y-3">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" size="lg" close-button="true">
+        <div slot="title">Fee Schedule Details</div>
+        <div class="space-y-6">
+          <!-- Header -->
+          <div class="flex items-center gap-3 border-b pb-4">
+            <h3 class="text-xl font-semibold text-gray-900">${s.classDisplay || ''} • ${s.academic_year || ''} • ${s.term || ''}</h3>
+            <ui-badge color="${statusActive ? 'success' : 'error'}">
+              <i class="fas fa-${statusActive ? 'check' : 'times'} mr-1"></i>
+              ${statusActive ? 'Active' : 'Inactive'}
+            </ui-badge>
+          </div>
+
+          <!-- Info Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Class</div>
               <div class="text-sm font-medium text-gray-900">${s.classDisplay || ''}</div>
             </div>
-            <div>
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Academic Year</div>
               <div class="text-sm font-medium text-gray-900">${s.academic_year || ''}</div>
             </div>
-            <div>
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Term</div>
               <div class="text-sm font-medium text-gray-900">${s.term || ''}</div>
             </div>
-            <div>
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Total Fee</div>
               <div class="text-sm font-medium text-gray-900">${s.total_fee != null ? Number(s.total_fee).toFixed(2) : ''}</div>
             </div>
-            <div>
-              <div class="text-xs text-gray-500">Status</div>
-              <div class="text-sm font-medium text-gray-900">${Number(s.is_active) === 1 ? 'Active' : 'Inactive'}</div>
-            </div>
-            <div>
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Updated</div>
               <div class="text-sm font-medium text-gray-900">${s.updated_at || ''}</div>
             </div>

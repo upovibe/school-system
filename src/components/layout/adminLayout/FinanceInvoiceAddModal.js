@@ -193,7 +193,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Due</label>
               <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
@@ -201,17 +201,19 @@ class FinanceInvoiceAddModal extends HTMLElement {
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid (optional)</label>
               <ui-input data-field="amount_paid" type="number" step="0.01" placeholder="0.00" class="w-full"></ui-input>
-            </div>
-            <div>
+            </div>           
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
               <ui-input data-field="issue_date" type="date" class="w-full"></ui-input>
             </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
               <ui-input data-field="due_date" type="date" class="w-full"></ui-input>
             </div>
+          </div>
+          <div class="grid grid-cols-1">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
               <ui-input data-field="notes" type="text" placeholder="Optional note" class="w-full"></ui-input>

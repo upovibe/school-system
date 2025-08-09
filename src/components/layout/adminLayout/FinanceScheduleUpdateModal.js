@@ -43,12 +43,27 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     if (yearInput) yearInput.value = s.academic_year || '';
     if (termInput) termInput.value = s.term || '';
     if (totalFeeInput) totalFeeInput.value = s.total_fee;
-    if (activeSwitch) activeSwitch.checked = Number(s.is_active) === 1;
+    if (activeSwitch) {
+      const isActive = Number(s.is_active) === 1;
+      if (isActive) {
+        activeSwitch.setAttribute('checked', '');
+      } else {
+        activeSwitch.removeAttribute('checked');
+      }
+      const indicator = this.querySelector('#active-indicator');
+      if (indicator) indicator.textContent = isActive ? 'Active: 1' : 'Active: 0';
+    }
   }
 
   setupEventListeners() {
     this.addEventListener('confirm', () => this.updateSchedule());
     this.addEventListener('cancel', () => this.close());
+    this.addEventListener('switch-change', (e) => {
+      if (e.target?.getAttribute('name') === 'is_active') {
+        const indicator = this.querySelector('#active-indicator');
+        if (indicator) indicator.textContent = e.detail.checked ? 'Active: 1' : 'Active: 0';
+      }
+    });
   }
 
   open() { this.setAttribute('open', ''); }
@@ -122,7 +137,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Active</label>
-            <ui-switch name="is_active" class="w-full"><span slot="label">Active (1 or 0)</span></ui-switch>
+            <ui-switch name="is_active" class="w-full"><span slot="label">Active</span></ui-switch>
           </div>
         </form>
 

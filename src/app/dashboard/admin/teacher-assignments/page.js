@@ -181,13 +181,11 @@ class TeacherAssignmentManagementPage extends App {
 
         // Listen for delete events from view dialog
         this.addEventListener('delete-class', (event) => {
-            console.log('Received delete-class event:', event.detail);
             const { employeeId, className, classSection } = event.detail;
             this.onDeleteClass(employeeId, className, classSection);
         });
 
         this.addEventListener('delete-subject', (event) => {
-            console.log('Received delete-subject event:', event.detail);
             const { employeeId, className, classSection, subjectName, subjectCode } = event.detail;
             this.onDeleteSubject(employeeId, className, classSection, subjectName, subjectCode);
         });

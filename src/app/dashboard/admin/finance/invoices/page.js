@@ -1,0 +1,360 @@
+import App from '@/core/App.js';
+import '@/components/ui/Table.js';
+import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
+import '@/components/ui/Toast.js';
+import '@/components/ui/Skeleton.js';
+import '@/components/layout/adminLayout/FinanceInvoiceAddModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceUpdateModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceViewModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceDeleteDialog.js';
+import api from '@/services/api.js';
+
+/**
+ * Finance: Fee Invoices Management Page
+ */
+class FinanceInvoicesPage extends App {
+  constructor() {
+    super();
+    this.invoices = null;
+    this.students = [];
+    this.loading = false;
+    this.showAddModal = false;
+    this.showUpdateModal = false;
+    this.showViewModal = false;
+    this.showDeleteDialog = false;
+    this.updateInvoiceData = null;
+    this.viewInvoiceData = null;
+    this.deleteInvoiceData = null;
+  }
+
+  // Header counts
+  getHeaderCounts() {
+    const invoices = this.get('invoices') || [];
+    const total = invoices.length;
+    let open = 0;
+    let paid = 0;
+    invoices.forEach((inv) => {
+      const status = String(inv.status || '').toLowerCase();
+      if (status === 'paid') paid += 1; else open += 1;
+    });
+    const uniqueStudents = new Set((invoices || []).map(i => String(i.student_id))).size;
+    return { total, open, paid, students: uniqueStudents };
+  }
+
+  renderHeader() {
+    const c = this.getHeaderCounts();
+    return `
+      <div class="space-y-8 mb-4">
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl shadow-lg p-5 text-white">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold">Fee Invoices</h1>
+              <p class="text-indigo-100 text-base sm:text-lg">Manage invoices for student fees</p>
+            </div>
+            <div class="mt-4 sm:mt-0 text-right">
+              <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+              <div class="text-indigo-100 text-xs sm:text-sm">Total Invoices</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-file-invoice-dollar text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.open}</div>
+                  <div class="text-indigo-100 text-xs sm:text-sm">Open</div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-check text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.paid}</div>
+                  <div class="text-indigo-100 text-xs sm:text-sm">Paid</div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-orange-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-user-graduate text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.students}</div>
+                  <div class="text-indigo-100 text-xs sm:text-sm">Students Invoiced</div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-sync-alt text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${new Date().getFullYear()}</div>
+                  <div class="text-indigo-100 text-xs sm:text-sm">Current Year</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.title = 'Fee Invoices | School System';
+    this.loadData();
+
+    this.addEventListener('table-view', this.onView.bind(this));
+    this.addEventListener('table-edit', this.onEdit.bind(this));
+    this.addEventListener('table-delete', this.onDelete.bind(this));
+    this.addEventListener('table-add', this.onAdd.bind(this));
+    this.addEventListener('table-refresh', () => this.loadData());
+
+    this.addEventListener('invoice-deleted', (event) => {
+      const id = event.detail.id;
+      const current = this.get('invoices') || [];
+      this.set('invoices', current.filter((i) => String(i.id) !== String(id)));
+      this.updateTableData();
+      this.set('showDeleteDialog', false);
+    });
+
+    this.addEventListener('invoice-saved', (event) => {
+      const newInv = event.detail.invoice;
+      if (newInv) {
+        const list = this.get('invoices') || [];
+        const updated = [...list, newInv];
+        this.set('invoices', updated);
+        this.updateTableData();
+        this.set('showAddModal', false);
+      } else {
+        this.loadData();
+      }
+    });
+
+    this.addEventListener('invoice-updated', (event) => {
+      const updated = event.detail.invoice;
+      if (updated) {
+        const current = this.get('invoices') || [];
+        this.set('invoices', current.map((i) => (String(i.id) === String(updated.id) ? updated : i)));
+        this.updateTableData();
+        this.set('showUpdateModal', false);
+      } else {
+        this.loadData();
+      }
+    });
+  }
+
+  async loadData() {
+    this.set('loading', true);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Toast.show({ title: 'Authentication Error', message: 'Please log in to view data', variant: 'error', duration: 3000 });
+      this.set('loading', false);
+      return;
+    }
+
+    // Load invoices first
+    try {
+      const resp = await api.withToken(token).get('/finance/invoices');
+      this.set('invoices', (resp.data?.data) || []);
+    } catch (error) {
+      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load invoices', variant: 'error', duration: 3000 });
+      this.set('invoices', []);
+    }
+
+    // Load students for display names; ignore failure
+    try {
+      const sresp = await api.withToken(token).get('/students');
+      const students = (sresp.data?.data) || [];
+      this.students = students;
+      this.set('students', students);
+    } catch (_) {
+      this.students = [];
+      this.set('students', []);
+    }
+
+    this.set('loading', false);
+    this.updateTableData();
+  }
+
+  studentDisplay(studentId) {
+    const list = this.get('students') || this.students || [];
+    const s = list.find(x => String(x.id) === String(studentId));
+    if (!s) return `Student #${studentId}`;
+    const fullName = s.name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.full_name || s.username || s.email || `Student #${studentId}`;
+    return fullName;
+  }
+
+  onView(event) {
+    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
+    if (item) {
+      this.closeAllModals();
+      this.set('viewInvoiceData', item);
+      this.set('showViewModal', true);
+      setTimeout(() => {
+        const modal = this.querySelector('finance-invoice-view-modal');
+        if (modal) modal.setInvoiceData({ ...item, studentDisplay: this.studentDisplay(item.student_id) });
+      }, 0);
+    }
+  }
+
+  onEdit(event) {
+    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
+    if (item) {
+      this.closeAllModals();
+      this.set('updateInvoiceData', item);
+      this.set('showUpdateModal', true);
+      setTimeout(() => {
+        const modal = this.querySelector('finance-invoice-update-modal');
+        if (modal) {
+          modal.setStudents(this.students);
+          modal.setInvoiceData(item);
+        }
+      }, 0);
+    }
+  }
+
+  onDelete(event) {
+    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
+    if (item) {
+      this.closeAllModals();
+      this.set('deleteInvoiceData', item);
+      this.set('showDeleteDialog', true);
+      setTimeout(() => {
+        const dlg = this.querySelector('finance-invoice-delete-dialog');
+        if (dlg) dlg.setInvoiceData(item);
+      }, 0);
+    }
+  }
+
+  onAdd() {
+    this.closeAllModals();
+    this.set('showAddModal', true);
+    setTimeout(() => {
+      const modal = this.querySelector('finance-invoice-add-modal');
+      if (modal) modal.setStudents(this.students);
+    }, 0);
+  }
+
+  updateTableData() {
+    const invoices = this.get('invoices');
+    if (!invoices) return;
+    const tableData = invoices.map((i, idx) => ({
+      id: i.id,
+      index: idx + 1,
+      student: this.studentDisplay(i.student_id),
+      academic_year: i.academic_year,
+      term: i.term,
+      invoice_number: i.invoice_number,
+      amount_due: Number(i.amount_due).toFixed(2),
+      amount_paid: Number(i.amount_paid).toFixed(2),
+      balance: Number(i.balance).toFixed(2),
+      status: (i.status || '').toString(),
+      issue_date: i.issue_date,
+      updated: i.updated_at,
+    }));
+    const table = this.querySelector('ui-table');
+    if (table) table.setAttribute('data', JSON.stringify(tableData));
+  }
+
+  closeAllModals() {
+    this.set('showAddModal', false);
+    this.set('showUpdateModal', false);
+    this.set('showViewModal', false);
+    this.set('showDeleteDialog', false);
+    this.set('updateInvoiceData', null);
+    this.set('viewInvoiceData', null);
+    this.set('deleteInvoiceData', null);
+  }
+
+  render() {
+    const invoices = this.get('invoices');
+    const loading = this.get('loading');
+    const showAddModal = this.get('showAddModal');
+    const showUpdateModal = this.get('showUpdateModal');
+    const showViewModal = this.get('showViewModal');
+    const showDeleteDialog = this.get('showDeleteDialog');
+
+    const tableData = invoices ? invoices.map((i, idx) => ({
+      id: i.id,
+      index: idx + 1,
+      student: this.studentDisplay(i.student_id),
+      academic_year: i.academic_year,
+      term: i.term,
+      invoice_number: i.invoice_number,
+      amount_due: Number(i.amount_due).toFixed(2),
+      amount_paid: Number(i.amount_paid).toFixed(2),
+      balance: Number(i.balance).toFixed(2),
+      status: (i.status || '').toString(),
+      issue_date: i.issue_date,
+      updated: i.updated_at,
+    })) : [];
+
+    const tableColumns = [
+      { key: 'index', label: 'No.' },
+      { key: 'student', label: 'Student' },
+      { key: 'academic_year', label: 'Academic Year' },
+      { key: 'term', label: 'Term' },
+      { key: 'invoice_number', label: 'Invoice #' },
+      { key: 'amount_due', label: 'Amount Due' },
+      { key: 'amount_paid', label: 'Amount Paid' },
+      { key: 'balance', label: 'Balance' },
+      { key: 'status', label: 'Status' },
+      { key: 'issue_date', label: 'Issued' },
+      { key: 'updated', label: 'Updated' },
+    ];
+
+    return `
+      ${this.renderHeader()}
+      <div class="bg-white rounded-lg shadow-lg p-4">
+        ${loading ? `
+          <div class="space-y-4">
+            <ui-skeleton class="h-24 w-full"></ui-skeleton>
+            <ui-skeleton class="h-24 w-full"></ui-skeleton>
+            <ui-skeleton class="h-24 w-full"></ui-skeleton>
+          </div>
+        ` : `
+          <div class="mb-8">
+            <ui-table
+              title="Fee Invoices"
+              data='${JSON.stringify(tableData)}'
+              columns='${JSON.stringify(tableColumns)}'
+              sortable
+              searchable
+              search-placeholder="Search invoices..."
+              pagination
+              page-size="50"
+              action
+              addable
+              refresh
+              print
+              bordered
+              striped
+              class="w-full"
+            ></ui-table>
+          </div>
+        `}
+      </div>
+
+      <finance-invoice-add-modal ${showAddModal ? 'open' : ''}></finance-invoice-add-modal>
+      <finance-invoice-update-modal ${showUpdateModal ? 'open' : ''}></finance-invoice-update-modal>
+      <finance-invoice-view-modal ${showViewModal ? 'open' : ''}></finance-invoice-view-modal>
+      <finance-invoice-delete-dialog ${showDeleteDialog ? 'open' : ''}></finance-invoice-delete-dialog>
+    `;
+  }
+}
+
+customElements.define('app-finance-invoices-page', FinanceInvoicesPage);
+export default FinanceInvoicesPage;
+
+
+

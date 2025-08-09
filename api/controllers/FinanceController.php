@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../models/FeeSchedule.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../models/FeeInvoice.php';
+require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -11,11 +12,13 @@ class FinanceController {
     private $pdo;
     private $feeScheduleModel;
     private $feeInvoiceModel;
+    private $studentModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->feeScheduleModel = new FeeSchedule($pdo);
         $this->feeInvoiceModel = new FeeInvoice($pdo);
+        $this->studentModel = new StudentModel($pdo);
     }
 
     /**
@@ -390,6 +393,14 @@ class FinanceController {
                 }
             }
 
+            // If amount_due is empty or 0, try deriving from schedule based on student's current class
+            if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
+                $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['term']);
+                if ($derived !== null) {
+                    $data['amount_due'] = $derived;
+                }
+            }
+
             // Defaults
             if (empty($data['invoice_number'])) {
                 $data['invoice_number'] = $this->generateInvoiceNumber();
@@ -476,6 +487,17 @@ class FinanceController {
                 }
             }
 
+            // If amount_due not supplied or zero, attempt derive based on student current class & schedule
+            $studentId = isset($data['student_id']) ? (int)$data['student_id'] : (int)$existing['student_id'];
+            $year = $data['academic_year'] ?? $existing['academic_year'];
+            $term = $data['term'] ?? $existing['term'];
+            if (!isset($data['amount_due']) || (float)$data['amount_due'] <= 0) {
+                $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$term);
+                if ($derived !== null) {
+                    $data['amount_due'] = $derived;
+                }
+            }
+
             // Recompute amounts
             $amountDue = isset($data['amount_due']) ? (float)$data['amount_due'] : (float)$existing['amount_due'];
             $amountPaid = isset($data['amount_paid']) ? (float)$data['amount_paid'] : (float)$existing['amount_paid'];
@@ -552,6 +574,24 @@ class FinanceController {
             $userSessionModel = new UserSessionModel($this->pdo);
             $session = $userSessionModel->findActiveSession($token);
             return $session['user_id'] ?? null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $term): ?float {
+        try {
+            // Find student's current class
+            $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $stmt->execute([$studentId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $classId = $row['current_class_id'] ?? null;
+            if (!$classId) return null;
+
+            // Find schedule for class/year/term
+            $schedule = $this->findScheduleByComposite($classId, $academicYear, $term);
+            if (!$schedule) return null;
+            return isset($schedule['total_fee']) ? (float)$schedule['total_fee'] : null;
         } catch (Exception $e) {
             return null;
         }

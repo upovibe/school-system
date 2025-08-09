@@ -537,19 +537,34 @@ class TeacherAssignmentManagementPage extends App {
         const teacherAssignments = this.get('teacherAssignments');
         if (!teacherAssignments) return;
 
-        // Prepare table data
-        const tableData = teacherAssignments.map((teacherAssignment, index) => ({
-            id: teacherAssignment.id, // Keep ID for internal use
-            index: index + 1, // Add index number for display
-            teacher_name: `${teacherAssignment.teacher_first_name || 'N/A'} ${teacherAssignment.teacher_last_name || 'N/A'}`,
-            employee_id: teacherAssignment.employee_id || 'N/A',
-            class_name: teacherAssignment.class_name || 'N/A',
-            class_section: teacherAssignment.class_section || 'N/A',
-            subject_name: teacherAssignment.subject_name || 'N/A',
-            subject_code: teacherAssignment.subject_code || 'N/A',
-            created: teacherAssignment.created_at,
-            updated: teacherAssignment.updated_at
-        }));
+        // Build grouped table data consistent with render()
+        const groupedData = this.groupTeacherAssignments(teacherAssignments);
+        const tableData = [];
+        let rowIndex = 1;
+        groupedData.forEach(teacher => {
+            teacher.classes.forEach((classInfo, classIndex) => {
+                const subjectsText = classInfo.subjects.map(subject => 
+                    `${subject.subjectName} (${subject.subjectCode})`
+                ).join(', ');
+                const isFirstClass = classIndex === 0;
+                tableData.push({
+                    id: `${teacher.employeeId}-${classInfo.className}-${classInfo.classSection}`,
+                    index: rowIndex++,
+                    teacher_name: isFirstClass ? teacher.teacherName : '',
+                    employee_id: isFirstClass ? teacher.employeeId : '',
+                    class_name: classInfo.className,
+                    class_section: classInfo.classSection,
+                    subjects: subjectsText,
+                    subject_count: classInfo.subjects.length,
+                    updated: new Date().toISOString(),
+                    teacher_employee_id: teacher.employeeId,
+                    teacher_name_full: teacher.teacherName,
+                    is_first_class: isFirstClass,
+                    class_key: `${classInfo.className}-${classInfo.classSection}`,
+                    subjects_data: classInfo.subjects
+                });
+            });
+        });
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');

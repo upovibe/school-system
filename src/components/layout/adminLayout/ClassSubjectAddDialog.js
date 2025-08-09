@@ -274,7 +274,29 @@ class ClassSubjectAddDialog extends HTMLElement {
                             `}
                         </div>
 
-                        
+                        <!-- Notes -->
+                        <div class="p-3 rounded-md bg-gray-50 border border-gray-100 text-gray-700 text-xs">
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>You can reopen this dialog any time to add more subjects to the same class.</li>
+                                <li>To remove a subject from a class, use the delete action in the table or the class subjects view.</li>
+                            </ul>
+                        </div>
+
+                        <!-- How this works -->
+                        <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <div>
+                                    <p class="font-medium">How this works</p>
+                                    <ul class="list-disc pl-5 mt-1 space-y-1">
+                                        <li>Select a class.</li>
+                                        <li>Select one or more subjects from the full catalog.</li>
+                                        <li>It creates one assignment per selected subject for the chosen class.</li>
+                                        <li>Existing duplicates are rejected by the server; you’ll get success for only new combinations.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ui-dialog>

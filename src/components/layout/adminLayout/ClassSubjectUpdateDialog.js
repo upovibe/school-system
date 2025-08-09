@@ -19,14 +19,19 @@ class ClassSubjectUpdateDialog extends HTMLElement {
   constructor() {
     super();
     this.classData = null;
-    this.teachers = [];
     this.classes = [];
     this.subjects = [];
     this.loading = false;
-
-    this.selectedTeacherId = null;
     this.selectedClassIds = [];
     this.selectedSubjectIds = [];
+  }
+
+  // Debug logger
+  logDebug(label, payload) {
+    try {
+      // eslint-disable-next-line no-console
+      console.log(`[ClassSubjectUpdateDialog] ${label}:`, payload);
+    } catch (_) {}
   }
 
   static get observedAttributes() {
@@ -40,43 +45,76 @@ class ClassSubjectUpdateDialog extends HTMLElement {
   }
 
   connectedCallback() {
+    this.logDebug('connected', true);
     this.render();
-    this.loadTeachers();
     this.loadClasses();
+    // Load ALL subjects so dropdown shows every subject (class subjects will be preselected)
     this.loadSubjects();
     this.addEventListener('confirm', this.save.bind(this));
   }
 
-  setClassSubjectData(data) {
+  setClassSubjectData(data, classAssignments) {
     this.classData = data || null;
 
-    // Prefill selections from provided data
-    const first = data?.assignments?.[0] || null;
-    const classId = data?.classId ?? first?.class_id ?? null;
-    const teacherId = data?.teacherId ?? first?.teacher_id ?? null;
-    const subjectIds = Array.isArray(data?.assignments)
-      ? data.assignments.map(a => a.subject_id).filter(id => id && !isNaN(id))
-      : [];
+    // Normalize incoming assignments: prefer explicit list if provided
+    const assignments = Array.isArray(classAssignments) && classAssignments.length > 0
+      ? classAssignments
+      : (Array.isArray(data?.assignments) && data.assignments.length > 0 ? data.assignments : []);
 
-    this.selectedTeacherId = teacherId || null;
+    // Prefill selections from provided data (supports single-object or array)
+    const first = assignments[0] || data || null;
+    const classId = data?.classId ?? data?.class_id ?? first?.class_id ?? null;
+    const subjectIds = assignments.length > 0
+      ? assignments.map(a => parseInt(a.subject_id)).filter(id => id && !isNaN(id))
+      : (data?.subject_id ? [parseInt(data.subject_id)] : []);
+
     this.selectedClassIds = classId ? [classId] : [];
     this.selectedSubjectIds = subjectIds;
 
-    this.render();
-    setTimeout(() => this.syncDropdownSelections(), 100);
-  }
+    this.logDebug('setClassSubjectData.incoming', {
+      classId,
+      assignmentsCount: data?.assignments?.length || 0,
+      subjectIds
+    });
 
-  async loadTeachers() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await api.withToken(token).get('/teachers');
-      if (res.status === 200 && res.data.success) {
-        this.teachers = res.data.data;
-        this.render();
-        this.syncDropdownSelections();
+    // Temporary fallback options from current assignments so dropdown isn't empty
+    if (assignments.length > 0) {
+      this.subjects = assignments.map(a => ({
+        id: parseInt(a.subject_id),
+        name: a.subject_name,
+        code: a.subject_code
+      }));
+    }
+
+    this.render();
+
+    // Load authoritative subject list for the class (replaces fallback options) and re-apply selection each time
+    // Ensure full subject list is available; preselection uses selectedSubjectIds
+    this.loadSubjects();
+
+    // Try multiple times to ensure options are rendered before setting values
+    const trySync = () => this.syncDropdownSelections();
+    setTimeout(trySync, 50);
+    setTimeout(trySync, 200);
+    setTimeout(trySync, 400);
+    setTimeout(trySync, 800);
+
+    // Attach change listener to class dropdown to reload subjects for new selection (first selected)
+    setTimeout(() => {
+      const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+      if (classDropdown && !classDropdown._classChangeBound) {
+        classDropdown.addEventListener('change', () => {
+          const value = Array.isArray(classDropdown.value) ? classDropdown.value[0] : classDropdown.value;
+          const newClassId = parseInt(value);
+          this.logDebug('classDropdown.change', { value: classDropdown.value, newClassId });
+          if (newClassId && !isNaN(newClassId)) {
+            this.selectedClassIds = [newClassId];
+            this.loadClassSubjects(newClassId).then(() => this.syncDropdownSelections());
+          }
+        });
+        classDropdown._classChangeBound = true;
       }
-    } catch (_) { /* silent */ }
+    }, 300);
   }
 
   async loadClasses() {
@@ -86,10 +124,39 @@ class ClassSubjectUpdateDialog extends HTMLElement {
       const res = await api.withToken(token).get('/classes');
       if (res.status === 200 && res.data.success) {
         this.classes = res.data.data;
+        this.logDebug('loadClasses.success', { count: this.classes.length });
         this.render();
         this.syncDropdownSelections();
       }
     } catch (_) { /* silent */ }
+  }
+
+  async loadClassSubjects(classId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !classId) return;
+      const res = await api.withToken(token).get(`/class-subjects/by-class?class_id=${encodeURIComponent(classId)}`);
+      if (res.status === 200 && res.data.success) {
+        const list = (res.data.data || []).map(item => ({
+          id: item.subject_id ?? item.id,
+          name: item.subject_name ?? item.name ?? (item.subject?.name ?? `Subject ${item.subject_id ?? item.id}`),
+          code: item.subject_code ?? item.code ?? (item.subject?.code ?? '')
+        }));
+        if (Array.isArray(list) && list.length > 0) {
+          this.subjects = list;
+          this.logDebug('loadClassSubjects.success', { classId, count: list.length, subjectIds: list.map(s => s.id) });
+          this.render();
+          // After render, re-apply selection (multiple retries)
+          const sync = () => this.syncDropdownSelections();
+          setTimeout(sync, 10);
+          setTimeout(sync, 100);
+          setTimeout(sync, 250);
+        }
+      }
+    } catch (e) {
+      this.logDebug('loadClassSubjects.error', e?.message || e);
+      // Keep fallback options; no-op on failure
+    }
   }
 
   async loadSubjects() {
@@ -98,7 +165,12 @@ class ClassSubjectUpdateDialog extends HTMLElement {
       if (!token) return;
       const res = await api.withToken(token).get('/subjects');
       if (res.status === 200 && res.data.success) {
-        this.subjects = res.data.data;
+        const all = res.data.data || [];
+        // Merge with any class-specific fallback subjects to ensure no loss
+        const byId = new Map();
+        all.forEach(s => byId.set(String(s.id), { id: s.id, name: s.name, code: s.code }));
+        (this.subjects || []).forEach(s => byId.set(String(s.id), { id: s.id, name: s.name, code: s.code }));
+        this.subjects = Array.from(byId.values());
         this.render();
         this.syncDropdownSelections();
       }
@@ -106,24 +178,53 @@ class ClassSubjectUpdateDialog extends HTMLElement {
   }
 
   syncDropdownSelections() {
-    const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
-    if (teacherDropdown && this.selectedTeacherId) {
-      teacherDropdown.setAttribute('value', String(this.selectedTeacherId));
-    }
-
+    this.logDebug('sync.start', {
+      selectedClassIds: this.selectedClassIds,
+      selectedSubjectIds: this.selectedSubjectIds,
+      subjectsCount: this.subjects?.length || 0
+    });
     const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
     if (classDropdown && this.selectedClassIds?.length) {
-      classDropdown.setAttribute('value', JSON.stringify(this.selectedClassIds));
+      const classIdsStr = this.selectedClassIds.map(id => String(id));
+      try { classDropdown.value = classIdsStr; } catch (_) {}
+      classDropdown.setAttribute('value', JSON.stringify(classIdsStr));
+      // Force-mark selected options for robustness
+      classDropdown.querySelectorAll('ui-option').forEach(opt => {
+        const isSelected = classIdsStr.includes(String(opt.getAttribute('value')));
+        if (isSelected) opt.setAttribute('selected', ''); else opt.removeAttribute('selected');
+      });
+      this.logDebug('sync.classDropdown', {
+        options: Array.from(classDropdown.querySelectorAll('ui-option')).map(o => o.getAttribute('value')),
+        valueProp: classDropdown.value,
+        valueAttr: classDropdown.getAttribute('value')
+      });
     }
 
     const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
     if (subjectDropdown && this.selectedSubjectIds?.length) {
-      subjectDropdown.setAttribute('value', JSON.stringify(this.selectedSubjectIds));
+      const subjectIdsStr = this.selectedSubjectIds.map(id => String(id));
+      try { subjectDropdown.value = subjectIdsStr; } catch (_) {}
+      subjectDropdown.setAttribute('value', JSON.stringify(subjectIdsStr));
+      // Set display label from loaded subjects; fallback to assignments
+      let displayValue = '';
       if (this.subjects?.length) {
-        const selected = this.subjects.filter(s => this.selectedSubjectIds.includes(s.id));
-        const displayValue = selected.map(s => `${s.name} (${s.code})`).join(', ');
-        subjectDropdown.setAttribute('display-value', displayValue);
+        const selected = this.subjects.filter(s => subjectIdsStr.includes(String(s.id)));
+        displayValue = selected.map(s => `${s.name} (${s.code})`).join(', ');
+      } else if (this.classData?.assignments?.length) {
+        displayValue = this.classData.assignments.map(a => `${a.subject_name} (${a.subject_code})`).join(', ');
       }
+      if (displayValue) subjectDropdown.setAttribute('display-value', displayValue);
+      // Force-mark selected options
+      subjectDropdown.querySelectorAll('ui-option').forEach(opt => {
+        const isSelected = subjectIdsStr.includes(String(opt.getAttribute('value')));
+        if (isSelected) opt.setAttribute('selected', ''); else opt.removeAttribute('selected');
+      });
+      this.logDebug('sync.subjectDropdown', {
+        options: Array.from(subjectDropdown.querySelectorAll('ui-option')).map(o => o.getAttribute('value')),
+        valueProp: subjectDropdown.value,
+        valueAttr: subjectDropdown.getAttribute('value'),
+        displayValue: subjectDropdown.getAttribute('display-value')
+      });
     }
   }
 
@@ -139,19 +240,12 @@ class ClassSubjectUpdateDialog extends HTMLElement {
     try {
       this.setLoading(true);
 
-      const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
       const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
       const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
 
-      const selectedTeacherIdRaw = teacherDropdown ? teacherDropdown.value : null;
-      const selectedTeacherId = selectedTeacherIdRaw ? parseInt(selectedTeacherIdRaw) : null;
       const selectedClassIds = classDropdown ? classDropdown.value : [];
       const subjectIds = subjectDropdown ? subjectDropdown.value : [];
 
-      if (!selectedTeacherId || isNaN(selectedTeacherId)) {
-        Toast.show({ title: 'Validation Error', message: 'Please select a teacher', variant: 'error', duration: 3000 });
-        return;
-      }
       if (!Array.isArray(selectedClassIds) || selectedClassIds.length === 0) {
         Toast.show({ title: 'Validation Error', message: 'Please select at least one class', variant: 'error', duration: 3000 });
         return;
@@ -162,14 +256,14 @@ class ClassSubjectUpdateDialog extends HTMLElement {
       }
 
       const oldAssignment = this.classData?.assignments?.[0] || null;
-      const oldTeacherId = oldAssignment?.teacher_id ?? this.classData?.teacherId ?? null;
+      const oldTeacherId = oldAssignment?.teacher_id ?? this.classData?.teacherId ?? null; // keep same teacher
       const oldEmployeeId = oldAssignment?.employee_id ?? this.classData?.employeeId ?? null;
       const oldClassId = oldAssignment?.class_id ?? this.classData?.classId ?? null;
       const oldClassName = this.classData?.className ?? oldAssignment?.class_name;
       const oldClassSection = this.classData?.classSection ?? oldAssignment?.class_section;
 
       // If same teacher and same single class, just PUT
-      if (oldClassId && selectedClassIds.length === 1 && parseInt(selectedClassIds[0]) === oldClassId && selectedTeacherId === oldTeacherId) {
+      if (oldClassId && selectedClassIds.length === 1 && parseInt(selectedClassIds[0]) === oldClassId) {
         const res = await api.withToken(token).put(`/teacher-assignments/teacher/${oldTeacherId}/class/${oldClassId}`, {
           subject_ids: subjectIds
         });
@@ -203,7 +297,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         subjectIds.forEach(sid => {
           createPromises.push(
             api.withToken(token).post('/teacher-assignments', {
-              teacher_id: parseInt(selectedTeacherId),
+              teacher_id: parseInt(oldTeacherId),
               class_id: parseInt(cid),
               subject_id: parseInt(sid)
             })
@@ -240,35 +334,11 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
   render() {
     const d = this.classData;
-    const currentClassLabel = d ? `${d.className || d.assignments?.[0]?.class_name || 'N/A'} - ${d.classSection || d.assignments?.[0]?.class_section || 'N/A'}` : 'N/A';
-    const currentTeacherLabel = d ? `${d.teacherFirstName || d.assignments?.[0]?.teacher_first_name || 'N/A'} ${d.teacherLastName || d.assignments?.[0]?.teacher_last_name || 'N/A'} (${d.employeeId || d.assignments?.[0]?.employee_id || 'N/A'})` : 'N/A';
 
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Edit Class Subjects">
         <div slot="content">
           <div class="space-y-4">
-            <!-- Current Class -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Current Class</label>
-              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentClassLabel}</div>
-            </div>
-
-            <!-- Current Teacher -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Current Teacher</label>
-              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentTeacherLabel}</div>
-            </div>
-
-            <!-- Teacher -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Teacher *</label>
-              ${this.teachers.length > 0 ? `
-                <ui-search-dropdown data-field="teacher_id" placeholder="Search teachers..." class="w-full">
-                  ${this.teachers.map(t => `<ui-option value="${t.id}">${t.first_name} ${t.last_name} (${t.employee_id})</ui-option>`).join('')}
-                </ui-search-dropdown>
-              ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}
-            </div>
-
             <!-- Classes -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Classes *</label>
@@ -299,17 +369,18 @@ class ClassSubjectUpdateDialog extends HTMLElement {
               </div>
             ` : ''}
 
-            <!-- How it works -->
+            <!-- How it works (always at bottom) -->
             <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
               <div class="flex items-start space-x-2">
                 <i class="fas fa-info-circle mt-0.5"></i>
                 <div>
                   <p class="font-medium">How this works</p>
                   <ul class="list-disc pl-5 mt-1 space-y-1">
-                    <li>Pick a teacher (defaults to current).</li>
-                    <li>Select one or more destination classes.</li>
-                    <li>Select one or more subjects.</li>
-                    <li>If you keep the same single class and teacher, it only updates the subjects. Otherwise, it moves the current assignments to the selected class(es) for the selected teacher.</li>
+                    <li>Select one or more destination classes (defaults to current class).</li>
+                    <li>Select one or more subjects from the full catalog; existing class subjects are preselected.</li>
+                    <li>Same class: only updates the subject list (adds/removes).</li>
+                    <li>Different classes: old class assignments are removed; new combinations are created for the selected classes.</li>
+                    <li>Duplicates are ignored by the server; only new combinations are created.</li>
                   </ul>
                 </div>
               </div>

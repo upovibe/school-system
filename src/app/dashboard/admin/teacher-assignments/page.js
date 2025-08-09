@@ -12,6 +12,7 @@ import '@/components/layout/adminLayout/TeacherAssignmentDeleteClassDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteSubjectDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentEditClassDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentUpdateDialog.js';
+import '@/components/layout/adminLayout/ClassSubjectUpdateDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -31,6 +32,7 @@ class TeacherAssignmentManagementPage extends App {
         this.viewTeacherAssignmentData = null;
         this.deleteTeacherAssignmentData = null;
         this.activeTab = 'table'; // Default to table tab
+        this.showClassSubjectUpdateDialog = false;
     }
 
     getHeaderCounts() {
@@ -174,6 +176,7 @@ class TeacherAssignmentManagementPage extends App {
             // Close the edit dialog
             this.set('showEditClassDialog', false);
             this.set('showUpdateModal', false);
+            this.set('showClassSubjectUpdateDialog', false);
         });
 
         // Listen for delete events from view dialog
@@ -459,6 +462,40 @@ class TeacherAssignmentManagementPage extends App {
         }
     }
 
+    onUpdateClassSubjects(employeeId, className, classSection) {
+        // Find the teacher assignments for this employee
+        const teacherAssignments = this.get('teacherAssignments') || [];
+        const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
+        
+        if (teacherData.length > 0) {
+            // Find assignments for this specific class
+            const classAssignments = teacherData.filter(assignment => 
+                assignment.class_name === className && assignment.class_section === classSection
+            );
+            
+            if (classAssignments.length > 0) {
+                const first = classAssignments[0];
+                this.closeAllModals();
+                this.set('showClassSubjectUpdateDialog', true);
+                setTimeout(() => {
+                    const dlg = this.querySelector('class-subject-update-dialog');
+                    if (dlg) {
+                        dlg.setClassSubjectData({
+                            classId: first.class_id,
+                            className: className,
+                            classSection: classSection,
+                            teacherId: first.teacher_id,
+                            employeeId: first.employee_id,
+                            teacherFirstName: first.teacher_first_name,
+                            teacherLastName: first.teacher_last_name,
+                            assignments: classAssignments
+                        });
+                    }
+                }, 0);
+            }
+        }
+    }
+
     onDeleteSubject(employeeId, className, classSection, subjectName, subjectCode) {
         // Find the teacher assignments for this employee
         const teacherAssignments = this.get('teacherAssignments');
@@ -529,6 +566,7 @@ class TeacherAssignmentManagementPage extends App {
         this.set('showDeleteClassDialog', false);
         this.set('showDeleteSubjectDialog', false);
         this.set('showEditClassDialog', false);
+        this.set('showClassSubjectUpdateDialog', false);
         this.set('updateTeacherAssignmentData', null);
         this.set('viewTeacherAssignmentData', null);
         this.set('deleteTeacherAssignmentData', null);
@@ -754,6 +792,12 @@ class TeacherAssignmentManagementPage extends App {
                                                                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                                                 ${classGroup.subjects.length} subject${classGroup.subjects.length !== 1 ? 's' : ''}
                                                                             </span>
+                                                                             <button 
+                                                                                 onclick="this.closest('app-teacher-assignment-management-page').onUpdateClassSubjects('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}')"
+                                                                                 class="inline-flex items-center p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors duration-200"
+                                                                                 title="Update class subjects (change teacher/classes/subjects)">
+                                                                                 <i class="fas fa-exchange-alt text-xs"></i>
+                                                                             </button>
                                                                             <button 
                                                                                 onclick="this.closest('app-teacher-assignment-management-page').onEditClass('${teacherGroup.employeeId}', '${classGroup.className}', '${classGroup.classSection}')"
                                                                                 class="inline-flex items-center p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition-colors duration-200"
@@ -845,6 +889,9 @@ class TeacherAssignmentManagementPage extends App {
             
             <!-- Edit Class Dialog -->
             <teacher-assignment-edit-class-dialog ${this.get('showEditClassDialog') ? 'open' : ''}></teacher-assignment-edit-class-dialog>
+            
+            <!-- Class Subject Update Dialog -->
+            <class-subject-update-dialog ${this.get('showClassSubjectUpdateDialog') ? 'open' : ''}></class-subject-update-dialog>
         `;
     }
 }

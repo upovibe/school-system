@@ -6,27 +6,26 @@ class FinanceInvoiceDeleteDialog extends HTMLElement {
   constructor() {
     super();
     this._invoice = null;
-    this._listenersAttached = false;
   }
 
   static get observedAttributes() { return ['open']; }
 
   connectedCallback() {
     this.render();
-    this.setupListeners();
+    this.setup();
   }
 
   setInvoiceData(invoice) {
     this._invoice = invoice || null;
     this.render();
-    this.setupListeners();
+    this.setup();
   }
 
-  setupListeners() {
-    if (this._listenersAttached) return;
-    this.addEventListener('confirm', () => this.deleteInvoice());
-    this.addEventListener('cancel', () => this.close());
-    this._listenersAttached = true;
+  setup() {
+    const dialog = this.querySelector('ui-dialog');
+    if (!dialog) return;
+    dialog.addEventListener('confirm', () => this.deleteInvoice());
+    dialog.addEventListener('cancel', () => this.close());
   }
 
   open() { this.setAttribute('open', ''); }
@@ -40,7 +39,7 @@ class FinanceInvoiceDeleteDialog extends HTMLElement {
       const id = this._invoice.id;
       const resp = await api.withToken(token).delete(`/finance/invoices/${id}`);
       if (resp.status === 200 || resp.data?.success) {
-        Toast.show({ title: 'Deleted', message: 'Invoice deleted', variant: 'success', duration: 2000 });
+        Toast.show({ title: 'Deleted', message: 'Invoice deleted', variant: 'success', duration: 2500 });
         this.close();
         this.dispatchEvent(new CustomEvent('invoice-deleted', { detail: { id }, bubbles: true, composed: true }));
       } else {
@@ -52,17 +51,18 @@ class FinanceInvoiceDeleteDialog extends HTMLElement {
   }
 
   render() {
-    const i = this._invoice;
+    const i = this._invoice || {};
     this.innerHTML = `
-      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''}>
-        <div slot="title">Delete Invoice</div>
-        <div class="space-y-2">
-          <p>Are you sure you want to delete this invoice?</p>
-          ${i ? `<p class="text-sm text-gray-600">Invoice #${i.invoice_number} for student #${i.student_id}</p>` : ''}
-        </div>
-        <div slot="footer">
-          <button is="ui-button" variant="secondary" data-action="cancel">Cancel</button>
-          <button is="ui-button" variant="danger" data-action="confirm">Delete</button>
+      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Delete Invoice" variant="danger">
+        <div slot="content">
+          <p class="text-sm text-gray-700">Are you sure you want to delete this invoice?</p>
+          <div class="mt-3 p-3 bg-red-50 border border-red-100 rounded text-red-700 text-sm">
+            <div><strong>Invoice #:</strong> ${i.invoice_number ?? ''}</div>
+            <div><strong>Student ID:</strong> ${i.student_id ?? ''}</div>
+            <div><strong>Year/Term:</strong> ${i.academic_year ?? ''} - ${i.term ?? ''}</div>
+            <div><strong>Amount Due:</strong> ${i.amount_due ?? ''}</div>
+            <div><strong>Balance:</strong> ${i.balance ?? ''}</div>
+          </div>
         </div>
       </ui-dialog>
     `;

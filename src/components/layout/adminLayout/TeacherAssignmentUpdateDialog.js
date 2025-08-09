@@ -19,8 +19,9 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     this.classAssignments = []; // assignments limited to one class
     this.classes = [];
     this.subjects = [];
+    this.teachers = [];
     this.loading = false;
-    this.selectedClassId = null;
+    this.selectedClassIds = [];
   }
 
   static get observedAttributes() {
@@ -35,6 +36,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
 
   connectedCallback() {
     this.render();
+    this.loadTeachers();
     this.loadClasses();
     this.loadSubjects();
     this.addEventListener('confirm', this.save.bind(this));
@@ -56,8 +58,9 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
       this.classAssignments = [];
     }
 
-    // Current class id
-    this.selectedClassId = this.classAssignments?.[0]?.class_id ?? null;
+    // Current class ids (default to existing single class)
+    const existingClassId = this.classAssignments?.[0]?.class_id ?? null;
+    this.selectedClassIds = existingClassId ? [existingClassId] : [];
     this.render();
 
     // After render and after options load, set dropdown defaults
@@ -71,6 +74,19 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
       const res = await api.withToken(token).get('/classes');
       if (res.status === 200 && res.data.success) {
         this.classes = res.data.data;
+        this.render();
+        this.syncDropdownSelections();
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  async loadTeachers() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await api.withToken(token).get('/teachers');
+      if (res.status === 200 && res.data.success) {
+        this.teachers = res.data.data;
         this.render();
         this.syncDropdownSelections();
       }
@@ -91,9 +107,14 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
   }
 
   syncDropdownSelections() {
-    const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-    if (classDropdown && this.selectedClassId) {
-      classDropdown.setAttribute('value', String(this.selectedClassId));
+    const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+    if (classDropdown && this.selectedClassIds?.length) {
+      classDropdown.setAttribute('value', JSON.stringify(this.selectedClassIds));
+    }
+
+    const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+    if (teacherDropdown && this.primaryAssignment?.teacher_id) {
+      teacherDropdown.setAttribute('value', String(this.primaryAssignment.teacher_id));
     }
 
     const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
@@ -122,15 +143,21 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
 
     try {
       this.setLoading(true);
-      const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+      const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
       const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+      const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
 
-      const newClassIdRaw = classDropdown ? classDropdown.value : null;
-      const newClassId = newClassIdRaw ? parseInt(newClassIdRaw) : null;
+      const selectedClassIds = classDropdown ? classDropdown.value : [];
       const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+      const selectedTeacherIdRaw = teacherDropdown ? teacherDropdown.value : null;
+      const selectedTeacherId = selectedTeacherIdRaw ? parseInt(selectedTeacherIdRaw) : null;
 
-      if (!newClassId || isNaN(newClassId)) {
-        Toast.show({ title: 'Validation Error', message: 'Please select a class', variant: 'error', duration: 3000 });
+      if (!selectedTeacherId || isNaN(selectedTeacherId)) {
+        Toast.show({ title: 'Validation Error', message: 'Please select a teacher', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!Array.isArray(selectedClassIds) || selectedClassIds.length === 0) {
+        Toast.show({ title: 'Validation Error', message: 'Please select at least one class', variant: 'error', duration: 3000 });
         return;
       }
       if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
@@ -143,9 +170,10 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
       const currentClassId = this.classAssignments?.[0]?.class_id ?? null;
       const oldClassName = this.primaryAssignment.class_name;
       const oldClassSection = this.primaryAssignment.class_section;
+      const teacherChanged = selectedTeacherId !== teacherId;
 
-      // Same class -> PUT update subjects
-      if (currentClassId && newClassId === currentClassId) {
+      // Simple update case: same teacher, single class equals current -> PUT subjects
+      if (!teacherChanged && currentClassId && selectedClassIds.length === 1 && parseInt(selectedClassIds[0]) === currentClassId) {
         const res = await api.withToken(token).put(`/teacher-assignments/teacher/${teacherId}/class/${currentClassId}`, {
           subject_ids: subjectIds
         });
@@ -169,27 +197,32 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         throw new Error(res?.data?.message || 'Failed to update subjects');
       }
 
-      // Class changed -> delete old, create new
+      // Complex update: teacher and/or classes changed -> delete old then recreate for each selected class under selected teacher
       if (currentClassId) {
         await api.withToken(token).delete(`/teacher-assignments/teacher/${teacherId}/class/${currentClassId}`);
       }
 
-      const createPromises = subjectIds.map(subjectId =>
-        api.withToken(token).post('/teacher-assignments', {
-          teacher_id: parseInt(teacherId),
-          class_id: parseInt(newClassId),
-          subject_id: parseInt(subjectId)
-        })
-      );
+      const createPromises = [];
+      selectedClassIds.forEach(cid => {
+        subjectIds.forEach(subjectId => {
+          createPromises.push(
+            api.withToken(token).post('/teacher-assignments', {
+              teacher_id: parseInt(selectedTeacherId),
+              class_id: parseInt(cid),
+              subject_id: parseInt(subjectId)
+            })
+          );
+        });
+      });
       const responses = await Promise.all(createPromises);
       const createdAssignments = responses.filter(r => r?.data?.success).map(r => r.data.data);
 
-      Toast.show({ title: 'Success', message: 'Class and subjects updated successfully', variant: 'success', duration: 3000 });
+      Toast.show({ title: 'Success', message: 'Teacher, classes and subjects updated successfully', variant: 'success', duration: 3000 });
       this.close();
       this.dispatchEvent(new CustomEvent('teacher-class-assignments-updated', {
         detail: {
           updatedAssignments: createdAssignments,
-          teacherId,
+          teacherId, // old teacher id to remove old entries
           employeeId,
           className: oldClassName, // remove old entries
           classSection: oldClassSection
@@ -215,16 +248,26 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
   render() {
     const a = this.primaryAssignment;
     const currentClassLabel = a ? `${a.class_name || 'N/A'} - ${a.class_section || 'N/A'}` : 'N/A';
-    const teacherLabel = a ? `${a.teacher_first_name || 'N/A'} ${a.teacher_last_name || 'N/A'} (${a.employee_id || 'N/A'})` : 'N/A';
+    const currentTeacherLabel = a ? `${a.teacher_first_name || 'N/A'} ${a.teacher_last_name || 'N/A'} (${a.employee_id || 'N/A'})` : 'N/A';
 
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Edit Teacher Class & Subjects">
         <div slot="content">
           <div class="space-y-4">
-            <!-- Teacher -->
+            <!-- Current Teacher (read-only) -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
-              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${teacherLabel}</div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Current Teacher</label>
+              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentTeacherLabel}</div>
+            </div>
+
+            <!-- New Teacher -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Teacher *</label>
+              ${this.teachers.length > 0 ? `
+                <ui-search-dropdown data-field="teacher_id" placeholder="Search teachers..." class="w-full">
+                  ${this.teachers.map(t => `<ui-option value="${t.id}">${t.first_name} ${t.last_name} (${t.employee_id})</ui-option>`).join('')}
+                </ui-search-dropdown>
+              ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}
             </div>
 
             <!-- Current Class -->
@@ -233,11 +276,11 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
               <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentClassLabel}</div>
             </div>
 
-            <!-- New Class -->
+            <!-- New Classes -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Classes *</label>
               ${this.classes.length > 0 ? `
-                <ui-search-dropdown data-field="class_id" placeholder="Search classes..." class="w-full">
+                <ui-search-dropdown data-field="class_ids" placeholder="Search and select multiple classes..." multiple class="w-full">
                   ${this.classes.map(cls => `<ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>`).join('')}
                 </ui-search-dropdown>
               ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}

@@ -27,15 +27,10 @@ class StudentDashboardPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Student Dashboard | School System';
-        this.loadUserData();
-         this.loadClassData();
-         this.loadGradesData();
-         this.loadAssignmentsData();
-        this.simulateLoading();
-         
-         // Add event listeners for help buttons
-         this.addEventListener('click', this.handleButtonClick.bind(this));
-     }
+        this.loadAll();
+        // Add event listeners for help buttons
+        this.addEventListener('click', this.handleButtonClick.bind(this));
+    }
 
      handleButtonClick(event) {
          const button = event.target.closest('button[data-action]');
@@ -53,11 +48,50 @@ class StudentDashboardPage extends App {
          }
     }
 
-    async simulateLoading() {
-        // Simulate API loading time
-        setTimeout(() => {
+    async loadAll() {
+        try {
+            this.set('loading', true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                this.set('loading', false);
+                return;
+            }
+
+            const stored = localStorage.getItem('userData');
+            let userId = null;
+            if (stored) {
+                try { userId = JSON.parse(stored)?.id || null; } catch (_) { userId = null; }
+            }
+
+            const requests = [];
+            if (userId) {
+                requests.push(api.withToken(token).get(`/users/${userId}/profile`).catch(() => null));
+            } else {
+                requests.push(Promise.resolve(null));
+            }
+            requests.push(api.withToken(token).get('/students/current-class').catch(() => null));
+            requests.push(api.withToken(token).get('/student/my-grades').catch(() => ({ data: { data: [] } })));
+            requests.push(api.withToken(token).get('/students/my-assignments').catch(() => ({ data: { data: [] } })));
+
+            const [userResp, classResp, gradesResp, assignmentsResp] = await Promise.all(requests);
+
+            if (userResp?.data) {
+                this.set('currentUser', userResp.data);
+            } else if (stored) {
+                try { this.set('currentUser', JSON.parse(stored)); } catch (_) {}
+            }
+
+            if (classResp?.data?.success) {
+                this.set('classData', classResp.data.data);
+            } else {
+                this.set('classData', null);
+            }
+
+            this.set('gradesData', gradesResp?.data?.data || []);
+            this.set('assignmentsData', assignmentsResp?.data?.data || []);
+        } finally {
             this.set('loading', false);
-        }, 1000);
+        }
     }
 
     async loadUserData() {

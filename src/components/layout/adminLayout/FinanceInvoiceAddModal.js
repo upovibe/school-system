@@ -69,8 +69,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
             const student = resp?.data?.data || null;
             const classId = student?.current_class_id || null;
             const infoEl = this.querySelector('#current-class-info');
-            // Preselect billing type based on student record
-            // clear dependent fields and refetch using student's type
+            // Show student type badge and clear dependent fields
             const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
             const yearInput2 = this.querySelector('ui-input[data-field="academic_year"]');
             const termInput2 = this.querySelector('ui-input[data-field="term"]');
@@ -86,7 +85,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
               if (info && infoEl) {
                 const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
                 const type = student?.student_type || '';
-                infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
+                infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id=\"current-student-type\" class=\"ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200\" data-type=\"${type}\">${type}</span>` : ''}`;
               } else if (infoEl) {
                 infoEl.textContent = `Current Class ID: ${classId}`;
               }
@@ -223,7 +222,9 @@ class FinanceInvoiceAddModal extends HTMLElement {
           const infoEl = this.querySelector('#current-class-info');
           if (info && infoEl) {
             const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
-            infoEl.textContent = `Current Class: ${label}`;
+            const typeBadge = this.querySelector('#current-student-type');
+            const type = typeBadge?.dataset?.type || '';
+            infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
           }
         }
       } catch (_) {}

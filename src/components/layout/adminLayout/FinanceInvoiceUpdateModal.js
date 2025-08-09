@@ -300,7 +300,9 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
             const infoEl = this.querySelector('#current-class-info');
             if (infoEl) {
               const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
-              infoEl.textContent = `Current Class: ${label}`;
+              const typeBadge = this.querySelector('#current-student-type');
+              const type = typeBadge?.dataset?.type || '';
+              infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
             }
           }
         }

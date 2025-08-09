@@ -89,6 +89,12 @@ class FinanceInvoiceViewModal extends HTMLElement {
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-user mr-1"></i>Student Type
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.student_type)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
                   <i class="fas fa-calendar mr-1"></i>Academic Year
                 </label>
                 <p class="text-gray-900 text-sm">${safe(i.academic_year)}</p>

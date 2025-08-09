@@ -63,14 +63,22 @@ class StudentDashboardPage extends App {
     async loadUserData() {
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                return;
-            }
+            if (!token) return;
 
-            // Get current user data
-            const userResponse = await api.withToken(token).get('/auth/me');
-            this.set('currentUser', userResponse.data);
-            
+            // Align with profile page: get ID from localStorage and fetch profile
+            const stored = localStorage.getItem('userData');
+            let userId = null;
+            if (stored) {
+                try { userId = JSON.parse(stored)?.id || null; } catch (_) { userId = null; }
+            }
+            if (userId) {
+                const resp = await api.withToken(token).get(`/users/${userId}/profile`).catch(() => null);
+                if (resp?.data) {
+                    this.set('currentUser', resp.data);
+                } else if (stored) {
+                    try { this.set('currentUser', JSON.parse(stored)); } catch (_) {}
+                }
+            }
         } catch (error) {
             console.error('❌ Error loading user data:', error);
         }
@@ -375,7 +383,14 @@ class StudentDashboardPage extends App {
         const loading = this.get('loading');
         const currentUser = this.get('currentUser');
         const classData = this.get('classData');
-        const userName = currentUser?.name || 'Student';
+        const userName = (currentUser && (
+            currentUser.name ||
+            currentUser.full_name ||
+            (currentUser.first_name && currentUser.last_name ? `${currentUser.first_name} ${currentUser.last_name}` : null) ||
+            currentUser.username ||
+            currentUser.email ||
+            currentUser.displayName
+        )) || 'Student';
         const classInfo = classData?.class || {};
         const gradeStats = this.calculateGradeStats();
         const assignmentStats = this.calculateAssignmentStats();

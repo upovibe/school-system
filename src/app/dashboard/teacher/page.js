@@ -32,13 +32,23 @@ class TeacherDashboardPage extends App {
         return;
       }
 
-      // Fetch in parallel
-      const [meResp, classResp] = await Promise.all([
-        api.withToken(token).get('/auth/me').catch(() => ({ data: null })),
-        api.withToken(token).get('/teachers/my-class').catch(() => ({ data: null })),
-      ]);
+      // Resolve current user using profile endpoint like Profile page
+      let userId = null;
+      const storedUser = localStorage.getItem('userData');
+      if (storedUser) {
+        try { userId = JSON.parse(storedUser)?.id || null; } catch (_) { userId = null; }
+      }
+      if (userId) {
+        const profileResp = await api.withToken(token).get(`/users/${userId}/profile`).catch(() => null);
+        if (profileResp?.data) {
+          this.set('currentUser', profileResp.data);
+        } else if (storedUser) {
+          try { this.set('currentUser', JSON.parse(storedUser)); } catch (_) {}
+        }
+      }
 
-      if (meResp?.data) this.set('currentUser', meResp.data);
+      // Fetch teacher class
+      const classResp = await api.withToken(token).get('/teachers/my-class').catch(() => ({ data: null }));
       if (classResp?.data?.success) this.set('teacherClass', classResp.data.data);
 
       // Assignments
@@ -82,12 +92,17 @@ class TeacherDashboardPage extends App {
     const user = this.get('currentUser');
     const teacherClass = this.get('teacherClass');
     const assignments = this.calculateAssignmentStats();
-    const gradeCounts = this.getGradeCounts();
 
-    const teacherName = user?.name || 'Teacher';
+    const teacherName = (user && (
+      user.name ||
+      user.full_name ||
+      (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : null) ||
+      user.username ||
+      user.email ||
+      user.displayName
+    )) || 'Teacher';
     const className = teacherClass?.class_name || teacherClass?.name || '';
     const classSection = teacherClass?.class_section || teacherClass?.section || '';
-    const subjects = Array.isArray(teacherClass?.subjects) ? teacherClass.subjects : [];
     const students = Array.isArray(teacherClass?.students) ? teacherClass.students : [];
 
     return `

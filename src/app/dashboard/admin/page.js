@@ -103,14 +103,21 @@ class AdminDashboardPage extends App {
     async loadUserData() {
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                return;
-            }
+            if (!token) return;
 
-            // Get current user data
-            const userResponse = await api.withToken(token).get('/auth/me');
-            this.set('currentUser', userResponse.data);
-            
+            const stored = localStorage.getItem('userData');
+            let userId = null;
+            if (stored) {
+                try { userId = JSON.parse(stored)?.id || null; } catch (_) { userId = null; }
+            }
+            if (userId) {
+                const resp = await api.withToken(token).get(`/users/${userId}/profile`).catch(() => null);
+                if (resp?.data) {
+                    this.set('currentUser', resp.data);
+                } else if (stored) {
+                    try { this.set('currentUser', JSON.parse(stored)); } catch (_) {}
+                }
+            }
         } catch (error) {
             console.error('❌ Error loading user data:', error);
         }
@@ -130,7 +137,14 @@ class AdminDashboardPage extends App {
         };
         const loading = this.get('loading');
         const currentUser = this.get('currentUser');
-        const userName = currentUser?.name || 'Admin';
+        const userName = (currentUser && (
+            currentUser.name ||
+            currentUser.full_name ||
+            (currentUser.first_name && currentUser.last_name ? `${currentUser.first_name} ${currentUser.last_name}` : null) ||
+            currentUser.username ||
+            currentUser.email ||
+            currentUser.displayName
+        )) || 'Admin';
         
         return `
             <div class="space-y-6">

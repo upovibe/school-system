@@ -202,7 +202,8 @@ class TeacherDashboardPage extends App {
         ${loading ? `
           <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
@@ -226,6 +227,11 @@ class TeacherDashboardPage extends App {
                 <i class="fas fa-chart-line text-xl mb-2 block"></i>
                 <div class="font-medium">My Class Grades</div>
                 <div class="text-xs opacity-90">View & update</div>
+              </a>
+              <a href="/dashboard/profile" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-user text-xl mb-2 block"></i>
+                <div class="font-medium">My Profile</div>
+                <div class="text-xs opacity-90">Update information</div>
               </a>
             </div>
           </div>

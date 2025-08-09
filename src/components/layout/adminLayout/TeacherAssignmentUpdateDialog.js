@@ -22,6 +22,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     this.teachers = [];
     this.loading = false;
     this.selectedClassIds = [];
+    this.fallbackSubjects = [];
   }
 
   static get observedAttributes() {
@@ -38,7 +39,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     this.render();
     this.loadTeachers();
     this.loadClasses();
-    this.loadSubjects();
     this.addEventListener('confirm', this.save.bind(this));
   }
 
@@ -61,10 +61,53 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     // Current class ids (default to existing single class)
     const existingClassId = this.classAssignments?.[0]?.class_id ?? null;
     this.selectedClassIds = existingClassId ? [existingClassId] : [];
+
+    // Build fallback subjects from current class assignments so tags render with names immediately
+    if (this.classAssignments && this.classAssignments.length > 0) {
+      const byId = new Map();
+      this.classAssignments.forEach(a => {
+        if (a.subject_id) {
+          byId.set(String(a.subject_id), {
+            id: parseInt(a.subject_id),
+            name: a.subject_name,
+            code: a.subject_code
+          });
+        }
+      });
+      this.fallbackSubjects = Array.from(byId.values());
+      // Use fallback immediately so chips show names before async load
+      if (this.fallbackSubjects.length > 0) {
+        this.subjects = this.fallbackSubjects;
+      }
+    }
     this.render();
 
-    // After render and after options load, set dropdown defaults
-    setTimeout(() => this.syncDropdownSelections(), 100);
+    // After render: load class-specific subjects for the current class and sync
+    if (existingClassId) {
+      this.loadClassSubjects(existingClassId).then(() => this.syncDropdownSelections());
+    }
+
+    // Extra retries to ensure options exist before applying selection
+    const trySync = () => this.syncDropdownSelections();
+    setTimeout(trySync, 50);
+    setTimeout(trySync, 200);
+    setTimeout(trySync, 400);
+    setTimeout(trySync, 800);
+
+    // Bind class change to reload class-specific subjects (use first selected)
+    setTimeout(() => {
+      const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+      if (classDropdown && !classDropdown._classChangeBound) {
+        classDropdown.addEventListener('change', () => {
+          const value = Array.isArray(classDropdown.value) ? classDropdown.value[0] : classDropdown.value;
+          const newClassId = parseInt(value);
+          if (newClassId && !isNaN(newClassId)) {
+            this.loadClassSubjects(newClassId).then(() => this.syncDropdownSelections());
+          }
+        });
+        classDropdown._classChangeBound = true;
+      }
+    }, 200);
   }
 
   async loadClasses() {
@@ -93,15 +136,29 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     } catch (_) { /* silent */ }
   }
 
-  async loadSubjects() {
+  async loadSubjects() { /* not used; class-specific loader below */ }
+
+  async loadClassSubjects(classId) {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await api.withToken(token).get('/subjects');
+      if (!token || !classId) return;
+      const res = await api.withToken(token).get(`/class-subjects/by-class?class_id=${encodeURIComponent(classId)}`);
       if (res.status === 200 && res.data.success) {
-        this.subjects = res.data.data;
+        const list = (res.data.data || []).map(item => ({
+          id: item.subject_id ?? item.id,
+          name: item.subject_name ?? item.name ?? (item.subject?.name ?? `Subject ${item.subject_id ?? item.id}`),
+          code: item.subject_code ?? item.code ?? (item.subject?.code ?? '')
+        }));
+        // Merge with fallback subjects to ensure all selected subjects have options
+        const byId = new Map();
+        list.forEach(s => byId.set(String(s.id), s));
+        (this.fallbackSubjects || []).forEach(s => byId.set(String(s.id), s));
+        this.subjects = Array.from(byId.values());
         this.render();
-        this.syncDropdownSelections();
+        const sync = () => this.syncDropdownSelections();
+        setTimeout(sync, 10);
+        setTimeout(sync, 100);
+        setTimeout(sync, 250);
       }
     } catch (_) { /* silent */ }
   }
@@ -110,6 +167,7 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
     if (classDropdown && this.selectedClassIds?.length) {
       classDropdown.setAttribute('value', JSON.stringify(this.selectedClassIds));
+      try { classDropdown.value = this.selectedClassIds.map(id => String(id)); } catch (_) {}
     }
 
     const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
@@ -123,12 +181,19 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         .map(a => a.subject_id)
         .filter(id => id && !isNaN(id));
       subjectDropdown.setAttribute('value', JSON.stringify(currentSubjectIds));
+      try { subjectDropdown.value = currentSubjectIds.map(id => String(id)); } catch (_) {}
 
       if (this.subjects?.length) {
-        const selected = this.subjects.filter(s => currentSubjectIds.includes(s.id));
+        const selected = this.subjects.filter(s => currentSubjectIds.map(id => String(id)).includes(String(s.id)));
         const displayValue = selected.map(s => `${s.name} (${s.code})`).join(', ');
         subjectDropdown.setAttribute('display-value', displayValue);
       }
+
+      // Force-mark selected options for robustness
+      subjectDropdown.querySelectorAll('ui-option').forEach(opt => {
+        const isSelected = currentSubjectIds.map(id => String(id)).includes(String(opt.getAttribute('value')));
+        if (isSelected) opt.setAttribute('selected', ''); else opt.removeAttribute('selected');
+      });
     }
   }
 

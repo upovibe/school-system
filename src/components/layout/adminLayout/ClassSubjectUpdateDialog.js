@@ -3,6 +3,11 @@ import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
+// Simple in-memory caches for this module (persists across dialog openings in-session)
+let CSU_CACHED_CLASSES = null; // Array<{id,name,section}>
+let CSU_CACHED_SUBJECTS = null; // Array<{id,name,code}>
+const CSU_CACHED_SUBJECTS_BY_CLASS = new Map(); // Map<classId:string, Array<{id,name,code}>>
+
 /**
  * Class Subject Update Dialog
  *
@@ -119,11 +124,19 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
   async loadClasses() {
     try {
+      if (Array.isArray(CSU_CACHED_CLASSES) && CSU_CACHED_CLASSES.length > 0) {
+        this.classes = CSU_CACHED_CLASSES;
+        this.logDebug('loadClasses.cache', { count: this.classes.length });
+        this.render();
+        this.syncDropdownSelections();
+        return;
+      }
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await api.withToken(token).get('/classes');
       if (res.status === 200 && res.data.success) {
         this.classes = res.data.data;
+        CSU_CACHED_CLASSES = this.classes;
         this.logDebug('loadClasses.success', { count: this.classes.length });
         this.render();
         this.syncDropdownSelections();
@@ -133,6 +146,19 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
   async loadClassSubjects(classId) {
     try {
+      const cacheKey = String(classId);
+      if (CSU_CACHED_SUBJECTS_BY_CLASS.has(cacheKey)) {
+        const cached = CSU_CACHED_SUBJECTS_BY_CLASS.get(cacheKey) || [];
+        if (cached.length > 0) {
+          this.subjects = this._mergeSubjects(cached, this.subjects);
+          this.logDebug('loadClassSubjects.cache', { classId, count: cached.length });
+          this.render();
+          const sync = () => this.syncDropdownSelections();
+          setTimeout(sync, 10);
+          setTimeout(sync, 100);
+          return;
+        }
+      }
       const token = localStorage.getItem('token');
       if (!token || !classId) return;
       const res = await api.withToken(token).get(`/class-subjects/by-class?class_id=${encodeURIComponent(classId)}`);
@@ -142,8 +168,9 @@ class ClassSubjectUpdateDialog extends HTMLElement {
           name: item.subject_name ?? item.name ?? (item.subject?.name ?? `Subject ${item.subject_id ?? item.id}`),
           code: item.subject_code ?? item.code ?? (item.subject?.code ?? '')
         }));
+        CSU_CACHED_SUBJECTS_BY_CLASS.set(cacheKey, list);
         if (Array.isArray(list) && list.length > 0) {
-          this.subjects = list;
+          this.subjects = this._mergeSubjects(list, this.subjects);
           this.logDebug('loadClassSubjects.success', { classId, count: list.length, subjectIds: list.map(s => s.id) });
           this.render();
           // After render, re-apply selection (multiple retries)
@@ -161,20 +188,38 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
   async loadSubjects() {
     try {
+      if (Array.isArray(CSU_CACHED_SUBJECTS) && CSU_CACHED_SUBJECTS.length > 0) {
+        // Merge any preexisting subjects with cache
+        const byId = new Map();
+        CSU_CACHED_SUBJECTS.forEach(s => byId.set(String(s.id), s));
+        (this.subjects || []).forEach(s => byId.set(String(s.id), s));
+        this.subjects = Array.from(byId.values());
+        this.render();
+        this.syncDropdownSelections();
+        return;
+      }
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await api.withToken(token).get('/subjects');
       if (res.status === 200 && res.data.success) {
-        const all = res.data.data || [];
+        const all = (res.data.data || []).map(s => ({ id: s.id, name: s.name, code: s.code }));
+        CSU_CACHED_SUBJECTS = all;
         // Merge with any class-specific fallback subjects to ensure no loss
         const byId = new Map();
-        all.forEach(s => byId.set(String(s.id), { id: s.id, name: s.name, code: s.code }));
-        (this.subjects || []).forEach(s => byId.set(String(s.id), { id: s.id, name: s.name, code: s.code }));
+        all.forEach(s => byId.set(String(s.id), s));
+        (this.subjects || []).forEach(s => byId.set(String(s.id), s));
         this.subjects = Array.from(byId.values());
         this.render();
         this.syncDropdownSelections();
       }
     } catch (_) { /* silent */ }
+  }
+
+  _mergeSubjects(primary, secondary) {
+    const byId = new Map();
+    (Array.isArray(primary) ? primary : []).forEach(s => byId.set(String(s.id), s));
+    (Array.isArray(secondary) ? secondary : []).forEach(s => byId.set(String(s.id), s));
+    return Array.from(byId.values());
   }
 
   syncDropdownSelections() {

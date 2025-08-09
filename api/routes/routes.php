@@ -301,3 +301,10 @@ Router::post('/finance/schedules', 'FinanceController@storeSchedule');
 Router::get('/finance/schedules/{id}', 'FinanceController@showSchedule');
 Router::put('/finance/schedules/{id}', 'FinanceController@updateSchedule');
 Router::delete('/finance/schedules/{id}', 'FinanceController@destroySchedule');
+
+// Finance - Fee Invoices (admin only)
+Router::get('/finance/invoices', 'FinanceController@indexInvoices');
+Router::post('/finance/invoices', 'FinanceController@storeInvoice');
+Router::get('/finance/invoices/{id}', 'FinanceController@showInvoice');
+Router::put('/finance/invoices/{id}', 'FinanceController@updateInvoice');
+Router::delete('/finance/invoices/{id}', 'FinanceController@destroyInvoice');

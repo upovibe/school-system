@@ -152,6 +152,7 @@ class TeacherClassPage extends App {
         }
 
         const { class_name, class_section, academic_year, capacity, status, students, student_count } = classData;
+        const current_students = (student_count != null ? student_count : (Array.isArray(students) ? students.length : 0));
 
         // Prepare table data with separate columns
         const tableData = students ? students.map(student => ({
@@ -235,11 +236,11 @@ class TeacherClassPage extends App {
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-chart-pie text-white text-lg sm:text-xl"></i>
+                                    <i class="fas fa-user-check text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${capacity || 0}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Class Capacity</div>
+                                    <div class="text-xl sm:text-2xl font-bold">${current_students}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Current Student${current_students === 1 ? '' : 's'}</div>
                                 </div>
                             </div>
                         </div>
@@ -265,7 +266,7 @@ class TeacherClassPage extends App {
                                     </span>
                                     <span class="flex items-center">
                                         <i class="fas fa-users mr-1"></i>
-                                        ${student_count || 0} / ${capacity || 0} students
+                                        ${student_count || 0} students
                                     </span>
                                     <span class="flex items-center">
                                         <i class="fas fa-check-circle mr-1 text-green-500"></i>

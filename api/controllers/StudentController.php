@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/ClassModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../models/ClassAssignmentModel.php';
 require_once __DIR__ . '/../models/StudentAssignmentModel.php';
+require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
@@ -15,6 +16,7 @@ class StudentController {
     private $classModel;
     private $classAssignmentModel;
     private $studentAssignmentModel;
+    private $userModel;
     private $pdo;
 
     public function __construct($pdo) {
@@ -23,6 +25,7 @@ class StudentController {
         $this->classModel = new ClassModel($pdo);
         $this->classAssignmentModel = new ClassAssignmentModel($pdo);
         $this->studentAssignmentModel = new StudentAssignmentModel($pdo);
+        $this->userModel = new UserModel($pdo);
     }
 
     /**
@@ -323,8 +326,21 @@ class StudentController {
                 return;
             }
 
+            // Begin transaction for cascading delete
+            $this->pdo->beginTransaction();
+
+            // Delete linked user if present
+            $userId = $student['user_id'] ?? null;
+            if ($userId) {
+                // Clean up sessions/logs if you have models for them (optional)
+                $stmt = $this->pdo->prepare("DELETE FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+            }
+
             // Delete student
             $this->studentModel->delete($id);
+
+            $this->pdo->commit();
             
             // Log the action
             $this->logAction('delete', 'Student deleted successfully', [

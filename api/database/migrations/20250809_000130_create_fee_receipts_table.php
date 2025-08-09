@@ -1,6 +1,6 @@
 <?php
 
-class Migration_20250809_000130_create_fee_receipts_table {
+class Migration_20250809000130createfeereceiptstable {
     private $pdo;
 
     public function __construct($pdo) {

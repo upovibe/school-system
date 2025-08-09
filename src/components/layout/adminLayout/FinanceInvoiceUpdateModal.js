@@ -93,6 +93,41 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       }
     };
     setTimeout(rebindAuto, 0);
+    // Capture change events to ensure we see student selection
+    if (!this._captureBound) {
+      this.addEventListener(
+        'change',
+        async (e) => {
+          const dropdown = e.target && e.target.closest && e.target.closest('ui-search-dropdown[name="student_id"]');
+          if (!dropdown) return;
+          const val = dropdown.value || (e.detail && e.detail.value);
+          const id = Number(val);
+          if (!id) return;
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const resp = await api.withToken(token).get(`/students/${id}`).catch(() => null);
+            const student = resp?.data?.data || null;
+            const classId = student?.current_class_id || null;
+            const infoEl = this.querySelector('#current-class-info');
+            if (classId) {
+              const cls = await api.withToken(token).get(`/classes/${classId}`).catch(() => null);
+              const info = cls?.data?.data;
+              if (info && infoEl) {
+                const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
+                infoEl.textContent = `Current Class: ${label}`;
+              } else if (infoEl) {
+                infoEl.textContent = `Current Class ID: ${classId}`;
+              }
+            } else if (infoEl) {
+              infoEl.textContent = '';
+            }
+          } catch (_) {}
+        },
+        true
+      );
+      this._captureBound = true;
+    }
   }
 
   open() {
@@ -254,6 +289,24 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       }
       if (!classId) return;
 
+      // Debug: log student's current class id and details
+      try {
+        const token2 = localStorage.getItem('token');
+        if (token2) {
+          console.log('[InvoiceUpdate] student selected:', { studentId, current_class_id: classId });
+          const cls = await api.withToken(token2).get(`/classes/${classId}`).catch(() => null);
+          const info = cls?.data?.data;
+          if (info) {
+            console.log('[InvoiceUpdate] current class details:', info);
+            const infoEl = this.querySelector('#current-class-info');
+            if (infoEl) {
+              const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
+              infoEl.textContent = `Current Class: ${label}`;
+            }
+          }
+        }
+      } catch (_) {}
+
       const token = localStorage.getItem("token");
       if (!token) return;
       const qs = new URLSearchParams({ student_id: String(studentId) });
@@ -299,6 +352,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
                 })
                 .join("")}
             </ui-search-dropdown>
+            <div id="current-class-info" class="text-xs text-gray-500 mt-1"></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

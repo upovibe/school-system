@@ -52,6 +52,43 @@ class FinanceInvoiceAddModal extends HTMLElement {
       }
     };
     setTimeout(rebindAuto, 0);
+    // Capture any change events from the student dropdown to ensure logging triggers
+    if (!this._captureBound) {
+      this.addEventListener(
+        'change',
+        async (e) => {
+          const dropdown = e.target && e.target.closest && e.target.closest('ui-search-dropdown[name="student_id"]');
+          if (!dropdown) return;
+          const val = dropdown.value || (e.detail && e.detail.value);
+          const id = Number(val);
+          if (!id) return;
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const resp = await api.withToken(token).get(`/students/${id}`).catch(() => null);
+            const student = resp?.data?.data || null;
+            const classId = student?.current_class_id || null;
+            const infoEl = this.querySelector('#current-class-info');
+            if (classId) {
+              const cls = await api.withToken(token).get(`/classes/${classId}`).catch(() => null);
+              const info = cls?.data?.data;
+              if (info && infoEl) {
+                const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
+                infoEl.textContent = `Current Class: ${label}`;
+              } else if (infoEl) {
+                infoEl.textContent = `Current Class ID: ${classId}`;
+              }
+              // trigger amount-due fetch after class resolved
+              this.autoFillAmountDueDebounced();
+            } else if (infoEl) {
+              infoEl.textContent = '';
+            }
+          } catch (_) {}
+        },
+        true
+      );
+      this._captureBound = true;
+    }
     this._listenersAttached = true;
   }
 
@@ -150,6 +187,20 @@ class FinanceInvoiceAddModal extends HTMLElement {
       }
       if (!classId) { return; }
 
+      // Resolve and show current class inline (no logs)
+      try {
+        const token2 = localStorage.getItem('token');
+        if (token2) {
+          const cls = await api.withToken(token2).get(`/classes/${classId}`).catch(() => null);
+          const info = cls?.data?.data;
+          const infoEl = this.querySelector('#current-class-info');
+          if (info && infoEl) {
+            const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
+            infoEl.textContent = `Current Class: ${label}`;
+          }
+        }
+      } catch (_) {}
+
       // Simple backend computation endpoint
       const token = localStorage.getItem('token');
       if (!token) { return; }
@@ -182,6 +233,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
                 return `<ui-option value="${s.id}">${name}</ui-option>`;
               }).join('')}
             </ui-search-dropdown>
+            <div id="current-class-info" class="text-xs text-gray-500 mt-1"></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

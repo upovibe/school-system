@@ -11,7 +11,7 @@ import '@/components/layout/skeletonLoaders/ProfileContentSkeleton.js';
  * This component displays student personal information including contact details,
  * parent information, and medical conditions. Only visible to students.
  */
-class PersonalInfoContent extends App {
+class StudentInfoContent extends App {
     constructor() {
         super();
         this.personalData = null;
@@ -340,5 +340,5 @@ class PersonalInfoContent extends App {
     }
 }
 
-customElements.define('personal-info-content', PersonalInfoContent);
-export default PersonalInfoContent; 
+customElements.define('student-info-content', StudentInfoContent);
+export default StudentInfoContent; 

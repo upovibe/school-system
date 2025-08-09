@@ -1,9 +1,9 @@
 import App from '@/core/App.js';
 import '@/components/ui/Tabs.js';
 import '@/components/layout/profileLayout/ProfileContent.js';
-import '@/components/layout/profileLayout/ActivityContent.js';
 import '@/components/layout/profileLayout/PasswordContent.js';
-import '@/components/layout/profileLayout/PersonalInfoContent.js';
+import '@/components/layout/profileLayout/StudentInfoContent.js';
+import '@/components/layout/profileLayout/TeacherInfoContent.js';
 
 /**
  * User Profile Page Component (/dashboard/profile)
@@ -38,6 +38,7 @@ class ProfilePage extends App {
     render() {
         const userRole = this.get('userRole');
         const isStudent = userRole === 'student' || userRole === 'Student';
+        const isTeacher = userRole === 'teacher' || userRole === 'Teacher';
 
         return `
             <div class="max-w-6xl mx-auto">
@@ -58,12 +59,15 @@ class ProfilePage extends App {
                                 <i class="fas fa-id-card mr-2"></i>Personal Info
                             </ui-tab>
                         ` : ''}
+                        ${isTeacher ? `
+                            <ui-tab value="teacher-info">
+                                <i class="fas fa-user-tie mr-2"></i>Teacher Info
+                            </ui-tab>
+                        ` : ''}
                         <ui-tab value="password">
                             <i class="fas fa-key mr-2"></i>Password
                         </ui-tab>
-                        <ui-tab value="activity">
-                            <i class="fas fa-chart-line mr-2"></i>Activity
-                        </ui-tab>
+                        
                     </ui-tab-list>
                     
                     <ui-tab-panel value="profile">
@@ -72,7 +76,12 @@ class ProfilePage extends App {
                     
                     ${isStudent ? `
                         <ui-tab-panel value="personal-info">
-                            <personal-info-content></personal-info-content>
+                            <student-info-content></student-info-content>
+                        </ui-tab-panel>
+                    ` : ''}
+                    ${isTeacher ? `
+                        <ui-tab-panel value="teacher-info">
+                            <teacher-info-content></teacher-info-content>
                         </ui-tab-panel>
                     ` : ''}
                     
@@ -80,9 +89,7 @@ class ProfilePage extends App {
                         <password-content></password-content>
                     </ui-tab-panel>
                     
-                    <ui-tab-panel value="activity">
-                        <activity-content></activity-content>
-                    </ui-tab-panel>
+                    
                 </ui-tabs>
             </div>
         `;

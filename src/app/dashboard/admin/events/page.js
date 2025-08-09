@@ -30,6 +30,83 @@ class EventsPage extends App {
         this.deleteEventData = null;
     }
 
+    getHeaderCounts() {
+        const events = this.get('events') || [];
+        const total = events.length;
+        const upcoming = events.filter(e => new Date(e.start_date) >= new Date()).length;
+        const past = events.filter(e => new Date(e.end_date || e.start_date) < new Date()).length;
+        const categories = new Set(events.map(e => e.category || 'Uncategorized')).size;
+        return { total, upcoming, past, categories };
+    }
+
+    renderHeader() {
+        const c = this.getHeaderCounts();
+        return `
+            <div class="space-y-8 mb-4">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold">Events</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">Manage school events and activities</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Events</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-play-circle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.upcoming}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Upcoming</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-gray-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-history text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.past}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Past</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-tags text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.categories}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Categories</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-database text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Records</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Events Management | School System';
@@ -264,6 +341,7 @@ class EventsPage extends App {
         ];
         
         return `
+            ${this.renderHeader()}
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->

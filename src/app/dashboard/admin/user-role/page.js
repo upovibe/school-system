@@ -32,6 +32,71 @@ class UserRolePage extends App {
         this.deleteUserRoleData = null;
     }
 
+    getHeaderCounts() {
+        const roles = this.get('userRoles') || [];
+        const total = roles.length;
+        const withDescription = roles.filter(r => (r?.description || '').trim().length > 0).length;
+        const withoutDescription = total - withDescription;
+        return { total, withDescription, withoutDescription };
+    }
+
+    renderHeader() {
+        const c = this.getHeaderCounts();
+        return `
+            <div class="space-y-8 mb-4">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold">User Roles</h1>
+                            <p class="text-blue-100 text-base sm:text-lg">Manage roles and permissions</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Roles</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-id-card text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.withDescription}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">With Description</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-gray-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-minus-circle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.withoutDescription}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Without Description</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-layer-group text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Records</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     connectedCallback() {
         super.connectedCallback();
         document.title = 'User Role Settings | School System';
@@ -255,6 +320,7 @@ class UserRolePage extends App {
         ];
         
         return `
+            ${this.renderHeader()}
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->

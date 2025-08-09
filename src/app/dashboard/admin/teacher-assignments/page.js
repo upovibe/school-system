@@ -6,12 +6,12 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/TeacherAssignmentAddDialog.js';
-import '@/components/layout/adminLayout/TeacherAssignmentUpdateDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteClassDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentDeleteSubjectDialog.js';
 import '@/components/layout/adminLayout/TeacherAssignmentEditClassDialog.js';
+import '@/components/layout/adminLayout/TeacherAssignmentUpdateDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -173,6 +173,7 @@ class TeacherAssignmentManagementPage extends App {
             
             // Close the edit dialog
             this.set('showEditClassDialog', false);
+            this.set('showUpdateModal', false);
         });
 
         // Listen for delete events from view dialog

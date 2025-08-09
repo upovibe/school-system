@@ -295,68 +295,58 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         return;
       }
 
-      const oldAssignment = this.classData?.assignments?.[0] || null;
-      const oldTeacherId = oldAssignment?.teacher_id ?? this.classData?.teacherId ?? null; // keep same teacher
-      const oldEmployeeId = oldAssignment?.employee_id ?? this.classData?.employeeId ?? null;
-      const oldClassId = oldAssignment?.class_id ?? this.classData?.classId ?? null;
-      const oldClassName = this.classData?.className ?? oldAssignment?.class_name;
-      const oldClassSection = this.classData?.classSection ?? oldAssignment?.class_section;
+      // For each selected class, compute diff and apply via class-subjects API
+      for (const cidRaw of selectedClassIds) {
+        const classId = parseInt(cidRaw);
+        if (!classId || isNaN(classId)) continue;
 
-      // If same teacher and same single class, just PUT
-      if (oldClassId && selectedClassIds.length === 1 && parseInt(selectedClassIds[0]) === oldClassId) {
-        const res = await api.withToken(token).put(`/teacher-assignments/teacher/${oldTeacherId}/class/${oldClassId}`, {
-          subject_ids: subjectIds
-        });
-
-        if (res?.data?.success) {
-          Toast.show({ title: 'Success', message: 'Updated subjects successfully', variant: 'success', duration: 3000 });
-          this.close();
-          this.dispatchEvent(new CustomEvent('teacher-class-assignments-updated', {
-            detail: {
-              updatedAssignments: res.data.data.assignments,
-              teacherId: oldTeacherId,
-              employeeId: oldEmployeeId,
-              className: oldClassName,
-              classSection: oldClassSection
-            },
-            bubbles: true,
-            composed: true
-          }));
-          return;
+        // Get existing subjects for class (from cache or API)
+        let existing = CSU_CACHED_SUBJECTS_BY_CLASS.get(String(classId));
+        if (!existing) {
+          const res = await api.withToken(token).get(`/class-subjects/by-class?class_id=${encodeURIComponent(classId)}`);
+          if (res.status === 200 && res.data.success) {
+            existing = (res.data.data || []).map(item => ({
+              id: item.subject_id ?? item.id,
+              name: item.subject_name ?? item.name ?? (item.subject?.name ?? ''),
+              code: item.subject_code ?? item.code ?? (item.subject?.code ?? '')
+            }));
+            CSU_CACHED_SUBJECTS_BY_CLASS.set(String(classId), existing);
+          } else {
+            existing = [];
+          }
         }
-        throw new Error(res?.data?.message || 'Failed to update subjects');
-      }
 
-      // Otherwise: delete old (if present) and create new combinations for selected teacher/classes/subjects
-      if (oldTeacherId && oldClassId) {
-        await api.withToken(token).delete(`/teacher-assignments/teacher/${oldTeacherId}/class/${oldClassId}`);
-      }
+        const existingIds = new Set((existing || []).map(s => String(s.id)));
+        const selectedIds = new Set((subjectIds || []).map(s => String(s)));
 
-      const createPromises = [];
-      selectedClassIds.forEach(cid => {
-        subjectIds.forEach(sid => {
-          createPromises.push(
-            api.withToken(token).post('/teacher-assignments', {
-              teacher_id: parseInt(oldTeacherId),
-              class_id: parseInt(cid),
-              subject_id: parseInt(sid)
-            })
-          );
-        });
-      });
-      const responses = await Promise.all(createPromises);
-      const createdAssignments = responses.filter(r => r?.data?.success).map(r => r.data.data);
+        const toAdd = Array.from(selectedIds).filter(id => !existingIds.has(id));
+        const toDelete = Array.from(existingIds).filter(id => !selectedIds.has(id));
+
+        // Apply deletes
+        for (const sid of toDelete) {
+          await api.withToken(token).delete(`/class-subjects/class/${classId}/subject/${sid}`);
+        }
+
+        // Apply creates
+        for (const sid of toAdd) {
+          await api.withToken(token).post('/class-subjects', {
+            class_id: classId,
+            subject_id: parseInt(sid)
+          });
+        }
+
+        // Update cache for this class
+        const finalList = (existing || [])
+          .filter(s => !toDelete.includes(String(s.id)))
+          .concat(toAdd.map(id => ({ id: parseInt(id), name: (this.subjects.find(s => String(s.id) === String(id))?.name) || `Subject ${id}`, code: (this.subjects.find(s => String(s.id) === String(id))?.code) || '' })));
+        CSU_CACHED_SUBJECTS_BY_CLASS.set(String(classId), finalList);
+      }
 
       Toast.show({ title: 'Success', message: 'Class subjects updated successfully', variant: 'success', duration: 3000 });
       this.close();
-      this.dispatchEvent(new CustomEvent('teacher-class-assignments-updated', {
-        detail: {
-          updatedAssignments: createdAssignments,
-          teacherId: oldTeacherId, // parent uses this to remove prior entries
-          employeeId: oldEmployeeId,
-          className: oldClassName,
-          classSection: oldClassSection
-        },
+      // Notify parent to refresh class-subjects data
+      this.dispatchEvent(new CustomEvent('class-subject-updated', {
+        detail: { classSubject: null },
         bubbles: true,
         composed: true
       }));

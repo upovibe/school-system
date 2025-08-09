@@ -283,10 +283,6 @@ class TeacherClassesSubjectsPage extends App {
                                                 <i class="fas fa-calendar mr-1"></i>
                                                 ${assignment.class_academic_year}
                                             </span>
-                                            <span class="flex items-center">
-                                                <i class="fas fa-users mr-1"></i>
-                                                ${assignment.class_capacity} students
-                                            </span>
                                         </div>
                                     </div>
                             </div>

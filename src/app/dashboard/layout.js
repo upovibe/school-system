@@ -323,7 +323,6 @@ class DashboardLayout extends App {
                         { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'My Class Assignments', icon: 'fas fa-tasks', href: '/dashboard/teacher/assignments' },
                         { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
-                        { label: 'Attendance', icon: 'fas fa-calendar-check', href: '/dashboard/teacher/attendance' },
                     ]
                 }
             ],
@@ -393,7 +392,7 @@ class DashboardLayout extends App {
             'student': 'Student Dashboard', 'parent': 'Parent Dashboard', 'staff': 'Staff Dashboard',
             'profile': 'Profile', 'settings': 'Settings', 'page-settings': 'Page Settings',
             'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
-            'classes': 'Classes', 'grades': 'Grades', 'attendance': 'Attendance',
+            'classes': 'Classes', 'grades': 'Grades',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
             'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',

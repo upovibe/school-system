@@ -145,6 +145,11 @@ class StudentController {
             if (!isset($data['status'])) {
                 $data['status'] = 'active';
             }
+            // Normalize student_type
+            $allowedTypes = ['Day','Boarding'];
+            if (empty($data['student_type']) || !in_array($data['student_type'], $allowedTypes, true)) {
+                $data['student_type'] = 'Day';
+            }
 
             // Create student with user account
             $result = $this->studentModel->createStudentWithUser($data);
@@ -256,6 +261,19 @@ class StudentController {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Invalid class ID'
+                    ]);
+                    return;
+                }
+            }
+
+            // Validate student_type if provided
+            if (isset($data['student_type'])) {
+                $allowedTypes = ['Day','Boarding'];
+                if (!in_array($data['student_type'], $allowedTypes, true)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid student_type. Allowed: Day, Boarding'
                     ]);
                     return;
                 }

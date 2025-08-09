@@ -19,6 +19,7 @@ class StudentModel extends BaseModel {
         'gender',
         'admission_date',
         'current_class_id',
+        'student_type',
         'parent_name',
         'parent_phone',
         'parent_email',
@@ -36,6 +37,7 @@ class StudentModel extends BaseModel {
         'date_of_birth' => 'date',
         'admission_date' => 'date',
         'current_class_id' => 'integer',
+        'student_type' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -297,13 +299,13 @@ class StudentModel extends BaseModel {
             // Insert student record
             $studentSql = "INSERT INTO students (
                 student_id, first_name, last_name, email, phone, address, 
-                date_of_birth, gender, admission_date, current_class_id,
+                date_of_birth, gender, admission_date, current_class_id, student_type,
                 parent_name, parent_phone, parent_email, emergency_contact,
                 emergency_phone, blood_group, medical_conditions, password,
                 status, created_at, updated_at
             ) VALUES (
                 :student_id, :first_name, :last_name, :email, :phone, :address,
-                :date_of_birth, :gender, :admission_date, :current_class_id,
+                :date_of_birth, :gender, :admission_date, :current_class_id, :student_type,
                 :parent_name, :parent_phone, :parent_email, :emergency_contact,
                 :emergency_phone, :blood_group, :medical_conditions, :password,
                 :status, :created_at, :updated_at

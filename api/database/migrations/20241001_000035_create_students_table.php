@@ -22,6 +22,7 @@ class Migration_20241001000035createstudentstable {
                 gender ENUM('male', 'female', 'other'),
                 admission_date DATE,
                 current_class_id INT,
+                student_type ENUM('Day','Boarding') NOT NULL DEFAULT 'Day',
                 parent_name VARCHAR(100),
                 parent_phone VARCHAR(20),
                 parent_email VARCHAR(255),

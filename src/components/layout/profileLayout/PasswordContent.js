@@ -105,7 +105,7 @@ class PasswordContent extends App {
                             data-action="change-password"
                             variant="outline"
                             size="sm"
-                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hidden"
                         >
                             <i class="fas fa-key mr-2"></i>
                             Change Password

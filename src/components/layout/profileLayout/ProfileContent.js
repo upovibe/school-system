@@ -323,7 +323,7 @@ class ProfileContent extends App {
                             data-action="edit-profile"
                             variant="outline"
                             size="sm"
-                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hidden"
                         >
                             <i class="fas fa-edit mr-2"></i>
                             Edit
@@ -353,7 +353,7 @@ class ProfileContent extends App {
                                         </div>
                                         <div>
                                             <div class="text-gray-900 font-semibold text-lg">${user.name || 'Not provided'}</div>
-                                            <div class="text-xs text-gray-500">Your display name</div>
+                                <div class="text-xs text-gray-500">Your display name</div>
                                         </div>
                                     </div>
                                 </div>

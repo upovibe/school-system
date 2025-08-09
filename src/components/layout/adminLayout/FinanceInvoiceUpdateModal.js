@@ -53,7 +53,6 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
     );
     const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
     const notesInput = this.querySelector('ui-input[data-field="notes"]');
-    const asTypeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
     if (studentDropdown && inv.student_id != null)
       studentDropdown.value = String(inv.student_id);
     if (yearInput) yearInput.value = inv.academic_year || "";
@@ -63,7 +62,6 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
     if (issueDateInput) issueDateInput.value = inv.issue_date || "";
     if (dueDateInput) dueDateInput.value = inv.due_date || "";
     if (notesInput) notesInput.value = inv.notes || "";
-    if (asTypeDd) asTypeDd.value = inv.student_type || '';
   }
 
   setupEventListeners() {
@@ -93,23 +91,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         termInput.addEventListener("change", trigger);
         termInput._autoBound = true;
       }
-      const typeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
-      if (typeDd && !typeDd._autoBound) {
-        const onTypeChange = () => {
-          const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
-          const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-          const termInput = this.querySelector('ui-input[data-field="term"]');
-          const hint = this.querySelector('#schedule-hint');
-          if (amountDueInput) amountDueInput.value = '';
-          if (yearInput) yearInput.value = '';
-          if (termInput) termInput.value = '';
-          if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
-          trigger();
-        };
-        typeDd.addEventListener('change', onTypeChange);
-        typeDd.addEventListener('value-change', onTypeChange);
-        typeDd._autoBound = true;
-      }
+      // No manual billing type selector in update modal
     };
     setTimeout(rebindAuto, 0);
     // Capture change events to ensure we see student selection
@@ -179,7 +161,6 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         'ui-input[data-field="due_date"]'
       );
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
-      const asTypeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
 
       const payload = {
         student_id: studentDropdown?.value
@@ -192,7 +173,6 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         issue_date: issueDateInput?.value || undefined,
         due_date: dueDateInput?.value || undefined,
         notes: notesInput?.value || undefined,
-        student_type: asTypeDd?.value || undefined,
       };
 
       if (!payload.academic_year)
@@ -331,9 +311,9 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const qs = new URLSearchParams({ student_id: String(studentId) });
       if (academicYear) qs.append("academic_year", academicYear);
       if (term) qs.append("term", term);
-      const typeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
-      const overrideType = typeDd?.value || '';
-      if (overrideType) qs.append('as_type', overrideType);
+      const typeBadge = this.querySelector('#current-student-type');
+      const overrideType = typeBadge?.dataset?.type || '';
+      // no manual override
 
       const hint = this.querySelector('#schedule-hint');
       if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
@@ -425,14 +405,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
               <ui-input data-field="notes" type="text" placeholder="Optional note" class="w-full"></ui-input>
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Billing Type</label>
-            <ui-search-dropdown name="as_type" placeholder="Select type" class="w-full">
-              <ui-option value="Day">Day</ui-option>
-              <ui-option value="Boarding">Boarding</ui-option>
-            </ui-search-dropdown>
-            <div id="schedule-hint" class="text-xs text-red-600 mt-1 hidden"></div>
-          </div>
+          <div id="schedule-hint" class="text-xs text-red-600 mt-1 hidden"></div>
         </form>
 
         <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">

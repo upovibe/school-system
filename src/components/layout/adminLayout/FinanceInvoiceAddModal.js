@@ -74,7 +74,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
               const info = cls?.data?.data;
               if (info && infoEl) {
                 const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
-                infoEl.textContent = `Current Class: ${label}`;
+                const type = student?.student_type || '';
+                infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
               } else if (infoEl) {
                 infoEl.textContent = `Current Class ID: ${classId}`;
               }
@@ -107,6 +108,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const issueDateInput = this.querySelector('ui-input[data-field="issue_date"]');
       const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
+      const studentTypeEl = this.querySelector('#current-student-type');
 
       const payload = {
         student_id: studentDropdown ? Number(studentDropdown.value) : null,
@@ -117,6 +119,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
         issue_date: issueDateInput?.value || undefined,
         due_date: dueDateInput?.value || undefined,
         notes: notesInput?.value || undefined,
+        student_type: studentTypeEl?.dataset?.type || undefined,
       };
 
       if (!payload.student_id) return Toast.show({ title: 'Validation', message: 'Select a student', variant: 'error', duration: 3000 });
@@ -126,6 +129,17 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
+
+      // Frontend duplicate check: one invoice per student/year/term
+      try {
+        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, term: payload.term }).toString();
+        const dupResp = await api.withToken(token).get(`/finance/invoices?${q}`);
+        const list = dupResp?.data?.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          this._saving = false;
+          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and term', variant: 'warning', duration: 3500 });
+        }
+      } catch (_) { /* ignore – backend unique index still protects */ }
 
       const resp = await api.withToken(token).post('/finance/invoices', payload);
       if (resp.status === 201 || resp.data?.success) {

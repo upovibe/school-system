@@ -1,4 +1,5 @@
 import '@/components/ui/Modal.js';
+import '@/components/ui/Badge.js';
 
 class FinanceInvoiceViewModal extends HTMLElement {
   constructor() {
@@ -19,71 +20,130 @@ class FinanceInvoiceViewModal extends HTMLElement {
 
   render() {
     const i = this._invoice;
-    const safe = (v) => (v == null || v === '' ? '—' : v);
+    const safe = (v) => (v == null || v === '' ? 'N/A' : v);
     const money = (v) => Number(v || 0).toFixed(2);
+    const formatDate = (d) => {
+      if (!d) return 'N/A';
+      try { return new Date(d).toLocaleString(); } catch { return d; }
+    };
 
     this.innerHTML = `
-      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
-        <div slot="title">Invoice Details</div>
+      <ui-modal 
+        ${this.hasAttribute('open') ? 'open' : ''}
+        position="right"
+        size="lg"
+        close-button="true">
+        <div slot="title">View Invoice Details</div>
+
         ${i ? `
-        <div class="space-y-4">
-          <div class="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm opacity-90">Invoice #</div>
-                <div class="text-xl font-semibold">${safe(i.invoice_number)}</div>
+        <div>
+          <!-- Header -->
+          <div class="flex items-center gap-3 border-b pb-4">
+            <h3 class="text-xl font-semibold text-gray-900">Invoice # ${safe(i.invoice_number)}</h3>
+            <ui-badge color="${String(i.status).toLowerCase() === 'paid' ? 'success' : 'warning'}">
+              <i class="fas fa-${String(i.status).toLowerCase() === 'paid' ? 'check' : 'exclamation'} mr-1"></i>
+              ${safe(i.status)}
+            </ui-badge>
+          </div>
+
+          <!-- Financials -->
+          <div class="border-b pb-4 mt-4">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-receipt text-indigo-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Financials</h4>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-arrow-up mr-1"></i>Amount Due
+                </label>
+                <p class="text-gray-900 text-sm font-medium">${money(i.amount_due)}</p>
               </div>
-              <div class="text-right">
-                <div class="text-sm opacity-90">Status</div>
-                <div class="inline-flex items-center px-2 py-1 rounded-md ${String(i.status).toLowerCase() === 'paid' ? 'bg-green-500/30' : 'bg-yellow-500/30'}">
-                  <span class="text-sm font-semibold">${safe(i.status)}</span>
-                </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-arrow-down mr-1"></i>Amount Paid
+                </label>
+                <p class="text-gray-900 text-sm font-medium">${money(i.amount_paid)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-balance-scale mr-1"></i>Balance
+                </label>
+                <p class="${Number(i.balance) > 0 ? 'text-red-600' : 'text-green-600'} text-sm font-semibold">${money(i.balance)}</p>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="p-3 rounded-md border bg-white">
-              <div class="text-xs text-gray-500">Amount Due</div>
-              <div class="text-lg font-semibold text-gray-900">${money(i.amount_due)}</div>
+          <!-- Invoice Information -->
+          <div class="border-b pb-4 mt-4">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-info-circle text-blue-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Invoice Information</h4>
             </div>
-            <div class="p-3 rounded-md border bg-white">
-              <div class="text-xs text-gray-500">Amount Paid</div>
-              <div class="text-lg font-semibold text-gray-900">${money(i.amount_paid)}</div>
-            </div>
-            <div class="p-3 rounded-md border bg-white">
-              <div class="text-xs text-gray-500">Balance</div>
-              <div class="text-lg font-semibold ${Number(i.balance) > 0 ? 'text-red-600' : 'text-green-600'}">${money(i.balance)}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-user-graduate mr-1"></i>Student
+                </label>
+                <p class="text-gray-900 text-sm font-medium">${safe(i.studentDisplay || `#${i.student_id}`)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-calendar mr-1"></i>Academic Year
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.academic_year)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-layer-group mr-1"></i>Term
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.term)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-calendar-check mr-1"></i>Issue Date
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.issue_date)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-calendar-times mr-1"></i>Due Date
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.due_date)}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-sticky-note mr-1"></i>Notes
+                </label>
+                <p class="text-gray-900 text-sm">${safe(i.notes)}</p>
+              </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="p-3 border rounded-md bg-gray-50">
-              <div class="text-xs text-gray-500">Student</div>
-              <div class="text-sm font-medium text-gray-800">${safe(i.studentDisplay || `#${i.student_id}`)}</div>
+          <!-- Timestamps -->
+          <div class="mt-4">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-clock text-orange-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
             </div>
-            <div class="p-3 border rounded-md bg-gray-50">
-              <div class="text-xs text-gray-500">Period</div>
-              <div class="text-sm font-medium text-gray-800">${safe(i.academic_year)} • ${safe(i.term)}</div>
-            </div>
-            <div class="p-3 border rounded-md bg-gray-50">
-              <div class="text-xs text-gray-500">Issue Date</div>
-              <div class="text-sm font-medium text-gray-800">${safe(i.issue_date)}</div>
-            </div>
-            <div class="p-3 border rounded-md bg-gray-50">
-              <div class="text-xs text-gray-500">Due Date</div>
-              <div class="text-sm font-medium text-gray-800">${safe(i.due_date)}</div>
-            </div>
-            <div class="p-3 border rounded-md bg-gray-50 sm:col-span-2">
-              <div class="text-xs text-gray-500">Notes</div>
-              <div class="text-sm font-medium text-gray-800">${safe(i.notes)}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-plus mr-1"></i>Created
+                </label>
+                <span class="text-gray-900 text-sm">${formatDate(i.created_at)}</span>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <i class="fas fa-edit mr-1"></i>Updated
+                </label>
+                <span class="text-gray-900 text-sm">${formatDate(i.updated_at)}</span>
+              </div>
             </div>
           </div>
-
-          <div class="text-xs text-gray-500 text-right">Updated ${safe(i.updated_at)}</div>
         </div>
         ` : `
-          <div class="p-4 text-gray-600">No data</div>
+          <div class="text-center py-8 text-gray-500">No invoice data available</div>
         `}
       </ui-modal>
     `;

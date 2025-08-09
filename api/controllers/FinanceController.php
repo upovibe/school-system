@@ -640,6 +640,11 @@ class FinanceController {
             $classId = $row['current_class_id'] ?? null;
             if (!$classId) return null;
 
+            // Resolve student's type if available to match typed schedules (e.g., Day/Boarding)
+            $typeStmt = $this->pdo->prepare('SELECT student_type FROM students WHERE id = ? LIMIT 1');
+            $typeStmt->execute([$studentId]);
+            $studentType = $typeStmt->fetchColumn() ?: null;
+
             // Normalize inputs and try multiple candidates for year/term
             $yearCandidates = [];
             $trimYear = trim($academicYear);
@@ -662,16 +667,21 @@ class FinanceController {
 
             foreach ($yearCandidates as $y) {
                 foreach ($termCandidates as $t) {
-                    $schedule = $this->findScheduleByComposite($classId, $y, $t);
+                    $schedule = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                     if ($schedule && isset($schedule['total_fee'])) {
                         return (float)$schedule['total_fee'];
                     }
                 }
             }
 
-            // Fallback: choose the most recent schedule for the class if available
-            $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
-            $stmt2->execute([$classId]);
+            // Fallback: choose the most recent schedule for the class matching the student's type (if known)
+            if ($studentType) {
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2->execute([$classId, $studentType]);
+            } else {
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2->execute([$classId]);
+            }
             $fallback = $stmt2->fetch(PDO::FETCH_ASSOC);
             if ($fallback && isset($fallback['total_fee'])) {
                 return (float)$fallback['total_fee'];
@@ -731,26 +741,38 @@ class FinanceController {
                 $termCandidates[] = str_replace(' ', '', $termLower);
             }
 
+            // Resolve student's type to match typed schedules; allow override via as_type
+            $typeStmt = $this->pdo->prepare('SELECT student_type FROM students WHERE id = ? LIMIT 1');
+            $typeStmt->execute([$studentId]);
+            $studentType = $typeStmt->fetchColumn() ?: null;
+            $overrideType = isset($_GET['as_type']) && $_GET['as_type'] !== '' ? (string)$_GET['as_type'] : null;
+            if ($overrideType) { $studentType = $overrideType; }
+
             $chosen = null;
             if (!empty($yearCandidates) && !empty($termCandidates)) {
                 foreach ($yearCandidates as $y) {
                     foreach ($termCandidates as $t) {
-                        $s = $this->findScheduleByComposite($classId, $y, $t);
+                        $s = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                         if ($s) { $chosen = $s; break 2; }
                     }
                 }
             }
 
             if (!$chosen) {
-                // Fallback pick most recent/active for the class
-                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
-                $stmt2->execute([$classId]);
+                // Fallback pick most recent/active for the class matching the student's type if present
+                if ($studentType) {
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2->execute([$classId, $studentType]);
+                } else {
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2->execute([$classId]);
+                }
                 $chosen = $stmt2->fetch(PDO::FETCH_ASSOC) ?: null;
             }
 
             if (!$chosen) {
                 http_response_code(404);
-                echo json_encode(['success' => false, 'message' => 'No schedule found for class']);
+                echo json_encode(['success' => false, 'message' => 'No schedule found for class and student type']);
                 return;
             }
 
@@ -765,6 +787,7 @@ class FinanceController {
                         'term' => $chosen['term'] ?? null,
                         'total_fee' => $chosen['total_fee'] ?? null,
                         'is_active' => isset($chosen['is_active']) ? (int)$chosen['is_active'] : null,
+                        'student_type' => $chosen['student_type'] ?? null,
                     ]
                 ],
                 'message' => 'Amount due computed successfully'

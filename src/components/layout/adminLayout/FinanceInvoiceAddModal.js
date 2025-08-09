@@ -34,6 +34,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
+      const typeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
       const trigger = () => this.autoFillAmountDueDebounced();
       if (studentDd && !studentDd._autoBound) {
         studentDd.addEventListener('change', () => { trigger(); });
@@ -49,6 +50,22 @@ class FinanceInvoiceAddModal extends HTMLElement {
         termInput.addEventListener('input', () => { trigger(); });
         termInput.addEventListener('change', () => { trigger(); });
         termInput._autoBound = true;
+      }
+      if (typeDd && !typeDd._autoBound) {
+        const onTypeChange = () => {
+          const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+          const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+          const termInput = this.querySelector('ui-input[data-field="term"]');
+          const hint = this.querySelector('#schedule-hint');
+          if (amountDueInput) amountDueInput.value = '';
+          if (yearInput) yearInput.value = '';
+          if (termInput) termInput.value = '';
+          if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
+          trigger();
+        };
+        typeDd.addEventListener('change', onTypeChange);
+        typeDd.addEventListener('value-change', onTypeChange);
+        typeDd._autoBound = true;
       }
     };
     setTimeout(rebindAuto, 0);
@@ -69,6 +86,24 @@ class FinanceInvoiceAddModal extends HTMLElement {
             const student = resp?.data?.data || null;
             const classId = student?.current_class_id || null;
             const infoEl = this.querySelector('#current-class-info');
+            // Preselect billing type based on student record
+            const typeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
+            if (typeDd) {
+              const st = student?.student_type || '';
+              if (st) {
+                typeDd.value = st;
+                // Clear dependent fields and refetch based on the new type
+                const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+                const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+                const termInput = this.querySelector('ui-input[data-field="term"]');
+                const hint = this.querySelector('#schedule-hint');
+                if (amountDueInput) amountDueInput.value = '';
+                if (yearInput) yearInput.value = '';
+                if (termInput) termInput.value = '';
+                if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
+                this.autoFillAmountDueDebounced();
+              }
+            }
             if (classId) {
               const cls = await api.withToken(token).get(`/classes/${classId}`).catch(() => null);
               const info = cls?.data?.data;
@@ -109,6 +144,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
       const studentTypeEl = this.querySelector('#current-student-type');
+      const asTypeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
 
       const payload = {
         student_id: studentDropdown ? Number(studentDropdown.value) : null,
@@ -119,7 +155,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
         issue_date: issueDateInput?.value || undefined,
         due_date: dueDateInput?.value || undefined,
         notes: notesInput?.value || undefined,
-        student_type: studentTypeEl?.dataset?.type || undefined,
+        student_type: (asTypeDd?.value || studentTypeEl?.dataset?.type) || undefined,
       };
 
       if (!payload.student_id) return Toast.show({ title: 'Validation', message: 'Select a student', variant: 'error', duration: 3000 });
@@ -183,6 +219,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
+      const asTypeDd = this.querySelector('ui-search-dropdown[name="as_type"]');
+      const overrideType = asTypeDd?.value || '';
       const academicYear = yearInput?.value || '';
       const term = termInput?.value || '';
       if (!studentId) { return; }
@@ -221,13 +259,31 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const qs = new URLSearchParams({ student_id: String(studentId) });
       if (academicYear) qs.append('academic_year', academicYear);
       if (term) qs.append('term', term);
-      const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`).catch(() => null);
-      const amountDue = amtResp?.data?.data?.amount_due;
-      const schedule = amtResp?.data?.data?.schedule || {};
-      if (amountDue != null) {
-        amountDueInput.value = String(amountDue);
-        if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
-        if (termInput && !termInput.value) termInput.value = schedule.term || '';
+      if (overrideType) qs.append('as_type', overrideType);
+
+      const hint = this.querySelector('#schedule-hint');
+      if (hint) { hint.classList.add('hidden'); hint.textContent = ''; }
+
+      try {
+        const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
+        const amountDue = amtResp?.data?.data?.amount_due;
+        const schedule = amtResp?.data?.data?.schedule || {};
+        if (amountDue != null) {
+          amountDueInput.value = String(amountDue);
+          if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
+          if (termInput && !termInput.value) termInput.value = schedule.term || '';
+        }
+      } catch (err) {
+        if (err?.response?.status === 404) {
+          amountDueInput.value = '';
+          if (yearInput) yearInput.value = '';
+          if (termInput) termInput.value = '';
+          if (hint) {
+            const typeText = overrideType || 'selected type';
+            hint.textContent = `No schedule found for ${typeText}. Amount Due cleared.`;
+            hint.classList.remove('hidden');
+          }
+        }
       }
     } catch (_) {
       // Silent fail; user can still enter manually
@@ -258,6 +314,14 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
               <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
             </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Billing Type</label>
+            <ui-search-dropdown name="as_type" placeholder="Select type" class="w-full">
+              <ui-option value="Day">Day</ui-option>
+              <ui-option value="Boarding">Boarding</ui-option>
+            </ui-search-dropdown>
+            <div id="schedule-hint" class="text-xs text-red-600 mt-1 hidden"></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

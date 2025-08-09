@@ -49,6 +49,10 @@ class FinanceScheduleViewModal extends HTMLElement {
               <div class="text-sm font-medium text-gray-900">${s.term || ''}</div>
             </div>
             <div class="bg-gray-50 p-3 rounded-lg">
+              <div class="text-xs text-gray-500">Student Type</div>
+              <div class="text-sm font-medium text-gray-900">${s.student_type || 'Day'}</div>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
               <div class="text-xs text-gray-500">Total Fee</div>
               <div class="text-sm font-medium text-gray-900">${s.total_fee != null ? Number(s.total_fee).toFixed(2) : ''}</div>
             </div>

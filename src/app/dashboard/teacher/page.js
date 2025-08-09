@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
+import '@/components/ui/Skeleton.js';
 
 /**
  * Teacher Dashboard Page Component (/dashboard/teacher)
@@ -105,7 +106,9 @@ class TeacherDashboardPage extends App {
             
           </div>
 
-          ${!loading && (className || classSection) ? `
+          ${loading ? `
+            <ui-skeleton class="h-14 w-full"></ui-skeleton>
+          ` : ((className || classSection) ? `
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
                 <div class="size-12 flex items-center justify-center bg-blue-500 rounded-lg mr-4 flex-shrink-0">
@@ -117,81 +120,101 @@ class TeacherDashboardPage extends App {
                 </div>
               </div>
             </div>
-          ` : ''}
+          ` : '')}
 
           <!-- Summary Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-4">
-            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-              <div class="flex items-center">
-                <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                  <i class="fas fa-users text-white text-lg sm:text-xl"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xl sm:text-2xl font-bold">${students.length}</div>
-                  <div class="text-blue-100 text-xs sm:text-sm">Students</div>
+          ${loading ? `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-4">
+              <ui-skeleton class="h-24 w-full"></ui-skeleton>
+              <ui-skeleton class="h-24 w-full"></ui-skeleton>
+              <ui-skeleton class="h-24 w-full"></ui-skeleton>
+              <ui-skeleton class="h-24 w-full"></ui-skeleton>
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-4">
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                <div class="flex items-center">
+                  <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                    <i class="fas fa-users text-white text-lg sm:text-xl"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xl sm:text-2xl font-bold">${students.length}</div>
+                    <div class="text-blue-100 text-xs sm:text-sm">Students</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-              <div class="flex items-center">
-                <div class="size-10 flex items-center justify-center bg-emerald-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                  <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xl sm:text-2xl font-bold">${assignments.published}</div>
-                  <div class="text-blue-100 text-xs sm:text-sm">Published Assignments</div>
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                <div class="flex items-center">
+                  <div class="size-10 flex items-center justify-center bg-emerald-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                    <i class="fas fa-tasks text-white text-lg sm:text-xl"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xl sm:text-2xl font-bold">${assignments.published}</div>
+                    <div class="text-blue-100 text-xs sm:text-sm">Published Assignments</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-              <div class="flex items-center">
-                <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                  <i class="fas fa-edit text-white text-lg sm:text-xl"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xl sm:text-2xl font-bold">${assignments.draft}</div>
-                  <div class="text-blue-100 text-xs sm:text-sm">Draft Assignments</div>
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                <div class="flex items-center">
+                  <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                    <i class="fas fa-edit text-white text-lg sm:text-xl"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xl sm:text-2xl font-bold">${assignments.draft}</div>
+                    <div class="text-blue-100 text-xs sm:text-sm">Draft Assignments</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-              <div class="flex items-center">
-                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                  <i class="fas fa-archive text-white text-lg sm:text-xl"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xl sm:text-2xl font-bold">${assignments.archived}</div>
-                  <div class="text-blue-100 text-xs sm:text-sm">Archived Assignments</div>
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                <div class="flex items-center">
+                  <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                    <i class="fas fa-archive text-white text-lg sm:text-xl"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xl sm:text-2xl font-bold">${assignments.archived}</div>
+                    <div class="text-blue-100 text-xs sm:text-sm">Archived Assignments</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          `}
         </div>
 
         <!-- Quick Actions -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <a href="/dashboard/teacher/class" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
-              <i class="fas fa-chalkboard text-xl mb-2 block"></i>
-              <div class="font-medium">My Class</div>
-              <div class="text-xs opacity-90">View students & subjects</div>
-            </a>
-            <a href="/dashboard/teacher/assignments" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
-              <i class="fas fa-tasks text-xl mb-2 block"></i>
-              <div class="font-medium">My Assignments</div>
-              <div class="text-xs opacity-90">Create & manage</div>
-            </a>
-            <a href="/dashboard/teacher/student-grades" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
-              <i class="fas fa-chart-line text-xl mb-2 block"></i>
-              <div class="font-medium">My Class Grades</div>
-              <div class="text-xs opacity-90">View & update</div>
-            </a>
+        ${loading ? `
+          <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ui-skeleton class="h-28 w-full"></ui-skeleton>
+              <ui-skeleton class="h-28 w-full"></ui-skeleton>
+              <ui-skeleton class="h-28 w-full"></ui-skeleton>
+            </div>
           </div>
-        </div>
+        ` : `
+          <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="/dashboard/teacher/class" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-chalkboard text-xl mb-2 block"></i>
+                <div class="font-medium">My Class</div>
+                <div class="text-xs opacity-90">View students & subjects</div>
+              </a>
+              <a href="/dashboard/teacher/assignments" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-tasks text-xl mb-2 block"></i>
+                <div class="font-medium">My Assignments</div>
+                <div class="text-xs opacity-90">Create & manage</div>
+              </a>
+              <a href="/dashboard/teacher/student-grades" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-chart-line text-xl mb-2 block"></i>
+                <div class="font-medium">My Class Grades</div>
+                <div class="text-xs opacity-90">View & update</div>
+              </a>
+            </div>
+          </div>
+        `}
       </div>
     `;
   }

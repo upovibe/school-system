@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
+import '@/components/ui/Skeleton.js';
 
 /**
  * Student Dashboard Page Component (/dashboard/student)
@@ -567,7 +568,23 @@ class StudentDashboardPage extends App {
                             </a>
                         </div>
                     </div>
-                 ` : ''}
+                 ` : `
+                    <div class="space-y-6">
+                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <ui-skeleton class="h-40 w-full"></ui-skeleton>
+                            <ui-skeleton class="h-40 w-full"></ui-skeleton>
+                            <ui-skeleton class="h-40 w-full"></ui-skeleton>
+                        </div>
+                        <ui-skeleton class="h-64 w-full"></ui-skeleton>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <ui-skeleton class="h-28 w-full"></ui-skeleton>
+                            <ui-skeleton class="h-28 w-full"></ui-skeleton>
+                            <ui-skeleton class="h-28 w-full"></ui-skeleton>
+                            <ui-skeleton class="h-28 w-full"></ui-skeleton>
+                        </div>
+                    </div>
+                 `}
             </div>
         `;
     }

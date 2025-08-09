@@ -265,10 +265,6 @@ class TeacherClassPage extends App {
                                         ${academic_year}
                                     </span>
                                     <span class="flex items-center">
-                                        <i class="fas fa-users mr-1"></i>
-                                        ${student_count || 0} students
-                                    </span>
-                                    <span class="flex items-center">
                                         <i class="fas fa-check-circle mr-1 text-green-500"></i>
                                         ${status || 'Active'}
                                     </span>

@@ -1,502 +1,327 @@
 import '@/components/ui/Dialog.js';
-import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
 /**
- * Class Subject Update Dialog Component
- * 
- * Dialog for updating existing class subject assignments
+ * Class Subject Update Dialog
+ *
+ * Edit a class's subjects (optionally moving to other classes and/or different teacher).
+ * Similar to TeacherAssignmentUpdateDialog but class-centric.
+ *
+ * Use setClassSubjectData({
+ *   classId, className, classSection,
+ *   teacherId, employeeId, teacherFirstName, teacherLastName,
+ *   assignments: [ { class_id, class_name, class_section, subject_id, subject_name, subject_code, teacher_id, employee_id } ]
+ * }) to seed defaults.
  */
 class ClassSubjectUpdateDialog extends HTMLElement {
-    constructor() {
-        super();
-        this.classSubjectData = null;
-        this.allClassSubjects = null;
-        this.classes = [];
-        this.subjects = [];
-        this.loading = false;
-    }
+  constructor() {
+    super();
+    this.classData = null;
+    this.teachers = [];
+    this.classes = [];
+    this.subjects = [];
+    this.loading = false;
 
-    static get observedAttributes() {
-        return ['open'];
-    }
+    this.selectedTeacherId = null;
+    this.selectedClassIds = [];
+    this.selectedSubjectIds = [];
+  }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && newValue !== null) {
-            this.render();
-            // Re-render after a short delay to ensure data is loaded
-            setTimeout(() => {
-                this.render();
-            }, 100);
-        }
-    }
+  static get observedAttributes() {
+    return ['open'];
+  }
 
-    connectedCallback() {
+  attributeChangedCallback(name, _old, newVal) {
+    if (name === 'open' && newVal !== null) {
+      this.render();
+    }
+  }
+
+  connectedCallback() {
+    this.render();
+    this.loadTeachers();
+    this.loadClasses();
+    this.loadSubjects();
+    this.addEventListener('confirm', this.save.bind(this));
+  }
+
+  setClassSubjectData(data) {
+    this.classData = data || null;
+
+    // Prefill selections from provided data
+    const first = data?.assignments?.[0] || null;
+    const classId = data?.classId ?? first?.class_id ?? null;
+    const teacherId = data?.teacherId ?? first?.teacher_id ?? null;
+    const subjectIds = Array.isArray(data?.assignments)
+      ? data.assignments.map(a => a.subject_id).filter(id => id && !isNaN(id))
+      : [];
+
+    this.selectedTeacherId = teacherId || null;
+    this.selectedClassIds = classId ? [classId] : [];
+    this.selectedSubjectIds = subjectIds;
+
+    this.render();
+    setTimeout(() => this.syncDropdownSelections(), 100);
+  }
+
+  async loadTeachers() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await api.withToken(token).get('/teachers');
+      if (res.status === 200 && res.data.success) {
+        this.teachers = res.data.data;
         this.render();
-        this.loadClasses();
-        this.loadSubjects();
-        this.setupEventListeners();
-    }
+        this.syncDropdownSelections();
+      }
+    } catch (_) { /* silent */ }
+  }
 
-    async loadClasses() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const response = await api.withToken(token).get('/classes');
-            
-            if (response.status === 200 && response.data.success) {
-                // Only update if we don't have fallback data yet
-                if (this.classes.length === 0) {
-                    this.classes = response.data.data;
-                } else {
-                    // Merge with existing fallback data, keeping fallback for assigned classes
-                    const apiClasses = response.data.data;
-                    const fallbackClasses = this.classes;
-                    
-                    // Create a map of existing classes by ID
-                    const existingClassesMap = new Map(fallbackClasses.map(cls => [cls.id, cls]));
-                    
-                    // Add new classes from API that aren't in fallback
-                    apiClasses.forEach(apiClass => {
-                        if (!existingClassesMap.has(apiClass.id)) {
-                            existingClassesMap.set(apiClass.id, apiClass);
-                        }
-                    });
-                    
-                    this.classes = Array.from(existingClassesMap.values());
-                }
-                
-                // Re-render to update dropdown options
-                this.render();
-                // Re-setup dropdowns if we have class subject data
-                if (this.classSubjectData && this.allClassSubjects) {
-                    setTimeout(() => {
-                        this.setupDropdownsImmediately(this.allClassSubjects);
-                    }, 50);
-                }
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
-
-    async loadSubjects() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const response = await api.withToken(token).get('/subjects');
-            
-            if (response.status === 200 && response.data.success) {
-                // Only update if we don't have fallback data yet
-                if (this.subjects.length === 0) {
-                    this.subjects = response.data.data;
-                } else {
-                    // Merge with existing fallback data, keeping fallback for assigned subjects
-                    const apiSubjects = response.data.data;
-                    const fallbackSubjects = this.subjects;
-                    
-                    // Create a map of existing subjects by ID
-                    const existingSubjectsMap = new Map(fallbackSubjects.map(subj => [subj.id, subj]));
-                    
-                    // Add new subjects from API that aren't in fallback
-                    apiSubjects.forEach(apiSubject => {
-                        if (!existingSubjectsMap.has(apiSubject.id)) {
-                            existingSubjectsMap.set(apiSubject.id, apiSubject);
-                        }
-                    });
-                    
-                    this.subjects = Array.from(existingSubjectsMap.values());
-                }
-                
-                // Re-render to update dropdown options
-                this.render();
-                // Re-setup dropdowns if we have class subject data
-                if (this.classSubjectData && this.allClassSubjects) {
-                    setTimeout(() => {
-                        this.setupDropdownsImmediately(this.allClassSubjects);
-                    }, 50);
-                }
-            }
-        } catch (error) {
-            // Silent error handling
-        }
-    }
-
-    setupEventListeners() {
-        // Listen for dialog events
-        this.addEventListener('confirm', this.updateClassSubject.bind(this));
-    }
-
-    setClassSubjectData(classSubject, allClassSubjects = null) {
-        this.classSubjectData = classSubject;
-        this.allClassSubjects = allClassSubjects;
-        
-        // Create fallback data immediately from class subjects
-        if (allClassSubjects && allClassSubjects.length > 0) {
-            this.createFallbackData(allClassSubjects);
-        }
-        
+  async loadClasses() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await api.withToken(token).get('/classes');
+      if (res.status === 200 && res.data.success) {
+        this.classes = res.data.data;
         this.render();
-        
-        // If we have all class subjects data, use it directly instead of making an API call
-        if (allClassSubjects && allClassSubjects.length > 0) {
-            this.setupDropdownsWithData(allClassSubjects);
-        } else {
-            // Fallback to API call
-            this.loadClassSubjects(classSubject.class_id);
+        this.syncDropdownSelections();
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  async loadSubjects() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await api.withToken(token).get('/subjects');
+      if (res.status === 200 && res.data.success) {
+        this.subjects = res.data.data;
+        this.render();
+        this.syncDropdownSelections();
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  syncDropdownSelections() {
+    const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+    if (teacherDropdown && this.selectedTeacherId) {
+      teacherDropdown.setAttribute('value', String(this.selectedTeacherId));
+    }
+
+    const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+    if (classDropdown && this.selectedClassIds?.length) {
+      classDropdown.setAttribute('value', JSON.stringify(this.selectedClassIds));
+    }
+
+    const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+    if (subjectDropdown && this.selectedSubjectIds?.length) {
+      subjectDropdown.setAttribute('value', JSON.stringify(this.selectedSubjectIds));
+      if (this.subjects?.length) {
+        const selected = this.subjects.filter(s => this.selectedSubjectIds.includes(s.id));
+        const displayValue = selected.map(s => `${s.name} (${s.code})`).join(', ');
+        subjectDropdown.setAttribute('display-value', displayValue);
+      }
+    }
+  }
+
+  async save() {
+    if (this.loading || !this.classData) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Toast.show({ title: 'Authentication Error', message: 'Please log in to continue', variant: 'error', duration: 3000 });
+      return;
+    }
+
+    try {
+      this.setLoading(true);
+
+      const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+      const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+      const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+
+      const selectedTeacherIdRaw = teacherDropdown ? teacherDropdown.value : null;
+      const selectedTeacherId = selectedTeacherIdRaw ? parseInt(selectedTeacherIdRaw) : null;
+      const selectedClassIds = classDropdown ? classDropdown.value : [];
+      const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+
+      if (!selectedTeacherId || isNaN(selectedTeacherId)) {
+        Toast.show({ title: 'Validation Error', message: 'Please select a teacher', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!Array.isArray(selectedClassIds) || selectedClassIds.length === 0) {
+        Toast.show({ title: 'Validation Error', message: 'Please select at least one class', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
+        Toast.show({ title: 'Validation Error', message: 'Please select at least one subject', variant: 'error', duration: 3000 });
+        return;
+      }
+
+      const oldAssignment = this.classData?.assignments?.[0] || null;
+      const oldTeacherId = oldAssignment?.teacher_id ?? this.classData?.teacherId ?? null;
+      const oldEmployeeId = oldAssignment?.employee_id ?? this.classData?.employeeId ?? null;
+      const oldClassId = oldAssignment?.class_id ?? this.classData?.classId ?? null;
+      const oldClassName = this.classData?.className ?? oldAssignment?.class_name;
+      const oldClassSection = this.classData?.classSection ?? oldAssignment?.class_section;
+
+      // If same teacher and same single class, just PUT
+      if (oldClassId && selectedClassIds.length === 1 && parseInt(selectedClassIds[0]) === oldClassId && selectedTeacherId === oldTeacherId) {
+        const res = await api.withToken(token).put(`/teacher-assignments/teacher/${oldTeacherId}/class/${oldClassId}`, {
+          subject_ids: subjectIds
+        });
+
+        if (res?.data?.success) {
+          Toast.show({ title: 'Success', message: 'Updated subjects successfully', variant: 'success', duration: 3000 });
+          this.close();
+          this.dispatchEvent(new CustomEvent('teacher-class-assignments-updated', {
+            detail: {
+              updatedAssignments: res.data.data.assignments,
+              teacherId: oldTeacherId,
+              employeeId: oldEmployeeId,
+              className: oldClassName,
+              classSection: oldClassSection
+            },
+            bubbles: true,
+            composed: true
+          }));
+          return;
         }
-        
-        // Setup change listeners after render
-        setTimeout(() => {
-            this.setupClassChangeListener();
-        }, 100);
+        throw new Error(res?.data?.message || 'Failed to update subjects');
+      }
+
+      // Otherwise: delete old (if present) and create new combinations for selected teacher/classes/subjects
+      if (oldTeacherId && oldClassId) {
+        await api.withToken(token).delete(`/teacher-assignments/teacher/${oldTeacherId}/class/${oldClassId}`);
+      }
+
+      const createPromises = [];
+      selectedClassIds.forEach(cid => {
+        subjectIds.forEach(sid => {
+          createPromises.push(
+            api.withToken(token).post('/teacher-assignments', {
+              teacher_id: parseInt(selectedTeacherId),
+              class_id: parseInt(cid),
+              subject_id: parseInt(sid)
+            })
+          );
+        });
+      });
+      const responses = await Promise.all(createPromises);
+      const createdAssignments = responses.filter(r => r?.data?.success).map(r => r.data.data);
+
+      Toast.show({ title: 'Success', message: 'Class subjects updated successfully', variant: 'success', duration: 3000 });
+      this.close();
+      this.dispatchEvent(new CustomEvent('teacher-class-assignments-updated', {
+        detail: {
+          updatedAssignments: createdAssignments,
+          teacherId: oldTeacherId, // parent uses this to remove prior entries
+          employeeId: oldEmployeeId,
+          className: oldClassName,
+          classSection: oldClassSection
+        },
+        bubbles: true,
+        composed: true
+      }));
+    } catch (error) {
+      console.error('Class subjects update failed:', error);
+      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to update class subjects', variant: 'error', duration: 3000 });
+    } finally {
+      this.setLoading(false);
     }
+  }
 
-    createFallbackData(classSubjects) {
-        // Create fallback classes from class subjects
-        const uniqueClasses = classSubjects.reduce((acc, classSubject) => {
-            if (!acc.find(c => c.id === classSubject.class_id)) {
-                acc.push({
-                    id: classSubject.class_id,
-                    name: classSubject.class_name || 'Class',
-                    section: classSubject.class_section || 'N/A'
-                });
-            }
-            return acc;
-        }, []);
+  setLoading(loading) { this.loading = loading; }
+  open() { this.setAttribute('open', ''); }
+  close() { this.removeAttribute('open'); }
 
-        // Create fallback subjects from class subjects
-        const uniqueSubjects = classSubjects.reduce((acc, classSubject) => {
-            if (!acc.find(s => s.id === classSubject.subject_id)) {
-                acc.push({
-                    id: classSubject.subject_id,
-                    name: classSubject.subject_name || `Subject ${classSubject.subject_id}`,
-                    code: classSubject.subject_code || `SUB${classSubject.subject_id}`
-                });
-            }
-            return acc;
-        }, []);
+  render() {
+    const d = this.classData;
+    const currentClassLabel = d ? `${d.className || d.assignments?.[0]?.class_name || 'N/A'} - ${d.classSection || d.assignments?.[0]?.class_section || 'N/A'}` : 'N/A';
+    const currentTeacherLabel = d ? `${d.teacherFirstName || d.assignments?.[0]?.teacher_first_name || 'N/A'} ${d.teacherLastName || d.assignments?.[0]?.teacher_last_name || 'N/A'} (${d.employeeId || d.assignments?.[0]?.employee_id || 'N/A'})` : 'N/A';
 
-        // Set fallback data immediately
-        this.classes = uniqueClasses;
-        this.subjects = uniqueSubjects;
-    }
+    this.innerHTML = `
+      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Edit Class Subjects">
+        <div slot="content">
+          <div class="space-y-4">
+            <!-- Current Class -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Current Class</label>
+              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentClassLabel}</div>
+            </div>
 
-    setupDropdownsWithData(classSubjects) {
-        // Set up dropdowns immediately with fallback data
-        this.setupDropdownsImmediately(classSubjects);
-        
-        // Don't update with API data at all - fallback data is sufficient
-        // This prevents any flickering or empty fields
-    }
+            <!-- Current Teacher -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Current Teacher</label>
+              <div class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">${currentTeacherLabel}</div>
+            </div>
 
-    setupDropdownsImmediately(classSubjects) {
-        // Filter class subjects for the specific class being edited
-        const classClassSubjects = classSubjects.filter(classSubject => classSubject.class_id == this.classSubjectData.class_id);
-        
-        // Extract subject IDs for this specific class
-        const subjectIds = classClassSubjects.map(classSubject => classSubject.subject_id);
-        
-        // Set up dropdowns immediately with available data
-        setTimeout(() => {
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-            
-            // Set class dropdown with fallback data
-            if (classDropdown && this.classSubjectData?.class_id) {
-                const selectedClass = this.classes.find(cls => cls.id == this.classSubjectData.class_id);
-                if (selectedClass) {
-                    classDropdown.setAttribute('value', this.classSubjectData.class_id);
-                    classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
-                }
-            }
-            
-            // Set subject dropdown with fallback data
-            if (subjectDropdown && subjectIds.length > 0) {
-                const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
-                subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
-                const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
-                subjectDropdown.setAttribute('display-value', displayValue);
-            }
-        }, 100);
-    }
+            <!-- Teacher -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Teacher *</label>
+              ${this.teachers.length > 0 ? `
+                <ui-search-dropdown data-field="teacher_id" placeholder="Search teachers..." class="w-full">
+                  ${this.teachers.map(t => `<ui-option value="${t.id}">${t.first_name} ${t.last_name} (${t.employee_id})</ui-option>`).join('')}
+                </ui-search-dropdown>
+              ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}
+            </div>
 
-    // Add method to handle class change
-    setupClassChangeListener() {
-        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-        if (classDropdown) {
-            classDropdown.addEventListener('change', (event) => {
-                const classId = event.detail.value;
-                if (classId) {
-                    // Update subjects based on the selected class
-                    this.updateSubjectsForClass(classId);
-                }
-            });
-        }
-    }
+            <!-- Classes -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Classes *</label>
+              ${this.classes.length > 0 ? `
+                <ui-search-dropdown data-field="class_ids" placeholder="Search and select multiple classes..." multiple class="w-full">
+                  ${this.classes.map(cls => `<ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>`).join('')}
+                </ui-search-dropdown>
+              ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}
+            </div>
 
-    async updateSubjectsForClass(classId) {
-        if (!this.allClassSubjects) return;
-        
-        // Filter class subjects for the selected class
-        const classClassSubjects = this.allClassSubjects.filter(classSubject => classSubject.class_id == classId);
-        
-        // Extract subject IDs for this class
-        const subjectIds = classClassSubjects.map(classSubject => classSubject.subject_id);
-        
-        // Update the subject dropdown
-        setTimeout(() => {
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-            if (subjectDropdown && subjectIds.length > 0) {
-                subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
-                // Set display value for multiple subjects
-                const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
-                const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
-                subjectDropdown.setAttribute('display-value', displayValue);
-            }
-        }, 100);
-    }
+            <!-- Subjects -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
+              ${this.subjects.length > 0 ? `
+                <ui-search-dropdown data-field="subject_ids" placeholder="Search and select multiple subjects..." multiple class="w-full">
+                  ${this.subjects.map(s => `<ui-option value="${s.id}">${s.name} (${s.code})</ui-option>`).join('')}
+                </ui-search-dropdown>
+              ` : `<div class="w-full h-8 bg-gray-200 rounded"></div>`}
+            </div>
 
-    async loadClassSubjects(classId) {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            // Use the correct endpoint to get class subjects for this specific class
-            const response = await api.withToken(token).get(`/class-subjects?class_id=${classId}`);
-            
-            if (response.status === 200 && response.data.success) {
-                const classSubjects = response.data.data;
-                
-                // Extract subject IDs for this specific class
-                const subjectIds = classSubjects.map(classSubject => classSubject.subject_id);
-                
-                // Force update dropdowns after render to ensure values are displayed
-                setTimeout(() => {
-                    const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-                    const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-                    
-                    if (classDropdown && this.classSubjectData?.class_id) {
-                        // Find the class option and set its text as the display value
-                        const selectedClass = this.classes.find(cls => cls.id == this.classSubjectData.class_id);
-                        if (selectedClass) {
-                            classDropdown.setAttribute('value', this.classSubjectData.class_id);
-                            classDropdown.setAttribute('display-value', `${selectedClass.name}-${selectedClass.section}`);
-                        }
-                    }
-                    
-                    if (subjectDropdown && subjectIds.length > 0) {
-                        subjectDropdown.setAttribute('value', JSON.stringify(subjectIds));
-                        // Set display value for multiple subjects
-                        const selectedSubjects = this.subjects.filter(subject => subjectIds.includes(subject.id));
-                        const displayValue = selectedSubjects.map(subject => `${subject.name} (${subject.code})`).join(', ');
-                        subjectDropdown.setAttribute('display-value', displayValue);
-                    }
-                }, 200);
-            }
-        } catch (error) {
-            console.error('Error loading class subjects:', error);
-        }
-    }
-
-    async updateClassSubject() {
-        if (this.loading || !this.classSubjectData) return;
-        
-        try {
-            this.setLoading(true);
-            
-            // Get form data using the data-field attributes for reliable selection
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-
-            const classId = classDropdown ? classDropdown.value : '';
-            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
-
-            // Validation
-            if (!classId) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select a class',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!subjectIds || !Array.isArray(subjectIds) || subjectIds.length === 0) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please select at least one subject',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                Toast.show({
-                    title: 'Authentication Error',
-                    message: 'Please log in to continue',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            // Filter out any invalid subject IDs
-            const validSubjectIds = subjectIds.filter(id => id && id !== '' && !isNaN(id));
-            
-            if (!classId || isNaN(classId)) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'No valid class selected',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-            
-            if (validSubjectIds.length === 0) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'No valid subjects selected',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            // For now, we'll update each subject individually
-            // In the future, you might want to create a bulk update endpoint
-            const updatePromises = validSubjectIds.map(subjectId => {
-                const classSubjectData = {
-                    class_id: classId,
-                    subject_id: subjectId
-                };
-                
-                // Check if this class-subject combination already exists
-                const existingClassSubject = this.allClassSubjects?.find(cs => 
-                    cs.class_id == classId && cs.subject_id == subjectId
-                );
-                
-                if (existingClassSubject) {
-                    // Update existing
-                    return api.withToken(token).put(`/class-subjects/${existingClassSubject.id}`, classSubjectData);
-                } else {
-                    // Create new
-                    return api.withToken(token).post('/class-subjects', classSubjectData);
-                }
-            });
-
-            const responses = await Promise.all(updatePromises);
-            
-            // Check if all updates were successful
-            const allSuccessful = responses.every(response => response.data.success);
-            
-            if (allSuccessful) {
-                Toast.show({
-                    title: 'Success',
-                    message: `Class subject assignments updated successfully`,
-                    variant: 'success',
-                    duration: 3000
-                });
-
-                // Close modal and dispatch event
-                this.close();
-                this.dispatchEvent(new CustomEvent('class-subject-updated', {
-                    detail: {
-                        classSubjects: responses.map(response => response.data.data)
-                    },
-                    bubbles: true,
-                    composed: true
-                }));
-            } else {
-                Toast.show({
-                    title: 'Error',
-                    message: 'Some class subject assignments failed to update',
-                    variant: 'error',
-                    duration: 3000
-                });
-            }
-        } catch (error) {
-            console.error('Error updating class subjects:', error);
-            Toast.show({
-                title: 'Error',
-                message: error.response?.data?.message || 'Failed to update class subject assignments',
-                variant: 'error',
-                duration: 3000
-            });
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    setLoading(loading) {
-        this.loading = loading;
-        // The ui-dialog component handles the loading state automatically
-    }
-
-    open() {
-        this.setAttribute('open', '');
-    }
-
-    close() {
-        this.removeAttribute('open');
-    }
-
-    render() {
-        const classSubject = this.classSubjectData;
-        this.innerHTML = `
-            <ui-dialog 
-                ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Update Class Subject Assignment">
-                <div slot="content">
-                    <div class="flex flex-col space-y-4">
-                        <!-- Class Selection -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                            ${this.classes.length > 0 ? `
-                                <ui-search-dropdown 
-                                    data-field="class_id" 
-                                    placeholder="Search classes..."
-                                    class="w-full">
-                                    ${this.classes.map(cls => `
-                                        <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-
-                        <!-- Subject Selection -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
-                            ${this.subjects.length > 0 ? `
-                                <ui-search-dropdown 
-                                    data-field="subject_ids" 
-                                    placeholder="Search and select multiple subjects..."
-                                    multiple
-                                    class="w-full">
-                                    ${this.subjects.map(subject => `
-                                        <ui-option value="${subject.id}">${subject.name} (${subject.code})</ui-option>
-                                    `).join('')}
-                                </ui-search-dropdown>
-                            ` : `
-                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
-                            `}
-                        </div>
-                    </div>
+            <!-- Current subjects note -->
+            ${d?.assignments?.length ? `
+              <div class="mt-2 p-3 bg-blue-50 rounded-md">
+                <p class="text-xs font-medium text-blue-700 mb-2">Current subjects for this class:</p>
+                <div class="space-y-1">
+                  ${d.assignments.map(asg => `<div class="text-xs text-blue-700">• ${asg.subject_name} (${asg.subject_code})</div>`).join('')}
                 </div>
-            </ui-dialog>
-        `;
-    }
+              </div>
+            ` : ''}
+
+            <!-- How it works -->
+            <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+              <div class="flex items-start space-x-2">
+                <i class="fas fa-info-circle mt-0.5"></i>
+                <div>
+                  <p class="font-medium">How this works</p>
+                  <ul class="list-disc pl-5 mt-1 space-y-1">
+                    <li>Pick a teacher (defaults to current).</li>
+                    <li>Select one or more destination classes.</li>
+                    <li>Select one or more subjects.</li>
+                    <li>If you keep the same single class and teacher, it only updates the subjects. Otherwise, it moves the current assignments to the selected class(es) for the selected teacher.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ui-dialog>
+    `;
+  }
 }
 
 customElements.define('class-subject-update-dialog', ClassSubjectUpdateDialog);
-export default ClassSubjectUpdateDialog; 
+export default ClassSubjectUpdateDialog;
+
+

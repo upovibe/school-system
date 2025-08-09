@@ -54,6 +54,16 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
   setupEventListeners() {
     this.addEventListener('confirm', () => this.updateInvoice());
     this.addEventListener('cancel', () => this.close());
+    const rebindAuto = () => {
+      const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
+      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const trigger = () => this.autoFillAmountDueDebounced();
+      if (studentDd && !studentDd._autoBound) { studentDd.addEventListener('change', trigger); studentDd._autoBound = true; }
+      if (yearInput && !yearInput._autoBound) { yearInput.addEventListener('input', trigger); yearInput.addEventListener('change', trigger); yearInput._autoBound = true; }
+      if (termInput && !termInput._autoBound) { termInput.addEventListener('input', trigger); termInput.addEventListener('change', trigger); termInput._autoBound = true; }
+    };
+    setTimeout(rebindAuto, 0);
   }
 
   open() { this.setAttribute('open', ''); }
@@ -108,6 +118,53 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       }
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to update invoice', variant: 'error', duration: 3000 });
+    }
+  }
+
+  autoFillAmountDueDebounced() {
+    clearTimeout(this._autoDueTimeout);
+    this._autoDueTimeout = setTimeout(() => this.autoFillAmountDue(), 200);
+  }
+
+  async autoFillAmountDue() {
+    try {
+      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+      if (!amountDueInput) return;
+      // Only auto-fill if empty or zero to avoid overriding manual edits
+      const current = parseFloat(amountDueInput.value || '0');
+      if (current > 0) return;
+
+      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
+      const academicYear = yearInput?.value || '';
+      const term = termInput?.value || '';
+      if (!studentId || !academicYear || !term) return;
+
+      let classId = null;
+      const fromList = (this._students || []).find(s => String(s.id) === String(studentId));
+      if (fromList && fromList.current_class_id) {
+        classId = fromList.current_class_id;
+      }
+      if (!classId) {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const resp = await api.withToken(token).get(`/students/${studentId}`);
+        classId = resp?.data?.data?.current_class_id || null;
+      }
+      if (!classId) return;
+
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const qs = new URLSearchParams({ class_id: String(classId), academic_year: academicYear, term: term }).toString();
+      const schedResp = await api.withToken(token).get(`/finance/schedules?${qs}`);
+      const schedules = schedResp?.data?.data || [];
+      if (schedules.length > 0 && schedules[0].total_fee != null) {
+        amountDueInput.value = String(schedules[0].total_fee);
+      }
+    } catch (_) {
+      // Silent fail
     }
   }
 

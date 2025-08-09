@@ -316,7 +316,7 @@ class ProfileContent extends App {
         return `
             <div class="space-y-6">
                 <!-- Profile Picture and Basic Info -->
-                <div class="bg-white shadow rounded-lg p-6">
+                <div class="bg-white shadow rounded-lg">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
                         <ui-button 
@@ -330,9 +330,9 @@ class ProfileContent extends App {
                         </ui-button>
                     </div>
 
-                    <div class="flex flex-col lg:flex-row items-center justify-center lg:items-start gap-8 space-x-8 mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                         <!-- Profile Picture (Left) -->
-                        <div class="flex-shrink-0 w-2/6" style="aspect-ratio: 1; min-width: 8rem;">
+                        <div class="flex-shrink-0 lg:col-span-1" style="aspect-ratio: 1; min-width: 8rem;">
                             <ui-profile-image-uploader 
                                 src="${this.getImageUrl(user.profile_image) || ''}" 
                                 name="${user.name || 'User'}" 
@@ -343,8 +343,7 @@ class ProfileContent extends App {
                         </div>
                         
                         <!-- Information Fields (Right) -->
-                        <div class="flex-1 border border-gray-200 rounded-lg p-6 w-full">
-                            <div class="space-y-6">
+                            <div class="w-full flex flex-col gap-4 lg:col-span-2">
                                 <!-- Name -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -439,7 +438,6 @@ class ProfileContent extends App {
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </div>
 
 

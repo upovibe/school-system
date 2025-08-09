@@ -219,6 +219,23 @@ class ClassAddModal extends HTMLElement {
                         </ui-switch>
                     </div>
                 </form>
+
+                <!-- How this works (bottom) -->
+                <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-medium">How this works</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Class Name</strong>: short identifier for the class (e.g., P1, JHS1).</li>
+                                <li><strong>Section</strong>: letter/number to distinguish parallel classes (e.g., A, B).</li>
+                                <li><strong>Academic Year</strong>: used for reporting and filtering.</li>
+                                <li><strong>Capacity</strong>: optional; defaults to 30.</li>
+                                <li><strong>Status</strong>: Active classes are available for assignments.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

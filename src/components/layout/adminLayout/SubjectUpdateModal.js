@@ -109,8 +109,6 @@ class SubjectUpdateModal extends HTMLElement {
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
-            console.log('Subject update data being sent:', subjectData); // Debug log
-
             // Validate required fields
             if (!subjectData.name) {
                 Toast.show({
@@ -250,6 +248,21 @@ class SubjectUpdateModal extends HTMLElement {
                         </ui-switch>
                     </div>
                 </form>
+
+                <!-- How this works (bottom) -->
+                <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-medium">How this works</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li>Update the <strong>Name</strong> and <strong>Code</strong> carefully; the code is used in assignments.</li>
+                                <li>Switch <strong>Status</strong> to inactive to temporarily hide the subject from new assignments.</li>
+                                <li>Changes apply immediately across class/teacher assignment dialogs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

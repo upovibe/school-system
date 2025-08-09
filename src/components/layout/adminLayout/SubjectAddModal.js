@@ -213,6 +213,23 @@ class SubjectAddModal extends HTMLElement {
                         </ui-switch>
                     </div>
                 </form>
+
+                <!-- How this works (bottom) -->
+                <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-medium">How this works</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Subject Name</strong>: the display name (required).</li>
+                                <li><strong>Subject Code</strong>: short unique code (e.g., ENG, MATH). Used when assigning to classes/teachers.</li>
+                                <li><strong>Category</strong>: choose Core, Elective, or Optional.</li>
+                                <li><strong>Status</strong>: Active subjects are available when assigning; Inactive won’t appear for new assignments.</li>
+                                <li>After saving, the subject becomes available immediately in related dropdowns.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

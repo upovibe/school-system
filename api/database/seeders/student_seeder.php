@@ -33,6 +33,7 @@ class StudentSeeder
                 'gender' => 'male',
                 'admission_date' => '2020-09-01',
                 'current_class_id' => null, // Will be assigned after classes are created
+                'student_type' => 'Day',
                 'parent_name' => 'Mr. Kwesi Asante',
                 'parent_phone' => '+233244123466',
                 'parent_email' => 'kwesi.asante@parent.school.com',
@@ -55,6 +56,7 @@ class StudentSeeder
                 'gender' => 'female',
                 'admission_date' => '2020-09-01',
                 'current_class_id' => null,
+                'student_type' => 'Boarding',
                 'parent_name' => 'Mrs. Akua Osei',
                 'parent_phone' => '+233244123468',
                 'parent_email' => 'akua.osei@parent.school.com',
@@ -77,6 +79,7 @@ class StudentSeeder
                 'gender' => 'male',
                 'admission_date' => '2020-09-01',
                 'current_class_id' => null,
+                'student_type' => 'Day',
                 'parent_name' => 'Mr. Kofi Mensah',
                 'parent_phone' => '+233244123470',
                 'parent_email' => 'kofi.mensah@parent.school.com',
@@ -99,6 +102,7 @@ class StudentSeeder
                 'gender' => 'female',
                 'admission_date' => '2020-09-01',
                 'current_class_id' => null,
+                'student_type' => 'Boarding',
                 'parent_name' => 'Mrs. Grace Addo',
                 'parent_phone' => '+233244123472',
                 'parent_email' => 'grace.addo@parent.school.com',
@@ -121,6 +125,7 @@ class StudentSeeder
                 'gender' => 'male',
                 'admission_date' => '2020-09-01',
                 'current_class_id' => null,
+                'student_type' => 'Day',
                 'parent_name' => 'Mr. Yaw Darko',
                 'parent_phone' => '+233244123474',
                 'parent_email' => 'yaw.darko@parent.school.com',
@@ -165,11 +170,11 @@ class StudentSeeder
         $stmt = $this->pdo->prepare('
             INSERT INTO students (
                 user_id, student_id, first_name, last_name, email, phone, address, 
-                date_of_birth, gender, admission_date, current_class_id, parent_name, 
+                date_of_birth, gender, admission_date, current_class_id, student_type, parent_name, 
                 parent_phone, parent_email, emergency_contact, emergency_phone, 
                 blood_group, medical_conditions, password, status, created_at, updated_at
             ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
         
         $stmt->execute([
@@ -184,6 +189,7 @@ class StudentSeeder
             $studentData['gender'],
             $studentData['admission_date'],
             $studentData['current_class_id'],
+            ($studentData['student_type'] ?? 'Day'),
             $studentData['parent_name'],
             $studentData['parent_phone'],
             $studentData['parent_email'],

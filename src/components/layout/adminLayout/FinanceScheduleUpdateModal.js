@@ -38,11 +38,15 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
     const termInput = this.querySelector('ui-input[data-field="term"]');
     const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
+    const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
+    const notesInput = this.querySelector('ui-input[data-field="notes"]');
     const activeSwitch = this.querySelector('ui-switch[name="is_active"]');
     if (classDropdown && s.class_id != null) classDropdown.value = String(s.class_id);
     if (yearInput) yearInput.value = s.academic_year || '';
     if (termInput) termInput.value = s.term || '';
     if (totalFeeInput) totalFeeInput.value = s.total_fee;
+    if (studentTypeDd && s.student_type) studentTypeDd.value = String(s.student_type);
+    if (notesInput) notesInput.value = s.notes || '';
     if (activeSwitch) {
       const isActive = Number(s.is_active) === 1;
       if (isActive) {
@@ -76,13 +80,17 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
+      const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
+      const notesInput = this.querySelector('ui-input[data-field="notes"]');
       const activeSwitch = this.querySelector('ui-switch[name="is_active"]');
 
       const payload = {
         class_id: classDropdown?.value ? Number(classDropdown.value) : undefined,
         academic_year: yearInput?.value || '',
         term: termInput?.value || '',
+        student_type: studentTypeDd?.value || undefined,
         total_fee: totalFeeInput?.value ? Number(totalFeeInput.value) : 0,
+        notes: notesInput?.value || undefined,
         is_active: activeSwitch?.checked ? 1 : 0,
       };
 
@@ -133,6 +141,17 @@ class FinanceScheduleUpdateModal extends HTMLElement {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Total Fee</label>
             <ui-input data-field="total_fee" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full"></ui-input>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+            <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full">
+              <ui-option value="Day">Day</ui-option>
+              <ui-option value="Boarding">Boarding</ui-option>
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <ui-input data-field="notes" type="text" placeholder="Optional notes" class="w-full"></ui-input>
           </div>
 
           <div>

@@ -31,13 +31,8 @@ class ClassSubjectUpdateDialog extends HTMLElement {
     this.selectedSubjectIds = [];
   }
 
-  // Debug logger
-  logDebug(label, payload) {
-    try {
-      // eslint-disable-next-line no-console
-      console.log(`[ClassSubjectUpdateDialog] ${label}:`, payload);
-    } catch (_) {}
-  }
+  // Debug logger (disabled)
+  logDebug() { /* no-op */ }
 
   static get observedAttributes() {
     return ['open'];

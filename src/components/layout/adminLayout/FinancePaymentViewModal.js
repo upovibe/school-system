@@ -1,4 +1,4 @@
-import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Badge.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Button.js';
@@ -44,7 +44,11 @@ class FinancePaymentViewModal extends HTMLElement {
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
       const reasonInput = this.querySelector('#void-reason');
-      const resp = await api.withToken(token).put(`/finance/payments/${this._payment.id}/void`, { reason: reasonInput?.value || undefined });
+      const reasonVal = (reasonInput?.value || '').trim();
+      if (!reasonVal) {
+        return Toast.show({ title: 'Validation', message: 'Reason is required to void this payment', variant: 'error', duration: 3000 });
+      }
+      const resp = await api.withToken(token).put(`/finance/payments/${this._payment.id}/void`, { reason: reasonVal });
       if (resp.status === 200 || resp.data?.success) {
         Toast.show({ title: 'Voided', message: 'Payment voided successfully', variant: 'success', duration: 2000 });
         this.dispatchEvent(new CustomEvent('payment-voided', { bubbles: true, composed: true }));
@@ -71,9 +75,8 @@ class FinancePaymentViewModal extends HTMLElement {
     };
     const isVoided = String(p.status || '').toLowerCase() === 'voided';
     this.innerHTML = `
-      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" size="lg" close-button="true">
-        <div slot="title">View Payment</div>
-        <div class="space-y-6">
+      <ui-dialog id="main-dialog" ${this.hasAttribute('open') ? 'open' : ''} title="View Payment">
+        <div slot="content" class="space-y-6">
           <!-- Header -->
           <div class="flex items-center gap-3 border-b pb-4">
             <h3 class="text-xl font-semibold text-gray-900">${safe(p.invoiceDisplay || ('Invoice #' + p.invoice_id))}</h3>
@@ -137,10 +140,10 @@ class FinancePaymentViewModal extends HTMLElement {
           </div>
         </div>
         <div slot="footer" class="flex items-center justify-end gap-2">
-          <ui-button id="cancel-view" variant="outline" color="secondary">Cancel</ui-button>
+          <ui-button id="cancel-view" variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
           ${!isVoided ? `<ui-button id=\"void-btn\" color=\"error\"><i class=\"fas fa-ban mr-1\"></i>Void</ui-button>` : ''}
         </div>
-      </ui-modal>
+      </ui-dialog>
 
       ${!isVoided ? `
       <ui-dialog id="void-dialog" title="Void Payment" ${this.hasAttribute('void-open') ? 'open' : ''}>

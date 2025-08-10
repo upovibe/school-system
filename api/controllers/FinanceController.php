@@ -1022,7 +1022,12 @@ class FinanceController {
             }
 
             $payload = json_decode(file_get_contents('php://input'), true) ?? [];
-            $reason = isset($payload['reason']) && $payload['reason'] !== '' ? (string)$payload['reason'] : null;
+            $reason = isset($payload['reason']) ? trim((string)$payload['reason']) : '';
+            if ($reason === '') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Reason for voiding is required']);
+                return;
+            }
 
             $ok = $this->feePaymentModel->update($id, [
                 'status' => 'voided',

@@ -1,4 +1,4 @@
-import '@/components/ui/Modal.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
@@ -106,8 +106,8 @@ class FinancePaymentAddModal extends HTMLElement {
   render() {
     const openInvoices = (this._invoices || []).filter(i => String(i.status).toLowerCase() !== 'paid' && Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0);
     this.innerHTML = `
-      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
-        <div slot="title">Add Payment</div>
+      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Add Payment">
+        <div slot="content">
         <form class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
@@ -144,7 +144,8 @@ class FinancePaymentAddModal extends HTMLElement {
             <ui-input data-field="notes" type="text" placeholder="Optional note" class="w-full"></ui-input>
           </div>
         </form>
-      </ui-modal>
+        </div>
+      </ui-dialog>
     `;
   }
 }

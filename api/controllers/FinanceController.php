@@ -1071,7 +1071,8 @@ class FinanceController {
     // Helpers (payments)
     private function generateReceiptNumber() {
         $prefix = 'RCT-' . date('Ymd') . '-';
-        $sql = "SELECT COUNT(*) FROM fee_receipts WHERE DATE(printed_on) = CURDATE()";
+        // Count all receipts for today regardless of printed_on status to avoid duplicates
+        $sql = "SELECT COUNT(*) FROM fee_receipts WHERE DATE(created_at) = CURDATE()";
         $count = (int)$this->pdo->query($sql)->fetchColumn();
         $seq = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
         return $prefix . $seq;
@@ -1240,11 +1241,14 @@ class FinanceController {
                 'printed_on' => null // Reset printed timestamp
             ]);
 
+            // Fetch the updated receipt data
+            $updatedReceipt = $this->feeReceiptModel->findById($id);
+            
             http_response_code(200);
             echo json_encode([
                 'success' => true, 
                 'message' => 'Receipt regenerated successfully',
-                'data' => ['new_receipt_number' => $newReceiptNumber]
+                'data' => $updatedReceipt
             ]);
             
         } catch (Exception $e) {

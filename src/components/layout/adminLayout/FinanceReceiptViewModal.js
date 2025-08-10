@@ -13,8 +13,8 @@ import api from '@/services/api.js';
 class FinanceReceiptViewModal extends App {
   constructor() {
     super();
-    this.receipt = null;
-    this.loading = false;
+    this.set('receipt', null);
+    this.set('loading', false);
   }
 
   setReceiptData(receipt) {
@@ -24,17 +24,39 @@ class FinanceReceiptViewModal extends App {
 
   connectedCallback() {
     super.connectedCallback();
-    
-    // Listen for dialog events
     this.addEventListener('dialog-close', this.onClose.bind(this));
+  }
+
+  // Add event listeners after the component is rendered
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'open' && newValue !== null) {
+      // Modal is now open, add event listeners to buttons
+      setTimeout(() => {
+        this.addButtonListeners();
+      }, 100);
+    }
+  }
+
+  addButtonListeners() {
+    
+    const printBtn = this.querySelector('#print-btn');
+    const regenerateBtn = this.querySelector('#regenerate-btn');
+    
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        this.onPrint();
+      });
+    }
+    
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => {
+        this.onRegenerate();
+      });
+    }
   }
 
   static get observedAttributes() {
     return ['open'];
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    // No action needed when open attribute changes
   }
 
   close() { 
@@ -46,15 +68,22 @@ class FinanceReceiptViewModal extends App {
   }
 
   async onPrint() {
-    if (!this.receipt) return;
+    if (!this.get('receipt')) {
+      return;
+    }
     
     try {
       this.set('loading', true);
       
-      // Open receipt in new window for printing
-      const printUrl = `/api/finance/receipts/${this.receipt.id}/print`;
       const token = localStorage.getItem('token');
+      if (!token) {
+        Toast.show({ title: 'Error', message: 'Authentication token not found', variant: 'error', duration: 3000 });
+        return;
+      }
       
+      const printUrl = `/api/finance/receipts/${this.get('receipt').id}/print`;
+      
+      // Fetch the receipt HTML with authentication
       const response = await fetch(printUrl, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -64,16 +93,23 @@ class FinanceReceiptViewModal extends App {
       
       if (response.ok) {
         const html = await response.text();
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
+        
+        // Open new window and write the HTML content
+        const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.focus();
+          
+          // Wait for content to load then print
+          setTimeout(() => {
+            printWindow.print();
+          }, 1000);
+        }
       } else {
-        Toast.show({ title: 'Error', message: 'Failed to generate receipt for printing', variant: 'error', duration: 3000 });
+        throw new Error(`Print failed with status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error printing receipt:', error);
       Toast.show({ title: 'Error', message: 'Failed to print receipt', variant: 'error', duration: 3000 });
     } finally {
       this.set('loading', false);
@@ -81,23 +117,39 @@ class FinanceReceiptViewModal extends App {
   }
 
   async onRegenerate() {
-    if (!this.receipt) return;
+    if (!this.get('receipt')) {
+      return;
+    }
     
     try {
       this.set('loading', true);
       
-      const response = await api.post(`/finance/receipts/${this.receipt.id}/regenerate`);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        Toast.show({ title: 'Error', message: 'Authentication token not found', variant: 'error', duration: 3000 });
+        return;
+      }
+      
+      const response = await api.withToken(token).post(`/finance/receipts/${this.get('receipt').id}/regenerate`, {});
+      
       if (response.data.success) {
         Toast.show({ title: 'Success', message: 'Receipt regenerated successfully', variant: 'success', duration: 3000 });
-        // Refresh the receipt data
+        
+        // Update the receipt data with the response
         this.set('receipt', response.data.data);
         this.render();
       } else {
         Toast.show({ title: 'Error', message: response.data.message || 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
       }
     } catch (error) {
-      console.error('Error regenerating receipt:', error);
-      Toast.show({ title: 'Error', message: 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
+      if (error.response) {
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Failed to regenerate receipt';
+        Toast.show({ title: 'Error', message: errorMessage, variant: 'error', duration: 3000 });
+      } else if (error.request) {
+        Toast.show({ title: 'Error', message: 'No response received from server', variant: 'error', duration: 3000 });
+      } else {
+        Toast.show({ title: 'Error', message: 'Failed to regenerate receipt: ' + error.message, variant: 'error', duration: 3000 });
+      }
     } finally {
       this.set('loading', false);
     }
@@ -244,10 +296,10 @@ class FinanceReceiptViewModal extends App {
         </div>
         <div slot="footer" class="flex items-center justify-end gap-2">
           <ui-button id="cancel-view" variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
-          <ui-button id="print-btn" color="primary" onclick="this.closest('finance-receipt-view-modal').onPrint()">
+          <ui-button id="print-btn" color="primary">
             <i class="fas fa-print mr-1"></i>Print
           </ui-button>
-          <ui-button id="regenerate-btn" color="secondary" onclick="this.closest('finance-receipt-view-modal').onRegenerate()">
+          <ui-button id="regenerate-btn" color="secondary">
             <i class="fas fa-sync mr-1"></i>Regenerate
           </ui-button>
         </div>

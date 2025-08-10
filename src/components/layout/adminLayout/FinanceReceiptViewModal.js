@@ -165,11 +165,11 @@ class FinanceReceiptViewModal extends App {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Student Name</label>
-                <p class="text-gray-900 text-sm font-medium">${safe(receipt.student_first_name)} ${safe(receipt.student_last_name)}</p>
+                <p class="text-gray-900 text-sm font-medium">${safe(receipt.student_display || `${receipt.first_name || ''} ${receipt.last_name || ''}`.trim() || 'N/A')}</p>
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
-                <p class="text-gray-900 text-sm">${safe(receipt.student_number)}</p>
+                <p class="text-gray-900 text-sm">${safe(receipt.student_number || receipt.student_id || 'N/A')}</p>
               </div>
             </div>
           </div>

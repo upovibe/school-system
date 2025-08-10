@@ -145,16 +145,25 @@ class FinanceReceiptsPage extends App {
   }
 
   // Helper methods for display
-  studentDisplay(studentId) {
-    const receipt = this.get('receipts')?.find(r => r.student_id === studentId);
+  studentDisplay(receipt) {
     if (!receipt) return 'N/A';
-    return `${receipt.student_first_name} ${receipt.student_last_name}`;
+    
+    // Use student_display if available (most reliable)
+    if (receipt.student_display) {
+      return receipt.student_display;
+    }
+    
+    // Fallback to combining first_name and last_name
+    const firstName = receipt.first_name || '';
+    const lastName = receipt.last_name || '';
+    const result = `${firstName} ${lastName}`.trim() || 'N/A';
+    return result;
   }
 
-  invoiceDisplay(invoiceId) {
-    const receipt = this.get('receipts')?.find(r => r.invoice_id === invoiceId);
+  invoiceDisplay(receipt) {
     if (!receipt) return 'N/A';
-    return receipt.invoice_number || `INV-${invoiceId}`;
+    const result = receipt.invoice_number || `INV-${receipt.invoice_id}` || 'N/A';
+    return result;
   }
 
   displayStatus(status) {
@@ -204,8 +213,8 @@ class FinanceReceiptsPage extends App {
       id: r.id,
       index: idx + 1,
       receipt_number: r.receipt_number,
-      invoice: this.invoiceDisplay(r.invoice_id),
-      student: this.studentDisplay(r.student_id),
+      invoice: this.invoiceDisplay(r),
+      student: this.studentDisplay(r),
       amount: Number(r.amount).toFixed(2),
       method: r.method || 'N/A',
       status: this.displayStatus(r.payment_status || 'posted'),
@@ -232,8 +241,8 @@ class FinanceReceiptsPage extends App {
       id: r.id,
       index: idx + 1,
       receipt_number: r.receipt_number,
-      invoice: this.invoiceDisplay(r.invoice_id),
-      student: this.studentDisplay(r.student_id),
+      invoice: this.invoiceDisplay(r),
+      student: this.studentDisplay(r),
       amount: Number(r.amount).toFixed(2),
       method: r.method || 'N/A',
       status: this.displayStatus(r.payment_status || 'posted'),
@@ -294,4 +303,3 @@ class FinanceReceiptsPage extends App {
 
 customElements.define('app-finance-receipts-page', FinanceReceiptsPage);
 export default FinanceReceiptsPage;
-

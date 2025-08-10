@@ -289,6 +289,7 @@ class FinancePaymentsPage extends App {
               pagination
               page-size="50"
               action
+              actions="view,delete"  
               addable
               refresh
               print

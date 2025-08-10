@@ -310,3 +310,9 @@ Router::put('/finance/invoices/{id}', 'FinanceController@updateInvoice');
 Router::delete('/finance/invoices/{id}', 'FinanceController@destroyInvoice');
 // Finance - Helpers
 Router::get('/finance/amount-due', 'FinanceController@getAmountDue');
+
+// Finance - Payments (admin only)
+Router::get('/finance/payments', 'FinanceController@indexPayments');
+Router::post('/finance/payments', 'FinanceController@storePayment');
+Router::get('/finance/payments/{id}', 'FinanceController@showPayment');
+Router::delete('/finance/payments/{id}', 'FinanceController@destroyPayment');

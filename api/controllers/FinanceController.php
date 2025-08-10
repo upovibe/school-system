@@ -4,6 +4,8 @@
 require_once __DIR__ . '/../models/FeeSchedule.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../models/FeeInvoice.php';
+require_once __DIR__ . '/../models/FeePayment.php';
+require_once __DIR__ . '/../models/FeeReceipt.php';
 require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
@@ -12,12 +14,16 @@ class FinanceController {
     private $pdo;
     private $feeScheduleModel;
     private $feeInvoiceModel;
+    private $feePaymentModel;
+    private $feeReceiptModel;
     private $studentModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->feeScheduleModel = new FeeSchedule($pdo);
         $this->feeInvoiceModel = new FeeInvoice($pdo);
+        $this->feePaymentModel = new FeePayment($pdo);
+        $this->feeReceiptModel = new FeeReceipt($pdo);
         $this->studentModel = new StudentModel($pdo);
     }
 
@@ -796,6 +802,193 @@ class FinanceController {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error computing amount due: ' . $e->getMessage()]);
         }
+    }
+
+    // Payments Section
+    /**
+     * List payments with optional filters: invoice_id, student_id, method, date range
+     */
+    public function indexPayments() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $conditions = [];
+            $params = [];
+
+            if (!empty($_GET['invoice_id'])) { $conditions[] = 'invoice_id = ?'; $params[] = (int)$_GET['invoice_id']; }
+            if (!empty($_GET['student_id'])) { $conditions[] = 'student_id = ?'; $params[] = (int)$_GET['student_id']; }
+            if (!empty($_GET['method'])) { $conditions[] = 'method = ?'; $params[] = (string)$_GET['method']; }
+            if (!empty($_GET['from'])) { $conditions[] = 'DATE(paid_on) >= ?'; $params[] = (string)$_GET['from']; }
+            if (!empty($_GET['to'])) { $conditions[] = 'DATE(paid_on) <= ?'; $params[] = (string)$_GET['to']; }
+
+            $where = empty($conditions) ? '' : ('WHERE ' . implode(' AND ', $conditions));
+            $sql = "SELECT * FROM fee_payments $where ORDER BY paid_on DESC, id DESC";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $rows, 'message' => 'Payments retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving payments: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Create a payment for an invoice, then recompute the invoice totals/status and create a receipt
+     * Required: invoice_id, amount
+     * Optional: method, reference, paid_on, notes
+     */
+    public function storePayment() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $invoiceId = isset($data['invoice_id']) ? (int)$data['invoice_id'] : 0;
+            $amount = isset($data['amount']) ? (float)$data['amount'] : 0.0;
+            if ($invoiceId <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'invoice_id is required']); return; }
+            if ($amount <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'amount must be greater than 0']); return; }
+
+            $invoice = $this->feeInvoiceModel->findById($invoiceId);
+            if (!$invoice) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Invoice not found']); return; }
+
+            // Prevent overpayment
+            $currentPaid = (float)$invoice['amount_paid'];
+            $currentDue = (float)$invoice['amount_due'];
+            $currentBalance = $currentDue - $currentPaid;
+            if ($amount > $currentBalance + 0.0001) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Payment exceeds invoice balance']);
+                return;
+            }
+
+            $studentId = (int)$invoice['student_id'];
+            $payload = [
+                'invoice_id' => $invoiceId,
+                'student_id' => $studentId,
+                'amount' => $amount,
+                'method' => $data['method'] ?? null,
+                'reference' => $data['reference'] ?? null,
+                'paid_on' => !empty($data['paid_on']) ? $data['paid_on'] : date('Y-m-d'),
+                'received_by' => $this->getCurrentUserIdFromToken(),
+                'notes' => $data['notes'] ?? null,
+            ];
+
+            // Insert payment
+            $paymentId = $this->feePaymentModel->create($payload);
+
+            // Recompute invoice totals based on payments
+            $sumStmt = $this->pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ?');
+            $sumStmt->execute([$invoiceId]);
+            $sumPaid = (float)$sumStmt->fetchColumn();
+
+            $newBalance = (float)$invoice['amount_due'] - $sumPaid;
+            if ($newBalance < 0) { $newBalance = 0.0; }
+            $newStatus = $newBalance <= 0 ? 'paid' : 'open';
+
+            $this->feeInvoiceModel->update($invoiceId, [
+                'amount_paid' => $sumPaid,
+                'balance' => $newBalance,
+                'status' => $newStatus,
+            ]);
+
+            // Create receipt
+            $receiptNumber = $this->generateReceiptNumber();
+            $this->feeReceiptModel->create([
+                'payment_id' => $paymentId,
+                'receipt_number' => $receiptNumber,
+                'printed_on' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->logAction('finance_payment_created', 'Payment recorded', [
+                'fee_payment_id' => $paymentId,
+                'invoice_id' => $invoiceId,
+                'amount' => $amount
+            ]);
+
+            http_response_code(201);
+            echo json_encode(['success' => true, 'data' => ['id' => $paymentId, 'receipt_number' => $receiptNumber], 'message' => 'Payment recorded successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error recording payment: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show a payment by id
+     */
+    public function showPayment($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            $stmt = $this->pdo->prepare('SELECT * FROM fee_payments WHERE id = ? LIMIT 1');
+            $stmt->execute([(int)$id]);
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if (!$payment) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Payment not found']); return; }
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $payment, 'message' => 'Payment retrieved successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving payment: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete a payment, then recompute the invoice totals/status
+     */
+    public function destroyPayment($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $stmt = $this->pdo->prepare('SELECT * FROM fee_payments WHERE id = ? LIMIT 1');
+            $stmt->execute([(int)$id]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if (!$existing) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Payment not found']); return; }
+
+            $invoiceId = (int)$existing['invoice_id'];
+            $ok = $this->feePaymentModel->delete($id);
+            if ($ok) {
+                // Recompute invoice totals
+                $sumStmt = $this->pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ?');
+                $sumStmt->execute([$invoiceId]);
+                $sumPaid = (float)$sumStmt->fetchColumn();
+                $inv = $this->feeInvoiceModel->findById($invoiceId);
+                if ($inv) {
+                    $newBalance = (float)$inv['amount_due'] - $sumPaid;
+                    if ($newBalance < 0) { $newBalance = 0.0; }
+                    $newStatus = $newBalance <= 0 ? 'paid' : 'open';
+                    $this->feeInvoiceModel->update($invoiceId, [
+                        'amount_paid' => $sumPaid,
+                        'balance' => $newBalance,
+                        'status' => $newStatus,
+                    ]);
+                }
+
+                $this->logAction('finance_payment_deleted', 'Payment deleted', [ 'fee_payment_id' => (int)$id, 'invoice_id' => $invoiceId ]);
+
+                http_response_code(200);
+                echo json_encode(['success' => true, 'message' => 'Payment deleted successfully']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to delete payment']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting payment: ' . $e->getMessage()]);
+        }
+    }
+
+    // Helpers (payments)
+    private function generateReceiptNumber() {
+        $prefix = 'RCT-' . date('Ymd') . '-';
+        $sql = "SELECT COUNT(*) FROM fee_receipts WHERE DATE(printed_on) = CURDATE()";
+        $count = (int)$this->pdo->query($sql)->fetchColumn();
+        $seq = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
+        return $prefix . $seq;
     }
 }
 

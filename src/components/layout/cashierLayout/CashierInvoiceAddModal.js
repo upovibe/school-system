@@ -15,11 +15,13 @@ class CashierInvoiceAddModal extends HTMLElement {
   static get observedAttributes() { return ['open']; }
 
   connectedCallback() {
+    console.log('CashierInvoiceAddModal connected, open attribute:', this.hasAttribute('open'));
     this.render();
     this.setupEventListeners();
   }
 
   setStudents(students) {
+    console.log('setStudents called with:', students);
     this._students = Array.isArray(students) ? students : [];
     this.render();
     this.setupEventListeners();
@@ -27,88 +29,107 @@ class CashierInvoiceAddModal extends HTMLElement {
 
   setupEventListeners() {
     if (this._listenersAttached) return;
+    console.log('Setting up event listeners');
     this.addEventListener('confirm', () => this.saveInvoice());
     this.addEventListener('cancel', () => this.close());
+    
     // Auto-fill amount_due when student/year/term changes (debounced)
     const rebindAuto = () => {
       const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
       const trigger = () => this.autoFillAmountDueDebounced();
+      
       if (studentDd && !studentDd._autoBound) {
         studentDd.addEventListener('change', () => { trigger(); });
         studentDd.addEventListener('value-change', () => { trigger(); });
         studentDd._autoBound = true;
       }
+      
       if (yearInput && !yearInput._autoBound) {
         yearInput.addEventListener('input', () => { trigger(); });
         yearInput.addEventListener('change', () => { trigger(); });
         yearInput._autoBound = true;
       }
+      
       if (termInput && !termInput._autoBound) {
         termInput.addEventListener('input', () => { trigger(); });
         termInput.addEventListener('change', () => { trigger(); });
         termInput._autoBound = true;
       }
     };
+    
     setTimeout(rebindAuto, 0);
-    // Capture any change events from the student dropdown to ensure logging triggers
+    
+    // Capture any change events from the student dropdown
     if (!this._captureBound) {
       this.addEventListener(
         'change',
         async (e) => {
           const dropdown = e.target && e.target.closest && e.target.closest('ui-search-dropdown[name="student_id"]');
           if (!dropdown) return;
+          
           const val = dropdown.value || (e.detail && e.detail.value);
           const id = Number(val);
           if (!id) return;
+          
           try {
             const token = localStorage.getItem('token');
             if (!token) return;
-            const resp = await api.withToken(token).get(`/students/${id}`).catch(() => null);
+            
+            const resp = await api.withToken(token).get(`/cashier/students/${id}`).catch(() => null);
             const student = resp?.data?.data || null;
             const classId = student?.current_class_id || null;
             const infoEl = this.querySelector('#current-class-info');
+            
             // Show student type badge and clear dependent fields
             const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
             const yearInput2 = this.querySelector('ui-input[data-field="academic_year"]');
             const termInput2 = this.querySelector('ui-input[data-field="term"]');
-            const missBadge = this.querySelector('#schedule-missing');
+            
             if (amountDueInput) amountDueInput.value = '';
             if (yearInput2) yearInput2.value = '';
             if (termInput2) termInput2.value = '';
-            if (missBadge) missBadge.remove();
+            
             this.autoFillAmountDueDebounced();
+            
             if (classId) {
               const cls = await api.withToken(token).get(`/classes/${classId}`).catch(() => null);
               const info = cls?.data?.data;
               if (info && infoEl) {
                 const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
                 const type = student?.student_type || '';
-                infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id=\"current-student-type\" class=\"ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200\" data-type=\"${type}\">${type}</span>` : ''}`;
+                infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
               } else if (infoEl) {
-                infoEl.textContent = `Current Class ID: ${classId}`;
+                infoEl.innerHTML = '';
               }
-              // trigger amount-due fetch after class resolved
-              this.autoFillAmountDueDebounced();
             } else if (infoEl) {
-              infoEl.textContent = '';
+              infoEl.innerHTML = '';
             }
-          } catch (_) {}
-        },
-        true
+          } catch (error) {
+            console.error('Error handling student change:', error);
+          }
+        }
       );
       this._captureBound = true;
     }
+    
     this._listenersAttached = true;
   }
 
-  open() { this.setAttribute('open', ''); }
-  close() { this.removeAttribute('open'); }
+  open() { 
+    console.log('CashierInvoiceAddModal open() called');
+    this.setAttribute('open', ''); 
+  }
+  close() { 
+    console.log('CashierInvoiceAddModal close() called');
+    this.removeAttribute('open'); 
+  }
 
   async saveInvoice() {
     if (this._saving) return;
     this._saving = true;
+    
     try {
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
@@ -126,136 +147,114 @@ class CashierInvoiceAddModal extends HTMLElement {
         term: termInput?.value || '',
         amount_due: amountDueInput?.value ? Number(amountDueInput.value) : 0,
         amount_paid: amountPaidInput?.value ? Number(amountPaidInput.value) : 0,
-        issue_date: issueDateInput?.value || undefined,
-        due_date: dueDateInput?.value || undefined,
-        notes: notesInput?.value || undefined,
-        student_type: (studentTypeEl?.dataset?.type) || undefined,
+        issue_date: issueDateInput?.value || new Date().toISOString().slice(0, 10),
+        due_date: dueDateInput?.value || null,
+        notes: notesInput?.value || '',
+        student_type: studentTypeEl?.getAttribute('data-type') || '',
+        status: 'open'
       };
 
-      if (!payload.student_id) return Toast.show({ title: 'Validation', message: 'Select a student', variant: 'error', duration: 3000 });
-      if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
-      if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
-      if (!payload.amount_due || isNaN(payload.amount_due)) return Toast.show({ title: 'Validation', message: 'Enter amount due', variant: 'error', duration: 3000 });
+      // Validation
+      if (!payload.student_id) {
+        Toast.show({ title: 'Validation Error', message: 'Please select a student', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!payload.academic_year) {
+        Toast.show({ title: 'Validation Error', message: 'Please enter academic year', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!payload.term) {
+        Toast.show({ title: 'Validation Error', message: 'Please enter term', variant: 'error', duration: 3000 });
+        return;
+      }
+      if (!payload.amount_due || payload.amount_due <= 0) {
+        Toast.show({ title: 'Validation Error', message: 'Please enter a valid amount due', variant: 'error', duration: 3000 });
+        return;
+      }
 
       const token = localStorage.getItem('token');
-      if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
+      if (!token) {
+        Toast.show({ title: 'Authentication Error', message: 'Please log in to create invoice', variant: 'error', duration: 3000 });
+        return;
+      }
 
-      // Frontend duplicate check: one invoice per student/year/term
-      try {
-        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, term: payload.term }).toString();
-        const dupResp = await api.withToken(token).get(`/cashier/invoices?${q}`);
-        const list = dupResp?.data?.data || [];
-        if (Array.isArray(list) && list.length > 0) {
-          this._saving = false;
-          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and term', variant: 'warning', duration: 3500 });
-        }
-      } catch (_) { /* ignore – backend unique index still protects */ }
-
-      const resp = await api.withToken(token).post('/cashier/invoices', payload);
-      if (resp.status === 201 || resp.data?.success) {
-        Toast.show({ title: 'Success', message: 'Invoice created', variant: 'success', duration: 2500 });
-        const id = resp.data?.data?.id;
-        const invoice = {
-          id,
-          invoice_number: resp.data?.data?.invoice_number,
-          status: payload.amount_due - payload.amount_paid <= 0 ? 'paid' : 'open',
-          balance: (payload.amount_due - (payload.amount_paid || 0)),
-          created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          ...payload,
-        };
+      const response = await api.withToken(token).post('/cashier/invoices', payload);
+      
+      if (response.data?.success) {
+        Toast.show({ title: 'Success', message: 'Invoice created successfully', variant: 'success', duration: 3000 });
+        
+        // Dispatch event to parent
+        this.dispatchEvent(new CustomEvent('invoice-saved', {
+          bubbles: true,
+          detail: { invoice: response.data.data }
+        }));
+        
         this.close();
-        this.dispatchEvent(new CustomEvent('invoice-saved', { detail: { invoice }, bubbles: true, composed: true }));
+        this.resetForm();
       } else {
-        throw new Error(resp.data?.message || 'Failed to create invoice');
+        Toast.show({ title: 'Error', message: response.data?.message || 'Failed to create invoice', variant: 'error', duration: 3000 });
       }
     } catch (error) {
-      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to create invoice', variant: 'error', duration: 3000 });
+      console.error('Error creating invoice:', error);
+      Toast.show({ 
+        title: 'Error', 
+        message: error.response?.data?.message || 'Failed to create invoice. Please try again.', 
+        variant: 'error', 
+        duration: 3000 
+      });
     } finally {
       this._saving = false;
+      this.render();
     }
   }
 
+  resetForm() {
+    const inputs = this.querySelectorAll('ui-input');
+    inputs.forEach(input => {
+      if (input.getAttribute('data-field') !== 'issue_date') {
+        input.value = '';
+      }
+    });
+    
+    const dropdowns = this.querySelectorAll('ui-search-dropdown');
+    dropdowns.forEach(dd => dd.value = '');
+    
+    const infoEl = this.querySelector('#current-class-info');
+    if (infoEl) infoEl.textContent = '';
+  }
+
   autoFillAmountDueDebounced() {
-    clearTimeout(this._autoDueTimeout);
-    this._autoDueTimeout = setTimeout(() => this.autoFillAmountDue(), 200);
+    clearTimeout(this._autoFillTimeout);
+    this._autoFillTimeout = setTimeout(() => this.autoFillAmountDue(), 300);
   }
 
   async autoFillAmountDue() {
     try {
-      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
-      if (!amountDueInput) return;
-      // Only auto-fill if empty or zero to avoid overriding manual edits
-      const current = parseFloat(amountDueInput.value || '0');
-      if (current > 0) { return; }
-
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
       const termInput = this.querySelector('ui-input[data-field="term"]');
-      const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
-      const typeBadge = this.querySelector('#current-student-type');
-      const overrideType = typeBadge?.dataset?.type || '';
-      const academicYear = yearInput?.value || '';
-      const term = termInput?.value || '';
-      if (!studentId) { return; }
-
-      let classId = null;
-      const fromList = (this._students || []).find(s => String(s.id) === String(studentId));
-      if (fromList && fromList.current_class_id) {
-        classId = fromList.current_class_id;
-      }
-      if (!classId) {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        try {
-          const resp = await api.withToken(token).get(`/students/${studentId}`);
-          const student = resp?.data?.data;
-          classId = student?.current_class_id || null;
-        } catch (_) {
-          return;
-        }
-      }
-      if (!classId) return;
-
+      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+      
+      if (!studentDropdown?.value || !yearInput?.value || !termInput?.value || !amountDueInput) return;
+      
+      const studentId = Number(studentDropdown.value);
+      const academicYear = yearInput.value;
+      const term = termInput.value;
+      
+      if (!studentId || !academicYear || !term) return;
+      
       const token = localStorage.getItem('token');
       if (!token) return;
-
+      
+      // Try to get class fee for this student/class/year/term combination
       try {
-        // Try to find a fee schedule for this student/class/year/term
-        const scheduleResp = await api.withToken(token).get(`/cashier/schedules`, {
-          params: {
-            student_id: studentId,
-            class_id: classId,
-            academic_year: academicYear,
-            term: term,
-            student_type: overrideType || undefined
-          }
-        });
-        const schedules = scheduleResp?.data?.data || [];
-        if (schedules.length > 0) {
-          const schedule = schedules[0];
-          const amount = parseFloat(schedule.amount || 0);
-          if (amount > 0) {
-            amountDueInput.value = amount.toFixed(2);
-            Toast.show({ title: 'Auto-filled', message: `Amount due: ${amount.toFixed(2)} from fee schedule`, variant: 'info', duration: 2000 });
-            return;
-          }
-        }
-      } catch (_) {
-        // Ignore errors - just means no schedule found
-      }
-
-      // If no schedule found, try to derive from class fee structure
-      try {
-        const classResp = await api.withToken(token).get(`/classes/${classId}`);
-        const classInfo = classResp?.data?.data;
-        if (classInfo && classInfo.fee_amount) {
-          const amount = parseFloat(classInfo.fee_amount);
-          if (amount > 0) {
-            amountDueInput.value = amount.toFixed(2);
-            Toast.show({ title: 'Auto-filled', message: `Amount due: ${amount.toFixed(2)} from class fee`, variant: 'info', duration: 2000 });
-            return;
-          }
+        const resp = await api.withToken(token).get(`/cashier/class-fees?student_id=${studentId}&academic_year=${academicYear}&term=${term}`);
+        const fee = resp?.data?.data;
+        if (fee && fee.amount) {
+          const amount = Number(fee.amount);
+          amountDueInput.value = amount.toFixed(2);
+          Toast.show({ title: 'Auto-filled', message: `Amount due: ${amount.toFixed(2)} from class fee`, variant: 'info', duration: 2000 });
+          return;
         }
       } catch (_) {
         // Ignore errors
@@ -273,7 +272,8 @@ class CashierInvoiceAddModal extends HTMLElement {
     }).join('');
 
     return `
-      <ui-modal title="Create Fee Invoice" size="lg">
+      <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" size="lg" close-button="true">
+        <div slot="title">Add Fee Invoice</div>
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -338,8 +338,8 @@ class CashierInvoiceAddModal extends HTMLElement {
         </div>
 
         <div slot="footer" class="flex justify-end gap-2">
-          <ui-button data-action="cancel" variant="secondary">Cancel</ui-button>
-          <ui-button data-action="confirm" variant="primary" loading="${this._saving}">
+          <ui-button modal-action="cancel" variant="secondary">Cancel</ui-button>
+          <ui-button modal-action="confirm" variant="primary" loading="${this._saving}">
             ${this._saving ? 'Creating...' : 'Create Invoice'}
           </ui-button>
         </div>

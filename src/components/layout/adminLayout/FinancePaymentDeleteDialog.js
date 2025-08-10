@@ -36,10 +36,18 @@ class FinancePaymentDeleteDialog extends HTMLElement {
   render() {
     const p = this._payment || {};
     this.innerHTML = `
-      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''}>
+      <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} variant="danger">
         <div slot="title">Delete Payment</div>
         <div class="text-sm text-gray-700">
-          Are you sure you want to delete this payment of <span class="font-semibold">${Number(p.amount || 0).toFixed(2)}</span> for invoice <span class="font-semibold">${p.invoice_id || ''}</span>?
+          <p>Are you sure you want to delete this payment?</p>
+          <div class="mt-3 p-3 bg-red-50 border border-red-100 rounded text-red-700 text-sm">
+            <div><strong>Invoice:</strong> ${p.invoice_id ? `#${p.invoice_id}` : 'N/A'}</div>
+            <div><strong>Student ID:</strong> ${p.student_id ?? 'N/A'}</div>
+            <div><strong>Amount:</strong> ${Number(p.amount || 0).toFixed(2)}</div>
+            <div><strong>Method:</strong> ${p.method || 'N/A'}</div>
+            <div><strong>Paid On:</strong> ${p.paid_on || 'N/A'}</div>
+            ${p.reference ? `<div><strong>Reference:</strong> ${p.reference}</div>` : ''}
+          </div>
         </div>
       </ui-dialog>
     `;

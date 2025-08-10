@@ -177,6 +177,17 @@ class FinancePaymentsPage extends App {
     return `${inv.invoice_number || ('#' + invoiceId)} (${this.studentDisplay(inv.student_id)})`;
   }
 
+  formatDateTime(value) {
+    if (!value) return '';
+    try {
+      // Support server formats like 'YYYY-MM-DD HH:mm:ss' or ISO
+      const normalized = String(value).replace(' ', 'T');
+      const d = new Date(normalized);
+      if (isNaN(d.getTime())) return value;
+      return d.toLocaleString();
+    } catch (_) { return value; }
+  }
+
   onView(event) {
     const item = (this.get('payments') || []).find((p) => String(p.id) === String(event.detail.row.id));
     if (item) {
@@ -223,8 +234,8 @@ class FinancePaymentsPage extends App {
       amount: Number(p.amount).toFixed(2),
       method: p.method || 'N/A',
       reference: p.reference || '—',
-      paid_on: p.paid_on,
-      created: p.created_at || '',
+      paid_on: this.formatDateTime(p.paid_on),
+      created: this.formatDateTime(p.created_at),
     }));
     const table = this.querySelector('ui-table');
     if (table) table.setAttribute('data', JSON.stringify(tableData));
@@ -253,8 +264,8 @@ class FinancePaymentsPage extends App {
       amount: Number(p.amount).toFixed(2),
       method: p.method || 'N/A',
       reference: p.reference || '—',
-      paid_on: p.paid_on,
-      created: p.created_at || '',
+      paid_on: this.formatDateTime(p.paid_on),
+      created: this.formatDateTime(p.created_at),
     })) : [];
 
     const tableColumns = [

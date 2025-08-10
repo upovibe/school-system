@@ -866,13 +866,30 @@ class FinanceController {
             }
 
             $studentId = (int)$invoice['student_id'];
+            // Normalize paid_on
+            $incomingPaidOn = $data['paid_on'] ?? null;
+            if ($incomingPaidOn) {
+                // Accept formats like YYYY-MM-DD or YYYY-MM-DDTHH:MM or full datetime
+                if (strpos($incomingPaidOn, 'T') !== false) {
+                    $incomingPaidOn = str_replace('T', ' ', $incomingPaidOn);
+                }
+                // If only date or missing seconds, pad to seconds
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $incomingPaidOn)) {
+                    $incomingPaidOn .= ' 00:00:00';
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $incomingPaidOn)) {
+                    $incomingPaidOn .= ':00';
+                }
+            } else {
+                $incomingPaidOn = date('Y-m-d H:i:s');
+            }
+
             $payload = [
                 'invoice_id' => $invoiceId,
                 'student_id' => $studentId,
                 'amount' => $amount,
                 'method' => $data['method'] ?? null,
                 'reference' => $data['reference'] ?? null,
-                'paid_on' => !empty($data['paid_on']) ? $data['paid_on'] : date('Y-m-d'),
+                'paid_on' => $incomingPaidOn,
                 'received_by' => $this->getCurrentUserIdFromToken(),
                 'notes' => $data['notes'] ?? null,
             ];

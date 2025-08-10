@@ -1,5 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/Dialog.js';
+import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
@@ -13,23 +15,23 @@ class FinancePaymentViewModal extends HTMLElement {
     const voidBtn = this.querySelector('#void-btn');
     if (voidBtn && !voidBtn._bound) {
       voidBtn.addEventListener('click', () => {
-        const section = this.querySelector('#void-section');
-        if (section) section.classList.remove('hidden');
+        const dlg = this.querySelector('#void-dialog');
+        if (dlg) dlg.setAttribute('open', '');
+        this.close();
       });
       voidBtn._bound = true;
     }
-    const cancelBtn = this.querySelector('#void-cancel');
-    if (cancelBtn && !cancelBtn._bound) {
-      cancelBtn.addEventListener('click', () => {
-        const section = this.querySelector('#void-section');
-        if (section) section.classList.add('hidden');
-      });
-      cancelBtn._bound = true;
+    const dlg = this.querySelector('#void-dialog');
+    if (dlg && !dlg._bound) {
+      dlg.addEventListener('confirm', () => this.voidPayment());
+      dlg.addEventListener('cancel', () => dlg.removeAttribute('open'));
+      dlg._bound = true;
     }
-    const confirmBtn = this.querySelector('#void-confirm');
-    if (confirmBtn && !confirmBtn._bound) {
-      confirmBtn.addEventListener('click', () => this.voidPayment());
-      confirmBtn._bound = true;
+
+    const cancelMainBtn = this.querySelector('#cancel-view');
+    if (cancelMainBtn && !cancelMainBtn._bound) {
+      cancelMainBtn.addEventListener('click', () => this.close());
+      cancelMainBtn._bound = true;
     }
   }
 
@@ -43,6 +45,8 @@ class FinancePaymentViewModal extends HTMLElement {
       if (resp.status === 200 || resp.data?.success) {
         Toast.show({ title: 'Voided', message: 'Payment voided successfully', variant: 'success', duration: 2000 });
         this.dispatchEvent(new CustomEvent('payment-voided', { bubbles: true, composed: true }));
+        const dlg = this.querySelector('#void-dialog');
+        if (dlg) dlg.removeAttribute('open');
         this.close();
       } else {
         throw new Error(resp.data?.message || 'Failed to void payment');
@@ -105,23 +109,6 @@ class FinancePaymentViewModal extends HTMLElement {
             </div>
           </div>
 
-          ${!isVoided ? `
-          <!-- Void Action -->
-          <div class="mt-2">
-            <button id="void-btn" class="inline-flex items-center px-3 py-1.5 text-sm rounded bg-red-600 text-white hover:bg-red-700">
-              <i class="fas fa-ban mr-1"></i> Void Payment
-            </button>
-            <div id="void-section" class="mt-3 hidden">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
-              <textarea id="void-reason" class="w-full border rounded px-2 py-1 text-sm" rows="2" placeholder="Enter reason..."></textarea>
-              <div class="mt-2 flex gap-2">
-                <button id="void-confirm" class="px-3 py-1.5 text-sm rounded bg-red-600 text-white hover:bg-red-700">Confirm Void</button>
-                <button id="void-cancel" class="px-3 py-1.5 text-sm rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-              </div>
-            </div>
-          </div>
-          ` : ''}
-
           <!-- Timestamps -->
           <div class="mt-2">
             <div class="flex items-center gap-2 mb-3">
@@ -146,12 +133,23 @@ class FinancePaymentViewModal extends HTMLElement {
             </div>
           </div>
         </div>
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <ui-button id="cancel-view" variant="outline" color="secondary">Cancel</ui-button>
+          ${!isVoided ? `<ui-button id=\"void-btn\" color=\"error\"><i class=\"fas fa-ban mr-1\"></i>Void</ui-button>` : ''}
+        </div>
       </ui-modal>
+
+      ${!isVoided ? `
+      <ui-dialog id="void-dialog" title="Void Payment" ${this.hasAttribute('void-open') ? 'open' : ''}>
+        <div slot="content">
+          <p class="text-sm text-gray-700 mb-2">Provide an optional reason for voiding this payment.</p>
+          <textarea id="void-reason" class="w-full border rounded px-2 py-1 text-sm" rows="3" placeholder="Reason (optional)"></textarea>
+        </div>
+      </ui-dialog>
+      ` : ''}
     `;
   }
 }
 
 customElements.define('finance-payment-view-modal', FinancePaymentViewModal);
 export default FinancePaymentViewModal;
-
-

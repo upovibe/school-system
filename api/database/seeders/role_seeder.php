@@ -15,8 +15,7 @@ class RoleSeeder
             ['admin', 'System administrator with full access'],
             ['teacher', 'Teacher with class and grade management access'],
             ['student', 'Student with limited access to own data'],
-            ['parent', 'Parent with access to child information'],
-            ['staff', 'Staff member with administrative access']
+            ['cashier', 'Cashier with financial transaction access']
         ];
         foreach ($roles as $role) {
             $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');

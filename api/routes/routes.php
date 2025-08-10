@@ -331,3 +331,10 @@ Router::get('/cashier/schedules/{id}', 'CashierController@showSchedule');
 Router::get('/cashier/schedules/student', 'CashierController@getStudentSchedules');
 Router::get('/cashier/schedules/active', 'CashierController@getActiveSchedules');
 Router::get('/cashier/schedules/search', 'CashierController@searchSchedules');
+
+// Cashier - Fee Invoices (cashier only)
+Router::get('/cashier/invoices', 'CashierController@indexInvoices');
+Router::post('/cashier/invoices', 'CashierController@storeInvoice');
+Router::get('/cashier/invoices/{id}', 'CashierController@showInvoice');
+Router::put('/cashier/invoices/{id}', 'CashierController@updateInvoice');
+Router::delete('/cashier/invoices/{id}', 'CashierController@destroyInvoice');

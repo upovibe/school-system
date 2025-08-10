@@ -4,6 +4,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/layout/adminLayout/FinanceScheduleViewModal.js';
 import api from '@/services/api.js';
 
@@ -148,28 +149,24 @@ class CashierPaymentSchedulerPage extends App {
           <div>
             <label class="block text-xs text-gray-600 mb-1">Class</label>
             <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full" value="${class_id || ''}">
-              <ui-option value="">All Classes</ui-option>
               ${classOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Academic Year</label>
             <ui-search-dropdown name="academic_year" placeholder="Select year" class="w-full" value="${academic_year || ''}">
-              <ui-option value="">All Years</ui-option>
               ${academicYearOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Term</label>
             <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
-              <ui-option value="">All Terms</ui-option>
               ${termOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Student Type</label>
             <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full" value="${student_type || ''}">
-              <ui-option value="">All Types</ui-option>
               ${studentTypeOptions}
             </ui-search-dropdown>
           </div>

@@ -4,6 +4,8 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/SearchDropdown.js';
+import '@/components/ui/Button.js';
 import '@/components/layout/adminLayout/FinanceInvoiceAddModal.js';
 import '@/components/layout/adminLayout/FinanceInvoiceUpdateModal.js';
 import '@/components/layout/adminLayout/FinanceInvoiceViewModal.js';
@@ -26,6 +28,7 @@ class FinanceInvoicesPage extends App {
     this.updateInvoiceData = null;
     this.viewInvoiceData = null;
     this.deleteInvoiceData = null;
+    this.filters = { academic_year: '', status: '', term: '' };
   }
 
   // Header counts
@@ -40,6 +43,51 @@ class FinanceInvoicesPage extends App {
     });
     const uniqueStudents = new Set((invoices || []).map(i => String(i.student_id))).size;
     return { total, open, paid, students: uniqueStudents };
+  }
+
+  renderFilters() {
+    // Get unique academic years, statuses, and terms from invoices data - filter out null/empty values
+    const invoices = this.get('invoices') || [];
+    const academicYears = [...new Set(invoices.map(i => i.academic_year).filter(year => year && year !== null && year !== ''))].sort().reverse();
+    const statuses = [...new Set(invoices.map(i => String(i.status || '')).filter(status => status && status !== null && status !== ''))].sort();
+    const terms = [...new Set(invoices.map(i => i.term).filter(term => term && term !== null && term !== ''))].sort();
+    
+    const academicYearOptions = academicYears.map(year => `<ui-option value="${year}">${year}</ui-option>`).join('');
+    const statusOptions = statuses.map(status => `<ui-option value="${status}">${status}</ui-option>`).join('');
+    const termOptions = terms.map(term => `<ui-option value="${term}">${term}</ui-option>`).join('');
+
+    const filters = this.get('filters') || { academic_year: '', status: '', term: '' };
+    const { academic_year, status, term } = filters;
+    
+    return `
+      <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Academic Year</label>
+            <ui-search-dropdown name="academic_year" placeholder="Select year" class="w-full" value="${academic_year || ''}">
+              ${academicYearOptions}
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Status</label>
+            <ui-search-dropdown name="status" placeholder="Select status" class="w-full" value="${status || ''}">
+              ${statusOptions}
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Term</label>
+            <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
+              ${termOptions}
+            </ui-search-dropdown>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+          <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+            <i class="fas fa-times mr-1"></i> Clear Filters
+          </ui-button>
+        </div>
+      </div>
+    `;
   }
 
   renderHeader() {
@@ -119,11 +167,44 @@ class FinanceInvoicesPage extends App {
     this.addEventListener('table-add', this.onAdd.bind(this));
     this.addEventListener('table-refresh', () => this.loadData());
 
+    // Filter interactions
+    this.addEventListener('change', (e) => {
+      const dd = e.target.closest('ui-search-dropdown');
+      if (!dd) return;
+      // Any dropdown change should close any open modal
+      this.closeAllModals();
+      const name = dd.getAttribute('name');
+      if (!name) return;
+      const next = { ...this.get('filters'), [name]: dd.value };
+      this.set('filters', next);
+      
+      // Auto-apply filters when any filter changes for better UX
+      setTimeout(() => this.applyFilters(), 100);
+    });
+
+    this.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('[data-action="clear-filters"]');
+      if (clearBtn) {
+        e.preventDefault();
+        this.closeAllModals();
+        const defaults = { academic_year: '', status: '', term: '' };
+        this.set('filters', defaults);
+        // Reset table to show all data
+        this.render();
+        Toast.show({ 
+          title: 'Filters Cleared', 
+          message: 'Showing all invoices', 
+          variant: 'info', 
+          duration: 2000 
+        });
+      }
+    });
+
     this.addEventListener('invoice-deleted', (event) => {
       const id = event.detail.id;
       const current = this.get('invoices') || [];
       this.set('invoices', current.filter((i) => String(i.id) !== String(id)));
-      this.updateTableData();
+      this.render();
       this.set('showDeleteDialog', false);
     });
 
@@ -133,7 +214,7 @@ class FinanceInvoicesPage extends App {
         const list = this.get('invoices') || [];
         const updated = [...list, newInv];
         this.set('invoices', updated);
-        this.updateTableData();
+        this.render();
         this.set('showAddModal', false);
       } else {
         this.loadData();
@@ -145,7 +226,7 @@ class FinanceInvoicesPage extends App {
       if (updated) {
         const current = this.get('invoices') || [];
         this.set('invoices', current.map((i) => (String(i.id) === String(updated.id) ? updated : i)));
-        this.updateTableData();
+        this.render();
         this.set('showUpdateModal', false);
       } else {
         this.loadData();
@@ -183,7 +264,38 @@ class FinanceInvoicesPage extends App {
     }
 
     this.set('loading', false);
-    this.updateTableData();
+    // Trigger render to show the loaded data
+    this.render();
+  }
+
+  applyFilters() {
+    const filters = this.get('filters') || {};
+    const invoices = this.get('invoices') || [];
+    
+    // Count filtered results
+    let filteredCount = invoices.length;
+    if (filters.academic_year && filters.academic_year !== '') {
+      filteredCount = invoices.filter(inv => String(inv.academic_year) === String(filters.academic_year)).length;
+    }
+    if (filters.status && filters.status !== '') {
+      filteredCount = invoices.filter(inv => String(inv.status || '') === String(filters.status)).length;
+    }
+    if (filters.term && filters.term !== '') {
+      filteredCount = invoices.filter(inv => String(inv.term) === String(filters.term)).length;
+    }
+    
+    // Trigger re-render to show filtered data
+    this.render();
+    
+    // Show feedback about filtering
+    if (filteredCount !== invoices.length) {
+      Toast.show({ 
+        title: 'Filters Applied', 
+        message: `Showing ${filteredCount} of ${invoices.length} invoices`, 
+        variant: 'info', 
+        duration: 2000 
+      });
+    }
   }
 
   studentDisplay(studentId) {
@@ -245,25 +357,9 @@ class FinanceInvoicesPage extends App {
     }, 0);
   }
 
-  updateTableData() {
-    const invoices = this.get('invoices');
-    if (!invoices) return;
-    const tableData = invoices.map((i, idx) => ({
-      id: i.id,
-      index: idx + 1,
-      student: this.studentDisplay(i.student_id),
-      academic_year: i.academic_year,
-      term: i.term,
-      invoice_number: i.invoice_number,
-      amount_due: Number(i.amount_due).toFixed(2),
-      amount_paid: Number(i.amount_paid).toFixed(2),
-      balance: Number(i.balance).toFixed(2),
-      status: (i.status || '').toString(),
-      issue_date: i.issue_date,
-      updated: i.updated_at,
-    }));
-    const table = this.querySelector('ui-table');
-    if (table) table.setAttribute('data', JSON.stringify(tableData));
+  clearFilters() {
+    this.set('filters', { academic_year: '', status: '', term: '' });
+    this.render(); // Just re-render with cleared filters
   }
 
   closeAllModals() {
@@ -283,8 +379,21 @@ class FinanceInvoicesPage extends App {
     const showUpdateModal = this.get('showUpdateModal');
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
+    const filters = this.get('filters') || {};
 
-    const tableData = invoices ? invoices.map((i, idx) => ({
+    // Apply filters to get the data that should be displayed
+    let displayInvoices = invoices || [];
+    if (filters.academic_year && filters.academic_year !== '') {
+      displayInvoices = displayInvoices.filter(inv => String(inv.academic_year) === String(filters.academic_year));
+    }
+    if (filters.status && filters.status !== '') {
+      displayInvoices = displayInvoices.filter(inv => String(inv.status || '') === String(filters.status));
+    }
+    if (filters.term && filters.term !== '') {
+      displayInvoices = displayInvoices.filter(inv => String(inv.term) === String(filters.term));
+    }
+
+    const tableData = displayInvoices.map((i, idx) => ({
       id: i.id,
       index: idx + 1,
       student: this.studentDisplay(i.student_id),
@@ -297,7 +406,7 @@ class FinanceInvoicesPage extends App {
       status: (i.status || '').toString(),
       issue_date: i.issue_date,
       updated: i.updated_at,
-    })) : [];
+    }));
 
     const tableColumns = [
       { key: 'index', label: 'No.' },
@@ -315,6 +424,7 @@ class FinanceInvoicesPage extends App {
 
     return `
       ${this.renderHeader()}
+      ${this.renderFilters()}
       <div class="bg-white rounded-lg shadow-lg p-4">
         ${loading ? `
           <div class="space-y-4">
@@ -355,6 +465,3 @@ class FinanceInvoicesPage extends App {
 
 customElements.define('app-finance-invoices-page', FinanceInvoicesPage);
 export default FinanceInvoicesPage;
-
-
-

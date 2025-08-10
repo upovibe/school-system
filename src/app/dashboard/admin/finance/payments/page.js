@@ -126,6 +126,11 @@ class FinancePaymentsPage extends App {
       this.loadData();
       this.set('showAddModal', false);
     });
+
+    this.addEventListener('payment-voided', () => {
+      this.loadData();
+      this.set('showViewModal', false);
+    });
   }
 
   async loadData() {

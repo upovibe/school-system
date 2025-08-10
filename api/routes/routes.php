@@ -316,3 +316,4 @@ Router::get('/finance/payments', 'FinanceController@indexPayments');
 Router::post('/finance/payments', 'FinanceController@storePayment');
 Router::get('/finance/payments/{id}', 'FinanceController@showPayment');
 Router::delete('/finance/payments/{id}', 'FinanceController@destroyPayment');
+Router::put('/finance/payments/{id}/void', 'FinanceController@voidPayment');

@@ -1,11 +1,58 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/Toast.js';
+import api from '@/services/api.js';
 
 class FinancePaymentViewModal extends HTMLElement {
   constructor() { super(); this._payment = null; }
   static get observedAttributes() { return ['open']; }
-  connectedCallback() { this.render(); }
-  setPaymentData(payment) { this._payment = payment || null; this.render(); }
+  connectedCallback() { this.render(); this.setup(); }
+  setPaymentData(payment) { this._payment = payment || null; this.render(); this.setup(); }
+
+  setup() {
+    const voidBtn = this.querySelector('#void-btn');
+    if (voidBtn && !voidBtn._bound) {
+      voidBtn.addEventListener('click', () => {
+        const section = this.querySelector('#void-section');
+        if (section) section.classList.remove('hidden');
+      });
+      voidBtn._bound = true;
+    }
+    const cancelBtn = this.querySelector('#void-cancel');
+    if (cancelBtn && !cancelBtn._bound) {
+      cancelBtn.addEventListener('click', () => {
+        const section = this.querySelector('#void-section');
+        if (section) section.classList.add('hidden');
+      });
+      cancelBtn._bound = true;
+    }
+    const confirmBtn = this.querySelector('#void-confirm');
+    if (confirmBtn && !confirmBtn._bound) {
+      confirmBtn.addEventListener('click', () => this.voidPayment());
+      confirmBtn._bound = true;
+    }
+  }
+
+  async voidPayment() {
+    try {
+      if (!this._payment?.id) return;
+      const token = localStorage.getItem('token');
+      if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
+      const reasonInput = this.querySelector('#void-reason');
+      const resp = await api.withToken(token).put(`/finance/payments/${this._payment.id}/void`, { reason: reasonInput?.value || undefined });
+      if (resp.status === 200 || resp.data?.success) {
+        Toast.show({ title: 'Voided', message: 'Payment voided successfully', variant: 'success', duration: 2000 });
+        this.dispatchEvent(new CustomEvent('payment-voided', { bubbles: true, composed: true }));
+        this.close();
+      } else {
+        throw new Error(resp.data?.message || 'Failed to void payment');
+      }
+    } catch (error) {
+      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to void payment', variant: 'error', duration: 3000 });
+    }
+  }
+
+  close() { this.removeAttribute('open'); }
 
   render() {
     const p = this._payment || {};
@@ -15,6 +62,7 @@ class FinancePaymentViewModal extends HTMLElement {
       if (!v) return 'N/A';
       try { const d = new Date(String(v).replace(' ', 'T')); return d.toLocaleString(); } catch { return v; }
     };
+    const isVoided = String(p.status || '').toLowerCase() === 'voided';
     this.innerHTML = `
       <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" size="lg" close-button="true">
         <div slot="title">View Payment</div>
@@ -24,6 +72,7 @@ class FinancePaymentViewModal extends HTMLElement {
             <h3 class="text-xl font-semibold text-gray-900">${safe(p.invoiceDisplay || ('Invoice #' + p.invoice_id))}</h3>
             <ui-badge color="info"><i class="fas fa-coins mr-1"></i>${money(p.amount)}</ui-badge>
             ${p.method ? `<ui-badge color="secondary"><i class="fas fa-wallet mr-1"></i>${safe(p.method)}</ui-badge>` : ''}
+            ${isVoided ? `<ui-badge color="error"><i class="fas fa-ban mr-1"></i>Voided</ui-badge>` : ''}
           </div>
 
           <!-- Payment Information -->
@@ -56,6 +105,23 @@ class FinancePaymentViewModal extends HTMLElement {
             </div>
           </div>
 
+          ${!isVoided ? `
+          <!-- Void Action -->
+          <div class="mt-2">
+            <button id="void-btn" class="inline-flex items-center px-3 py-1.5 text-sm rounded bg-red-600 text-white hover:bg-red-700">
+              <i class="fas fa-ban mr-1"></i> Void Payment
+            </button>
+            <div id="void-section" class="mt-3 hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+              <textarea id="void-reason" class="w-full border rounded px-2 py-1 text-sm" rows="2" placeholder="Enter reason..."></textarea>
+              <div class="mt-2 flex gap-2">
+                <button id="void-confirm" class="px-3 py-1.5 text-sm rounded bg-red-600 text-white hover:bg-red-700">Confirm Void</button>
+                <button id="void-cancel" class="px-3 py-1.5 text-sm rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+
           <!-- Timestamps -->
           <div class="mt-2">
             <div class="flex items-center gap-2 mb-3">
@@ -71,6 +137,12 @@ class FinancePaymentViewModal extends HTMLElement {
                 <label class="block text-sm font-medium text-gray-700 mb-1">Updated</label>
                 <span class="text-gray-900 text-sm">${fmt(p.updated_at)}</span>
               </div>
+              ${isVoided ? `
+              <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Voided</label>
+                <span class="text-gray-900 text-sm">${fmt(p.voided_at)}${p.voided_by ? ` • by User #${p.voided_by}` : ''}${p.void_reason ? ` • Reason: ${p.void_reason}` : ''}</span>
+              </div>
+              ` : ''}
             </div>
           </div>
         </div>

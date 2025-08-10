@@ -898,7 +898,8 @@ class FinanceController {
             $paymentId = $this->feePaymentModel->create($payload);
 
             // Recompute invoice totals based on payments
-            $sumStmt = $this->pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ?');
+            // Sum only non-voided payments
+            $sumStmt = $this->pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ? AND (status IS NULL OR status <> 'voided')");
             $sumStmt->execute([$invoiceId]);
             $sumPaid = (float)$sumStmt->fetchColumn();
 
@@ -970,7 +971,7 @@ class FinanceController {
             $ok = $this->feePaymentModel->delete($id);
             if ($ok) {
                 // Recompute invoice totals
-                $sumStmt = $this->pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ?');
+            $sumStmt = $this->pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ? AND (status IS NULL OR status <> 'voided')");
                 $sumStmt->execute([$invoiceId]);
                 $sumPaid = (float)$sumStmt->fetchColumn();
                 $inv = $this->feeInvoiceModel->findById($invoiceId);
@@ -996,6 +997,68 @@ class FinanceController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error deleting payment: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Void a payment (soft-cancel). Marks status=voided and recomputes invoice totals excluding voided payments
+     * Optional body: { reason: string }
+     */
+    public function voidPayment($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $stmt = $this->pdo->prepare('SELECT * FROM fee_payments WHERE id = ? LIMIT 1');
+            $stmt->execute([(int)$id]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if (!$existing) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Payment not found']); return; }
+
+            if (isset($existing['status']) && $existing['status'] === 'voided') {
+                http_response_code(200);
+                echo json_encode(['success' => true, 'message' => 'Payment already voided']);
+                return;
+            }
+
+            $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+            $reason = isset($payload['reason']) && $payload['reason'] !== '' ? (string)$payload['reason'] : null;
+
+            $ok = $this->feePaymentModel->update($id, [
+                'status' => 'voided',
+                'voided_at' => date('Y-m-d H:i:s'),
+                'voided_by' => $this->getCurrentUserIdFromToken(),
+                'void_reason' => $reason,
+            ]);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to void payment']);
+                return;
+            }
+
+            $invoiceId = (int)$existing['invoice_id'];
+            // Recompute invoice totals excluding voided payments
+            $sumStmt = $this->pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM fee_payments WHERE invoice_id = ? AND (status IS NULL OR status <> 'voided')");
+            $sumStmt->execute([$invoiceId]);
+            $sumPaid = (float)$sumStmt->fetchColumn();
+            $inv = $this->feeInvoiceModel->findById($invoiceId);
+            if ($inv) {
+                $newBalance = (float)$inv['amount_due'] - $sumPaid;
+                if ($newBalance < 0) { $newBalance = 0.0; }
+                $newStatus = $newBalance <= 0 ? 'paid' : 'open';
+                $this->feeInvoiceModel->update($invoiceId, [
+                    'amount_paid' => $sumPaid,
+                    'balance' => $newBalance,
+                    'status' => $newStatus,
+                ]);
+            }
+
+            $this->logAction('finance_payment_voided', 'Payment voided', [ 'fee_payment_id' => (int)$id, 'invoice_id' => $invoiceId, 'reason' => $reason ]);
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'message' => 'Payment voided successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error voiding payment: ' . $e->getMessage()]);
         }
     }
 

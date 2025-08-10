@@ -98,24 +98,56 @@ class CashierInvoicesPage extends App {
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
               <h1 class="text-2xl sm:text-3xl font-bold">Fee Invoices</h1>
-              <p class="text-green-100 mt-2">Manage student fee invoices and payments</p>
+              <p class="text-green-100 text-base sm:text-lg">Manage invoices for student fees</p>
             </div>
-            <div class="flex flex-wrap gap-3 mt-4 sm:mt-0">
-              <div class="text-center">
-                <div class="text-2xl font-bold">${c.total}</div>
-                <div class="text-sm text-green-100">Total Invoices</div>
+            <div class="mt-4 sm:mt-0 text-right">
+              <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+              <div class="text-green-100 text-xs sm:text-sm">Total Invoices</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-file-invoice-dollar text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.open}</div>
+                  <div class="text-green-100 text-xs sm:text-sm">Open</div>
+                </div>
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold">${c.open}</div>
-                <div class="text-sm text-green-100">Open</div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-check text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.paid}</div>
+                  <div class="text-green-100 text-xs sm:text-sm">Paid</div>
+                </div>
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold">${c.paid}</div>
-                <div class="text-sm text-green-100">Paid</div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-orange-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-user-graduate text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${c.students}</div>
+                  <div class="text-green-100 text-xs sm:text-sm">Students Invoiced</div>
+                </div>
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold">${c.students}</div>
-                <div class="text-sm text-green-100">Students</div>
+            </div>
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+              <div class="flex items-center">
+                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                  <i class="fas fa-sync-alt text-white text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold">${new Date().getFullYear()}</div>
+                  <div class="text-green-100 text-xs sm:text-sm">Current Year</div>
+                </div>
               </div>
             </div>
           </div>
@@ -127,40 +159,58 @@ class CashierInvoicesPage extends App {
   connectedCallback() {
     super.connectedCallback();
     document.title = 'Cashier - Fee Invoices';
+    this.loadData(); // Add this line to load data on page load
     
-    // Event listeners for filter changes
-    this.addEventListener('change', (event) => {
-      const target = event.target;
-      if (target.name && ['academic_year', 'status', 'term'].includes(target.name)) {
-        const filters = this.get('filters') || {};
-        filters[target.name] = target.value;
-        this.set('filters', filters);
-        this.applyFilters();
+    // Event listeners for table actions - use the correct event names that match the admin version
+    this.addEventListener('table-view', this.onView.bind(this));
+    this.addEventListener('table-edit', this.onEdit.bind(this));
+    this.addEventListener('table-delete', this.onDelete.bind(this));
+    this.addEventListener('table-add', this.onAdd.bind(this));
+    this.addEventListener('table-refresh', () => this.loadData());
+
+    // Filter interactions - match the admin version exactly
+    this.addEventListener('change', (e) => {
+      const dd = e.target.closest('ui-search-dropdown');
+      if (!dd) return;
+      
+      // Only close modals if this dropdown is in the filters section (not in a modal)
+      const isInFilters = dd.closest('.bg-gray-100');
+      if (isInFilters) {
+        this.closeAllModals();
+      }
+      
+      const name = dd.getAttribute('name');
+      if (!name) return;
+      
+      // Only update filters if this dropdown is in the filters section
+      if (isInFilters) {
+        const next = { ...this.get('filters'), [name]: dd.value };
+        this.set('filters', next);
+        
+        // Auto-apply filters when any filter changes for better UX
+        setTimeout(() => this.applyFilters(), 100);
       }
     });
 
-    // Event listeners for table actions
-    this.addEventListener('view', (event) => {
-      this.onView(event);
-    });
-
-    this.addEventListener('edit', (event) => {
-      this.onEdit(event);
-    });
-
-    this.addEventListener('delete', (event) => {
-      this.onDelete(event);
-    });
-
-    this.addEventListener('add', (event) => {
-      this.onAdd();
+    this.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('[data-action="clear-filters"]');
+      if (clearBtn) {
+        e.preventDefault();
+        this.closeAllModals();
+        const defaults = { academic_year: '', status: '', term: '' };
+        this.set('filters', defaults);
+        // Reset table to show all data
+        this.render();
+        Toast.show({ 
+          title: 'Filters Cleared', 
+          message: 'Showing all invoices', 
+          variant: 'info', 
+          duration: 2000 
+        });
+      }
     });
 
     // Event listeners for modal actions
-    this.addEventListener('clear-filters', () => {
-      this.clearFilters();
-    });
-
     this.addEventListener('invoice-deleted', (event) => {
       const id = event.detail.id;
       const current = this.get('invoices') || [];
@@ -215,11 +265,11 @@ class CashierInvoicesPage extends App {
 
     // Load students for display names; ignore failure
     try {
-      const sresp = await api.withToken(token).get('/students');
+      const sresp = await api.withToken(token).get('/cashier/students');
       const students = (sresp.data?.data) || [];
       this.students = students;
       this.set('students', students);
-    } catch (_) {
+    } catch (error) {
       this.students = [];
       this.set('students', []);
     }

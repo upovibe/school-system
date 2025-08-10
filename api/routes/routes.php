@@ -338,3 +338,6 @@ Router::post('/cashier/invoices', 'CashierController@storeInvoice');
 Router::get('/cashier/invoices/{id}', 'CashierController@showInvoice');
 Router::put('/cashier/invoices/{id}', 'CashierController@updateInvoice');
 Router::delete('/cashier/invoices/{id}', 'CashierController@destroyInvoice');
+
+// Cashier - Students (cashier only)
+Router::get('/cashier/students', 'CashierController@getStudents');

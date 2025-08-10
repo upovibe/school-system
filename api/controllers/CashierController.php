@@ -616,6 +616,32 @@ class CashierController {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Get basic student information for cashiers (cashier only)
+     * Returns limited student data needed for invoice management
+     */
+    public function getStudents() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            $students = $this->studentModel->getStudentsBasicInfo();
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $students,
+                'message' => 'Students retrieved successfully for cashier'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     // --- Helpers ---
     private function logAction($action, $description = null, $metadata = null) {
         try {

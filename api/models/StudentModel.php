@@ -495,5 +495,32 @@ class StudentModel extends BaseModel {
             throw new Exception('Error finding student by user ID: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get basic student information for cashiers (limited data for invoice display)
+     * @return array Array of students with basic information
+     */
+    public function getStudentsBasicInfo() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.status, c.name as class_name
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                WHERE s.status = 'active'
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching basic student information: ' . $e->getMessage());
+        }
+    }
 }
 ?> 

@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import '@/components/ui/Dialog.js';
+import '@/components/ui/Badge.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Toast.js';
@@ -167,7 +168,7 @@ class FinanceReceiptViewModal extends App {
     const loading = this.get('loading');
     const showVoidDialog = this.get('showVoidDialog');
     const voidReason = this.get('voidReason');
-    
+
     if (!receipt) {
       return `
         <ui-dialog title="Receipt Details" size="lg" ${this.hasAttribute('open') ? 'open' : ''}>
@@ -178,207 +179,164 @@ class FinanceReceiptViewModal extends App {
       `;
     }
 
+    // Helper functions for consistent formatting
+    const safe = (v) => (v == null || v === '' ? 'N/A' : v);
+    const money = (v) => Number(v || 0).toFixed(2);
+    const fmt = (v) => {
+      if (!v) return 'N/A';
+      try { 
+        const d = new Date(String(v).replace(' ', 'T')); 
+        return d.toLocaleString(); 
+      } catch { 
+        return v; 
+      }
+    };
+
     const isVoided = receipt.voided_at;
     const voidedClass = isVoided ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
     const voidedText = isVoided ? 'text-red-800' : 'text-green-800';
 
     return `
-      <ui-dialog title="Receipt Details" size="lg" ${this.hasAttribute('open') ? 'open' : ''}>
-        <div slot="content" class="p-6 space-y-6">
-          <!-- Header with receipt number and status -->
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">Receipt ${receipt.receipt_number}</h3>
-              <p class="text-sm text-gray-600">Generated on ${this.formatDateTime(receipt.created_at)}</p>
-            </div>
-            <div class="flex items-center space-x-2">
-              <span class="px-3 py-1 text-sm font-medium rounded-full ${voidedClass} ${voidedText} border">
-                ${isVoided ? 'VOIDED' : 'ACTIVE'}
-              </span>
+      <ui-dialog id="main-dialog" ${this.hasAttribute('open') ? 'open' : ''} title="View Receipt">
+        <div slot="content" class="space-y-6">
+          <!-- Header -->
+          <div class="flex flex-col gap-2 border-b pb-4">
+            <h3 class="text-xl font-semibold text-gray-900">Receipt ${safe(receipt.receipt_number)}</h3>
+            <div class="flex items-center gap-2 w-full justify-end">
+              <ui-badge color="info"><i class="fas fa-receipt mr-1"></i>${money(receipt.amount)}</ui-badge>
+              ${receipt.method ? `<ui-badge color="secondary"><i class="fas fa-wallet mr-1"></i>${safe(receipt.method)}</ui-badge>` : ''}
+              ${isVoided ? `<ui-badge color="error"><i class="fas fa-ban mr-1"></i>Voided</ui-badge>` : ''}
             </div>
           </div>
 
           <!-- Student Information -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="text-md font-semibold text-gray-900 mb-3">Student Information</h4>
+          <div class="border-b pb-4 mt-2">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-user text-blue-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Student Information</h4>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-sm font-medium text-gray-600">Student Name</label>
-                <p class="text-sm text-gray-900">${receipt.student_first_name} ${receipt.student_last_name}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Student Name</label>
+                <p class="text-gray-900 text-sm font-medium">${safe(receipt.student_first_name)} ${safe(receipt.student_last_name)}</p>
               </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600">Student ID</label>
-                <p class="text-sm text-gray-900">${receipt.student_number || 'N/A'}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                <p class="text-gray-900 text-sm">${safe(receipt.student_number)}</p>
               </div>
             </div>
           </div>
 
           <!-- Payment Information -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="text-md font-semibold text-gray-900 mb-3">Payment Information</h4>
+          <div class="border-b pb-4 mt-2">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-info-circle text-green-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Payment Information</h4>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-sm font-medium text-gray-600">Invoice Number</label>
-                <p class="text-sm text-gray-900">${receipt.invoice_number || 'N/A'}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
+                <p class="text-gray-900 text-sm">${safe(receipt.invoice_number)}</p>
               </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600">Term & Academic Year</label>
-                <p class="text-sm text-gray-900">${receipt.term} ${receipt.academic_year}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Term & Academic Year</label>
+                <p class="text-gray-900 text-sm">${safe(receipt.term)} ${safe(receipt.academic_year)}</p>
               </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600">Payment Method</label>
-                <p class="text-sm text-gray-900">${receipt.method || 'N/A'}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <p class="text-gray-900 text-sm">${safe(receipt.method)}</p>
               </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600">Reference</label>
-                <p class="text-sm text-gray-900">${receipt.reference || 'N/A'}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+                <p class="text-gray-900 text-sm">${safe(receipt.reference)}</p>
               </div>
             </div>
           </div>
 
           <!-- Financial Summary -->
-          <div class="bg-blue-50 rounded-lg p-4">
-            <h4 class="text-md font-semibold text-blue-900 mb-3">Financial Summary</h4>
+          <div class="border-b pb-4 mt-2">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-coins text-yellow-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Financial Summary</h4>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-sm font-medium text-blue-600">Amount Paid</label>
-                <p class="text-lg font-bold text-blue-900">${this.formatCurrency(receipt.amount)}</p>
+              <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <label class="block text-sm font-medium text-blue-700 mb-1">Amount Paid</label>
+                <p class="text-lg font-bold text-blue-900">${money(receipt.amount)}</p>
               </div>
-              <div>
-                <label class="text-sm font-medium text-blue-600">Balance After Payment</label>
-                <p class="text-lg font-bold text-blue-900">${this.formatCurrency(receipt.balance)}</p>
+              <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                <label class="block text-sm font-medium text-green-700 mb-1">Balance After Payment</label>
+                <p class="text-lg font-bold text-green-900">${money(receipt.balance)}</p>
               </div>
             </div>
           </div>
 
           <!-- Timestamps -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="text-md font-semibold text-gray-900 mb-3">Timestamps</h4>
+          <div class="mt-2">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-clock text-orange-500"></i>
+              <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-sm font-medium text-gray-600">Payment Date</label>
-                <p class="text-sm text-gray-900">${this.formatDateTime(receipt.paid_on)}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                <span class="text-gray-900 text-sm">${fmt(receipt.paid_on)}</span>
               </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600">Receipt Generated</label>
-                <p class="text-sm text-gray-900">${this.formatDateTime(receipt.created_at)}</p>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Receipt Generated</label>
+                <span class="text-gray-900 text-sm">${fmt(receipt.created_at)}</span>
               </div>
               ${receipt.printed_on ? `
-                <div>
-                  <label class="text-sm font-medium text-gray-600">Last Printed</label>
-                  <p class="text-sm text-gray-900">${this.formatDateTime(receipt.printed_on)}</p>
-                </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Last Printed</label>
+                <span class="text-gray-900 text-sm">${fmt(receipt.printed_on)}</span>
+              </div>
+              ` : ''}
+              ${isVoided ? `
+              <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Voided</label>
+                <span class="text-gray-900 text-sm">${fmt(receipt.voided_at)}${receipt.void_reason ? ` • Reason: ${receipt.void_reason}` : ''}</span>
+              </div>
               ` : ''}
             </div>
           </div>
-
-          <!-- Void Information (if voided) -->
-          ${isVoided ? `
-            <div class="bg-red-50 rounded-lg p-4 border border-red-200">
-              <h4 class="text-md font-semibold text-red-900 mb-3">Void Information</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="text-sm font-medium text-red-600">Voided On</label>
-                  <p class="text-sm text-red-900">${this.formatDateTime(receipt.voided_at)}</p>
-                </div>
-                <div>
-                  <label class="text-sm font-medium text-red-600">Voided By</label>
-                  <p class="text-sm text-red-900">${receipt.voided_by_display || 'N/A'}</p>
-                </div>
-                ${receipt.void_reason ? `
-                  <div class="md:col-span-2">
-                    <label class="text-sm font-medium text-red-600">Void Reason</label>
-                    <p class="text-sm text-red-900">${receipt.void_reason}</p>
-                  </div>
-                ` : ''}
-              </div>
-            </div>
-          ` : ''}
         </div>
-
-        <!-- Footer Actions -->
-        <div slot="footer" class="flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            Receipt ID: ${receipt.id}
-          </div>
-          <div class="flex items-center space-x-3">
-            <ui-button 
-              variant="outline" 
-              size="sm"
-              onclick="this.closest('finance-receipt-view-modal').onPrint()"
-              ${loading ? 'disabled' : ''}
-            >
-              <i class="fas fa-print mr-2"></i>
-              Print Receipt
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <ui-button id="cancel-view" variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+          ${!isVoided ? `
+            <ui-button id="print-btn" color="primary" onclick="this.closest('finance-receipt-view-modal').onPrint()">
+              <i class="fas fa-print mr-1"></i>Print
             </ui-button>
-            <ui-button 
-              variant="outline" 
-              size="sm"
-              onclick="this.closest('finance-receipt-view-modal').onRegenerate()"
-              ${loading ? 'disabled' : ''}
-            >
-              <i class="fas fa-sync-alt mr-2"></i>
-              Regenerate
+            <ui-button id="regenerate-btn" color="secondary" onclick="this.closest('finance-receipt-view-modal').onRegenerate()">
+              <i class="fas fa-sync mr-1"></i>Regenerate
             </ui-button>
-            ${!isVoided ? `
-              <ui-button 
-                variant="outline" 
-                color="error"
-                size="sm"
-                onclick="this.closest('finance-receipt-view-modal').onVoidClick()"
-                ${loading ? 'disabled' : ''}
-              >
-                <i class="fas fa-ban mr-2"></i>
-                Void
-              </ui-button>
-            ` : ''}
-            <ui-button 
-              variant="outline" 
-              size="sm"
-              onclick="this.closest('finance-receipt-view-modal').onClose()"
-            >
-              Cancel
+            <ui-button id="void-btn" color="error" onclick="this.closest('finance-receipt-view-modal').onVoidClick()">
+              <i class="fas fa-ban mr-1"></i>Void
             </ui-button>
-          </div>
+          ` : ''}
         </div>
       </ui-dialog>
 
-      <!-- Void Dialog -->
-      ${showVoidDialog ? `
-        <ui-dialog title="Void Receipt" variant="danger" open>
-          <div slot="content" class="p-6">
-            <p class="text-sm text-gray-700 mb-4">Please provide a reason for voiding this receipt. This action cannot be undone.</p>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Void Reason *</label>
-              <ui-textarea 
-                id="void-reason-input"
-                placeholder="Enter reason for voiding this receipt..."
-                rows="3"
-                class="w-full"
-                value="${voidReason}"
-                onchange="this.closest('finance-receipt-view-modal').set('voidReason', this.value)"
-              ></ui-textarea>
-            </div>
-          </div>
-          <div slot="footer" class="flex justify-end gap-3">
-            <ui-button 
-              variant="outline" 
-              size="sm"
-              onclick="this.closest('finance-receipt-view-modal').onVoidCancel()"
-            >
-              Cancel
-            </ui-button>
-            <ui-button 
-              color="error"
-              size="sm"
-              onclick="this.closest('finance-receipt-view-modal').onVoidConfirm()"
-              ${loading ? 'disabled' : ''}
-            >
-              <i class="fas fa-ban mr-2"></i>
-              Void Receipt
-            </ui-button>
-          </div>
-        </ui-dialog>
+      ${!isVoided ? `
+      <ui-dialog id="void-dialog" title="Void Receipt" ${showVoidDialog ? 'open' : ''}>
+        <div slot="content">
+          <p class="text-sm text-gray-700 mb-2">Provide a reason for voiding this receipt.</p>
+          <ui-textarea 
+            id="void-reason-input"
+            placeholder="Enter reason for voiding this receipt..."
+            rows="3"
+            class="w-full"
+            value="${voidReason}"
+            onchange="this.closest('finance-receipt-view-modal').set('voidReason', this.value)"
+          ></ui-textarea>
+        </div>
+        <div slot="footer" class="flex justify-end gap-2">
+          <ui-button variant="outline" color="secondary" onclick="this.closest('finance-receipt-view-modal').onVoidCancel()">Cancel</ui-button>
+          <ui-button color="error" onclick="this.closest('finance-receipt-view-modal').onVoidConfirm()" disabled="${loading}">
+            ${loading ? '<i class="fas fa-spinner fa-spin mr-1"></i>Processing...' : '<i class="fas fa-ban mr-1"></i>Void Receipt'}
+          </ui-button>
+        </div>
+      </ui-dialog>
       ` : ''}
     `;
   }

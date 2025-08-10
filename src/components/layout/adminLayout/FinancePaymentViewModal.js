@@ -78,11 +78,13 @@ class FinancePaymentViewModal extends HTMLElement {
       <ui-dialog id="main-dialog" ${this.hasAttribute('open') ? 'open' : ''} title="View Payment">
         <div slot="content" class="space-y-6">
           <!-- Header -->
-          <div class="flex items-center gap-3 border-b pb-4">
+          <div class="flex flex-col gap-2 border-b pb-4">
             <h3 class="text-xl font-semibold text-gray-900">${safe(p.invoiceDisplay || ('Invoice #' + p.invoice_id))}</h3>
-            <ui-badge color="info"><i class="fas fa-coins mr-1"></i>${money(p.amount)}</ui-badge>
-            ${p.method ? `<ui-badge color="secondary"><i class="fas fa-wallet mr-1"></i>${safe(p.method)}</ui-badge>` : ''}
-            ${isVoided ? `<ui-badge color="error"><i class="fas fa-ban mr-1"></i>Voided</ui-badge>` : ''}
+            <div class="flex items-center gap-2 w-full justify-end">
+              <ui-badge color="info"><i class="fas fa-coins mr-1"></i>${money(p.amount)}</ui-badge>
+              ${p.method ? `<ui-badge color="secondary"><i class="fas fa-wallet mr-1"></i>${safe(p.method)}</ui-badge>` : ''}
+              ${isVoided ? `<ui-badge color="error"><i class="fas fa-ban mr-1"></i>Voided</ui-badge>` : ''}
+            </div>
           </div>
 
           <!-- Payment Information -->

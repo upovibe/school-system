@@ -149,10 +149,12 @@ class FinancePaymentsPage extends App {
         api.withToken(token).get('/students'),
         api.withToken(token).get('/users'),
       ]);
+      
       const payments = presp?.data?.data || [];
       const invoices = iresp?.data?.data || [];
       const students = sresp?.data?.data || [];
-      const users = uresp?.data?.data || [];
+      const users = uresp?.data || uresp?.data?.data || [];
+      
       this.set('payments', payments);
       this.set('invoices', invoices);
       this.set('students', students);

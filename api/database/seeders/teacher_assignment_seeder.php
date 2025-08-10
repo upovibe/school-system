@@ -42,11 +42,7 @@ class TeacherAssignmentSeeder
         
         // Teacher specialization mapping
         $teacherSpecializations = [
-            'T001' => ['MATH_JHS'], // Sarah Johnson - Mathematics
-            'T002' => ['SCI_JHS'],  // Michael Chen - Science
-            'T003' => ['ENG_JHS'],  // Emily Rodriguez - English
-            'T004' => ['ICT'],      // David Osei - ICT
-            'T005' => ['SOC_JHS']   // Grace Mensah - Social Studies
+            'T001' => ['ENG', 'MATH', 'SCI', 'SOC', 'RME', 'ART', 'PE', 'ICT'] // Single teacher handles all subjects
         ];
         
         $assignments = [
@@ -54,192 +50,150 @@ class TeacherAssignmentSeeder
             [
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'ENG',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
-            ],
-            [
-                'class_name' => 'JHS 1',
-                'section' => 'A',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
-            ],
-            [
-                'class_name' => 'JHS 1',
-                'section' => 'A',
-                'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 1',
-                'section' => 'A',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
-            ],
-            
-            // JHS 1 Section B Assignments
-            [
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'MATH',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
+                'section' => 'A',
+                'subject_code' => 'SCI',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
+                'section' => 'A',
+                'subject_code' => 'SOC',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 1',
-                'section' => 'B',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'ART',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
                 'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
+                'teacher_id' => 'T001'
             ],
             
             // JHS 2 Assignments
             [
                 'class_name' => 'JHS 2',
                 'section' => 'A',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'ENG',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 2',
                 'section' => 'A',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
-            ],
-            [
-                'class_name' => 'JHS 2',
-                'section' => 'A',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
-            ],
-            [
-                'class_name' => 'JHS 2',
-                'section' => 'A',
-                'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 2',
-                'section' => 'A',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
-            ],
-            
-            // JHS 2 Section B Assignments
-            [
-                'class_name' => 'JHS 2',
-                'section' => 'B',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'MATH',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 2',
-                'section' => 'B',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
+                'section' => 'A',
+                'subject_code' => 'SCI',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 2',
-                'section' => 'B',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
+                'section' => 'A',
+                'subject_code' => 'SOC',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 2',
-                'section' => 'B',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'ART',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
                 'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 2',
-                'section' => 'B',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
+                'teacher_id' => 'T001'
             ],
             
             // JHS 3 Assignments
             [
                 'class_name' => 'JHS 3',
                 'section' => 'A',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'ENG',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 3',
                 'section' => 'A',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
-            ],
-            [
-                'class_name' => 'JHS 3',
-                'section' => 'A',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
-            ],
-            [
-                'class_name' => 'JHS 3',
-                'section' => 'A',
-                'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 3',
-                'section' => 'A',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
-            ],
-            
-            // JHS 3 Section B Assignments
-            [
-                'class_name' => 'JHS 3',
-                'section' => 'B',
-                'subject_code' => 'MATH_JHS',
+                'subject_code' => 'MATH',
                 'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 3',
-                'section' => 'B',
-                'subject_code' => 'SCI_JHS',
-                'teacher_id' => 'T002'
+                'section' => 'A',
+                'subject_code' => 'SCI',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 3',
-                'section' => 'B',
-                'subject_code' => 'ENG_JHS',
-                'teacher_id' => 'T003'
+                'section' => 'A',
+                'subject_code' => 'SOC',
+                'teacher_id' => 'T001'
             ],
             [
                 'class_name' => 'JHS 3',
-                'section' => 'B',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'ART',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T001'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
                 'subject_code' => 'ICT',
-                'teacher_id' => 'T004'
-            ],
-            [
-                'class_name' => 'JHS 3',
-                'section' => 'B',
-                'subject_code' => 'SOC_JHS',
-                'teacher_id' => 'T005'
+                'teacher_id' => 'T001'
             ]
         ];
         

@@ -32,7 +32,7 @@ class StudentGradeSeeder
         
         // Sample grades for demonstration
         $sampleGrades = [
-            // Student 1 (Kwame Asante) - JHS 1A
+            // Student 1 (Student User) - JHS 1 - Just a few subjects
             [
                 'student_id' => $this->getStudentId('S001'),
                 'class_id' => $this->getClassId('JHS 1', 'A'),
@@ -55,21 +55,8 @@ class StudentGradeSeeder
                 'remarks' => 'Excellent performance in both assignments and exams',
                 'created_by' => $this->getAdminUserId()
             ],
-            
-            // Student 2 (Ama Osei) - JHS 1A
             [
-                'student_id' => $this->getStudentId('S002'),
-                'class_id' => $this->getClassId('JHS 1', 'A'),
-                'subject_id' => $this->getSubjectId('Mathematics'),
-                'grading_period_id' => $periods[0]['id'],
-                'grading_policy_id' => $this->getPolicyId('Mathematics'),
-                'assignment_total' => 50.0, // Out of 70 max
-                'exam_total' => 22.0, // Out of 30 max
-                'remarks' => 'Shows improvement in exam performance',
-                'created_by' => $this->getAdminUserId()
-            ],
-            [
-                'student_id' => $this->getStudentId('S002'),
+                'student_id' => $this->getStudentId('S001'),
                 'class_id' => $this->getClassId('JHS 1', 'A'),
                 'subject_id' => $this->getSubjectId('Integrated Science'),
                 'grading_period_id' => $periods[0]['id'],
@@ -77,30 +64,6 @@ class StudentGradeSeeder
                 'assignment_total' => 55.0, // Out of 65 max
                 'exam_total' => 30.0, // Out of 35 max
                 'remarks' => 'Strong practical skills demonstrated',
-                'created_by' => $this->getAdminUserId()
-            ],
-            
-            // Student 3 (Kofi Mensah) - JHS 1B
-            [
-                'student_id' => $this->getStudentId('S003'),
-                'class_id' => $this->getClassId('JHS 1', 'B'),
-                'subject_id' => $this->getSubjectId('Mathematics'),
-                'grading_period_id' => $periods[0]['id'],
-                'grading_policy_id' => $this->getPolicyId('Mathematics'),
-                'assignment_total' => 65.0, // Out of 70 max
-                'exam_total' => 28.0, // Out of 30 max
-                'remarks' => 'Outstanding performance in all areas',
-                'created_by' => $this->getAdminUserId()
-            ],
-            [
-                'student_id' => $this->getStudentId('S003'),
-                'class_id' => $this->getClassId('JHS 1', 'B'),
-                'subject_id' => $this->getSubjectId('Information and Communication Technology'),
-                'grading_period_id' => $periods[0]['id'],
-                'grading_policy_id' => $this->getPolicyId('Information and Communication Technology'),
-                'assignment_total' => 65.0, // Out of 75 max
-                'exam_total' => 20.0, // Out of 25 max
-                'remarks' => 'Excellent practical ICT skills',
                 'created_by' => $this->getAdminUserId()
             ]
         ];

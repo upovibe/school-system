@@ -16,14 +16,14 @@ class GradingPolicySeeder
         $subjects = $this->getSubjects();
         
         $policies = [
-            // Mathematics - More emphasis on assignments
+            // English Language - Balanced approach
             [
-                'name' => 'Mathematics Grading Policy',
-                'description' => 'Mathematics grading policy with emphasis on assignments and problem-solving',
-                'subject_id' => $this->getSubjectId('Mathematics'),
-                'is_active' => 1, // Use integer instead of boolean
-                'assignment_max_score' => 70,
-                'exam_max_score' => 30,
+                'name' => 'English Language Grading Policy',
+                'description' => 'English Language grading policy with balanced assessment',
+                'subject_id' => $this->getSubjectId('English Language'),
+                'is_active' => 1,
+                'assignment_max_score' => 60,
+                'exam_max_score' => 40,
                 'grade_boundaries' => json_encode([
                     [ 'grade' => 'A+', 'min' => 90 ],
                     [ 'grade' => 'A',  'min' => 80 ],
@@ -41,14 +41,14 @@ class GradingPolicySeeder
                 'created_by' => $this->getAdminUserId()
             ],
             
-            // English Language - Balanced approach
+            // Mathematics - More emphasis on assignments
             [
-                'name' => 'English Language Grading Policy',
-                'description' => 'English Language grading policy with balanced assessment',
-                'subject_id' => $this->getSubjectId('English Language'),
-                'is_active' => 1, // Use integer instead of boolean
-                'assignment_max_score' => 60,
-                'exam_max_score' => 40,
+                'name' => 'Mathematics Grading Policy',
+                'description' => 'Mathematics grading policy with emphasis on assignments and problem-solving',
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'is_active' => 1,
+                'assignment_max_score' => 70,
+                'exam_max_score' => 30,
                 'grade_boundaries' => json_encode([
                     [ 'grade' => 'A+', 'min' => 90 ],
                     [ 'grade' => 'A',  'min' => 80 ],
@@ -71,7 +71,7 @@ class GradingPolicySeeder
                 'name' => 'Integrated Science Grading Policy',
                 'description' => 'Integrated Science grading policy with emphasis on practical work',
                 'subject_id' => $this->getSubjectId('Integrated Science'),
-                'is_active' => 1, // Use integer instead of boolean
+                'is_active' => 1,
                 'assignment_max_score' => 65,
                 'exam_max_score' => 35,
                 'grade_boundaries' => json_encode([
@@ -96,9 +96,84 @@ class GradingPolicySeeder
                 'name' => 'Social Studies Grading Policy',
                 'description' => 'Social Studies grading policy with balanced assessment',
                 'subject_id' => $this->getSubjectId('Social Studies'),
-                'is_active' => 1, // Use integer instead of boolean
+                'is_active' => 1,
                 'assignment_max_score' => 60,
                 'exam_max_score' => 40,
+                'grade_boundaries' => json_encode([
+                    [ 'grade' => 'A+', 'min' => 90 ],
+                    [ 'grade' => 'A',  'min' => 80 ],
+                    [ 'grade' => 'A-', 'min' => 75 ],
+                    [ 'grade' => 'B+', 'min' => 70 ],
+                    [ 'grade' => 'B',  'min' => 65 ],
+                    [ 'grade' => 'B-', 'min' => 60 ],
+                    [ 'grade' => 'C+', 'min' => 55 ],
+                    [ 'grade' => 'C',  'min' => 50 ],
+                    [ 'grade' => 'C-', 'min' => 45 ],
+                    [ 'grade' => 'D+', 'min' => 40 ],
+                    [ 'grade' => 'D',  'min' => 35 ],
+                    [ 'grade' => 'F',  'min' => 0 ],
+                ]),
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // Religious and Moral Education - Balanced approach
+            [
+                'name' => 'Religious and Moral Education Grading Policy',
+                'description' => 'RME grading policy with balanced assessment',
+                'subject_id' => $this->getSubjectId('Religious and Moral Education'),
+                'is_active' => 1,
+                'assignment_max_score' => 60,
+                'exam_max_score' => 40,
+                'grade_boundaries' => json_encode([
+                    [ 'grade' => 'A+', 'min' => 90 ],
+                    [ 'grade' => 'A',  'min' => 80 ],
+                    [ 'grade' => 'A-', 'min' => 75 ],
+                    [ 'grade' => 'B+', 'min' => 70 ],
+                    [ 'grade' => 'B',  'min' => 65 ],
+                    [ 'grade' => 'B-', 'min' => 60 ],
+                    [ 'grade' => 'C+', 'min' => 55 ],
+                    [ 'grade' => 'C',  'min' => 50 ],
+                    [ 'grade' => 'C-', 'min' => 45 ],
+                    [ 'grade' => 'D+', 'min' => 40 ],
+                    [ 'grade' => 'D',  'min' => 35 ],
+                    [ 'grade' => 'F',  'min' => 0 ],
+                ]),
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // Creative Arts - Practical emphasis
+            [
+                'name' => 'Creative Arts Grading Policy',
+                'description' => 'Creative Arts grading policy with emphasis on practical skills',
+                'subject_id' => $this->getSubjectId('Creative Arts'),
+                'is_active' => 1,
+                'assignment_max_score' => 70,
+                'exam_max_score' => 30,
+                'grade_boundaries' => json_encode([
+                    [ 'grade' => 'A+', 'min' => 90 ],
+                    [ 'grade' => 'A',  'min' => 80 ],
+                    [ 'grade' => 'A-', 'min' => 75 ],
+                    [ 'grade' => 'B+', 'min' => 70 ],
+                    [ 'grade' => 'B',  'min' => 65 ],
+                    [ 'grade' => 'B-', 'min' => 60 ],
+                    [ 'grade' => 'C+', 'min' => 55 ],
+                    [ 'grade' => 'C',  'min' => 50 ],
+                    [ 'grade' => 'C-', 'min' => 45 ],
+                    [ 'grade' => 'D+', 'min' => 40 ],
+                    [ 'grade' => 'D',  'min' => 35 ],
+                    [ 'grade' => 'F',  'min' => 0 ],
+                ]),
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // Physical Education - Practical emphasis
+            [
+                'name' => 'Physical Education Grading Policy',
+                'description' => 'Physical Education grading policy with emphasis on practical skills',
+                'subject_id' => $this->getSubjectId('Physical Education'),
+                'is_active' => 1,
+                'assignment_max_score' => 70,
+                'exam_max_score' => 30,
                 'grade_boundaries' => json_encode([
                     [ 'grade' => 'A+', 'min' => 90 ],
                     [ 'grade' => 'A',  'min' => 80 ],
@@ -121,22 +196,22 @@ class GradingPolicySeeder
                 'name' => 'ICT Grading Policy',
                 'description' => 'ICT grading policy with emphasis on practical skills',
                 'subject_id' => $this->getSubjectId('Information and Communication Technology'),
-                'is_active' => 1, // Use integer instead of boolean
+                'is_active' => 1,
                 'assignment_max_score' => 75,
                 'exam_max_score' => 25,
                 'grade_boundaries' => json_encode([
-                    'A+' => 90,
-                    'A' => 80,
-                    'A-' => 75,
-                    'B+' => 70,
-                    'B' => 65,
-                    'B-' => 60,
-                    'C+' => 55,
-                    'C' => 50,
-                    'C-' => 45,
-                    'D+' => 40,
-                    'D' => 35,
-                    'F' => 0
+                    [ 'grade' => 'A+', 'min' => 90 ],
+                    [ 'grade' => 'A',  'min' => 80 ],
+                    [ 'grade' => 'A-', 'min' => 75 ],
+                    [ 'grade' => 'B+', 'min' => 70 ],
+                    [ 'grade' => 'B',  'min' => 65 ],
+                    [ 'grade' => 'B-', 'min' => 60 ],
+                    [ 'grade' => 'C+', 'min' => 55 ],
+                    [ 'grade' => 'C',  'min' => 50 ],
+                    [ 'grade' => 'C-', 'min' => 45 ],
+                    [ 'grade' => 'D+', 'min' => 40 ],
+                    [ 'grade' => 'D',  'min' => 35 ],
+                    [ 'grade' => 'F',  'min' => 0 ],
                 ]),
                 'created_by' => $this->getAdminUserId()
             ]

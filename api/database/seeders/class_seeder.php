@@ -18,19 +18,73 @@ class ClassSeeder
     }
     
     private function seedClasses() {
-        echo "📝 Seeding classes for different grade levels...\n";
+        echo "📝 Seeding classes for Ghanaian education system...\n";
         
         $classes = [
+            // Kindergarten (KG1-KG2)
             [
-                'name' => 'JHS 1',
+                'name' => 'KG 1',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 25,
+                'status' => 'active'
+            ],
+            [
+                'name' => 'KG 2',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 25,
+                'status' => 'active'
+            ],
+            
+            // Primary School (P1-P6)
+            [
+                'name' => 'P 1',
                 'section' => 'A',
                 'academic_year' => '2024-2025',
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
+                'name' => 'P 2',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 30,
+                'status' => 'active'
+            ],
+            [
+                'name' => 'P 3',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 30,
+                'status' => 'active'
+            ],
+            [
+                'name' => 'P 4',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 30,
+                'status' => 'active'
+            ],
+            [
+                'name' => 'P 5',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 30,
+                'status' => 'active'
+            ],
+            [
+                'name' => 'P 6',
+                'section' => 'A',
+                'academic_year' => '2024-2025',
+                'capacity' => 30,
+                'status' => 'active'
+            ],
+            
+            // Junior High School (JHS1-JHS3)
+            [
                 'name' => 'JHS 1',
-                'section' => 'B',
+                'section' => 'A',
                 'academic_year' => '2024-2025',
                 'capacity' => 30,
                 'status' => 'active'
@@ -43,38 +97,10 @@ class ClassSeeder
                 'status' => 'active'
             ],
             [
-                'name' => 'JHS 2',
-                'section' => 'B',
-                'academic_year' => '2024-2025',
-                'capacity' => 30,
-                'status' => 'active'
-            ],
-            [
                 'name' => 'JHS 3',
                 'section' => 'A',
                 'academic_year' => '2024-2025',
                 'capacity' => 30,
-                'status' => 'active'
-            ],
-            [
-                'name' => 'JHS 3',
-                'section' => 'B',
-                'academic_year' => '2024-2025',
-                'capacity' => 30,
-                'status' => 'active'
-            ],
-            [
-                'name' => 'Primary 6',
-                'section' => 'A',
-                'academic_year' => '2024-2025',
-                'capacity' => 25,
-                'status' => 'active'
-            ],
-            [
-                'name' => 'Primary 5',
-                'section' => 'A',
-                'academic_year' => '2024-2025',
-                'capacity' => 25,
                 'status' => 'active'
             ]
         ];

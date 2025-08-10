@@ -31,72 +31,120 @@ class ClassSubjectSeeder
         $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $classSubjectAssignments = [
-            // JHS 1 Subjects
+            // Kindergarten (KG1-KG2) - Basic subjects
+            'KG 1' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'KG 2' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            // Primary School (P1-P6) - Core subjects
+            'P 1' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'P 2' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'P 3' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'P 4' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'P 5' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            'P 6' => [
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE'          // Physical Education
+            ],
+            
+            // Junior High School (JHS1-JHS3) - Core + ICT
             'JHS 1' => [
-                'ENG_JHS',    // English Language
-                'MATH_JHS',   // Mathematics
-                'SCI_JHS',    // Integrated Science
-                'SOC_JHS',    // Social Studies
-                'RME_JHS',    // Religious and Moral Education
-                'CAD',        // Creative Arts and Design
-                'PE_JHS',     // Physical Education
-                'FRENCH_JHS', // French (Elective)
-                'GHA_LANG_JHS', // Ghanaian Language (Elective)
-                'ICT'         // ICT (Elective)
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE',         // Physical Education
+                'ICT'         // Information and Communication Technology
             ],
             
-            // JHS 2 Subjects
             'JHS 2' => [
-                'ENG_JHS',    // English Language
-                'MATH_JHS',   // Mathematics
-                'SCI_JHS',    // Integrated Science
-                'SOC_JHS',    // Social Studies
-                'RME_JHS',    // Religious and Moral Education
-                'CAD',        // Creative Arts and Design
-                'PE_JHS',     // Physical Education
-                'FRENCH_JHS', // French (Elective)
-                'GHA_LANG_JHS', // Ghanaian Language (Elective)
-                'ICT'         // ICT (Elective)
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
+                'RME',        // Religious and Moral Education
+                'ART',        // Creative Arts
+                'PE',         // Physical Education
+                'ICT'         // Information and Communication Technology
             ],
             
-            // JHS 3 Subjects
             'JHS 3' => [
-                'ENG_JHS',    // English Language
-                'MATH_JHS',   // Mathematics
-                'SCI_JHS',    // Integrated Science
-                'SOC_JHS',    // Social Studies
-                'RME_JHS',    // Religious and Moral Education
-                'CAD',        // Creative Arts and Design
-                'PE_JHS',     // Physical Education
-                'FRENCH_JHS', // French (Elective)
-                'GHA_LANG_JHS', // Ghanaian Language (Elective)
-                'ICT'         // ICT (Elective)
-            ],
-            
-            // Primary 6 Subjects
-            'Primary 6' => [
-                'ENG_P',      // English Language
-                'MATH_P',     // Mathematics
-                'SCI_P',      // Integrated Science
-                'SOC_P',      // Social Studies
+                'ENG',        // English Language
+                'MATH',       // Mathematics
+                'SCI',        // Integrated Science
+                'SOC',        // Social Studies
                 'RME',        // Religious and Moral Education
-                'ART_P',      // Creative Arts
-                'PE_P',       // Physical Education
-                'FRENCH',     // French (Elective)
-                'GHA_LANG'    // Ghanaian Language (Elective)
-            ],
-            
-            // Primary 5 Subjects
-            'Primary 5' => [
-                'ENG_P',      // English Language
-                'MATH_P',     // Mathematics
-                'SCI_P',      // Integrated Science
-                'SOC_P',      // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART_P',      // Creative Arts
-                'PE_P',       // Physical Education
-                'FRENCH',     // French (Elective)
-                'GHA_LANG'    // Ghanaian Language (Elective)
+                'ART',        // Creative Arts
+                'PE',         // Physical Education
+                'ICT'         // Information and Communication Technology
             ]
         ];
         

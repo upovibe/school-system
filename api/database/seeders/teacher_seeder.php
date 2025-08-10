@@ -18,98 +18,26 @@ class TeacherSeeder
     }
     
     private function seedTeachers() {
-        echo "📝 Seeding 5 teachers...\n";
+        echo "📝 Seeding 1 teacher...\n";
         
         $teachers = [
             [
                 'user_id' => null, // Will be linked to user later
                 'employee_id' => 'T001',
-                'first_name' => 'Sarah',
-                'last_name' => 'Johnson',
-                'email' => 'sarah.johnson@school.com',
-                'phone' => '+233244123456',
-                'address' => '123 Accra Street, Accra, Ghana',
+                'first_name' => 'Teacher',
+                'last_name' => 'User',
+                'email' => 'teacher@school.com',
+                'phone' => '+1234567892',
+                'address' => '123 Teacher Street, Accra, Ghana',
                 'date_of_birth' => '1985-03-15',
                 'gender' => 'female',
-                'qualification' => 'PhD in Mathematics',
-                'specialization' => 'Advanced Mathematics, Calculus, Statistics',
+                'qualification' => 'MSc in Education',
+                'specialization' => 'General Education, Teaching Methods',
                 'hire_date' => '2020-09-01',
-                'salary' => 8500.00,
-                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active',
-                'class_id' => 1 // Class 1A
-            ],
-            [
-                'user_id' => null,
-                'employee_id' => 'T002',
-                'first_name' => 'Michael',
-                'last_name' => 'Chen',
-                'email' => 'michael.chen@school.com',
-                'phone' => '+233244123457',
-                'address' => '456 Kumasi Road, Kumasi, Ghana',
-                'date_of_birth' => '1988-07-22',
-                'gender' => 'male',
-                'qualification' => 'MSc in Physics',
-                'specialization' => 'Physics, Integrated Science, Laboratory Management',
-                'hire_date' => '2021-01-15',
-                'salary' => 7800.00,
-                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active',
-                'class_id' => 2 // Class 1B
-            ],
-            [
-                'user_id' => null,
-                'employee_id' => 'T003',
-                'first_name' => 'Emily',
-                'last_name' => 'Rodriguez',
-                'email' => 'emily.rodriguez@school.com',
-                'phone' => '+233244123458',
-                'address' => '789 Cape Coast Avenue, Cape Coast, Ghana',
-                'date_of_birth' => '1990-11-08',
-                'gender' => 'female',
-                'qualification' => 'MA in English Literature',
-                'specialization' => 'English Language, Literature, Creative Writing',
-                'hire_date' => '2019-08-20',
-                'salary' => 7200.00,
-                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active',
-                'class_id' => 3 // Class 2A
-            ],
-            [
-                'user_id' => null,
-                'employee_id' => 'T004',
-                'first_name' => 'David',
-                'last_name' => 'Osei',
-                'email' => 'david.osei@school.com',
-                'phone' => '+233244123459',
-                'address' => '321 Tamale Street, Tamale, Ghana',
-                'date_of_birth' => '1987-05-12',
-                'gender' => 'male',
-                'qualification' => 'BSc in Computer Science',
-                'specialization' => 'ICT, Computer Studies, Programming',
-                'hire_date' => '2022-03-10',
                 'salary' => 7500.00,
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
                 'status' => 'active',
-                'class_id' => null // No class assignment
-            ],
-            [
-                'user_id' => null,
-                'employee_id' => 'T005',
-                'first_name' => 'Grace',
-                'last_name' => 'Mensah',
-                'email' => 'grace.mensah@school.com',
-                'phone' => '+233244123460',
-                'address' => '654 Sekondi Road, Sekondi, Ghana',
-                'date_of_birth' => '1992-09-30',
-                'gender' => 'female',
-                'qualification' => 'MSc in Social Studies',
-                'specialization' => 'Social Studies, History, Geography',
-                'hire_date' => '2021-06-01',
-                'salary' => 7000.00,
-                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-                'status' => 'active',
-                'class_id' => 4 // Class 2B
+                'class_id' => null // No class assignment initially
             ]
         ];
         

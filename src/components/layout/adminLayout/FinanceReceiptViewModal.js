@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Textarea.js';
+import '@/components/ui/Toast.js';
 import api from '@/services/api.js';
 
 /**
@@ -19,8 +20,10 @@ class FinanceReceiptViewModal extends App {
   }
 
   setReceiptData(receipt) {
-    this.receipt = receipt || null;
-    this.render();
+    this.set('receipt', receipt);
+    this.set('loading', false);
+    this.set('showVoidDialog', false);
+    this.set('voidReason', '');
   }
 
   connectedCallback() {
@@ -28,9 +31,6 @@ class FinanceReceiptViewModal extends App {
     
     // Listen for dialog events
     this.addEventListener('dialog-close', this.onClose.bind(this));
-    
-    // Initial render
-    this.render();
   }
 
   static get observedAttributes() {
@@ -38,10 +38,7 @@ class FinanceReceiptViewModal extends App {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'open' && newValue !== null) {
-      // Modal is now open, ensure it's rendered
-      this.render();
-    }
+    // No action needed when open attribute changes
   }
 
   close() { 
@@ -63,7 +60,7 @@ class FinanceReceiptViewModal extends App {
 
   async onVoidConfirm() {
     if (!this.voidReason.trim()) {
-      this.showToast('error', 'Void reason is required');
+      Toast.show({ title: 'Validation', message: 'Void reason is required', variant: 'error', duration: 3000 });
       return;
     }
 
@@ -77,18 +74,18 @@ class FinanceReceiptViewModal extends App {
       });
       
       if (response.data.success) {
-        this.showToast('success', 'Receipt voided successfully');
+        Toast.show({ title: 'Success', message: 'Receipt voided successfully', variant: 'success', duration: 3000 });
         // Refresh the receipt data
-        this.receipt = response.data.data;
+        this.set('receipt', response.data.data);
         this.set('showVoidDialog', false);
         this.set('voidReason', '');
         this.render();
       } else {
-        this.showToast('error', response.data.message || 'Failed to void receipt');
+        Toast.show({ title: 'Error', message: response.data.message || 'Failed to void receipt', variant: 'error', duration: 3000 });
       }
     } catch (error) {
       console.error('Error voiding receipt:', error);
-      this.showToast('error', 'Failed to void receipt');
+      Toast.show({ title: 'Error', message: 'Failed to void receipt', variant: 'error', duration: 3000 });
     } finally {
       this.set('loading', false);
     }
@@ -119,11 +116,11 @@ class FinanceReceiptViewModal extends App {
         printWindow.focus();
         printWindow.print();
       } else {
-        this.showToast('error', 'Failed to generate receipt for printing');
+        Toast.show({ title: 'Error', message: 'Failed to generate receipt for printing', variant: 'error', duration: 3000 });
       }
     } catch (error) {
       console.error('Error printing receipt:', error);
-      this.showToast('error', 'Failed to print receipt');
+      Toast.show({ title: 'Error', message: 'Failed to print receipt', variant: 'error', duration: 3000 });
     } finally {
       this.set('loading', false);
     }
@@ -137,16 +134,16 @@ class FinanceReceiptViewModal extends App {
       
       const response = await api.post(`/finance/receipts/${this.receipt.id}/regenerate`);
       if (response.data.success) {
-        this.showToast('success', 'Receipt regenerated successfully');
+        Toast.show({ title: 'Success', message: 'Receipt regenerated successfully', variant: 'success', duration: 3000 });
         // Refresh the receipt data
-        this.receipt = response.data.data;
+        this.set('receipt', response.data.data);
         this.render();
       } else {
-        this.showToast('error', response.data.message || 'Failed to regenerate receipt');
+        Toast.show({ title: 'Error', message: response.data.message || 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
       }
     } catch (error) {
       console.error('Error regenerating receipt:', error);
-      this.showToast('error', 'Failed to regenerate receipt');
+      Toast.show({ title: 'Error', message: 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
     } finally {
       this.set('loading', false);
     }
@@ -166,11 +163,11 @@ class FinanceReceiptViewModal extends App {
   }
 
   render() {
-    const receipt = this.receipt;
+    const receipt = this.get('receipt');
     const loading = this.get('loading');
     const showVoidDialog = this.get('showVoidDialog');
     const voidReason = this.get('voidReason');
-
+    
     if (!receipt) {
       return `
         <ui-dialog title="Receipt Details" size="lg" ${this.hasAttribute('open') ? 'open' : ''}>

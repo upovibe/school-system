@@ -181,12 +181,20 @@ class FinanceReceiptsPage extends App {
       this.closeAllModals();
       this.set('viewReceiptData', receipt);
       this.set('showViewModal', true);
-      setTimeout(() => {
-        const modal = this.querySelector('finance-receipt-view-modal');
-        if (modal) {
-          modal.setReceiptData(receipt);
-        }
-      }, 0);
+      
+      // Get the modal immediately and set data
+      const modal = this.querySelector('finance-receipt-view-modal');
+      if (modal) {
+        modal.setReceiptData(receipt);
+      } else {
+        // If modal not found, wait for next render cycle
+        setTimeout(() => {
+          const modal = this.querySelector('finance-receipt-view-modal');
+          if (modal) {
+            modal.setReceiptData(receipt);
+          }
+        }, 100);
+      }
     }
   }
 

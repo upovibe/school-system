@@ -155,6 +155,21 @@ class FinancePaymentAddModal extends HTMLElement {
             <ui-input data-field="notes" type="text" placeholder="Optional note" class="w-full"></ui-input>
           </div>
         </form>
+
+        <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+          <div class="flex items-start space-x-2">
+            <i class="fas fa-info-circle mt-0.5"></i>
+            <div>
+              <p class="font-medium">How to make a payment</p>
+              <ul class="list-disc pl-5 mt-1 space-y-1">
+                <li><strong>Invoice</strong>: Select the invoice this payment is for. The system will show the current balance.</li>
+                <li><strong>Amount</strong>: Enter the payment amount. This will automatically update the invoice balance.</li>
+                <li><strong>Method</strong>: Choose how the payment was made (cash, bank transfer, etc.).</li>
+                <li><strong>Paid On</strong>: The payment date defaults to today and cannot be backdated.</li>
+                <li><strong>Notes</strong>: Add any additional details about this payment.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </ui-dialog>
     `;

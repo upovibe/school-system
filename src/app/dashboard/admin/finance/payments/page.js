@@ -143,24 +143,29 @@ class FinancePaymentsPage extends App {
     }
 
     try {
-      const [presp, iresp, sresp] = await Promise.all([
+      const [presp, iresp, sresp, uresp] = await Promise.all([
         api.withToken(token).get('/finance/payments'),
         api.withToken(token).get('/finance/invoices'),
         api.withToken(token).get('/students'),
+        api.withToken(token).get('/users'),
       ]);
       const payments = presp?.data?.data || [];
       const invoices = iresp?.data?.data || [];
       const students = sresp?.data?.data || [];
+      const users = uresp?.data?.data || [];
       this.set('payments', payments);
       this.set('invoices', invoices);
       this.set('students', students);
+      this.set('users', users);
       this.invoices = invoices;
       this.students = students;
+      this.users = users;
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load payments', variant: 'error', duration: 3000 });
       this.set('payments', []);
       this.set('invoices', []);
       this.set('students', []);
+      this.set('users', []);
     }
 
     this.set('loading', false);
@@ -180,6 +185,14 @@ class FinancePaymentsPage extends App {
     const inv = list.find(x => String(x.id) === String(invoiceId));
     if (!inv) return `Invoice #${invoiceId}`;
     return `${inv.invoice_number || ('#' + invoiceId)} (${this.studentDisplay(inv.student_id)})`;
+  }
+
+  userDisplay(userId) {
+    const list = this.get('users') || this.users || [];
+    const u = list.find(x => String(x.id) === String(userId));
+    if (!u) return `User #${userId}`;
+    const fullName = u.name || [u.first_name, u.last_name].filter(Boolean).join(' ') || u.full_name || u.username || u.email || `User #${userId}`;
+    return fullName;
   }
 
   displayStatus(status) {
@@ -206,7 +219,15 @@ class FinancePaymentsPage extends App {
       this.set('showViewModal', true);
       setTimeout(() => {
         const modal = this.querySelector('finance-payment-view-modal');
-        if (modal) modal.setPaymentData({ ...item, invoiceDisplay: this.invoiceDisplay(item.invoice_id), studentDisplay: this.studentDisplay(item.student_id) });
+        if (modal) {
+          const voidedByDisplay = item.voided_by ? this.userDisplay(item.voided_by) : null;
+          modal.setPaymentData({ 
+            ...item, 
+            invoiceDisplay: this.invoiceDisplay(item.invoice_id), 
+            studentDisplay: this.studentDisplay(item.student_id),
+            voidedByDisplay
+          });
+        }
       }, 0);
     }
   }
@@ -222,7 +243,8 @@ class FinancePaymentsPage extends App {
         if (dlg) dlg.setPaymentData({
           ...item,
           invoiceDisplay: this.invoiceDisplay(item.invoice_id),
-          studentDisplay: this.studentDisplay(item.student_id)
+          studentDisplay: this.studentDisplay(item.student_id),
+          voidedByDisplay: item.voided_by ? this.userDisplay(item.voided_by) : null
         });
       }, 0);
     }

@@ -133,7 +133,7 @@ class FinancePaymentViewModal extends HTMLElement {
               ${isVoided ? `
               <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Voided</label>
-                <span class="text-gray-900 text-sm">${fmt(p.voided_at)}${p.voided_by ? ` • by User #${p.voided_by}` : ''}${p.void_reason ? ` • Reason: ${p.void_reason}` : ''}</span>
+                <span class="text-gray-900 text-sm">${fmt(p.voided_at)}${p.voidedByDisplay ? ` • by ${p.voidedByDisplay}` : ''}${p.void_reason ? ` • Reason: ${p.void_reason}` : ''}</span>
               </div>
               ` : ''}
             </div>

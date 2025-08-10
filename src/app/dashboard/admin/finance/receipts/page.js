@@ -158,10 +158,8 @@ class FinanceReceiptsPage extends App {
   }
 
   displayStatus(status) {
-    if (status === 'voided') {
-      return '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Voided</span>';
-    }
-    return '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>';
+    const v = String(status || 'posted').toLowerCase();
+    return v.charAt(0).toUpperCase() + v.slice(1);
   }
 
   formatDateTime(value) {
@@ -206,12 +204,12 @@ class FinanceReceiptsPage extends App {
       id: r.id,
       index: idx + 1,
       receipt_number: r.receipt_number,
-      student: this.studentDisplay(r.student_id),
       invoice: this.invoiceDisplay(r.invoice_id),
+      student: this.studentDisplay(r.student_id),
       amount: Number(r.amount).toFixed(2),
       method: r.method || 'N/A',
+      status: this.displayStatus(r.payment_status || 'posted'),
       paid_on: this.formatDateTime(r.paid_on),
-      status: this.displayStatus(r.voided_at ? 'voided' : 'active'),
       printed_on: this.formatDateTime(r.printed_on),
       created: this.formatDateTime(r.created_at),
     }));
@@ -234,12 +232,12 @@ class FinanceReceiptsPage extends App {
       id: r.id,
       index: idx + 1,
       receipt_number: r.receipt_number,
-      student: this.studentDisplay(r.student_id),
       invoice: this.invoiceDisplay(r.invoice_id),
+      student: this.studentDisplay(r.student_id),
       amount: Number(r.amount).toFixed(2),
       method: r.method || 'N/A',
+      status: this.displayStatus(r.payment_status || 'posted'),
       paid_on: this.formatDateTime(r.paid_on),
-      status: this.displayStatus(r.voided_at ? 'voided' : 'active'),
       printed_on: this.formatDateTime(r.printed_on),
       created: this.formatDateTime(r.created_at),
     })) : [];
@@ -247,12 +245,12 @@ class FinanceReceiptsPage extends App {
     const tableColumns = [
       { key: 'index', label: 'No.' },
       { key: 'receipt_number', label: 'Receipt No.' },
-      { key: 'student', label: 'Student' },
       { key: 'invoice', label: 'Invoice' },
+      { key: 'student', label: 'Student' },
       { key: 'amount', label: 'Amount' },
       { key: 'method', label: 'Method' },
-      { key: 'paid_on', label: 'Paid On' },
       { key: 'status', label: 'Status' },
+      { key: 'paid_on', label: 'Paid On' },
       { key: 'printed_on', label: 'Printed On' },
       { key: 'created', label: 'Created' },
     ];

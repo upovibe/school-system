@@ -47,6 +47,11 @@ class RoleMiddleware extends Middleware {
         return $middleware->handle();
     }
     
+    public static function requireCashier($pdo) {
+        $middleware = new self($pdo, ['admin', 'cashier']);
+        return $middleware->handle();
+    }
+    
     public static function requireTeacher($pdo) {
         $middleware = new self($pdo, ['admin', 'teacher']);
         return $middleware->handle();

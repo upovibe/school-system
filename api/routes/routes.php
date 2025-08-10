@@ -323,3 +323,10 @@ Router::get('/finance/receipts', 'FinanceController@indexReceipts');
 Router::get('/finance/receipts/{id}', 'FinanceController@showReceipt');
 Router::get('/finance/receipts/{id}/print', 'FinanceController@printReceipt');
 Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateReceipt');
+
+// Cashier - Fee Schedules (cashier only)
+Router::get('/cashier/schedules', 'CashierController@indexSchedules');
+Router::get('/cashier/schedules/{id}', 'CashierController@showSchedule');
+Router::get('/cashier/schedules/student', 'CashierController@getStudentSchedules');
+Router::get('/cashier/schedules/active', 'CashierController@getActiveSchedules');
+Router::get('/cashier/schedules/search', 'CashierController@searchSchedules');

@@ -4,30 +4,23 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
-import '@/components/layout/adminLayout/FinanceScheduleAddModal.js';
-import '@/components/layout/adminLayout/FinanceScheduleUpdateModal.js';
 import '@/components/layout/adminLayout/FinanceScheduleViewModal.js';
-import '@/components/layout/adminLayout/FinanceScheduleDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
- * Finance: Fee Schedules Management Page
+ * Cashier: Payment Scheduler Page
  *
- * Displays fee schedules with CRUD actions using the Table component.
+ * Displays fee schedules for cashiers to view and understand fee structures.
+ * Cashiers can only view schedules, not modify them.
  */
-class FinanceSchedulesPage extends App {
+class CashierPaymentSchedulerPage extends App {
   constructor() {
     super();
     this.schedules = null;
     this.classes = [];
     this.loading = false;
-    this.showAddModal = false;
-    this.showUpdateModal = false;
     this.showViewModal = false;
-    this.showDeleteDialog = false;
-    this.updateScheduleData = null;
     this.viewScheduleData = null;
-    this.deleteScheduleData = null;
     this.filters = { class_id: '', academic_year: '', term: '', student_type: '' };
   }
 
@@ -69,15 +62,15 @@ class FinanceSchedulesPage extends App {
     const c = this.getHeaderCounts();
     return `
       <div class="space-y-8 mb-4">
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-5 text-white">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Fee Schedules</h1>
-              <p class="text-emerald-100 text-base sm:text-lg">Manage class fee schedules by year and term</p>
+              <h1 class="text-2xl sm:text-3xl font-bold">Payment Scheduler</h1>
+              <p class="text-blue-100 text-base sm:text-lg">View class fee schedules for payment processing</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
               <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
-              <div class="text-emerald-100 text-xs sm:text-sm">Total Schedules</div>
+              <div class="text-blue-100 text-xs sm:text-sm">Total Schedules</div>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
@@ -88,7 +81,7 @@ class FinanceSchedulesPage extends App {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="text-xl sm:text-2xl font-bold">${c.active}</div>
-                  <div class="text-emerald-100 text-xs sm:text-sm">Active</div>
+                  <div class="text-blue-100 text-xs sm:text-sm">Active</div>
                 </div>
               </div>
             </div>
@@ -99,7 +92,7 @@ class FinanceSchedulesPage extends App {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="text-xl sm:text-2xl font-bold">${c.inactive}</div>
-                  <div class="text-emerald-100 text-xs sm:text-sm">Inactive</div>
+                  <div class="text-blue-100 text-xs sm:text-sm">Inactive</div>
                 </div>
               </div>
             </div>
@@ -110,7 +103,7 @@ class FinanceSchedulesPage extends App {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="text-xl sm:text-2xl font-bold">${c.classes}</div>
-                  <div class="text-emerald-100 text-xs sm:text-sm">Classes Covered</div>
+                  <div class="text-blue-100 text-xs sm:text-sm">Classes Covered</div>
                 </div>
               </div>
             </div>
@@ -121,7 +114,7 @@ class FinanceSchedulesPage extends App {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="text-xl sm:text-2xl font-bold">${c.years}</div>
-                  <div class="text-emerald-100 text-xs sm:text-sm">Academic Years</div>
+                  <div class="text-blue-100 text-xs sm:text-sm">Academic Years</div>
                 </div>
               </div>
             </div>
@@ -186,37 +179,25 @@ class FinanceSchedulesPage extends App {
 
   connectedCallback() {
     super.connectedCallback();
-    document.title = 'Fee Schedules | School System';
+    document.title = 'Payment Scheduler | Cashier Dashboard';
     this.loadData();
 
     this.addEventListener('table-view', this.onView.bind(this));
-    this.addEventListener('table-edit', this.onEdit.bind(this));
-    this.addEventListener('table-delete', this.onDelete.bind(this));
-    this.addEventListener('table-add', this.onAdd.bind(this));
     this.addEventListener('table-refresh', () => this.loadData());
 
     // Filter interactions
     this.addEventListener('change', (e) => {
       const dd = e.target.closest('ui-search-dropdown');
       if (!dd) return;
-      
-      // Only close modals if this dropdown is in the filters section (not in a modal)
-      const isInFilters = dd.closest('.bg-gray-100');
-      if (isInFilters) {
-        this.closeAllModals();
-      }
-      
+      // Any dropdown change should close any open modal
+      this.closeAllModals();
       const name = dd.getAttribute('name');
       if (!name) return;
+      const next = { ...this.get('filters'), [name]: dd.value };
+      this.set('filters', next);
       
-      // Only update filters if this dropdown is in the filters section
-      if (isInFilters) {
-        const next = { ...this.get('filters'), [name]: dd.value };
-        this.set('filters', next);
-        
-        // Auto-apply filters when any filter changes for better UX
-        setTimeout(() => this.applyFilters(), 100);
-      }
+      // Auto-apply filters when any filter changes for better UX
+      setTimeout(() => this.applyFilters(), 100);
     });
 
     this.addEventListener('click', (e) => {
@@ -234,48 +215,6 @@ class FinanceSchedulesPage extends App {
           variant: 'info', 
           duration: 2000 
         });
-      }
-    });
-
-    this.addEventListener('schedule-deleted', (event) => {
-      const id = event.detail.id;
-      const current = this.get('schedules') || [];
-      this.set('schedules', current.filter((s) => s.id !== id));
-      this.render();
-      this.set('showDeleteDialog', false);
-    });
-
-    this.addEventListener('schedule-saved', (event) => {
-      const newSched = event.detail.schedule;
-      if (newSched) {
-        // Avoid duplicates if backend blocked due to unique key
-        const existingList = this.get('schedules') || [];
-        const dup = existingList.find(s => String(s.class_id) === String(newSched.class_id)
-          && String(s.academic_year) === String(newSched.academic_year)
-          && String(s.term) === String(newSched.term));
-        if (dup) {
-          Toast.show({ title: 'Info', message: 'Schedule already exists for this class/year/term', variant: 'warning', duration: 2500 });
-          this.set('showAddModal', false);
-          return;
-        }
-        const updatedList = [...existingList, newSched];
-        this.set('schedules', updatedList);
-        this.render();
-        this.set('showAddModal', false);
-      } else {
-        this.loadData();
-      }
-    });
-
-    this.addEventListener('schedule-updated', (event) => {
-      const updated = event.detail.schedule;
-      if (updated) {
-        const current = this.get('schedules') || [];
-        this.set('schedules', current.map((s) => (s.id === updated.id ? updated : s)));
-        this.render();
-        this.set('showUpdateModal', false);
-      } else {
-        this.loadData();
       }
     });
   }
@@ -324,7 +263,7 @@ class FinanceSchedulesPage extends App {
 
     // Load schedules first so table can render even if classes fail
     try {
-      const schedulesResp = await api.withToken(token).get('/finance/schedules');
+      const schedulesResp = await api.withToken(token).get('/cashier/schedules');
       this.set('schedules', (schedulesResp.data?.data) || []);
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load fee schedules', variant: 'error', duration: 3000 });
@@ -360,71 +299,21 @@ class FinanceSchedulesPage extends App {
     }
   }
 
-  onEdit(event) {
-    const editItem = (this.get('schedules') || []).find((s) => s.id === event.detail.row.id);
-    if (editItem) {
-      this.closeAllModals();
-      this.set('updateScheduleData', editItem);
-      this.set('showUpdateModal', true);
-      setTimeout(() => {
-        const modal = this.querySelector('finance-schedule-update-modal');
-        if (modal) {
-          modal.setClasses(this.classes);
-          modal.setScheduleData(editItem);
-        }
-      }, 0);
-    }
-  }
-
-  onDelete(event) {
-    const delItem = (this.get('schedules') || []).find((s) => s.id === event.detail.row.id);
-    if (delItem) {
-      this.closeAllModals();
-      this.set('deleteScheduleData', delItem);
-      this.set('showDeleteDialog', true);
-      setTimeout(() => {
-        const dlg = this.querySelector('finance-schedule-delete-dialog');
-        if (dlg) dlg.setScheduleData(delItem);
-      }, 0);
-    }
-  }
-
-  onAdd() {
-    this.closeAllModals();
-    this.set('showAddModal', true);
-    setTimeout(() => {
-      const modal = this.querySelector('finance-schedule-add-modal');
-      if (modal) {
-        modal.setClasses(this.classes);
-      }
-    }, 0);
-  }
-
   classDisplay(classId) {
     const classList = this.get('classes') || this.classes || [];
     const c = classList.find((x) => String(x.id) === String(classId));
     return c ? `${c.name}${c.section ? ' ' + c.section : ''}` : `Class #${classId}`;
   }
 
-
-
   closeAllModals() {
-    this.set('showAddModal', false);
-    this.set('showUpdateModal', false);
     this.set('showViewModal', false);
-    this.set('showDeleteDialog', false);
-    this.set('updateScheduleData', null);
     this.set('viewScheduleData', null);
-    this.set('deleteScheduleData', null);
   }
 
   render() {
     const schedules = this.get('schedules');
     const loading = this.get('loading');
-    const showAddModal = this.get('showAddModal');
-    const showUpdateModal = this.get('showUpdateModal');
     const showViewModal = this.get('showViewModal');
-    const showDeleteDialog = this.get('showDeleteDialog');
     const filters = this.get('filters') || {};
 
     // Apply filters to get the data that should be displayed
@@ -487,7 +376,7 @@ class FinanceSchedulesPage extends App {
               pagination
               page-size="50"
               action
-              addable
+              actions="view"
               refresh
               print
               bordered
@@ -498,15 +387,10 @@ class FinanceSchedulesPage extends App {
         `}
       </div>
 
-      <finance-schedule-add-modal ${showAddModal ? 'open' : ''}></finance-schedule-add-modal>
-      <finance-schedule-update-modal ${showUpdateModal ? 'open' : ''}></finance-schedule-update-modal>
       <finance-schedule-view-modal ${showViewModal ? 'open' : ''}></finance-schedule-view-modal>
-      <finance-schedule-delete-dialog ${showDeleteDialog ? 'open' : ''}></finance-schedule-delete-dialog>
     `;
   }
 }
 
-customElements.define('app-finance-schedules-page', FinanceSchedulesPage);
-export default FinanceSchedulesPage;
-
-
+customElements.define('app-cashier-payment-scheduler-page', CashierPaymentSchedulerPage);
+export default CashierPaymentSchedulerPage;

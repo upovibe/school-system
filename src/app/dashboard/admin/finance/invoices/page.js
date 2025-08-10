@@ -171,15 +171,24 @@ class FinanceInvoicesPage extends App {
     this.addEventListener('change', (e) => {
       const dd = e.target.closest('ui-search-dropdown');
       if (!dd) return;
-      // Any dropdown change should close any open modal
-      this.closeAllModals();
+      
+      // Only close modals if this dropdown is in the filters section (not in a modal)
+      const isInFilters = dd.closest('.bg-gray-100');
+      if (isInFilters) {
+        this.closeAllModals();
+      }
+      
       const name = dd.getAttribute('name');
       if (!name) return;
-      const next = { ...this.get('filters'), [name]: dd.value };
-      this.set('filters', next);
       
-      // Auto-apply filters when any filter changes for better UX
-      setTimeout(() => this.applyFilters(), 100);
+      // Only update filters if this dropdown is in the filters section
+      if (isInFilters) {
+        const next = { ...this.get('filters'), [name]: dd.value };
+        this.set('filters', next);
+        
+        // Auto-apply filters when any filter changes for better UX
+        setTimeout(() => this.applyFilters(), 100);
+      }
     });
 
     this.addEventListener('click', (e) => {

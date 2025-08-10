@@ -875,7 +875,8 @@ class FinanceController {
                 }
                 // If only date or missing seconds, pad to seconds
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $incomingPaidOn)) {
-                    $incomingPaidOn .= ' 00:00:00';
+                    // Use current server time when only date is provided
+                    $incomingPaidOn .= ' ' . date('H:i:s');
                 } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $incomingPaidOn)) {
                     $incomingPaidOn .= ':00';
                 }

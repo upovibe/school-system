@@ -542,6 +542,28 @@ class Modal extends HTMLElement {
                 this.close();
             };
         }
+
+        // Support custom footer buttons placed in the light DOM with modal-action or dialog-action attributes
+        if (!this._customFooterBound) {
+            this.addEventListener('click', (e) => {
+                try {
+                    const path = (e.composedPath && e.composedPath()) || [];
+                    const actionEl = path.find((el) => el && el.getAttribute && (el.getAttribute('modal-action') || el.getAttribute('dialog-action')));
+                    if (!actionEl) return;
+                    const action = actionEl.getAttribute('modal-action') || actionEl.getAttribute('dialog-action');
+                    if (action === 'cancel') {
+                        e.stopPropagation();
+                        this.dispatchEvent(new CustomEvent('cancel', { bubbles: true }));
+                        this.close();
+                    } else if (action === 'confirm') {
+                        e.stopPropagation();
+                        this.dispatchEvent(new CustomEvent('confirm', { bubbles: true }));
+                        this.close();
+                    }
+                } catch (_) { /* noop */ }
+            });
+            this._customFooterBound = true;
+        }
     }
 }
 

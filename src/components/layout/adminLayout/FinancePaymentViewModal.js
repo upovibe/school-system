@@ -12,22 +12,25 @@ class FinancePaymentViewModal extends HTMLElement {
   setPaymentData(payment) { this._payment = payment || null; this.render(); this.setup(); }
 
   setup() {
+    // Void button in footer - opens void dialog
     const voidBtn = this.querySelector('#void-btn');
     if (voidBtn && !voidBtn._bound) {
       voidBtn.addEventListener('click', () => {
         const dlg = this.querySelector('#void-dialog');
         if (dlg) dlg.setAttribute('open', '');
-        this.close();
       });
       voidBtn._bound = true;
     }
-    const dlg = this.querySelector('#void-dialog');
-    if (dlg && !dlg._bound) {
-      dlg.addEventListener('confirm', () => this.voidPayment());
-      dlg.addEventListener('cancel', () => dlg.removeAttribute('open'));
-      dlg._bound = true;
+
+    // Void dialog handlers
+    const voidDlg = this.querySelector('#void-dialog');
+    if (voidDlg && !voidDlg._bound) {
+      voidDlg.addEventListener('confirm', () => this.voidPayment());
+      voidDlg.addEventListener('cancel', () => voidDlg.removeAttribute('open'));
+      voidDlg._bound = true;
     }
 
+    // Cancel button in footer - closes main modal
     const cancelMainBtn = this.querySelector('#cancel-view');
     if (cancelMainBtn && !cancelMainBtn._bound) {
       cancelMainBtn.addEventListener('click', () => this.close());
@@ -144,6 +147,10 @@ class FinancePaymentViewModal extends HTMLElement {
         <div slot="content">
           <p class="text-sm text-gray-700 mb-2">Provide an optional reason for voiding this payment.</p>
           <textarea id="void-reason" class="w-full border rounded px-2 py-1 text-sm" rows="3" placeholder="Reason (optional)"></textarea>
+        </div>
+        <div slot="footer" class="flex justify-end gap-2">
+          <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+          <ui-button color="error" dialog-action="confirm">Void Payment</ui-button>
         </div>
       </ui-dialog>
       ` : ''}

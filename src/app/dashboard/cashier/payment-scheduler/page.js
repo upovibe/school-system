@@ -125,7 +125,9 @@ class CashierPaymentSchedulerPage extends App {
   }
 
   renderFilters() {
-    const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
+    // Ensure we have the latest classes data
+    const classes = this.get('classes') || this.classes || [];
+    const classOptions = classes.map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
     
     // Get unique academic years and terms from schedules data - filter out null/empty values
     const schedules = this.get('schedules') || [];
@@ -146,24 +148,28 @@ class CashierPaymentSchedulerPage extends App {
           <div>
             <label class="block text-xs text-gray-600 mb-1">Class</label>
             <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full" value="${class_id || ''}">
+              <ui-option value="">All Classes</ui-option>
               ${classOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Academic Year</label>
             <ui-search-dropdown name="academic_year" placeholder="Select year" class="w-full" value="${academic_year || ''}">
+              <ui-option value="">All Years</ui-option>
               ${academicYearOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Term</label>
             <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
+              <ui-option value="">All Terms</ui-option>
               ${termOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Student Type</label>
             <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full" value="${student_type || ''}">
+              <ui-option value="">All Types</ui-option>
               ${studentTypeOptions}
             </ui-search-dropdown>
           </div>
@@ -189,15 +195,24 @@ class CashierPaymentSchedulerPage extends App {
     this.addEventListener('change', (e) => {
       const dd = e.target.closest('ui-search-dropdown');
       if (!dd) return;
-      // Any dropdown change should close any open modal
-      this.closeAllModals();
+      
+      // Only close modals if this dropdown is in the filters section (not in a modal)
+      const isInFilters = dd.closest('.bg-gray-100');
+      if (isInFilters) {
+        this.closeAllModals();
+      }
+      
       const name = dd.getAttribute('name');
       if (!name) return;
-      const next = { ...this.get('filters'), [name]: dd.value };
-      this.set('filters', next);
       
-      // Auto-apply filters when any filter changes for better UX
-      setTimeout(() => this.applyFilters(), 100);
+      // Only update filters if this dropdown is in the filters section
+      if (isInFilters) {
+        const next = { ...this.get('filters'), [name]: dd.value };
+        this.set('filters', next);
+        
+        // Auto-apply filters when any filter changes for better UX
+        setTimeout(() => this.applyFilters(), 100);
+      }
     });
 
     this.addEventListener('click', (e) => {
@@ -261,22 +276,40 @@ class CashierPaymentSchedulerPage extends App {
       return;
     }
 
-    // Load schedules first so table can render even if classes fail
     try {
-      const schedulesResp = await api.withToken(token).get('/cashier/schedules');
-      this.set('schedules', (schedulesResp.data?.data) || []);
-    } catch (error) {
-      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load fee schedules', variant: 'error', duration: 3000 });
-      this.set('schedules', []);
-    }
+      // Load both schedules and classes in parallel for better performance
+      const [schedulesResp, classesResp] = await Promise.all([
+        api.withToken(token).get('/cashier/schedules'),
+        api.withToken(token).get('/classes/active/cashier')
+      ]);
 
-    // Load classes for display names; ignore failure
-    try {
-      const classesResp = await api.withToken(token).get('/classes');
+      // Set schedules data
+      const schedules = (schedulesResp.data?.data) || [];
+      this.set('schedules', schedules);
+
+      // Set classes data
       const classes = (classesResp.data?.data) || [];
       this.classes = classes;
       this.set('classes', classes);
-    } catch (_) {
+
+    } catch (error) {
+      console.error('Error loading data:', error);
+      
+      // Try to load schedules separately if classes fail
+      try {
+        const schedulesResp = await api.withToken(token).get('/cashier/schedules');
+        this.set('schedules', (schedulesResp.data?.data) || []);
+      } catch (scheduleError) {
+        Toast.show({ 
+          title: 'Error', 
+          message: scheduleError.response?.data?.message || 'Failed to load fee schedules', 
+          variant: 'error', 
+          duration: 3000 
+        });
+        this.set('schedules', []);
+      }
+
+      // Set empty classes if they failed to load
       this.classes = [];
       this.set('classes', []);
     }
@@ -300,9 +333,15 @@ class CashierPaymentSchedulerPage extends App {
   }
 
   classDisplay(classId) {
+    // Use both the reactive state and the instance variable for better reliability
     const classList = this.get('classes') || this.classes || [];
+    
     const c = classList.find((x) => String(x.id) === String(classId));
-    return c ? `${c.name}${c.section ? ' ' + c.section : ''}` : `Class #${classId}`;
+    if (c) {
+      return `${c.name}${c.section ? ' ' + c.section : ''}`;
+    } else {
+      return `Class #${classId}`;
+    }
   }
 
   closeAllModals() {
@@ -315,6 +354,8 @@ class CashierPaymentSchedulerPage extends App {
     const loading = this.get('loading');
     const showViewModal = this.get('showViewModal');
     const filters = this.get('filters') || {};
+
+
 
     // Apply filters to get the data that should be displayed
     let displaySchedules = schedules || [];
@@ -331,17 +372,25 @@ class CashierPaymentSchedulerPage extends App {
       displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
     }
 
-    const tableData = displaySchedules.map((s, i) => ({
-      id: s.id,
-      index: i + 1,
-      class: this.classDisplay(s.class_id),
-      academic_year: s.academic_year,
-      term: s.term,
-      student_type: s.student_type || 'Day',
-      total_fee: Number(s.total_fee).toFixed(2),
-      status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
-      updated: s.updated_at,
-    }));
+
+
+    const tableData = displaySchedules.map((s, i) => {
+      const classDisplay = this.classDisplay(s.class_id);
+      
+      return {
+        id: s.id,
+        index: i + 1,
+        class: classDisplay,
+        academic_year: s.academic_year,
+        term: s.term,
+        student_type: s.student_type || 'Day',
+        total_fee: Number(s.total_fee).toFixed(2),
+        status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
+        updated: s.updated_at,
+      };
+    });
+
+
 
     const tableColumns = [
       { key: 'index', label: 'No.' },

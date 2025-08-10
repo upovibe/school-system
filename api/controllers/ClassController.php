@@ -319,6 +319,31 @@ class ClassController {
     }
 
     /**
+     * Get active classes for cashiers (cashier only)
+     */
+    public function getActiveForCashier() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+            
+            $classes = $this->classModel->getActiveClasses();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $classes,
+                'message' => 'Active classes retrieved successfully for cashier'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving active classes: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get classes by academic year (admin only)
      */
     public function getByAcademicYear() {

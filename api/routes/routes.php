@@ -138,6 +138,7 @@ Router::delete('/subjects/{id}', 'SubjectController@destroy');
 Router::get('/classes', 'ClassController@index');
 Router::post('/classes', 'ClassController@store');
 Router::get('/classes/active', 'ClassController@getActive');
+Router::get('/classes/active/cashier', 'ClassController@getActiveForCashier');
 Router::get('/classes/search', 'ClassController@search');
 Router::get('/classes/with-student-counts', 'ClassController@getWithStudentCounts');
 Router::get('/classes/by-academic-year', 'ClassController@getByAcademicYear');

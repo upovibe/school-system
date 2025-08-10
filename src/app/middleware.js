@@ -81,16 +81,9 @@ export default {
         redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
     },
     
-    'dashboard/parent': {
+    'dashboard/cashier': {
         requireAuth: true,
-        requireRole: 'parent',
-        logAccess: true,
-        redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
-    },
-    
-    'dashboard/staff': {
-        requireAuth: true,
-        requireRole: 'staff',
+        requireRole: 'cashier',
         logAccess: true,
         redirectTo: (user) => user ? `/dashboard/${user.role}` : '/dashboard'
     },

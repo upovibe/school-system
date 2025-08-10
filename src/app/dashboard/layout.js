@@ -382,7 +382,24 @@ class DashboardLayout extends App {
                         { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' },
                     ]
                 }
-            ]
+            ],
+                            cashier: [
+                    {
+                        group: 'Dashboard',
+                        items: [
+                            { label: 'Home', icon: 'fas fa-cash-register', href: '/dashboard/cashier' },
+                        ]
+                    },
+                                       {
+                       group: 'Finance Management',
+                       items: [
+                           { label: 'Payment Scheduler', icon: 'fas fa-calendar-alt', href: '/dashboard/cashier/payment-scheduler' },
+                           { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
+                           { label: 'Payment', icon: 'fas fa-credit-card', href: '/dashboard/cashier/payment' },
+                           { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/cashier/receipts' },
+                       ]
+                   }
+                ]
         };
         // Mark active
         const groups = (roleGroups[userRole] || []);
@@ -398,7 +415,7 @@ class DashboardLayout extends App {
         const lastSegment = segments[segments.length - 1] || 'dashboard';
         const titles = {
             'dashboard': 'Dashboard', 'admin': 'Admin Dashboard', 'teacher': 'Teacher Dashboard',
-            'student': 'Student Dashboard', 'parent': 'Parent Dashboard', 'staff': 'Staff Dashboard',
+            'student': 'Student Dashboard', 'parent': 'Parent Dashboard', 'staff': 'Staff Dashboard', 'cashier': 'Cashier Dashboard',
             'profile': 'Profile', 'settings': 'Settings', 'page-settings': 'Page Settings',
             'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades',
@@ -416,7 +433,12 @@ class DashboardLayout extends App {
             'payments': 'Payments',
             'receipts': 'Receipts',
             'class': 'My Class',
-            'class-subjects': 'My Classes & Subjects'
+            'class-subjects': 'My Classes & Subjects',
+                             // Cashier specific
+                 'payment-scheduler': 'Payment Scheduler',
+                 'invoices': 'Invoices',
+                 'payment': 'Payment',
+                 'receipts': 'Receipts'
         };
         return titles[lastSegment] || 'Dashboard';
     }

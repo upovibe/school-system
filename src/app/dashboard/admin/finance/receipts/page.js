@@ -116,6 +116,15 @@ class FinanceReceiptsPage extends App {
     // Listen for table events
     this.addEventListener('table-view', this.onView.bind(this));
     this.addEventListener('table-refresh', this.loadData.bind(this));
+    
+    // Listen for receipt regeneration events
+    this.addEventListener('receipt-regenerated', (event) => {
+      // Close the modal
+      this.closeAllModals();
+      
+      // Refresh the data to show the new receipt number
+      this.loadData();
+    });
   }
 
   async loadData() {

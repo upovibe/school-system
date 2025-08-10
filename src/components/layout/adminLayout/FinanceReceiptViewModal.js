@@ -153,6 +153,15 @@ class FinanceReceiptViewModal extends App {
         // Update the receipt data with the response
         this.set('receipt', response.data.data);
         this.render();
+        
+        // Close the modal after successful regeneration
+        setTimeout(() => {
+          this.dispatchEvent(new CustomEvent('receipt-regenerated', { 
+            bubbles: true, 
+            composed: true,
+            detail: { receipt: response.data.data }
+          }));
+        }, 0);
       } else {
         Toast.show({ title: 'Error', message: response.data.message || 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
       }

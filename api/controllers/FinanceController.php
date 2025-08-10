@@ -1071,11 +1071,23 @@ class FinanceController {
     // Helpers (payments)
     private function generateReceiptNumber() {
         $prefix = 'RCT-' . date('Ymd') . '-';
-        // Count all receipts for today regardless of printed_on status to avoid duplicates
-        $sql = "SELECT COUNT(*) FROM fee_receipts WHERE DATE(created_at) = CURDATE()";
-        $count = (int)$this->pdo->query($sql)->fetchColumn();
-        $seq = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
-        return $prefix . $seq;
+        
+        // Find the next available sequence number by checking existing receipt numbers
+        $sql = "SELECT receipt_number FROM fee_receipts WHERE receipt_number LIKE ? ORDER BY receipt_number DESC LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$prefix . '%']);
+        $lastReceipt = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($lastReceipt) {
+            // Extract the sequence number from the last receipt
+            $lastSeq = (int)substr($lastReceipt['receipt_number'], -4);
+            $nextSeq = $lastSeq + 1;
+        } else {
+            // No receipts today, start with 0001
+            $nextSeq = 1;
+        }
+        
+        return $prefix . str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
     }
 
     // Receipt Management Methods

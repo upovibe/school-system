@@ -28,6 +28,7 @@ class FinanceSchedulesPage extends App {
     this.updateScheduleData = null;
     this.viewScheduleData = null;
     this.deleteScheduleData = null;
+    this.filters = { class_id: '', academic_year: '', term: '', student_type: '' };
   }
 
   // Header counts
@@ -113,6 +114,59 @@ class FinanceSchedulesPage extends App {
     `;
   }
 
+  renderFilters() {
+    const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
+    
+    // Get unique academic years and terms from schedules data - filter out null/empty values
+    const schedules = this.get('schedules') || [];
+    const academicYears = [...new Set(schedules.map(s => s.academic_year).filter(year => year && year !== null && year !== ''))].sort().reverse();
+    const terms = [...new Set(schedules.map(s => s.term).filter(term => term && term !== null && term !== ''))].sort();
+    const studentTypes = [...new Set(schedules.map(s => s.student_type).filter(type => type && type !== null && type !== ''))].sort();
+    
+    const academicYearOptions = academicYears.map(year => `<ui-option value="${year}">${year}</ui-option>`).join('');
+    const termOptions = terms.map(term => `<ui-option value="${term}">${term}</ui-option>`).join('');
+    const studentTypeOptions = studentTypes.map(type => `<ui-option value="${type}">${type}</ui-option>`).join('');
+
+    const filters = this.get('filters') || { class_id: '', academic_year: '', term: '', student_type: '' };
+    const { class_id, academic_year, term, student_type } = filters;
+    
+    return `
+      <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Class</label>
+            <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full" value="${class_id || ''}">
+              ${classOptions}
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Academic Year</label>
+            <ui-search-dropdown name="academic_year" placeholder="Select year" class="w-full" value="${academic_year || ''}">
+              ${academicYearOptions}
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Term</label>
+            <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
+              ${termOptions}
+            </ui-search-dropdown>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Student Type</label>
+            <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full" value="${student_type || ''}">
+              ${studentTypeOptions}
+            </ui-search-dropdown>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+          <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+            <i class="fas fa-times mr-1"></i> Clear Filters
+          </ui-button>
+        </div>
+      </div>
+    `;
+  }
+
   connectedCallback() {
     super.connectedCallback();
     document.title = 'Fee Schedules | School System';
@@ -123,6 +177,40 @@ class FinanceSchedulesPage extends App {
     this.addEventListener('table-delete', this.onDelete.bind(this));
     this.addEventListener('table-add', this.onAdd.bind(this));
     this.addEventListener('table-refresh', () => this.loadData());
+
+    // Filter interactions
+    this.addEventListener('change', (e) => {
+      const dd = e.target.closest('ui-search-dropdown');
+      if (!dd) return;
+      // Any dropdown change should close any open modal
+      this.closeAllModals();
+      const name = dd.getAttribute('name');
+      if (!name) return;
+      const next = { ...this.get('filters'), [name]: dd.value };
+      console.log('Filter changed:', name, 'Value:', dd.value, 'New filters:', next);
+      this.set('filters', next);
+      
+      // Auto-apply filters when any filter changes for better UX
+      setTimeout(() => this.applyFilters(), 100);
+    });
+
+    this.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('[data-action="clear-filters"]');
+      if (clearBtn) {
+        e.preventDefault();
+        this.closeAllModals();
+        const defaults = { class_id: '', academic_year: '', term: '', student_type: '' };
+        this.set('filters', defaults);
+        // Reset table to show all data
+        this.updateTableData();
+        Toast.show({ 
+          title: 'Filters Cleared', 
+          message: 'Showing all fee schedules', 
+          variant: 'info', 
+          duration: 2000 
+        });
+      }
+    });
 
     this.addEventListener('schedule-deleted', (event) => {
       const id = event.detail.id;
@@ -165,6 +253,57 @@ class FinanceSchedulesPage extends App {
         this.loadData();
       }
     });
+  }
+
+  applyFilters() {
+    const schedules = this.get('schedules') || [];
+    const filters = this.get('filters') || {};
+    
+    console.log('Applying filters:', filters);
+    console.log('Total schedules before filtering:', schedules.length);
+    
+    let filteredSchedules = schedules;
+    
+    // Filter by class_id (only if a specific class is selected)
+    if (filters.class_id && filters.class_id !== '') {
+      filteredSchedules = filteredSchedules.filter(s => String(s.class_id) === String(filters.class_id));
+      console.log('After class filter:', filteredSchedules.length);
+    }
+    
+    // Filter by academic_year (only if a specific year is selected)
+    if (filters.academic_year && filters.academic_year !== '') {
+      filteredSchedules = filteredSchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
+      console.log('After year filter:', filteredSchedules.length);
+    }
+    
+    // Filter by term (only if a specific term is selected)
+    if (filters.term && filters.term !== '') {
+      filteredSchedules = filteredSchedules.filter(s => String(s.term) === String(filters.term));
+      console.log('After term filter:', filteredSchedules.length);
+    }
+    
+    // Filter by student_type (only if a specific type is selected)
+    if (filters.student_type && filters.student_type !== '') {
+      filteredSchedules = filteredSchedules.filter(s => String(s.student_type) === String(filters.student_type));
+      console.log('After type filter:', filteredSchedules.length);
+    }
+    
+    console.log('Final filtered schedules:', filteredSchedules.length);
+    
+    // Update the table with filtered data
+    this.updateTableData(filteredSchedules);
+    
+    // Show feedback about filtering
+    const totalOriginal = schedules.length;
+    const totalFiltered = filteredSchedules.length;
+    if (totalFiltered !== totalOriginal) {
+      Toast.show({ 
+        title: 'Filters Applied', 
+        message: `Showing ${totalFiltered} of ${totalOriginal} schedules`, 
+        variant: 'info', 
+        duration: 2000 
+      });
+    }
   }
 
   async loadData() {
@@ -260,8 +399,8 @@ class FinanceSchedulesPage extends App {
     return c ? `${c.name}${c.section ? ' ' + c.section : ''}` : `Class #${classId}`;
   }
 
-  updateTableData() {
-    const schedules = this.get('schedules');
+  updateTableData(schedulesToUse = null) {
+    const schedules = schedulesToUse || this.get('schedules');
     if (!schedules) return;
     const tableData = schedules.map((s, i) => ({
       id: s.id,
@@ -323,6 +462,7 @@ class FinanceSchedulesPage extends App {
 
     return `
       ${this.renderHeader()}
+      ${this.renderFilters()}
       <div class="bg-white rounded-lg shadow-lg p-4">
         ${loading ? `
           <div class="space-y-4">

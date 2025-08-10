@@ -121,6 +121,21 @@ class FinanceReceiptViewModal extends App {
       return;
     }
     
+    // Show custom confirmation dialog
+    const confirmed = await this.showConfirmDialog(
+      'Regenerate Receipt',
+      `Are you sure you want to regenerate receipt <strong>${this.get('receipt').receipt_number}</strong>?<br><br>
+      <strong>This will:</strong><br>
+      • Generate a new receipt number<br>
+      • Reset the print status<br>
+      • Keep all payment details the same<br><br>
+      <em>This action cannot be undone.</em>`
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+    
     try {
       this.set('loading', true);
       
@@ -153,6 +168,38 @@ class FinanceReceiptViewModal extends App {
     } finally {
       this.set('loading', false);
     }
+  }
+
+  showConfirmDialog(title, message) {
+    return new Promise((resolve) => {
+      const dialog = document.createElement('ui-dialog');
+      dialog.setAttribute('open', '');
+      dialog.setAttribute('title', title);
+      
+      dialog.innerHTML = `
+        <div slot="content" class="text-gray-700">
+          ${message}
+        </div>
+        <div slot="footer" class="flex justify-end space-x-3">
+          <ui-button color="secondary" id="cancel-btn">Cancel</ui-button>
+          <ui-button color="error" id="confirm-btn">Regenerate Receipt</ui-button>
+        </div>
+      `;
+      
+      // Add event listeners
+      dialog.querySelector('#cancel-btn').addEventListener('click', () => {
+        document.body.removeChild(dialog);
+        resolve(false);
+      });
+      
+      dialog.querySelector('#confirm-btn').addEventListener('click', () => {
+        document.body.removeChild(dialog);
+        resolve(true);
+      });
+      
+      // Add to body
+      document.body.appendChild(dialog);
+    });
   }
 
   formatDateTime(value) {

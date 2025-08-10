@@ -26,6 +26,16 @@ class FinancePaymentAddModal extends HTMLElement {
   setup() {
     this.addEventListener('confirm', () => this.save());
     this.addEventListener('cancel', () => this.close());
+    // Set current date as default and minimum for paid_on field
+    setTimeout(() => {
+      const dateInput = this.querySelector('ui-input[data-field="paid_on"]');
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('value', today);
+        dateInput.setAttribute('min', today);
+      }
+    }, 0);
+
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
     const info = this.querySelector('#invoice-info');
     if (invoiceDd && !invoiceDd._bound) {
@@ -105,6 +115,7 @@ class FinancePaymentAddModal extends HTMLElement {
 
   render() {
     const openInvoices = (this._invoices || []).filter(i => String(i.status).toLowerCase() !== 'paid' && Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0);
+    const today = new Date().toISOString().split('T')[0];
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Add Payment">
         <div slot="content">
@@ -123,7 +134,7 @@ class FinancePaymentAddModal extends HTMLElement {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Paid On</label>
-              <ui-input data-field="paid_on" type="date" class="w-full"></ui-input>
+              <ui-input data-field="paid_on" type="date" value="${today}" min="${today}" class="w-full"></ui-input>
             </div>
           </div>
           <div>

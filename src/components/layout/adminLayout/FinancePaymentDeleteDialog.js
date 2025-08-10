@@ -41,7 +41,7 @@ class FinancePaymentDeleteDialog extends HTMLElement {
           <p>Are you sure you want to delete this payment?</p>
           <div class="mt-3 p-3 bg-red-50 border border-red-100 rounded text-red-700 text-sm">
             <div><strong>Invoice:</strong> ${p.invoiceDisplay || (p.invoice_id ? `#${p.invoice_id}` : 'N/A')}</div>
-            <div><strong>Student:</strong> ${p.studentDisplay || (p.student_id ?? 'N/A')}</div>
+            <div><strong>Student:</strong> ${p.studentDisplay || (p.student_full_name ?? 'N/A')}</div>
             <div><strong>Amount:</strong> ${Number(p.amount || 0).toFixed(2)}</div>
             <div><strong>Method:</strong> ${p.method || 'N/A'}</div>
             <div><strong>Paid On:</strong> ${p.paid_on || 'N/A'}</div>

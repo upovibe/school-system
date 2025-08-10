@@ -219,7 +219,11 @@ class FinancePaymentsPage extends App {
       this.set('showDeleteDialog', true);
       setTimeout(() => {
         const dlg = this.querySelector('finance-payment-delete-dialog');
-        if (dlg) dlg.setPaymentData(item);
+        if (dlg) dlg.setPaymentData({
+          ...item,
+          invoiceDisplay: this.invoiceDisplay(item.invoice_id),
+          studentDisplay: this.studentDisplay(item.student_id)
+        });
       }, 0);
     }
   }

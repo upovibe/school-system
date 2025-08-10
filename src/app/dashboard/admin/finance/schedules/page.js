@@ -34,12 +34,29 @@ class FinanceSchedulesPage extends App {
   // Header counts
   getHeaderCounts() {
     const schedules = this.get('schedules') || [];
-    const total = schedules.length;
+    const filters = this.get('filters') || {};
+    
+    // Apply filters to get the data that should be displayed
+    let displaySchedules = schedules;
+    if (filters.class_id && filters.class_id !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.class_id) === String(filters.class_id));
+    }
+    if (filters.academic_year && filters.academic_year !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
+    }
+    if (filters.term && filters.term !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    }
+    if (filters.student_type && filters.student_type !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
+    }
+    
+    const total = displaySchedules.length;
     let active = 0;
     let inactive = 0;
     const classSet = new Set();
     const yearSet = new Set();
-    schedules.forEach((s) => {
+    displaySchedules.forEach((s) => {
       const isActive = Number(s.is_active) === 1 || String(s.is_active).toLowerCase() === '1' || String(s.is_active).toLowerCase() === 'active';
       if (isActive) active += 1; else inactive += 1;
       if (s.class_id) classSet.add(String(s.class_id));
@@ -202,7 +219,7 @@ class FinanceSchedulesPage extends App {
         const defaults = { class_id: '', academic_year: '', term: '', student_type: '' };
         this.set('filters', defaults);
         // Reset table to show all data
-        this.updateTableData();
+        this.render();
         Toast.show({ 
           title: 'Filters Cleared', 
           message: 'Showing all fee schedules', 
@@ -216,7 +233,7 @@ class FinanceSchedulesPage extends App {
       const id = event.detail.id;
       const current = this.get('schedules') || [];
       this.set('schedules', current.filter((s) => s.id !== id));
-      this.updateTableData();
+      this.render();
       this.set('showDeleteDialog', false);
     });
 
@@ -235,7 +252,7 @@ class FinanceSchedulesPage extends App {
         }
         const updatedList = [...existingList, newSched];
         this.set('schedules', updatedList);
-        this.updateTableData();
+        this.render();
         this.set('showAddModal', false);
       } else {
         this.loadData();
@@ -247,7 +264,7 @@ class FinanceSchedulesPage extends App {
       if (updated) {
         const current = this.get('schedules') || [];
         this.set('schedules', current.map((s) => (s.id === updated.id ? updated : s)));
-        this.updateTableData();
+        this.render();
         this.set('showUpdateModal', false);
       } else {
         this.loadData();
@@ -256,50 +273,36 @@ class FinanceSchedulesPage extends App {
   }
 
   applyFilters() {
-    const schedules = this.get('schedules') || [];
     const filters = this.get('filters') || {};
+    const schedules = this.get('schedules') || [];
     
     console.log('Applying filters:', filters);
-    console.log('Total schedules before filtering:', schedules.length);
     
-    let filteredSchedules = schedules;
-    
-    // Filter by class_id (only if a specific class is selected)
+    // Count filtered results
+    let filteredCount = schedules.length;
     if (filters.class_id && filters.class_id !== '') {
-      filteredSchedules = filteredSchedules.filter(s => String(s.class_id) === String(filters.class_id));
-      console.log('After class filter:', filteredSchedules.length);
+      filteredCount = schedules.filter(s => String(s.class_id) === String(filters.class_id)).length;
     }
-    
-    // Filter by academic_year (only if a specific year is selected)
     if (filters.academic_year && filters.academic_year !== '') {
-      filteredSchedules = filteredSchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
-      console.log('After year filter:', filteredSchedules.length);
+      filteredCount = schedules.filter(s => String(s.academic_year) === String(filters.academic_year)).length;
     }
-    
-    // Filter by term (only if a specific term is selected)
     if (filters.term && filters.term !== '') {
-      filteredSchedules = filteredSchedules.filter(s => String(s.term) === String(filters.term));
-      console.log('After term filter:', filteredSchedules.length);
+      filteredCount = schedules.filter(s => String(s.term) === String(filters.term)).length;
     }
-    
-    // Filter by student_type (only if a specific type is selected)
     if (filters.student_type && filters.student_type !== '') {
-      filteredSchedules = filteredSchedules.filter(s => String(s.student_type) === String(filters.student_type));
-      console.log('After type filter:', filteredSchedules.length);
+      filteredCount = schedules.filter(s => String(s.student_type) === String(filters.student_type)).length;
     }
     
-    console.log('Final filtered schedules:', filteredSchedules.length);
+    console.log('Filtered count:', filteredCount, 'of', schedules.length);
     
-    // Update the table with filtered data
-    this.updateTableData(filteredSchedules);
+    // Trigger re-render to show filtered data
+    this.render();
     
     // Show feedback about filtering
-    const totalOriginal = schedules.length;
-    const totalFiltered = filteredSchedules.length;
-    if (totalFiltered !== totalOriginal) {
+    if (filteredCount !== schedules.length) {
       Toast.show({ 
         title: 'Filters Applied', 
-        message: `Showing ${totalFiltered} of ${totalOriginal} schedules`, 
+        message: `Showing ${filteredCount} of ${schedules.length} schedules`, 
         variant: 'info', 
         duration: 2000 
       });
@@ -336,8 +339,8 @@ class FinanceSchedulesPage extends App {
     }
 
     this.set('loading', false);
-    // Rely on reactive render. Also push data into table explicitly as safety.
-    this.updateTableData();
+    // Trigger render to show the loaded data
+    this.render();
   }
 
   onView(event) {
@@ -399,25 +402,7 @@ class FinanceSchedulesPage extends App {
     return c ? `${c.name}${c.section ? ' ' + c.section : ''}` : `Class #${classId}`;
   }
 
-  updateTableData(schedulesToUse = null) {
-    const schedules = schedulesToUse || this.get('schedules');
-    if (!schedules) return;
-    const tableData = schedules.map((s, i) => ({
-      id: s.id,
-      index: i + 1,
-      class: this.classDisplay(s.class_id),
-      academic_year: s.academic_year,
-      term: s.term,
-      student_type: s.student_type || 'Day',
-      total_fee: Number(s.total_fee).toFixed(2),
-      status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
-      updated: s.updated_at,
-    }));
-    const table = this.querySelector('ui-table');
-    if (table) {
-      table.setAttribute('data', JSON.stringify(tableData));
-    }
-  }
+
 
   closeAllModals() {
     this.set('showAddModal', false);
@@ -436,8 +421,24 @@ class FinanceSchedulesPage extends App {
     const showUpdateModal = this.get('showUpdateModal');
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
+    const filters = this.get('filters') || {};
 
-    const tableData = schedules ? schedules.map((s, i) => ({
+    // Apply filters to get the data that should be displayed
+    let displaySchedules = schedules || [];
+    if (filters.class_id && filters.class_id !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.class_id) === String(filters.class_id));
+    }
+    if (filters.academic_year && filters.academic_year !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
+    }
+    if (filters.term && filters.term !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    }
+    if (filters.student_type && filters.student_type !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
+    }
+
+    const tableData = displaySchedules.map((s, i) => ({
       id: s.id,
       index: i + 1,
       class: this.classDisplay(s.class_id),
@@ -447,7 +448,7 @@ class FinanceSchedulesPage extends App {
       total_fee: Number(s.total_fee).toFixed(2),
       status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
       updated: s.updated_at,
-    })) : [];
+    }));
 
     const tableColumns = [
       { key: 'index', label: 'No.' },

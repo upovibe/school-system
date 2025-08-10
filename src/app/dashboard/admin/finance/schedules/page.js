@@ -204,7 +204,6 @@ class FinanceSchedulesPage extends App {
       const name = dd.getAttribute('name');
       if (!name) return;
       const next = { ...this.get('filters'), [name]: dd.value };
-      console.log('Filter changed:', name, 'Value:', dd.value, 'New filters:', next);
       this.set('filters', next);
       
       // Auto-apply filters when any filter changes for better UX
@@ -276,8 +275,6 @@ class FinanceSchedulesPage extends App {
     const filters = this.get('filters') || {};
     const schedules = this.get('schedules') || [];
     
-    console.log('Applying filters:', filters);
-    
     // Count filtered results
     let filteredCount = schedules.length;
     if (filters.class_id && filters.class_id !== '') {
@@ -292,8 +289,6 @@ class FinanceSchedulesPage extends App {
     if (filters.student_type && filters.student_type !== '') {
       filteredCount = schedules.filter(s => String(s.student_type) === String(filters.student_type)).length;
     }
-    
-    console.log('Filtered count:', filteredCount, 'of', schedules.length);
     
     // Trigger re-render to show filtered data
     this.render();

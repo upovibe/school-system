@@ -1076,6 +1076,391 @@ class FinanceController {
         $seq = str_pad((string)($count + 1), 4, '0', STR_PAD_LEFT);
         return $prefix . $seq;
     }
+
+    // Receipt Management Methods
+    /**
+     * List all receipts with payment and invoice details
+     */
+    public function indexReceipts() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $sql = "
+                SELECT 
+                    r.id, r.receipt_number, r.printed_on, r.created_at,
+                    p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status,
+                    i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year,
+                    s.first_name, s.last_name,
+                    u.name as voided_by_name
+                FROM fee_receipts r
+                LEFT JOIN fee_payments p ON r.payment_id = p.id
+                LEFT JOIN fee_invoices i ON p.invoice_id = i.id
+                LEFT JOIN students s ON p.student_id = s.id
+                LEFT JOIN users u ON p.voided_by = u.id
+                ORDER BY r.created_at DESC
+            ";
+            
+            $stmt = $this->pdo->query($sql);
+            $receipts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Format the data
+            foreach ($receipts as &$receipt) {
+                $receipt['student_display'] = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
+                $receipt['voided_by_display'] = $receipt['voided_by_name'] ?: 'Unknown';
+                $receipt['is_voided'] = $receipt['payment_status'] === 'voided';
+            }
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $receipts]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching receipts: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get a specific receipt with full details
+     */
+    public function showReceipt($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $sql = "
+                SELECT 
+                    r.id, r.receipt_number, r.printed_on, r.created_at,
+                    p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
+                    p.voided_at, p.void_reason,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
+                    u.name as voided_by_name, u.first_name as voided_by_first, u.last_name as voided_by_last
+                FROM fee_receipts r
+                LEFT JOIN fee_payments p ON r.payment_id = p.id
+                LEFT JOIN fee_invoices i ON p.invoice_id = i.id
+                LEFT JOIN students s ON p.student_id = s.id
+                LEFT JOIN users u ON p.voided_by = u.id
+                WHERE r.id = ?
+                LIMIT 1
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([(int)$id]);
+            $receipt = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$receipt) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Receipt not found']);
+                return;
+            }
+
+            // Format the data
+            $receipt['student_display'] = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
+            $receipt['voided_by_display'] = $receipt['voided_by_name'] ?: 'Unknown';
+            $receipt['is_voided'] = $receipt['payment_status'] === 'voided';
+
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $receipt]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching receipt: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Print/download receipt as PDF or HTML
+     */
+    public function printReceipt($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            // Get receipt data
+            $sql = "
+                SELECT 
+                    r.id, r.receipt_number, r.printed_on, r.created_at,
+                    p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
+                    p.voided_at, p.void_reason,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
+                    u.name as voided_by_name
+                FROM fee_receipts r
+                LEFT JOIN fee_payments p ON r.payment_id = p.id
+                LEFT JOIN fee_invoices i ON p.invoice_id = i.id
+                LEFT JOIN students s ON p.student_id = s.id
+                LEFT JOIN users u ON p.voided_by = u.id
+                WHERE r.id = ?
+                LIMIT 1
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([(int)$id]);
+            $receipt = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$receipt) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Receipt not found']);
+                return;
+            }
+
+            // Update printed_on timestamp
+            $this->feeReceiptModel->update($id, ['printed_on' => date('Y-m-d H:i:s')]);
+
+            // For now, return HTML format (can be enhanced to generate PDF)
+            $this->renderReceiptHTML($receipt);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error printing receipt: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Regenerate receipt (useful if receipt was corrupted or needs updating)
+     */
+    public function regenerateReceipt($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            // Get existing receipt
+            $existing = $this->feeReceiptModel->findById($id);
+            if (!$existing) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Receipt not found']);
+                return;
+            }
+
+            // Generate new receipt number
+            $newReceiptNumber = $this->generateReceiptNumber();
+            
+            // Update receipt
+            $this->feeReceiptModel->update($id, [
+                'receipt_number' => $newReceiptNumber,
+                'printed_on' => null // Reset printed timestamp
+            ]);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Receipt regenerated successfully',
+                'data' => ['new_receipt_number' => $newReceiptNumber]
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error regenerating receipt: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get school settings for receipt generation
+     */
+    private function getSchoolSettings() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT setting_key, setting_value 
+                FROM settings 
+                WHERE category IN ('general', 'contact') 
+                AND is_active = 1
+            ");
+            $stmt->execute();
+            $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $result = [];
+            foreach ($settings as $setting) {
+                $result[$setting['setting_key']] = $setting['setting_value'];
+            }
+            
+            return $result;
+        } catch (Exception $e) {
+            // Return default values if settings can't be fetched
+            return [
+                'application_name' => 'School Name',
+                'application_logo' => '',
+                'application_tagline' => 'Excellence in Education',
+                'contact_address' => 'School Address',
+                'contact_phone' => 'Phone Number',
+                'contact_email' => 'info@school.com',
+                'contact_website' => 'https://school.com'
+            ];
+        }
+    }
+
+    /**
+     * Render receipt as HTML (can be enhanced to generate PDF)
+     */
+    private function renderReceiptHTML($receipt) {
+        $isVoided = $receipt['payment_status'] === 'voided';
+        $studentName = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
+        
+        // Fetch school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Set content type for HTML
+        header('Content-Type: text/html; charset=utf-8');
+        
+        echo '<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Receipt ' . htmlspecialchars($receipt['receipt_number']) . '</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                .receipt { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                .school-logo { max-width: 120px; max-height: 80px; margin-bottom: 15px; }
+                .school-name { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; }
+                .school-tagline { font-size: 14px; color: #666; margin-bottom: 10px; font-style: italic; }
+                .receipt-title { font-size: 18px; color: #666; }
+                .receipt-number { font-size: 16px; color: #333; font-weight: bold; }
+                .voided-banner { background: #ff4444; color: white; text-align: center; padding: 10px; margin: 20px 0; border-radius: 5px; font-weight: bold; }
+                .section { margin: 20px 0; }
+                .section-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                .field { margin-bottom: 15px; }
+                .label { font-size: 12px; color: #666; margin-bottom: 5px; }
+                .value { font-size: 14px; color: #333; font-weight: 500; }
+                .amount { font-size: 18px; font-weight: bold; color: #2c5aa0; }
+                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
+                .school-contact { border-top: 1px solid #ddd; padding-top: 20px; }
+                .school-contact p { margin: 5px 0; }
+                @media print { body { background: white; } .receipt { box-shadow: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="header">';
+        
+        // Add school logo if available
+        if (!empty($schoolSettings['application_logo'])) {
+            $logoUrl = 'http://localhost:8000/' . $schoolSettings['application_logo'];
+            echo '<img src="' . htmlspecialchars($logoUrl) . '" alt="School Logo" class="school-logo">';
+        }
+        
+        echo '<div class="school-name">' . htmlspecialchars($schoolSettings['application_name'] ?? 'SCHOOL SYSTEM') . '</div>';
+        if (!empty($schoolSettings['application_tagline'])) {
+            echo '<div class="school-tagline">' . htmlspecialchars($schoolSettings['application_tagline']) . '</div>';
+        }
+        echo '<div class="receipt-title">OFFICIAL RECEIPT</div>
+                    <div class="receipt-number">' . htmlspecialchars($receipt['receipt_number']) . '</div>
+                </div>';
+
+        if ($isVoided) {
+            echo '<div class="voided-banner">⚠️ THIS RECEIPT IS VOIDED</div>';
+        }
+
+        echo '
+                <div class="section">
+                    <div class="section-title">Student Information</div>
+                    <div class="grid">
+                        <div class="field">
+                            <div class="label">Student Name</div>
+                            <div class="value">' . htmlspecialchars($studentName) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Student ID</div>
+                            <div class="value">' . htmlspecialchars($receipt['student_number'] ?: 'N/A') . '</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Payment Details</div>
+                    <div class="grid">
+                        <div class="field">
+                            <div class="label">Invoice Number</div>
+                            <div class="value">' . htmlspecialchars($receipt['invoice_number'] ?: 'N/A') . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Term & Academic Year</div>
+                            <div class="value">' . htmlspecialchars($receipt['term'] . ' ' . $receipt['academic_year']) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Payment Method</div>
+                            <div class="value">' . htmlspecialchars($receipt['method'] ?: 'N/A') . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Reference</div>
+                            <div class="value">' . htmlspecialchars($receipt['reference'] ?: 'N/A') . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Amount Paid</div>
+                            <div class="value amount">₵' . number_format($receipt['amount'], 2) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Balance After Payment</div>
+                            <div class="value">₵' . number_format($receipt['balance'], 2) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Payment Date</div>
+                            <div class="value">' . date('d M Y', strtotime($receipt['paid_on'])) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Receipt Generated</div>
+                            <div class="value">' . date('d M Y H:i', strtotime($receipt['created_at'])) . '</div>
+                        </div>
+                    </div>
+                </div>';
+
+        if ($isVoided) {
+            echo '
+                <div class="section">
+                    <div class="section-title">Void Information</div>
+                    <div class="grid">
+                        <div class="field">
+                            <div class="label">Voided On</div>
+                            <div class="value">' . date('d M Y H:i', strtotime($receipt['voided_at'])) . '</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Voided By</div>
+                            <div class="value">' . htmlspecialchars($receipt['voided_by_display'] ?: 'N/A') . '</div>
+                        </div>
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <div class="label">Reason</div>
+                            <div class="value">' . htmlspecialchars($receipt['void_reason'] ?: 'N/A') . '</div>
+                        </div>
+                    </div>
+                </div>';
+        }
+
+        if ($receipt['notes']) {
+            echo '
+                <div class="section">
+                    <div class="section-title">Notes</div>
+                    <div class="value">' . htmlspecialchars($receipt['notes']) . '</div>
+                </div>';
+        }
+
+        echo '
+                <div class="footer">
+                    <div class="school-contact">
+                        <p><strong>' . htmlspecialchars($schoolSettings['application_name'] ?? 'School System') . '</strong></p>';
+        
+        if (!empty($schoolSettings['contact_address'])) {
+            echo '<p>' . htmlspecialchars($schoolSettings['contact_address']) . '</p>';
+        }
+        
+        if (!empty($schoolSettings['contact_phone'])) {
+            echo '<p>Phone: ' . htmlspecialchars($schoolSettings['contact_phone']) . '</p>';
+        }
+        
+        if (!empty($schoolSettings['contact_email'])) {
+            echo '<p>Email: ' . htmlspecialchars($schoolSettings['contact_email']) . '</p>';
+        }
+        
+        if (!empty($schoolSettings['contact_website'])) {
+            echo '<p>Website: ' . htmlspecialchars($schoolSettings['contact_website']) . '</p>';
+        }
+        
+        echo '<p>Generated on ' . date('d M Y H:i:s') . '</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>';
+    }
 }
 
 

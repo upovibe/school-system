@@ -317,3 +317,9 @@ Router::post('/finance/payments', 'FinanceController@storePayment');
 Router::get('/finance/payments/{id}', 'FinanceController@showPayment');
 Router::delete('/finance/payments/{id}', 'FinanceController@destroyPayment');
 Router::put('/finance/payments/{id}/void', 'FinanceController@voidPayment');
+
+// Finance - Receipts (admin only)
+Router::get('/finance/receipts', 'FinanceController@indexReceipts');
+Router::get('/finance/receipts/{id}', 'FinanceController@showReceipt');
+Router::get('/finance/receipts/{id}/print', 'FinanceController@printReceipt');
+Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateReceipt');

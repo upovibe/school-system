@@ -182,6 +182,11 @@ class FinancePaymentsPage extends App {
     return `${inv.invoice_number || ('#' + invoiceId)} (${this.studentDisplay(inv.student_id)})`;
   }
 
+  displayStatus(status) {
+    const v = String(status || 'posted').toLowerCase();
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  }
+
   formatDateTime(value) {
     if (!value) return '';
     try {
@@ -239,6 +244,7 @@ class FinancePaymentsPage extends App {
       amount: Number(p.amount).toFixed(2),
       method: p.method || 'N/A',
       reference: p.reference || '—',
+      status: this.displayStatus(p.status),
       paid_on: this.formatDateTime(p.paid_on),
       created: this.formatDateTime(p.created_at),
     }));
@@ -269,6 +275,7 @@ class FinancePaymentsPage extends App {
       amount: Number(p.amount).toFixed(2),
       method: p.method || 'N/A',
       reference: p.reference || '—',
+      status: this.displayStatus(p.status),
       paid_on: this.formatDateTime(p.paid_on),
       created: this.formatDateTime(p.created_at),
     })) : [];
@@ -280,6 +287,7 @@ class FinancePaymentsPage extends App {
       { key: 'amount', label: 'Amount' },
       { key: 'method', label: 'Method' },
       { key: 'reference', label: 'Reference' },
+      { key: 'status', label: 'Status' },
       { key: 'paid_on', label: 'Paid On' },
       { key: 'created', label: 'Created' },
     ];

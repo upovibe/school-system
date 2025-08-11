@@ -66,16 +66,19 @@ class LoginPage extends App {
 
             const { user, requires_password_change } = response.data;
             
-            // Map role_id to role name (temporary solution)
+            // Determine role with multiple fallbacks
             const roleMap = {
                 1: 'admin',
                 2: 'teacher', 
                 3: 'student',
                 4: 'parent',
-                5: 'staff'
+                5: 'staff',
+                6: 'cashier'
             };
 
-            const roleName = roleMap[user.role_id] || 'admin';
+            const roleFromServer = (user.role || '').toString().toLowerCase();
+            const roleFromId = roleMap[user.role_id];
+            const roleName = roleFromServer || roleFromId || 'admin';
 
             // Store user data and token
             localStorage.setItem('userData', JSON.stringify({
@@ -133,13 +136,14 @@ class LoginPage extends App {
     }
 
     redirectToDashboard(role) {
-        const dashboardRoutes = {
-            'admin': '/dashboard/admin',
-            'teacher': '/dashboard/teacher',
-            'student': '/dashboard/student',
-            'parent': '/dashboard/parent',
-            'staff': '/dashboard/staff'
-        };
+            const dashboardRoutes = {
+                'admin': '/dashboard/admin',
+                'teacher': '/dashboard/teacher',
+                'student': '/dashboard/student',
+                'parent': '/dashboard/parent',
+                'staff': '/dashboard/staff',
+                'cashier': '/dashboard/cashier'
+            };
 
         const route = dashboardRoutes[role] || '/dashboard/admin';
         window.location.href = route;

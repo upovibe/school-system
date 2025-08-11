@@ -47,30 +47,31 @@ class DashboardLayout extends App {
     }
 
     async loadUserData() {
-        // Get user ID and token from localStorage
-        const userData = localStorage.getItem('userData');
-        let userId = null;
-        let token = null;
-        if (userData) {
-            try {
-                const parsed = JSON.parse(userData);
-                userId = parsed.id;
-            } catch (e) {
-                userId = null;
-            }
+        // Get user from localStorage
+        const userDataRaw = localStorage.getItem('userData');
+        const token = localStorage.getItem('token');
+        let storedUser = null;
+        try {
+            storedUser = userDataRaw ? JSON.parse(userDataRaw) : null;
+        } catch (_) {
+            storedUser = null;
         }
-        token = localStorage.getItem('token');
+
+        const userId = storedUser?.id || null;
 
         if (userId && token) {
             try {
                 const response = await api.withToken(token).get(`/users/${userId}/profile`);
-                this.currentUser = response.data;
+                const apiUser = response.data || {};
+                // Preserve role from localStorage if present; fallback to API role
+                const role = (storedUser?.role || apiUser?.role || '').toString().toLowerCase();
+                this.currentUser = { ...apiUser, ...storedUser, role };
             } catch (error) {
-                // If API fails, fallback to localStorage
-                this.currentUser = userData ? JSON.parse(userData) : null;
+                // If API fails, fallback entirely to localStorage
+                this.currentUser = storedUser;
             }
         } else {
-            this.currentUser = userData ? JSON.parse(userData) : null;
+            this.currentUser = storedUser;
         }
 
         // Check if user needs to change password
@@ -257,7 +258,7 @@ class DashboardLayout extends App {
     }
 
     getNavigationItems() {
-        const userRole = this.currentUser?.role || 'student';
+        const userRole = (this.currentUser?.role || 'student').toString().toLowerCase();
         const path = window.location.pathname;
         // Grouped navigation structure with short labels
         const roleGroups = {

@@ -341,3 +341,4 @@ Router::delete('/cashier/invoices/{id}', 'CashierController@destroyInvoice');
 
 // Cashier - Students (cashier only)
 Router::get('/cashier/students', 'CashierController@getStudents');
+Router::get('/cashier/students/{id}', 'CashierController@showStudent');

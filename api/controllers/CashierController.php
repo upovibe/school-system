@@ -642,6 +642,50 @@ class CashierController {
         }
     }
 
+    /**
+     * Show a single student basic info (cashier only)
+     */
+    public function showStudent($id) {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            $student = $this->studentModel->findById($id);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+
+            // Limit to fields needed by cashier
+            $studentBasic = [
+                'id' => (int)$student['id'],
+                'first_name' => $student['first_name'] ?? null,
+                'last_name' => $student['last_name'] ?? null,
+                'name' => trim(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? '')),
+                'student_id' => $student['student_id'] ?? null,
+                'current_class_id' => $student['current_class_id'] ?? null,
+                'student_type' => $student['student_type'] ?? null,
+            ];
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $studentBasic,
+                'message' => 'Student retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving student: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     // --- Helpers ---
     private function logAction($action, $description = null, $metadata = null) {
         try {

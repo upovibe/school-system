@@ -360,16 +360,11 @@ class CashierInvoicesPage extends App {
   }
 
   onAdd() {
-    console.log('onAdd called');
     this.closeAllModals();
-    console.log('Setting showAddModal to true');
     this.set('showAddModal', true);
-    console.log('showAddModal state:', this.get('showAddModal'));
     setTimeout(() => {
       const modal = this.querySelector('cashier-invoice-add-modal');
-      console.log('Found modal:', modal);
       if (modal) {
-        console.log('Setting students on modal');
         modal.setStudents(this.students);
       }
     }, 0);
@@ -399,7 +394,7 @@ class CashierInvoicesPage extends App {
     const showDeleteDialog = this.get('showDeleteDialog');
     const filters = this.get('filters') || {};
 
-    console.log('Render called with states:', { showAddModal, showUpdateModal, showViewModal, showDeleteDialog });
+    
 
     // Apply filters to get the data that should be displayed
     let displayInvoices = invoices || [];

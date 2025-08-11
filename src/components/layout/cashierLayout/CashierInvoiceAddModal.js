@@ -15,13 +15,11 @@ class CashierInvoiceAddModal extends HTMLElement {
   static get observedAttributes() { return ['open']; }
 
   connectedCallback() {
-    console.log('CashierInvoiceAddModal connected, open attribute:', this.hasAttribute('open'));
     this.render();
     this.setupEventListeners();
   }
 
   setStudents(students) {
-    console.log('setStudents called with:', students);
     this._students = Array.isArray(students) ? students : [];
     this.render();
     this.setupEventListeners();
@@ -29,7 +27,6 @@ class CashierInvoiceAddModal extends HTMLElement {
 
   setupEventListeners() {
     if (this._listenersAttached) return;
-    console.log('Setting up event listeners');
     this.addEventListener('confirm', () => this.saveInvoice());
     this.addEventListener('cancel', () => this.close());
     
@@ -118,11 +115,9 @@ class CashierInvoiceAddModal extends HTMLElement {
   }
 
   open() { 
-    console.log('CashierInvoiceAddModal open() called');
     this.setAttribute('open', ''); 
   }
   close() { 
-    console.log('CashierInvoiceAddModal close() called');
     this.removeAttribute('open'); 
   }
 

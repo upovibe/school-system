@@ -165,10 +165,10 @@ class CashierPage extends App {
               <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                 <div class="flex items-center">
                   <div class="size-10 flex items-center justify-center bg-amber-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    <i class="fas fa-dollar-sign text-white text-lg sm:text-xl"></i>
+                    <i class="fas fa-money-bill text-white text-lg sm:text-xl"></i>
                   </div>
                   <div class="min-w-0 flex-1">
-                    <div class="text-xl sm:text-2xl font-bold">$${paymentStats.todayAmount.toFixed(2)}</div>
+                    <div class="text-xl sm:text-2xl font-bold">₵${paymentStats.todayAmount.toFixed(2)}</div>
                     <div class="text-green-100 text-xs sm:text-sm">Today's Collection</div>
                   </div>
                 </div>
@@ -193,82 +193,99 @@ class CashierPage extends App {
         ${!loading ? `
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Invoice Status Card -->
-            <div class="bg-white shadow rounded-lg p-6 border-l-4 border-blue-500">
-              <div class="flex items-center mb-4">
-                <div class="p-3 rounded-full bg-blue-100 text-blue-600 size-10 min-w-10 flex items-center justify-center">
-                  <i class="fas fa-file-invoice text-xl"></i>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                  <div class="p-2.5 rounded-lg bg-blue-50 text-blue-600 size-10 flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-lg"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-600">Invoice Status</p>
+                    <p class="text-2xl font-bold text-gray-900">${invoiceStats.total}</p>
+                  </div>
                 </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Invoice Status</p>
-                  <p class="text-2xl font-bold text-gray-900">${invoiceStats.total}</p>
+                <div class="text-right">
+                  <div class="text-lg font-semibold text-blue-600">${invoiceStats.open + invoiceStats.paid}</div>
+                  <div class="text-xs text-gray-500">Active</div>
                 </div>
               </div>
-              <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Open</span>
-                  <span class="font-medium text-orange-600">${invoiceStats.open}</span>
+              <div class="flex space-x-2">
+                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                  <div class="text-sm font-semibold text-orange-600">${invoiceStats.open}</div>
+                  <div class="text-xs text-gray-500">Open</div>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Paid</span>
-                  <span class="font-medium text-green-600">${invoiceStats.paid}</span>
+                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                  <div class="text-sm font-semibold text-green-600">${invoiceStats.paid}</div>
+                  <div class="text-xs text-gray-500">Paid</div>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Overdue</span>
-                  <span class="font-medium text-red-600">${invoiceStats.overdue}</span>
+                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                  <div class="text-sm font-semibold text-red-600">${invoiceStats.overdue}</div>
+                  <div class="text-xs text-gray-500">Overdue</div>
                 </div>
               </div>
             </div>
 
             <!-- Payment Summary Card -->
-            <div class="bg-white shadow rounded-lg p-6 border-l-4 border-green-500">
-              <div class="flex items-center mb-4">
-                <div class="p-3 rounded-full bg-green-100 text-green-600 size-10 min-w-10 flex items-center justify-center">
-                  <i class="fas fa-chart-line text-xl"></i>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                  <div class="p-2.5 rounded-lg bg-green-50 text-green-600 size-10 flex items-center justify-center">
+                    <i class="fas fa-chart-line text-lg"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-600">Payment Summary</p>
+                    <p class="text-2xl font-bold text-gray-900">₵${paymentStats.totalAmount.toFixed(2)}</p>
+                  </div>
                 </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Payment Summary</p>
-                  <p class="text-2xl font-bold text-gray-900">$${paymentStats.totalAmount.toFixed(2)}</p>
+                <div class="text-right">
+                  <div class="text-lg font-semibold text-green-600">${paymentStats.total}</div>
+                  <div class="text-xs text-gray-500">Total</div>
                 </div>
               </div>
               <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">This Month</span>
-                  <span class="font-medium text-green-600">$${paymentStats.thisMonthAmount.toFixed(2)}</span>
+                <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                  <span class="text-sm text-gray-600">This Month</span>
+                  <span class="font-semibold text-green-700">₵${paymentStats.thisMonthAmount.toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Today</span>
-                  <span class="font-medium text-blue-600">$${paymentStats.todayAmount.toFixed(2)}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Total Payments</span>
-                  <span class="font-medium text-purple-600">${paymentStats.total}</span>
+                <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                  <span class="text-sm text-gray-600">Today</span>
+                  <span class="font-semibold text-blue-700">₵${paymentStats.todayAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <!-- Collection Progress Card -->
-            <div class="bg-white shadow rounded-lg p-6 border-l-4 border-purple-500">
-              <div class="flex items-center mb-4">
-                <div class="p-3 rounded-full bg-purple-100 text-purple-600 size-10 min-w-10 flex items-center justify-center">
-                  <i class="fas fa-percentage text-xl"></i>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-600">Collection Rate</p>
-                  <p class="text-2xl font-bold text-gray-900">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</p>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                  <div class="p-2.5 rounded-lg bg-purple-50 text-purple-600 size-10 flex items-center justify-center">
+                    <i class="fas fa-percentage text-lg"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-600">Collection Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</p>
+                  </div>
                 </div>
               </div>
-              <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Total Due</span>
-                  <span class="font-medium text-red-600">$${invoiceStats.totalAmount.toFixed(2)}</span>
+              <div class="space-y-3">
+                <div class="bg-gray-50 rounded-md p-3">
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600">Progress</span>
+                    <span class="font-medium text-purple-600">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-1.5">
+                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: ${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100) : 0}%"></div>
+                  </div>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Collected</span>
-                  <span class="font-medium text-green-600">$${invoiceStats.totalCollected.toFixed(2)}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-gray-600">Outstanding</span>
-                  <span class="font-medium text-orange-600">$${(invoiceStats.totalAmount - invoiceStats.totalCollected).toFixed(2)}</span>
+                <div class="flex space-x-2">
+                  <div class="flex-1 text-center py-2 bg-gray-50 rounded-md">
+                    <div class="text-sm font-semibold text-red-600">₵${invoiceStats.totalAmount.toFixed(2)}</div>
+                    <div class="text-xs text-gray-500">Total Due</div>
+                  </div>
+                  <div class="flex-1 text-center py-2 bg-gray-50 rounded-md">
+                    <div class="text-sm font-semibold text-green-600">₵${invoiceStats.totalCollected.toFixed(2)}</div>
+                    <div class="text-xs text-gray-500">Collected</div>
+                  </div>
                 </div>
               </div>
             </div>

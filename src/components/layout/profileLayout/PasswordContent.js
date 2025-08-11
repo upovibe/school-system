@@ -81,6 +81,7 @@ class PasswordContent extends App {
         }
 
         const user = this.get('userData');
+        const isAdmin = user && user.role === 'admin';
 
         if (!user) {
             return `
@@ -105,7 +106,7 @@ class PasswordContent extends App {
                             data-action="change-password"
                             variant="outline"
                             size="sm"
-                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hidden"
+                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 ${isAdmin ? 'inline-flex' : 'hidden'}"
                         >
                             <i class="fas fa-key mr-2"></i>
                             Change Password

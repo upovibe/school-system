@@ -299,6 +299,7 @@ class ProfileContent extends App {
 
         const user = this.get('userData');
         const isSaving = this.get('isSaving');
+        const isAdmin = user && user.role === 'admin';
 
         if (!user) {
             return `
@@ -323,7 +324,7 @@ class ProfileContent extends App {
                             data-action="edit-profile"
                             variant="outline"
                             size="sm"
-                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hidden"
+                            class="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 ${isAdmin ? 'inline-flex' : 'hidden'}"
                         >
                             <i class="fas fa-edit mr-2"></i>
                             Edit
@@ -339,6 +340,7 @@ class ProfileContent extends App {
                                 size="lg"
                                 accept="image/*"
                                 max-size="5"
+                                ${!isAdmin ? 'readonly' : ''}
                             ></ui-profile-image-uploader>
                         </div>
                         

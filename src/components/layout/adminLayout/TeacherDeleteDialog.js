@@ -132,8 +132,11 @@ class TeacherDeleteDialog extends HTMLElement {
                     <p class="text-gray-700 mb-4">
                         Are you sure you want to delete <strong>${teacherName}</strong>${employeeId ? ` (${employeeId})` : ''}?
                     </p>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-gray-500 mb-3">
                         This action cannot be undone. If this teacher has any assignments, the deletion will be prevented.
+                    </p>
+                    <p class="text-sm text-red-600 font-medium">
+                        ⚠️ This will also delete the associated user account and all login access.
                     </p>
                 </div>
             </ui-dialog>

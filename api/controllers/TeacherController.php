@@ -399,17 +399,39 @@ class TeacherController {
                 return;
             }
 
-            // Delete teacher
-            $this->teacherModel->delete($id);
+            // Get the user ID before deleting the teacher
+            $userId = $existingTeacher['user_id'];
             
-            // Log teacher deletion
-            $this->logAction('teacher_deleted', 'Teacher deleted', $existingTeacher);
+            // Start transaction to ensure both operations succeed or fail together
+            $this->pdo->beginTransaction();
             
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Teacher deleted successfully'
-            ]);
+            try {
+                // Delete teacher first
+                $this->teacherModel->delete($id);
+                
+                // Delete the associated user account if user_id exists
+                if ($userId) {
+                    $this->userModel->delete($userId);
+                }
+                
+                // Commit transaction
+                $this->pdo->commit();
+                
+                // Log teacher deletion
+                $this->logAction('teacher_deleted', 'Teacher and associated user account deleted', $existingTeacher);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Teacher and associated user account deleted successfully'
+                ]);
+                
+            } catch (Exception $e) {
+                // Rollback transaction on error
+                $this->pdo->rollBack();
+                throw $e;
+            }
+            
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([

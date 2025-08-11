@@ -24,17 +24,25 @@ class CashierPage extends App {
   render() {
     const userName = this.get('userName') || this.userName;
     return `
-      <div class="p-8">
-        <div class="max-w-3xl mx-auto">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Cashier Dashboard</h1>
-          <p class="text-gray-600 text-lg">Welcome, <span class="font-semibold">${userName}</span></p>
+      <div class="space-y-8 p-6">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold">Cashier Dashboard</h1>
+              <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${userName}.</p>
+              <p class="text-blue-100 text-sm mt-1">
+                <i class="fas fa-calendar-alt mr-1"></i>
+                ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }
 }
 
-customElements.define('cashier-page', CashierPage);
+customElements.define('app-cashier-page', CashierPage);
 export default CashierPage;
 
  

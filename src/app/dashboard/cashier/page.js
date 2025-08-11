@@ -193,32 +193,32 @@ class CashierPage extends App {
         ${!loading ? `
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Invoice Status Card -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-5">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                  <div class="p-2.5 rounded-lg bg-blue-50 text-blue-600 size-10 flex items-center justify-center">
+                  <div class="p-2.5 rounded-lg bg-blue-500 text-white size-10 flex items-center justify-center">
                     <i class="fas fa-file-invoice text-lg"></i>
                   </div>
                   <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Invoice Status</p>
-                    <p class="text-2xl font-bold text-gray-900">${invoiceStats.total}</p>
+                    <p class="text-sm font-medium text-blue-700">Invoice Status</p>
+                    <p class="text-2xl font-bold text-blue-900">${invoiceStats.total}</p>
                   </div>
                 </div>
                 <div class="text-right">
                   <div class="text-lg font-semibold text-blue-600">${invoiceStats.open + invoiceStats.paid}</div>
-                  <div class="text-xs text-gray-500">Active</div>
+                  <div class="text-xs text-blue-500">Active</div>
                 </div>
               </div>
               <div class="flex space-x-2">
-                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                <div class="flex-1 text-center py-2 bg-white rounded-md border border-blue-200">
                   <div class="text-sm font-semibold text-orange-600">${invoiceStats.open}</div>
                   <div class="text-xs text-gray-500">Open</div>
                 </div>
-                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                <div class="flex-1 text-center py-2 bg-white rounded-md border border-blue-200">
                   <div class="text-sm font-semibold text-green-600">${invoiceStats.paid}</div>
                   <div class="text-xs text-gray-500">Paid</div>
                 </div>
-                <div class="flex-1 text-center py-2 bg-blue-50 rounded-md">
+                <div class="flex-1 text-center py-2 bg-white rounded-md border border-blue-200">
                   <div class="text-sm font-semibold text-red-600">${invoiceStats.overdue}</div>
                   <div class="text-xs text-gray-500">Overdue</div>
                 </div>
@@ -226,28 +226,28 @@ class CashierPage extends App {
             </div>
 
             <!-- Payment Summary Card -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-sm border border-green-200 p-5">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                  <div class="p-2.5 rounded-lg bg-green-50 text-green-600 size-10 flex items-center justify-center">
+                  <div class="p-2.5 rounded-lg bg-green-500 text-white size-10 flex items-center justify-center">
                     <i class="fas fa-chart-line text-lg"></i>
                   </div>
                   <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Payment Summary</p>
-                    <p class="text-2xl font-bold text-gray-900">₵${paymentStats.totalAmount.toFixed(2)}</p>
+                    <p class="text-sm font-medium text-green-700">Payment Summary</p>
+                    <p class="text-2xl font-bold text-green-900">₵${paymentStats.totalAmount.toFixed(2)}</p>
                   </div>
                 </div>
                 <div class="text-right">
                   <div class="text-lg font-semibold text-green-600">${paymentStats.total}</div>
-                  <div class="text-xs text-gray-500">Total</div>
+                  <div class="text-xs text-green-500">Total</div>
                 </div>
               </div>
               <div class="space-y-2">
-                <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                <div class="flex justify-between items-center py-2 px-3 bg-white rounded-md border border-green-200">
                   <span class="text-sm text-gray-600">This Month</span>
                   <span class="font-semibold text-green-700">₵${paymentStats.thisMonthAmount.toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                <div class="flex justify-between items-center py-2 px-3 bg-white rounded-md border border-green-200">
                   <span class="text-sm text-gray-600">Today</span>
                   <span class="font-semibold text-blue-700">₵${paymentStats.todayAmount.toFixed(2)}</span>
                 </div>
@@ -255,20 +255,20 @@ class CashierPage extends App {
             </div>
 
             <!-- Collection Progress Card -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+            <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-5">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                  <div class="p-2.5 rounded-lg bg-purple-50 text-purple-600 size-10 flex items-center justify-center">
+                  <div class="p-2.5 rounded-lg bg-purple-500 text-white size-10 flex items-center justify-center">
                     <i class="fas fa-percentage text-lg"></i>
                   </div>
                   <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Collection Rate</p>
-                    <p class="text-2xl font-bold text-gray-900">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</p>
+                    <p class="text-sm font-medium text-purple-700">Collection Rate</p>
+                    <p class="text-2xl font-bold text-purple-900">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</p>
                   </div>
                 </div>
               </div>
               <div class="space-y-3">
-                <div class="bg-gray-50 rounded-md p-3">
+                <div class="bg-white rounded-md p-3 border border-purple-200">
                   <div class="flex justify-between text-sm mb-2">
                     <span class="text-gray-600">Progress</span>
                     <span class="font-medium text-purple-600">${invoiceStats.totalAmount > 0 ? ((invoiceStats.totalCollected / invoiceStats.totalAmount) * 100).toFixed(1) : 0}%</span>
@@ -278,11 +278,11 @@ class CashierPage extends App {
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <div class="flex-1 text-center py-2 bg-gray-50 rounded-md">
+                  <div class="flex-1 text-center py-2 bg-white rounded-md border border-purple-200">
                     <div class="text-sm font-semibold text-red-600">₵${invoiceStats.totalAmount.toFixed(2)}</div>
                     <div class="text-xs text-gray-500">Total Due</div>
                   </div>
-                  <div class="flex-1 text-center py-2 bg-gray-50 rounded-md">
+                  <div class="flex-1 text-center py-2 bg-white rounded-md border border-purple-200">
                     <div class="text-sm font-semibold text-green-600">₵${invoiceStats.totalCollected.toFixed(2)}</div>
                     <div class="text-xs text-gray-500">Collected</div>
                   </div>

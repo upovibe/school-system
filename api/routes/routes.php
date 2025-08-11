@@ -339,6 +339,19 @@ Router::get('/cashier/invoices/{id}', 'CashierController@showInvoice');
 Router::put('/cashier/invoices/{id}', 'CashierController@updateInvoice');
 Router::delete('/cashier/invoices/{id}', 'CashierController@destroyInvoice');
 
+// Cashier - Payments (cashier only)
+Router::get('/cashier/payments', 'CashierController@indexPayments');
+Router::post('/cashier/payments', 'CashierController@storePayment');
+Router::get('/cashier/payments/{id}', 'CashierController@showPayment');
+Router::delete('/cashier/payments/{id}', 'CashierController@destroyPayment');
+Router::put('/cashier/payments/{id}/void', 'CashierController@voidPayment');
+
+// Cashier - Receipts (cashier only)
+Router::get('/cashier/receipts', 'CashierController@indexReceipts');
+Router::get('/cashier/receipts/{id}', 'CashierController@showReceipt');
+Router::get('/cashier/receipts/{id}/print', 'CashierController@printReceipt');
+Router::post('/cashier/receipts/{id}/regenerate', 'CashierController@regenerateReceipt');
+
 // Cashier - Students (cashier only)
 Router::get('/cashier/students', 'CashierController@getStudents');
 Router::get('/cashier/students/{id}', 'CashierController@showStudent');

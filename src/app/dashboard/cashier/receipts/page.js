@@ -106,7 +106,12 @@ class CashierReceiptsPage extends App {
     this.loadData();
     this.addEventListener('table-view', this.onView.bind(this));
     this.addEventListener('table-refresh', this.loadData.bind(this));
-    this.addEventListener('receipt-regenerated', () => this.loadData());
+    this.addEventListener('receipt-regenerated', () => {
+      // Match admin: close view dialog immediately and refresh
+      this.set('showViewModal', false);
+      this.set('viewReceiptData', null);
+      this.loadData();
+    });
   }
 
   async loadData() {

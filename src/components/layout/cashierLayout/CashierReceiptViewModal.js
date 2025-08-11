@@ -63,22 +63,63 @@ class CashierReceiptViewModal extends App {
     const receipt = this.get('receipt');
     if (!receipt) return;
     try {
-      const ok = confirm(`Regenerate receipt ${receipt.receipt_number}? This will assign a new number.`);
-      if (!ok) return;
+      const confirmed = await this.showConfirmDialog(
+        'Regenerate Receipt',
+        `Are you sure you want to regenerate receipt <strong>${receipt.receipt_number}</strong>?<br><br>
+        <strong>This will:</strong><br>
+        • Generate a new receipt number<br>
+        • Reset the print status<br>
+        • Keep all payment details the same<br><br>
+        <em>This action cannot be undone.</em>`
+      );
+      if (!confirmed) return;
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
       const resp = await api.withToken(token).post(`/cashier/receipts/${receipt.id}/regenerate`, {});
       if (resp?.data?.success) {
         Toast.show({ title: 'Success', message: 'Receipt regenerated', variant: 'success', duration: 2000 });
-        this.set('receipt', resp.data.data);
-        this.render();
+        // Immediately notify page and close like admin
         this.dispatchEvent(new CustomEvent('receipt-regenerated', { bubbles: true, composed: true, detail: { receipt: resp.data.data } }));
+        this.removeAttribute('open');
       } else {
         throw new Error(resp?.data?.message || 'Failed to regenerate');
       }
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to regenerate receipt', variant: 'error', duration: 3000 });
     }
+  }
+
+  showConfirmDialog(title, message) {
+    return new Promise((resolve) => {
+      const dialog = document.createElement('ui-dialog');
+      dialog.setAttribute('title', title);
+      dialog.innerHTML = `
+        <div slot="content" class="text-gray-700">
+          ${message}
+        </div>
+        <div slot="footer" class="flex justify-end space-x-3">
+          <ui-button color="secondary" id="cancel-btn">Cancel</ui-button>
+          <ui-button color="error" id="confirm-btn">Regenerate Receipt</ui-button>
+        </div>
+      `;
+      // Attach to DOM first, then open to avoid attributeChangedCallback issues
+      document.body.appendChild(dialog);
+      setTimeout(() => dialog.setAttribute('open', ''), 0);
+      const cancelBtn = dialog.querySelector('#cancel-btn');
+      const confirmBtn = dialog.querySelector('#confirm-btn');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
+          resolve(false);
+        });
+      }
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
+          resolve(true);
+        });
+      }
+    });
   }
 
   render() {

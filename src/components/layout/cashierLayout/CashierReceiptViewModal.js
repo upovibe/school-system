@@ -11,7 +11,6 @@ class CashierReceiptViewModal extends App {
   setReceiptData(receipt) {
     this.set('receipt', receipt);
     this.set('loading', false);
-    try { console.log('[CashierReceiptViewModal] setReceiptData id:', receipt?.id); } catch (_) {}
     setTimeout(() => this.addButtonListeners(), 0);
   }
   connectedCallback() {
@@ -21,24 +20,20 @@ class CashierReceiptViewModal extends App {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'open' && oldValue !== newValue) {
-      try { console.log('[CashierReceiptViewModal] open changed ->', this.hasAttribute('open')); } catch (_) {}
       setTimeout(() => this.addButtonListeners(), 0);
     }
   }
 
   addButtonListeners() {
-    try { console.log('[CashierReceiptViewModal] addButtonListeners'); } catch (_) {}
     const printBtn = this.querySelector('#print-btn');
     if (printBtn && !printBtn._bound) {
       printBtn.addEventListener('click', () => this.onPrint());
       printBtn._bound = true;
-      try { console.log('[CashierReceiptViewModal] print listener bound'); } catch (_) {}
     }
     const regenBtn = this.querySelector('#regen-btn');
     if (regenBtn && !regenBtn._bound) {
       regenBtn.addEventListener('click', () => this.onRegenerate());
       regenBtn._bound = true;
-      try { console.log('[CashierReceiptViewModal] regenerate listener bound'); } catch (_) {}
     }
   }
 
@@ -46,15 +41,12 @@ class CashierReceiptViewModal extends App {
     const receipt = this.get('receipt');
     if (!receipt) return;
     try {
-      try { console.log('[CashierReceiptViewModal] onPrint start, id:', receipt.id); } catch (_) {}
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
       const url = `/api/cashier/receipts/${receipt.id}/print`;
       const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'text/html' } });
-      try { console.log('[CashierReceiptViewModal] print fetch status:', resp.status); } catch (_) {}
       if (!resp.ok) throw new Error('Failed');
       const html = await resp.text();
-      try { console.log('[CashierReceiptViewModal] print html length:', html?.length); } catch (_) {}
       const w = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (w) {
         w.document.write(html);
@@ -63,7 +55,6 @@ class CashierReceiptViewModal extends App {
         setTimeout(() => { try { w.print(); } catch (_) {} }, 800);
       }
     } catch (error) {
-      try { console.error('[CashierReceiptViewModal] onPrint error:', error); } catch (_) {}
       Toast.show({ title: 'Error', message: 'Failed to print receipt', variant: 'error', duration: 3000 });
     }
   }

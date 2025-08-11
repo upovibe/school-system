@@ -6,8 +6,6 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Button.js';
-import '@/components/layout/cashierLayout/CashierInvoiceAddModal.js';
-import '@/components/layout/cashierLayout/CashierInvoiceUpdateModal.js';
 import '@/components/layout/cashierLayout/CashierInvoiceViewModal.js';
 import '@/components/layout/cashierLayout/CashierInvoiceDeleteDialog.js';
 import api from '@/services/api.js';
@@ -21,11 +19,10 @@ class CashierInvoicesPage extends App {
     this.invoices = null;
     this.students = [];
     this.loading = false;
-    this.showAddModal = false;
-    this.showUpdateModal = false;
+    // remove add/update modals for cashier
     this.showViewModal = false;
     this.showDeleteDialog = false;
-    this.updateInvoiceData = null;
+    // this.updateInvoiceData removed
     this.viewInvoiceData = null;
     this.deleteInvoiceData = null;
     this.filters = { academic_year: '', status: '', term: '' };
@@ -163,10 +160,10 @@ class CashierInvoicesPage extends App {
     
     // Event listeners for table actions - use the correct event names that match the admin version
     this.addEventListener('table-view', this.onView.bind(this));
-    this.addEventListener('table-edit', this.onEdit.bind(this));
     this.addEventListener('table-delete', this.onDelete.bind(this));
-    this.addEventListener('table-add', this.onAdd.bind(this));
     this.addEventListener('table-refresh', () => this.loadData());
+
+    // Remove edit handlers/debuggers
 
     // Filter interactions - match the admin version exactly
     this.addEventListener('change', (e) => {
@@ -219,30 +216,7 @@ class CashierInvoicesPage extends App {
       this.set('showDeleteDialog', false);
     });
 
-    this.addEventListener('invoice-saved', (event) => {
-      const newInv = event.detail.invoice;
-      if (newInv) {
-        const list = this.get('invoices') || [];
-        const updated = [...list, newInv];
-        this.set('invoices', updated);
-        this.render();
-        this.set('showAddModal', false);
-      } else {
-        this.loadData();
-      }
-    });
-
-    this.addEventListener('invoice-updated', (event) => {
-      const updated = event.detail.invoice;
-      if (updated) {
-        const current = this.get('invoices') || [];
-        this.set('invoices', current.map((i) => (String(i.id) === String(updated.id) ? updated : i)));
-        this.render();
-        this.set('showUpdateModal', false);
-      } else {
-        this.loadData();
-      }
-    });
+    // Removed add/update listeners
   }
 
   async loadData() {
@@ -330,21 +304,7 @@ class CashierInvoicesPage extends App {
     }
   }
 
-  onEdit(event) {
-    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
-    if (item) {
-      this.closeAllModals();
-      this.set('updateInvoiceData', item);
-      this.set('showUpdateModal', true);
-      setTimeout(() => {
-        const modal = this.querySelector('cashier-invoice-update-modal');
-        if (modal) {
-          modal.setStudents(this.students);
-          modal.setInvoiceData(item);
-        }
-      }, 0);
-    }
-  }
+  // onEdit removed
 
   onDelete(event) {
     const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
@@ -359,16 +319,7 @@ class CashierInvoicesPage extends App {
     }
   }
 
-  onAdd() {
-    this.closeAllModals();
-    this.set('showAddModal', true);
-    setTimeout(() => {
-      const modal = this.querySelector('cashier-invoice-add-modal');
-      if (modal) {
-        modal.setStudents(this.students);
-      }
-    }, 0);
-  }
+  // onAdd removed
 
   clearFilters() {
     this.set('filters', { academic_year: '', status: '', term: '' });
@@ -376,11 +327,10 @@ class CashierInvoicesPage extends App {
   }
 
   closeAllModals() {
-    this.set('showAddModal', false);
-    this.set('showUpdateModal', false);
+    // remove add/update modals
     this.set('showViewModal', false);
     this.set('showDeleteDialog', false);
-    this.set('updateInvoiceData', null);
+    // this.updateInvoiceData removed
     this.set('viewInvoiceData', null);
     this.set('deleteInvoiceData', null);
   }
@@ -388,8 +338,6 @@ class CashierInvoicesPage extends App {
   render() {
     const invoices = this.get('invoices');
     const loading = this.get('loading');
-    const showAddModal = this.get('showAddModal');
-    const showUpdateModal = this.get('showUpdateModal');
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
     const filters = this.get('filters') || {};
@@ -458,7 +406,7 @@ class CashierInvoicesPage extends App {
               pagination
               page-size="50"
               action
-              addable
+              actions="view,delete"
               refresh
               print
               bordered
@@ -468,9 +416,6 @@ class CashierInvoicesPage extends App {
           </div>
         `}
       </div>
-
-      <cashier-invoice-add-modal ${showAddModal ? 'open' : ''}></cashier-invoice-add-modal>
-      <cashier-invoice-update-modal ${showUpdateModal ? 'open' : ''}></cashier-invoice-update-modal>
       <cashier-invoice-view-modal ${showViewModal ? 'open' : ''}></cashier-invoice-view-modal>
       <cashier-invoice-delete-dialog ${showDeleteDialog ? 'open' : ''}></cashier-invoice-delete-dialog>
     `;

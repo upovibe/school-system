@@ -6,7 +6,6 @@ class CashierInvoiceDeleteDialog extends HTMLElement {
   constructor() {
     super();
     this._invoice = null;
-    this._deleting = false;
   }
 
   static get observedAttributes() { return ['open']; }
@@ -19,11 +18,14 @@ class CashierInvoiceDeleteDialog extends HTMLElement {
   setInvoiceData(invoice) {
     this._invoice = invoice || null;
     this.render();
+    this.setupEventListeners();
   }
 
   setupEventListeners() {
-    this.addEventListener('confirm', () => this.deleteInvoice());
-    this.addEventListener('cancel', () => this.close());
+    const dialog = this.querySelector('ui-dialog');
+    if (!dialog) return;
+    dialog.addEventListener('confirm', () => this.deleteInvoice());
+    dialog.addEventListener('cancel', () => this.close());
   }
 
   open() { this.setAttribute('open', ''); }
@@ -32,10 +34,6 @@ class CashierInvoiceDeleteDialog extends HTMLElement {
   async deleteInvoice() {
     try {
       if (!this._invoice) return;
-      
-      this._deleting = true;
-      this.render();
-      
       const token = localStorage.getItem('token');
       if (!token) {
         Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
@@ -60,7 +58,6 @@ class CashierInvoiceDeleteDialog extends HTMLElement {
         duration: 3000 
       });
     } finally {
-      this._deleting = false;
       this.render();
     }
   }
@@ -70,25 +67,15 @@ class CashierInvoiceDeleteDialog extends HTMLElement {
     
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Delete Invoice" variant="danger">
-        <div slot="content" class="space-y-4">
+        <div slot="content">
           <p class="text-sm text-gray-700">Are you sure you want to delete this invoice?</p>
           <div class="mt-3 p-3 bg-red-50 border border-red-100 rounded text-red-700 text-sm">
-            <div><strong>Invoice #:</strong> ${i.invoice_number ?? 'N/A'}</div>
-            <div><strong>Student ID:</strong> ${i.student_id ?? 'N/A'}</div>
-            <div><strong>Year/Term:</strong> ${i.academic_year ?? 'N/A'} - ${i.term ?? 'N/A'}</div>
-            <div><strong>Amount Due:</strong> ${i.amount_due ?? 'N/A'}</div>
-            <div><strong>Balance:</strong> ${i.balance ?? 'N/A'}</div>
+            <div><strong>Invoice #:</strong> ${i.invoice_number ?? ''}</div>
+            <div><strong>Student ID:</strong> ${i.student_id ?? ''}</div>
+            <div><strong>Year/Term:</strong> ${i.academic_year ?? ''} - ${i.term ?? ''}</div>
+            <div><strong>Amount Due:</strong> ${i.amount_due ?? ''}</div>
+            <div><strong>Balance:</strong> ${i.balance ?? ''}</div>
           </div>
-          <p class="text-xs text-red-600 font-medium">This action cannot be undone.</p>
-        </div>
-        
-        <div slot="footer" class="flex justify-end gap-3">
-          <ui-button dialog-action="cancel" variant="secondary" disabled="${this._deleting}">
-            Cancel
-          </ui-button>
-          <ui-button dialog-action="confirm" variant="danger" loading="${this._deleting}">
-            ${this._deleting ? 'Deleting...' : 'Delete Invoice'}
-          </ui-button>
         </div>
       </ui-dialog>
     `;

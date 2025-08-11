@@ -173,9 +173,7 @@ class CashierInvoiceViewModal extends HTMLElement {
           </div>
         </div>
 
-        <div slot="footer" class="flex justify-end">
-          <ui-button modal-action="cancel" variant="secondary">Close</ui-button>
-        </div>
+        
       </ui-modal>
     `;
   }

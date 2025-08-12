@@ -26,7 +26,7 @@ class StudentGradeController {
 
     /**
      * List grades with optional filters (admin and teacher)
-     * - Admin: can list by student_id or class_id + optional subject/period filters
+     * - Admin: can list all grades or filter by student_id/class_id + optional subject/period filters
      * - Teacher: must provide student_id or class_id; results limited to their assigned class/subject pairs
      */
     public function index() {
@@ -45,8 +45,12 @@ class StudentGradeController {
             if ($subjectId) { $filters['subject_id'] = $subjectId; }
             if ($periodId) { $filters['grading_period_id'] = $periodId; }
 
-            // Require at least student_id or class_id
-            if (!$studentId && !$classId) {
+            // Check if current user is admin
+            $currentUserId = $this->getCurrentUserId();
+            $isAdmin = $this->isCurrentUserAdmin();
+
+            // If teacher, require at least student_id or class_id
+            if (!$isAdmin && !$studentId && !$classId) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -56,8 +60,6 @@ class StudentGradeController {
             }
 
             // If teacher, enforce scope
-            $currentUserId = $this->getCurrentUserId();
-            $isAdmin = $this->isCurrentUserAdmin();
             if (!$isAdmin) {
                 // If filtering by class+subject, verify assignment; if only class given and subject also given, check pair
                 if ($classId && $subjectId) {
@@ -65,10 +67,13 @@ class StudentGradeController {
                 }
             }
 
-            if ($studentId) {
+            // For admin users, if no filters provided, get all grades
+            if ($isAdmin && !$studentId && !$classId) {
+                $grades = $this->gradeModel->getAllGradesWithDetails($filters);
+            } elseif ($studentId) {
                 $grades = $this->gradeModel->getStudentGradesWithDetails($studentId, $filters);
             } else {
-                // classId is guaranteed here
+                // classId is guaranteed here for teachers, or provided for admins
                 $grades = $this->gradeModel->getClassGradesWithDetails($classId, $filters);
             }
 

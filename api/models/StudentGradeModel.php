@@ -103,19 +103,24 @@ class StudentGradeModel extends BaseModel {
                 s.code as subject_code,
                 c.name as class_name,
                 c.section as class_section,
+                gp.name as grading_period_name,
+                gp.academic_year,
+                gp.start_date as period_start,
+                gp.end_date as period_end,
                 st.first_name as student_first_name,
                 st.last_name as student_last_name,
                 st.student_id as student_number,
-                gp.name as grading_period_name,
-                gp.academic_year,
                 u1.name as created_by_name,
-                u1.email as created_by_email
+                u1.email as created_by_email,
+                u2.name as updated_by_name,
+                u2.email as updated_by_email
             FROM student_grades sg
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
-            LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN users u1 ON sg.created_by = u1.id
+            LEFT JOIN users u2 ON sg.updated_by = u2.id
             WHERE sg.class_id = ?
         ";
         
@@ -132,6 +137,66 @@ class StudentGradeModel extends BaseModel {
         }
         
         $sql .= " ORDER BY st.first_name ASC, st.last_name ASC, s.name ASC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get all grades with details (admin only)
+     */
+    public function getAllGradesWithDetails($filters = []) {
+        $sql = "
+            SELECT 
+                sg.*,
+                s.name as subject_name,
+                s.code as subject_code,
+                c.name as class_name,
+                c.section as class_section,
+                gp.name as grading_period_name,
+                gp.academic_year,
+                gp.start_date as period_start,
+                gp.end_date as period_end,
+                st.first_name as student_first_name,
+                st.last_name as student_last_name,
+                st.student_id as student_number,
+                u1.name as created_by_name,
+                u1.email as created_by_email,
+                u2.name as updated_by_name,
+                u2.email as updated_by_email
+            FROM student_grades sg
+            LEFT JOIN subjects s ON sg.subject_id = s.id
+            LEFT JOIN classes c ON sg.class_id = c.id
+            LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN students st ON sg.student_id = st.id
+            LEFT JOIN users u1 ON sg.created_by = u1.id
+            LEFT JOIN users u2 ON sg.updated_by = u2.id
+        ";
+        
+        $whereConditions = [];
+        $params = [];
+        
+        if (!empty($filters['grading_period_id'])) {
+            $whereConditions[] = "sg.grading_period_id = ?";
+            $params[] = $filters['grading_period_id'];
+        }
+        
+        if (!empty($filters['subject_id'])) {
+            $whereConditions[] = "sg.subject_id = ?";
+            $params[] = $filters['subject_id'];
+        }
+        
+        if (!empty($filters['class_id'])) {
+            $whereConditions[] = "sg.class_id = ?";
+            $params[] = $filters['class_id'];
+        }
+        
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE " . implode(' AND ', $whereConditions);
+        }
+        
+        $sql .= " ORDER BY c.name ASC, st.first_name ASC, st.last_name ASC, s.name ASC";
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);

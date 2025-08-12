@@ -104,9 +104,7 @@ class LoginPage extends App {
                 1: 'admin',
                 2: 'teacher', 
                 3: 'student',
-                4: 'parent',
-                5: 'staff',
-                6: 'cashier'
+                4: 'cashier'
             };
 
             const roleFromServer = (user.role || '').toString().toLowerCase();
@@ -182,8 +180,6 @@ class LoginPage extends App {
             'admin': '/dashboard/admin',
             'teacher': '/dashboard/teacher',
             'student': '/dashboard/student',
-            'parent': '/dashboard/parent',
-            'staff': '/dashboard/staff',
             'cashier': '/dashboard/cashier'
         };
 

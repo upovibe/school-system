@@ -416,7 +416,7 @@ class DashboardLayout extends App {
         const lastSegment = segments[segments.length - 1] || 'dashboard';
         const titles = {
             'dashboard': 'Dashboard', 'admin': 'Admin Dashboard', 'teacher': 'Teacher Dashboard',
-            'student': 'Student Dashboard', 'parent': 'Parent Dashboard', 'staff': 'Staff Dashboard', 'cashier': 'Cashier Dashboard',
+            'student': 'Student Dashboard', 'cashier': 'Cashier Dashboard',
             'profile': 'Profile', 'settings': 'Settings', 'page-settings': 'Page Settings',
             'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades',

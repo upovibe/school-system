@@ -557,7 +557,6 @@ class AdminDashboardPage extends App {
             if (response?.data?.success && response.data.data) {
                 // Extract income values from the API response
                 this.monthlyIncomeData = response.data.data.map(item => item.income);
-                console.log(`📊 Monthly income data loaded for ${year || 'current year'}:`, this.monthlyIncomeData);
             } else {
                 console.warn('⚠️ No monthly income data available, using sample data');
                 this.monthlyIncomeData = null;

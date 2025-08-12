@@ -130,6 +130,9 @@ class AuthController {
             // Generate JWT token
             $token = $this->generateJWT($user);
             
+            // Create user session in database
+            $this->createUserSession($user['id'], $token);
+            
             // Store session data
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_type'] = $userType;
@@ -491,6 +494,26 @@ class AuthController {
         
         // Fallback to REMOTE_ADDR
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    }
+    
+    /**
+     * Create a new user session in the database
+     */
+    private function createUserSession($userId, $token) {
+        try {
+            $sessionData = [
+                'user_id' => $userId,
+                'token' => $token,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+                'ip_address' => $this->getRealIpAddress(),
+                'expires_at' => date('Y-m-d H:i:s', time() + (24 * 60 * 60)) // 24 hours
+            ];
+            
+            $this->sessionModel->create($sessionData);
+        } catch (Exception $e) {
+            // Log error but don't fail login
+            error_log("Failed to create user session: " . $e->getMessage());
+        }
     }
 }
 ?> 

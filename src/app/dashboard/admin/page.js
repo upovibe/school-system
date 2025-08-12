@@ -349,10 +349,117 @@ class AdminDashboardPage extends App {
                     }
                 }
             });
-        }
-    }
-
-    async loadStats() {
+                 }
+         
+         // Create gender statistics charts
+         this.createGenderCharts();
+     }
+     
+     createGenderCharts() {
+         const stats = this.get('stats') || this.stats;
+         
+         // Student Gender Chart
+         const studentGenderCtx = this.querySelector('#studentGenderChart');
+         if (studentGenderCtx && typeof Chart !== 'undefined') {
+             if (this.charts.studentGender) {
+                 this.charts.studentGender.destroy();
+             }
+             
+             this.charts.studentGender = new Chart(studentGenderCtx, {
+                 type: 'doughnut',
+                 data: {
+                     labels: ['Male Students', 'Female Students'],
+                     datasets: [{
+                         data: [stats.studentGenderStats.male, stats.studentGenderStats.female],
+                         backgroundColor: [
+                             'rgba(59, 130, 246, 0.8)',  // blue
+                             'rgba(236, 72, 153, 0.8)'   // pink
+                         ],
+                         borderColor: [
+                             'rgba(59, 130, 246, 1)',
+                             'rgba(236, 72, 153, 1)'
+                         ],
+                         borderWidth: 2
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: {
+                             position: 'bottom',
+                             labels: {
+                                 padding: 20,
+                                 usePointStyle: true,
+                                 font: {
+                                     size: 12
+                                 }
+                             }
+                         },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     }
+                 }
+             });
+         }
+         
+         // Teacher Gender Chart
+         const teacherGenderCtx = this.querySelector('#teacherGenderChart');
+         if (teacherGenderCtx && typeof Chart !== 'undefined') {
+             if (this.charts.teacherGender) {
+                 this.charts.teacherGender.destroy();
+             }
+             
+             this.charts.teacherGender = new Chart(teacherGenderCtx, {
+                 type: 'doughnut',
+                 data: {
+                     labels: ['Male Teachers', 'Female Teachers'],
+                     datasets: [{
+                         data: [stats.teacherGenderStats.male, stats.teacherGenderStats.female],
+                         backgroundColor: [
+                             'rgba(59, 130, 246, 0.8)',  // blue
+                             'rgba(236, 72, 153, 0.8)'   // pink
+                         ],
+                         borderColor: [
+                             'rgba(59, 130, 246, 1)',
+                             'rgba(236, 72, 153, 1)'
+                         ],
+                         borderWidth: 2
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: {
+                             position: 'bottom',
+                             labels: {
+                                 padding: 20,
+                                 usePointStyle: true,
+                                 font: {
+                                     size: 12
+                                 }
+                             }
+                         },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     }
+                 }
+             });
+         }
+     }
+ 
+     async loadStats() {
         try {
             this.set('loading', true);
             
@@ -581,13 +688,14 @@ class AdminDashboardPage extends App {
         }
     }
 
-    refreshCharts() {
-        // Wait a bit for the DOM to update, then refresh charts
-        setTimeout(() => {
-            this.createFinanceCharts();
-            this.setupTabListeners();
-        }, 200);
-    }
+         refreshCharts() {
+         // Wait a bit for the DOM to update, then refresh charts
+         setTimeout(() => {
+             this.createFinanceCharts();
+             this.createGenderCharts();
+             this.setupTabListeners();
+         }, 200);
+     }
 
     generateYearOptions() {
         const currentYear = new Date().getFullYear();
@@ -849,6 +957,65 @@ class AdminDashboardPage extends App {
                             <div class="bg-white rounded-lg p-4 border border-orange-200 text-center hover:shadow-md transition-shadow">
                                 <div class="text-lg font-semibold text-orange-600">${stats.studentGrades}</div>
                                 <div class="text-sm text-gray-600">Student Grades</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gender Statistics Section -->
+                    <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200 p-8">
+                        <div class="flex items-center mb-6">
+                            <div class="w-1 h-8 bg-pink-500 rounded-full mr-4"></div>
+                            <h2 class="text-2xl font-bold text-pink-900">Gender Statistics</h2>
+                            <div class="ml-4 px-4 py-2 bg-pink-100 text-pink-800 text-sm font-medium rounded-full border border-pink-200">
+                                ${stats.studentGenderStats.male + stats.studentGenderStats.female + stats.teacherGenderStats.male + stats.teacherGenderStats.female} Total
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Student Gender Chart -->
+                            <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-user-graduate text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Student Gender Distribution</h3>
+                                </div>
+                                <div class="relative" style="height: 250px;">
+                                    <canvas id="studentGenderChart"></canvas>
+                                </div>
+                                <div class="mt-4 grid grid-cols-2 gap-4">
+                                    <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div class="text-2xl font-bold text-blue-600">${stats.studentGenderStats.male}</div>
+                                        <div class="text-sm text-blue-700 font-medium">Male Students</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-pink-50 rounded-lg border border-pink-200">
+                                        <div class="text-2xl font-bold text-pink-600">${stats.studentGenderStats.female}</div>
+                                        <div class="text-sm text-pink-700 font-medium">Female Students</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Teacher Gender Chart -->
+                            <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-chalkboard-teacher text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Teacher Gender Distribution</h3>
+                                </div>
+                                <div class="relative" style="height: 250px;">
+                                    <canvas id="teacherGenderChart"></canvas>
+                                </div>
+                                <div class="mt-4 grid grid-cols-2 gap-4">
+                                    <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div class="text-2xl font-bold text-blue-600">${stats.teacherGenderStats.male}</div>
+                                        <div class="text-sm text-blue-700 font-medium">Male Teachers</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-pink-50 rounded-lg border border-pink-200">
+                                        <div class="text-2xl font-bold text-pink-600">${stats.teacherGenderStats.female}</div>
+                                        <div class="text-sm text-pink-700 font-medium">Female Teachers</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

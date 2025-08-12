@@ -87,25 +87,35 @@ class AdminDashboardPage extends App {
         }, 100);
     }
 
-    setupTabListeners() {
-        // Setup tab switching functionality
-        const tabButtons = this.querySelectorAll('[data-tab]');
-        tabButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const targetTab = e.target.getAttribute('data-tab');
-                this.switchTab(targetTab);
-            });
-        });
+         setupTabListeners() {
+         // Setup tab switching functionality for finance
+         const tabButtons = this.querySelectorAll('[data-tab]');
+         tabButtons.forEach(button => {
+             button.addEventListener('click', (e) => {
+                 const targetTab = e.target.getAttribute('data-tab');
+                 this.switchTab(targetTab);
+             });
+         });
 
-        // Setup year selector for monthly income
-        const yearSelector = this.querySelector('#incomeYearSelector');
-        if (yearSelector) {
-            yearSelector.addEventListener('change', (e) => {
-                const selectedYear = e.target.value;
-                this.loadMonthlyIncomeForYear(selectedYear);
-            });
-        }
-    }
+         // Setup gender chart tab switching
+         const genderTabButtons = this.querySelectorAll('[data-gender-tab]');
+         genderTabButtons.forEach(button => {
+             button.addEventListener('click', (e) => {
+                 const targetTab = e.target.getAttribute('data-gender-tab');
+                 const target = e.target.getAttribute('data-target');
+                 this.switchGenderTab(target, targetTab);
+             });
+         });
+
+         // Setup year selector for monthly income
+         const yearSelector = this.querySelector('#incomeYearSelector');
+         if (yearSelector) {
+             yearSelector.addEventListener('change', (e) => {
+                 const selectedYear = e.target.value;
+                 this.loadMonthlyIncomeForYear(selectedYear);
+             });
+         }
+     }
 
     switchTab(activeTab) {
         // Hide all chart containers
@@ -132,10 +142,38 @@ class AdminDashboardPage extends App {
         if (activeButton) {
             activeButton.classList.remove('text-gray-600');
             activeButton.classList.add('bg-white', 'text-purple-600', 'shadow-sm');
-        }
-    }
+                 }
+     }
 
-    createFinanceCharts() {
+     switchGenderTab(target, activeTab) {
+         // Hide all chart containers for the target
+         const chartContainers = this.querySelectorAll(`[data-gender-chart^="${target}-"]`);
+         chartContainers.forEach(container => {
+             container.style.display = 'none';
+         });
+
+         // Show the active chart container
+         const activeContainer = this.querySelector(`[data-gender-chart="${target}-${activeTab}"]`);
+         if (activeContainer) {
+             activeContainer.style.display = 'block';
+         }
+
+         // Update button styles for the target
+         const tabButtons = this.querySelectorAll(`[data-target="${target}"]`);
+         tabButtons.forEach(button => {
+             button.classList.remove('bg-white', 'text-pink-600', 'shadow-sm');
+             button.classList.add('text-gray-600');
+         });
+
+         // Highlight active button
+         const activeButton = this.querySelector(`[data-target="${target}"][data-gender-tab="${activeTab}"]`);
+         if (activeButton) {
+             activeButton.classList.remove('text-gray-600');
+             activeButton.classList.add('bg-white', 'text-pink-600', 'shadow-sm');
+         }
+     }
+
+     createFinanceCharts() {
         const stats = this.get('stats') || this.stats;
         
         // Finance Overview Chart
@@ -358,7 +396,15 @@ class AdminDashboardPage extends App {
      createGenderCharts() {
          const stats = this.get('stats') || this.stats;
          
-         // Student Gender Chart
+         // Student Gender Charts
+         this.createStudentGenderCharts(stats);
+         
+         // Teacher Gender Charts
+         this.createTeacherGenderCharts(stats);
+     }
+     
+     createStudentGenderCharts(stats) {
+         // Doughnut Chart
          const studentGenderCtx = this.querySelector('#studentGenderChart');
          if (studentGenderCtx && typeof Chart !== 'undefined') {
              if (this.charts.studentGender) {
@@ -391,9 +437,7 @@ class AdminDashboardPage extends App {
                              labels: {
                                  padding: 20,
                                  usePointStyle: true,
-                                 font: {
-                                     size: 12
-                                 }
+                                 font: { size: 12 }
                              }
                          },
                          tooltip: {
@@ -408,7 +452,118 @@ class AdminDashboardPage extends App {
              });
          }
          
-         // Teacher Gender Chart
+         // Bar Chart
+         const studentGenderBarCtx = this.querySelector('#studentGenderBarChart');
+         if (studentGenderBarCtx && typeof Chart !== 'undefined') {
+             if (this.charts.studentGenderBar) {
+                 this.charts.studentGenderBar.destroy();
+             }
+             
+             this.charts.studentGenderBar = new Chart(studentGenderBarCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Male Students', 'Female Students'],
+                     datasets: [{
+                         label: 'Count',
+                         data: [stats.studentGenderStats.male, stats.studentGenderStats.female],
+                         backgroundColor: [
+                             'rgba(59, 130, 246, 0.7)',  // blue
+                             'rgba(236, 72, 153, 0.7)'   // pink
+                         ],
+                         borderColor: [
+                             'rgba(59, 130, 246, 1)',
+                             'rgba(236, 72, 153, 1)'
+                         ],
+                         borderWidth: 2,
+                         borderRadius: 8,
+                         borderSkipped: false
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: { display: false },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     },
+                     scales: {
+                         y: {
+                             beginAtZero: true,
+                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                             ticks: { stepSize: 1, font: { size: 12 } }
+                         },
+                         x: {
+                             grid: { display: false },
+                             ticks: { font: { size: 12 } }
+                         }
+                     }
+                 }
+             });
+         }
+         
+         // Line Chart
+         const studentGenderLineCtx = this.querySelector('#studentGenderLineChart');
+         if (studentGenderLineCtx && typeof Chart !== 'undefined') {
+             if (this.charts.studentGenderLine) {
+                 this.charts.studentGenderLine.destroy();
+             }
+             
+             this.charts.studentGenderLine = new Chart(studentGenderLineCtx, {
+                 type: 'line',
+                 data: {
+                     labels: ['Male Students', 'Female Students'],
+                     datasets: [{
+                         label: 'Gender Distribution',
+                         data: [stats.studentGenderStats.male, stats.studentGenderStats.female],
+                         borderColor: 'rgba(59, 130, 246, 1)',
+                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                         borderWidth: 3,
+                         fill: true,
+                         tension: 0.4,
+                         pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                         pointBorderColor: '#ffffff',
+                         pointBorderWidth: 2,
+                         pointRadius: 6,
+                         pointHoverRadius: 8
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: { display: false },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     },
+                     scales: {
+                         y: {
+                             beginAtZero: true,
+                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                             ticks: { font: { size: 12 } }
+                         },
+                         x: {
+                             grid: { display: false },
+                             ticks: { font: { size: 12 } }
+                         }
+                     }
+                 }
+             });
+         }
+     }
+     
+     createTeacherGenderCharts(stats) {
+         // Doughnut Chart
          const teacherGenderCtx = this.querySelector('#teacherGenderChart');
          if (teacherGenderCtx && typeof Chart !== 'undefined') {
              if (this.charts.teacherGender) {
@@ -441,9 +596,7 @@ class AdminDashboardPage extends App {
                              labels: {
                                  padding: 20,
                                  usePointStyle: true,
-                                 font: {
-                                     size: 12
-                                 }
+                                 font: { size: 12 }
                              }
                          },
                          tooltip: {
@@ -452,6 +605,115 @@ class AdminDashboardPage extends App {
                              bodyColor: 'white',
                              borderColor: 'rgba(255, 255, 255, 0.2)',
                              borderWidth: 1
+                         }
+                     }
+                 }
+             });
+         }
+         
+         // Bar Chart
+         const teacherGenderBarCtx = this.querySelector('#teacherGenderBarChart');
+         if (teacherGenderBarCtx && typeof Chart !== 'undefined') {
+             if (this.charts.teacherGenderBar) {
+                 this.charts.teacherGenderBar.destroy();
+             }
+             
+             this.charts.teacherGenderBar = new Chart(teacherGenderBarCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Male Teachers', 'Female Teachers'],
+                     datasets: [{
+                         label: 'Count',
+                         data: [stats.teacherGenderStats.male, stats.teacherGenderStats.female],
+                         backgroundColor: [
+                             'rgba(59, 130, 246, 0.7)',  // blue
+                             'rgba(236, 72, 153, 0.7)'   // pink
+                         ],
+                         borderColor: [
+                             'rgba(59, 130, 246, 1)',
+                             'rgba(236, 72, 153, 1)'
+                         ],
+                         borderWidth: 2,
+                         borderRadius: 8,
+                         borderSkipped: false
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: { display: false },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     },
+                     scales: {
+                         y: {
+                             beginAtZero: true,
+                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                             ticks: { stepSize: 1, font: { size: 12 } }
+                         },
+                         x: {
+                             grid: { display: false },
+                             ticks: { font: { size: 12 } }
+                         }
+                     }
+                 }
+             });
+         }
+         
+         // Line Chart
+         const teacherGenderLineCtx = this.querySelector('#teacherGenderLineChart');
+         if (teacherGenderLineCtx && typeof Chart !== 'undefined') {
+             if (this.charts.teacherGenderLine) {
+                 this.charts.teacherGenderLine.destroy();
+             }
+             
+             this.charts.teacherGenderLine = new Chart(teacherGenderLineCtx, {
+                 type: 'line',
+                 data: {
+                     labels: ['Male Teachers', 'Female Teachers'],
+                     datasets: [{
+                         label: 'Gender Distribution',
+                         data: [stats.teacherGenderStats.male, stats.teacherGenderStats.female],
+                         borderColor: 'rgba(59, 130, 246, 1)',
+                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                         borderWidth: 3,
+                         fill: true,
+                         tension: 0.4,
+                         pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                         pointBorderColor: '#ffffff',
+                         pointBorderWidth: 2,
+                         pointRadius: 6,
+                         pointHoverRadius: 8
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: { display: false },
+                         tooltip: {
+                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                             titleColor: 'white',
+                             bodyColor: 'white',
+                             borderColor: 'rgba(255, 255, 255, 0.2)',
+                             borderWidth: 1
+                         }
+                     },
+                     scales: {
+                         y: {
+                             beginAtZero: true,
+                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                             ticks: { font: { size: 12 } }
+                         },
+                         x: {
+                             grid: { display: false },
+                             ticks: { font: { size: 12 } }
                          }
                      }
                  }
@@ -974,15 +1236,45 @@ class AdminDashboardPage extends App {
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <!-- Student Gender Chart -->
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
-                                        <i class="fas fa-user-graduate text-white text-sm"></i>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-user-graduate text-white text-sm"></i>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Student Gender Distribution</h3>
                                     </div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Student Gender Distribution</h3>
+                                    <!-- Tab Navigation -->
+                                    <div class="flex bg-gray-100 rounded-lg p-1">
+                                        <button 
+                                            data-gender-tab="doughnut"
+                                            data-target="student"
+                                            class="px-3 py-1.5 text-sm font-medium text-pink-600 bg-white rounded-md shadow-sm transition-all duration-200">
+                                            Doughnut
+                                        </button>
+                                        <button 
+                                            data-gender-tab="bar"
+                                            data-target="student"
+                                            class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
+                                            Bar
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="relative" style="height: 250px;">
+                                
+                                <!-- Doughnut Chart Tab -->
+                                <div data-gender-chart="student-doughnut" class="relative" style="height: 250px;">
                                     <canvas id="studentGenderChart"></canvas>
                                 </div>
+                                
+                                <!-- Bar Chart Tab -->
+                                <div data-gender-chart="student-bar" class="relative" style="height: 250px; display: none;">
+                                    <canvas id="studentGenderBarChart"></canvas>
+                                </div>
+                                
+                                <!-- Line Chart Tab -->
+                                <div data-gender-chart="student-line" class="relative" style="height: 250px; display: none;">
+                                    <canvas id="studentGenderLineChart"></canvas>
+                                </div>
+                                
                                 <div class="mt-4 grid grid-cols-2 gap-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                                         <div class="text-2xl font-bold text-blue-600">${stats.studentGenderStats.male}</div>
@@ -997,15 +1289,51 @@ class AdminDashboardPage extends App {
                             
                             <!-- Teacher Gender Chart -->
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
-                                        <i class="fas fa-chalkboard-teacher text-white text-sm"></i>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-chalkboard-teacher text-white text-sm"></i>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Teacher Gender Distribution</h3>
                                     </div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Teacher Gender Distribution</h3>
+                                    <!-- Tab Navigation -->
+                                    <div class="flex bg-gray-100 rounded-lg p-1">
+                                        <button 
+                                            data-gender-tab="doughnut"
+                                            data-target="teacher"
+                                            class="px-3 py-1.5 text-sm font-medium text-pink-600 bg-white rounded-md shadow-sm transition-all duration-200">
+                                            Doughnut
+                                        </button>
+                                        <button 
+                                            data-gender-tab="bar"
+                                            data-target="teacher"
+                                            class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
+                                            Bar
+                                        </button>
+                                        <button 
+                                            data-gender-tab="line"
+                                            data-target="teacher"
+                                            class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
+                                            Line
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="relative" style="height: 250px;">
+                                
+                                <!-- Doughnut Chart Tab -->
+                                <div data-gender-chart="teacher-doughnut" class="relative" style="height: 250px;">
                                     <canvas id="teacherGenderChart"></canvas>
                                 </div>
+                                
+                                <!-- Bar Chart Tab -->
+                                <div data-gender-chart="teacher-bar" class="relative" style="height: 250px; display: none;">
+                                    <canvas id="teacherGenderBarChart"></canvas>
+                                </div>
+                                
+                                <!-- Line Chart Tab -->
+                                <div data-gender-chart="teacher-line" class="relative" style="height: 250px; display: none;">
+                                    <canvas id="teacherGenderLineChart"></canvas>
+                                </div>
+                                
                                 <div class="mt-4 grid grid-cols-2 gap-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                                         <div class="text-2xl font-bold text-blue-600">${stats.teacherGenderStats.male}</div>

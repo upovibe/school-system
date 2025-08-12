@@ -507,59 +507,7 @@ class AdminDashboardPage extends App {
              });
          }
          
-         // Line Chart
-         const studentGenderLineCtx = this.querySelector('#studentGenderLineChart');
-         if (studentGenderLineCtx && typeof Chart !== 'undefined') {
-             if (this.charts.studentGenderLine) {
-                 this.charts.studentGenderLine.destroy();
-             }
-             
-             this.charts.studentGenderLine = new Chart(studentGenderLineCtx, {
-                 type: 'line',
-                 data: {
-                     labels: ['Male Students', 'Female Students'],
-                     datasets: [{
-                         label: 'Gender Distribution',
-                         data: [stats.studentGenderStats.male, stats.studentGenderStats.female],
-                         borderColor: 'rgba(59, 130, 246, 1)',
-                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                         borderWidth: 3,
-                         fill: true,
-                         tension: 0.4,
-                         pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                         pointBorderColor: '#ffffff',
-                         pointBorderWidth: 2,
-                         pointRadius: 6,
-                         pointHoverRadius: 8
-                     }]
-                 },
-                 options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     plugins: {
-                         legend: { display: false },
-                         tooltip: {
-                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                             titleColor: 'white',
-                             bodyColor: 'white',
-                             borderColor: 'rgba(255, 255, 255, 0.2)',
-                             borderWidth: 1
-                         }
-                     },
-                     scales: {
-                         y: {
-                             beginAtZero: true,
-                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                             ticks: { font: { size: 12 } }
-                         },
-                         x: {
-                             grid: { display: false },
-                             ticks: { font: { size: 12 } }
-                         }
-                     }
-                 }
-             });
-         }
+
      }
      
      createTeacherGenderCharts(stats) {
@@ -666,59 +614,7 @@ class AdminDashboardPage extends App {
              });
          }
          
-         // Line Chart
-         const teacherGenderLineCtx = this.querySelector('#teacherGenderLineChart');
-         if (teacherGenderLineCtx && typeof Chart !== 'undefined') {
-             if (this.charts.teacherGenderLine) {
-                 this.charts.teacherGenderLine.destroy();
-             }
-             
-             this.charts.teacherGenderLine = new Chart(teacherGenderLineCtx, {
-                 type: 'line',
-                 data: {
-                     labels: ['Male Teachers', 'Female Teachers'],
-                     datasets: [{
-                         label: 'Gender Distribution',
-                         data: [stats.teacherGenderStats.male, stats.teacherGenderStats.female],
-                         borderColor: 'rgba(59, 130, 246, 1)',
-                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                         borderWidth: 3,
-                         fill: true,
-                         tension: 0.4,
-                         pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                         pointBorderColor: '#ffffff',
-                         pointBorderWidth: 2,
-                         pointRadius: 6,
-                         pointHoverRadius: 8
-                     }]
-                 },
-                 options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     plugins: {
-                         legend: { display: false },
-                         tooltip: {
-                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                             titleColor: 'white',
-                             bodyColor: 'white',
-                             borderColor: 'rgba(255, 255, 255, 0.2)',
-                             borderWidth: 1
-                         }
-                     },
-                     scales: {
-                         y: {
-                             beginAtZero: true,
-                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                             ticks: { font: { size: 12 } }
-                         },
-                         x: {
-                             grid: { display: false },
-                             ticks: { font: { size: 12 } }
-                         }
-                     }
-                 }
-             });
-         }
+
      }
  
      async loadStats() {
@@ -1238,7 +1134,7 @@ class AdminDashboardPage extends App {
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                        <div class="size-8 min-w-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
                                             <i class="fas fa-user-graduate text-white text-sm"></i>
                                         </div>
                                         <h3 class="text-lg font-semibold text-gray-900">Student Gender Distribution</h3>
@@ -1270,10 +1166,7 @@ class AdminDashboardPage extends App {
                                     <canvas id="studentGenderBarChart"></canvas>
                                 </div>
                                 
-                                <!-- Line Chart Tab -->
-                                <div data-gender-chart="student-line" class="relative" style="height: 250px; display: none;">
-                                    <canvas id="studentGenderLineChart"></canvas>
-                                </div>
+                                
                                 
                                 <div class="mt-4 grid grid-cols-2 gap-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -1291,7 +1184,7 @@ class AdminDashboardPage extends App {
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                                        <div class="size-8 min-w-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
                                             <i class="fas fa-chalkboard-teacher text-white text-sm"></i>
                                         </div>
                                         <h3 class="text-lg font-semibold text-gray-900">Teacher Gender Distribution</h3>
@@ -1310,12 +1203,6 @@ class AdminDashboardPage extends App {
                                             class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
                                             Bar
                                         </button>
-                                        <button 
-                                            data-gender-tab="line"
-                                            data-target="teacher"
-                                            class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
-                                            Line
-                                        </button>
                                     </div>
                                 </div>
                                 
@@ -1329,10 +1216,7 @@ class AdminDashboardPage extends App {
                                     <canvas id="teacherGenderBarChart"></canvas>
                                 </div>
                                 
-                                <!-- Line Chart Tab -->
-                                <div data-gender-chart="teacher-line" class="relative" style="height: 250px; display: none;">
-                                    <canvas id="teacherGenderLineChart"></canvas>
-                                </div>
+                                
                                 
                                 <div class="mt-4 grid grid-cols-2 gap-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">

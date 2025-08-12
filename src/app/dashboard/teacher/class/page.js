@@ -144,9 +144,79 @@ class TeacherClassPage extends App {
 
         if (!classData) {
             return `
-                <div class="space-y-6">
-                    <ui-alert variant="info" title="No Class Assigned" message="You are not currently assigned to any class as a class teacher.">
-                    </ui-alert>
+                <div class="space-y-8">
+                    <!-- Enhanced Header for No Class -->
+                    <div class="bg-gradient-to-r from-gray-600 to-gray-700 rounded-xl shadow-lg p-8 text-white text-center">
+                        <div class="w-20 h-20 bg-white bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-chalkboard-teacher text-white text-3xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold mb-3">No Class Assignment</h1>
+                        <p class="text-gray-200 text-lg mb-6">You are not currently assigned to any class as a class teacher.</p>
+                                                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                             <ui-button 
+                                 color="secondary" 
+                                 onclick="window.location.reload()"
+                                 class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-white border border-white border-opacity-20">
+                                 <i class="fas fa-sync-alt mr-2"></i>
+                                 Refresh
+                             </ui-button>
+                             <ui-button 
+                                 color="primary" 
+                                 onclick="window.location.href='/dashboard/teacher'">
+                                 <i class="fas fa-home mr-2"></i>
+                                 Go to Dashboard
+                             </ui-button>
+                         </div>
+                    </div>
+
+                    <!-- Information Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- What This Means -->
+                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">What This Means</h3>
+                            <p class="text-gray-600 text-sm">You haven't been assigned as a class teacher to any specific class yet. This usually happens when:</p>
+                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
+                                <li>• You're a new teacher</li>
+                                <li>• Class assignments are pending</li>
+                                <li>• You're between class assignments</li>
+                            </ul>
+                        </div>
+
+                        <!-- What You Can Do -->
+                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-lightbulb text-green-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">What You Can Do</h3>
+                            <p class="text-gray-600 text-sm">While waiting for class assignment:</p>
+                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
+                                <li>• Update your profile information</li>
+                                <li>• Review teaching materials</li>
+                                <li>• Contact administration</li>
+                                <li>• Check other dashboard features</li>
+                            </ul>
+                        </div>
+
+                        <!-- Next Steps -->
+                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
+                            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-arrow-right text-amber-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Next Steps</h3>
+                            <p class="text-gray-600 text-sm">To get assigned to a class:</p>
+                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
+                                <li>• Contact your department head</li>
+                                <li>• Check with administration</li>
+                                <li>• Wait for semester planning</li>
+                                <li>• Refresh this page regularly</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    
                 </div>
             `;
         }

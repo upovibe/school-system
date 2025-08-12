@@ -40,6 +40,7 @@ class AdminDashboardPage extends App {
         };
         this.loading = true;
         this.currentUser = null;
+        this.charts = {};
         
         // Initialize state properly
         this.set('stats', this.stats);
@@ -52,6 +53,159 @@ class AdminDashboardPage extends App {
         document.title = 'Admin Dashboard | School System';
         this.loadUserData();
         this.loadStats();
+        
+        // Load Chart.js dynamically
+        this.loadChartJS();
+    }
+
+    async loadChartJS() {
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = () => this.initializeCharts();
+            document.head.appendChild(script);
+        } else {
+            this.initializeCharts();
+        }
+    }
+
+    initializeCharts() {
+        // Wait for the next tick to ensure DOM is ready
+        setTimeout(() => {
+            this.createFinanceCharts();
+        }, 100);
+    }
+
+    createFinanceCharts() {
+        const stats = this.get('stats') || this.stats;
+        
+        // Finance Overview Chart
+        const financeCtx = this.querySelector('#financeOverviewChart');
+        if (financeCtx && typeof Chart !== 'undefined') {
+            if (this.charts.financeOverview) {
+                this.charts.financeOverview.destroy();
+            }
+            
+            this.charts.financeOverview = new Chart(financeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fee Schedules', 'Invoices', 'Payments', 'Receipts'],
+                    datasets: [{
+                        data: [stats.feeSchedules, stats.invoices, stats.payments, stats.receipts],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',  // emerald
+                            'rgba(59, 130, 246, 0.8)',  // blue
+                            'rgba(34, 197, 94, 0.8)',   // green
+                            'rgba(147, 51, 234, 0.8)'   // purple
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(147, 51, 234, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        // Finance Trend Chart (Bar Chart)
+        const financeTrendCtx = this.querySelector('#financeTrendChart');
+        if (financeTrendCtx && typeof Chart !== 'undefined') {
+            if (this.charts.financeTrend) {
+                this.charts.financeTrend.destroy();
+            }
+            
+            this.charts.financeTrend = new Chart(financeTrendCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Fee Schedules', 'Invoices', 'Payments', 'Receipts'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [stats.feeSchedules, stats.invoices, stats.payments, stats.receipts],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(34, 197, 94, 0.7)',
+                            'rgba(147, 51, 234, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(147, 51, 234, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     async loadStats() {
@@ -224,6 +378,9 @@ class AdminDashboardPage extends App {
             // Update UI with all data at once
             this.set('stats', statsData);
             
+            // Refresh charts with new data
+            this.refreshCharts();
+            
         } catch (error) {
             console.error('❌ Error loading dashboard stats:', error);
             
@@ -236,6 +393,13 @@ class AdminDashboardPage extends App {
         } finally {
             this.set('loading', false);
         }
+    }
+
+    refreshCharts() {
+        // Wait a bit for the DOM to update, then refresh charts
+        setTimeout(() => {
+            this.createFinanceCharts();
+        }, 200);
     }
 
     async loadUserData() {
@@ -584,7 +748,8 @@ class AdminDashboardPage extends App {
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Finance Metrics Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <!-- Fee Schedules Card -->
                             <div class="bg-white rounded-lg shadow-lg border border-emerald-200 p-6 hover:shadow-xl transition-all duration-300">
                                 <div class="flex items-center justify-between mb-4">
@@ -666,6 +831,41 @@ class AdminDashboardPage extends App {
                                 <div class="bg-purple-50 rounded-lg p-3 text-center">
                                     <div class="text-xs text-purple-600 font-medium">Total Receipts</div>
                                     <div class="text-sm font-semibold text-purple-800">${stats.receipts} Issued</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Finance Charts Section -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Finance Overview Chart (Doughnut) -->
+                            <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-chart-pie text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Finance Overview</h3>
+                                </div>
+                                <div class="relative" style="height: 300px;">
+                                    <canvas id="financeOverviewChart"></canvas>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <p class="text-sm text-gray-600">Distribution of financial records across different categories</p>
+                                </div>
+                            </div>
+
+                            <!-- Finance Trend Chart (Bar) -->
+                            <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-chart-bar text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Finance Metrics</h3>
+                                </div>
+                                <div class="relative" style="height: 300px;">
+                                    <canvas id="financeTrendChart"></canvas>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <p class="text-sm text-gray-600">Count comparison of financial records</p>
                                 </div>
                             </div>
                         </div>

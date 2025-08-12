@@ -2073,8 +2073,9 @@ class TeacherController {
 
             $teacher = $_REQUEST['current_teacher'];
             if (empty($teacher['class_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'No class assigned to this teacher']);
+                // Return empty data instead of error - teacher just doesn't have a class yet
+                http_response_code(200);
+                echo json_encode(['success' => true, 'data' => [], 'message' => 'No class assigned to this teacher yet']);
                 return;
             }
 
@@ -2113,8 +2114,9 @@ class TeacherController {
 
             $teacher = $_REQUEST['current_teacher'];
             if (empty($teacher['class_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'No class assigned to this teacher']);
+                // Return empty data instead of error - teacher just doesn't have a class yet
+                http_response_code(200);
+                echo json_encode(['success' => true, 'data' => null, 'message' => 'No class assigned to this teacher yet']);
                 return;
             }
 

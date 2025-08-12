@@ -301,7 +301,7 @@ class AdminDashboardPage extends App {
                             borderWidth: 1,
                             callbacks: {
                                 label: function(context) {
-                                    return `Income: $${context.parsed.y.toLocaleString()}`;
+                                    return `Income: ₵${context.parsed.y.toLocaleString()}`;
                                 }
                             }
                         }
@@ -314,7 +314,7 @@ class AdminDashboardPage extends App {
                             },
                             ticks: {
                                 callback: function(value) {
-                                    return '$' + value.toLocaleString();
+                                    return '₵' + value.toLocaleString();
                                 },
                                 font: {
                                     size: 12
@@ -631,7 +631,7 @@ class AdminDashboardPage extends App {
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                         <div>
                             <h1 class="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
-                            <p class="text-blue-100 text-lg mt-2">Welcome back, <span class="font-semibold">${userName}</span></p>
+                            <p class="text-blue-100 text-lg mt-2">Welcome back, <!-- <span class="font-semibold">${userName}</span></p>-->
                             <p class="text-blue-100 text-sm mt-1">
                                 <i class="fas fa-calendar-alt mr-1"></i>
                                 ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

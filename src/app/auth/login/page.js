@@ -46,10 +46,7 @@ class LoginPage extends App {
     async handleSubmit() {
         const { emailOrId, password, rememberMe } = this.formData;
         
-        console.log('Login attempt with:', { emailOrId, password }); // Debug log
-        
         if (!emailOrId || !password) {
-            console.log('Validation failed - missing fields'); // Debug log
             Toast.show({
                 title: 'Validation Error',
                 message: 'Please fill in all fields',
@@ -61,13 +58,10 @@ class LoginPage extends App {
 
         try {
             const inputType = this.detectInputType(emailOrId);
-            console.log('Detected input type:', inputType); // Debug log
             
             if (inputType === 'email') {
-                console.log('Attempting email login...'); // Debug log
                 await this.authenticateUser({ email: emailOrId, password }, 'email');
             } else {
-                console.log('Attempting ID login...'); // Debug log
                 // For ID-based login, just send the ID and password
                 // Backend will automatically search both teachers and students tables
                 await this.authenticateUser({ 
@@ -76,7 +70,6 @@ class LoginPage extends App {
                 }, 'id');
             }
         } catch (error) {
-            console.log('Login error caught:', error); // Debug log
             Toast.show({
                 title: 'Login Failed',
                 message: error.response?.data?.error || 'An error occurred during login',
@@ -156,8 +149,6 @@ class LoginPage extends App {
             }, 2000);
 
         } catch (error) {
-            console.log('Full error object:', error); // Debug log
-            console.log('Error response:', error.response); // Debug log
             
             // Handle specific API errors
             if (error.response?.status === 401) {
@@ -214,9 +205,6 @@ class LoginPage extends App {
                                 class="transition-all duration-300 hover:shadow-md focus:shadow-lg"
                                 oninput="this.closest('app-login-page').handleInputChange('emailOrId', this.value)">
                             </ui-input>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Examples: teacher@school.com, EMP001, STU001
-                            </p>
                         </div>
 
                         <div class="space-y-1">
@@ -260,7 +248,7 @@ class LoginPage extends App {
                     <!-- Footer Section -->
                     <div class="pt-4">
                         <p class="text-center text-sm text-gray-500">
-                            Secure login powered by School Management System
+                            Secure login powered by PhirmHost
                         </p>
                     </div>
                 </ui-card>

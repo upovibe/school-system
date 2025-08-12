@@ -2369,5 +2369,36 @@ class TeacherController {
             echo json_encode(['success' => false, 'message' => 'Error retrieving grading periods: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Get gender statistics for teachers (admin only)
+     */
+    public function getGenderStatistics() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $genderStats = $this->teacherModel->getGenderStatistics();
+            $genderStatsByDepartment = $this->teacherModel->getGenderStatisticsByDepartment();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'overall' => $genderStats,
+                    'by_department' => $genderStatsByDepartment
+                ],
+                'message' => 'Gender statistics retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving gender statistics: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?> 

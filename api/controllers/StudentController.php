@@ -1749,5 +1749,35 @@ class StudentController {
         }
     }
 
+    /**
+     * Get gender statistics for students (admin only)
+     */
+    public function getGenderStatistics() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $genderStats = $this->studentModel->getGenderStatistics();
+            $genderStatsByClass = $this->studentModel->getGenderStatisticsByClass();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'overall' => $genderStats,
+                    'by_class' => $genderStatsByClass
+                ],
+                'message' => 'Gender statistics retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving gender statistics: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?> 

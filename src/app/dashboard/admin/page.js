@@ -21,6 +21,16 @@ class AdminDashboardPage extends App {
             gradingPolicies: 0,
             studentGrades: 0,
             
+            // Gender Statistics (only male and female)
+            studentGenderStats: {
+                male: 0,
+                female: 0
+            },
+            teacherGenderStats: {
+                male: 0,
+                female: 0
+            },
+            
             // General Management
             users: 0,
             teams: 0,
@@ -413,6 +423,17 @@ class AdminDashboardPage extends App {
                     timeoutPromise(3000)
                 ]).catch(() => ({ data: { data: [] } })),
                 
+                // Gender Statistics
+                Promise.race([
+                    api.withToken(token).get('/students/gender-statistics'),
+                    timeoutPromise(3000)
+                ]).catch(() => ({ data: { data: { overall: [] } } })),
+                
+                Promise.race([
+                    api.withToken(token).get('/teachers/gender-statistics'),
+                    timeoutPromise(3000)
+                ]).catch(() => ({ data: { data: { overall: [] } } })),
+                
                 // General Management
                 Promise.race([
                     api.withToken(token).get('/users'),
@@ -494,22 +515,50 @@ class AdminDashboardPage extends App {
                 gradingPolicies: allStats[7].status === 'fulfilled' ? (allStats[7].value.data?.data?.length || 0) : 0,
                 studentGrades: allStats[8].status === 'fulfilled' ? (allStats[8].value.data?.data?.length || 0) : 0,
                 
+                // Gender Statistics
+                            studentGenderStats: (() => {
+                if (allStats[9].status === 'fulfilled' && allStats[9].value.data?.data?.overall) {
+                    const stats = allStats[9].value.data.data.overall;
+                    const result = { male: 0, female: 0 };
+                    stats.forEach(stat => {
+                        if (stat.gender && stat.count && (stat.gender === 'male' || stat.gender === 'female')) {
+                            result[stat.gender] = parseInt(stat.count);
+                        }
+                    });
+                    return result;
+                }
+                return { male: 0, female: 0 };
+            })(),
+                            teacherGenderStats: (() => {
+                if (allStats[10].status === 'fulfilled' && allStats[10].value.data?.data?.overall) {
+                    const stats = allStats[10].value.data.data.overall;
+                    const result = { male: 0, female: 0 };
+                    stats.forEach(stat => {
+                        if (stat.gender && stat.count && (stat.gender === 'male' || stat.gender === 'female')) {
+                            result[stat.gender] = parseInt(stat.count);
+                        }
+                    });
+                    return result;
+                }
+                return { male: 0, female: 0 };
+            })(),
+                
                 // General Management
-                users: allStats[9].status === 'fulfilled' ? (allStats[9].value.data?.length || allStats[9].value.data.data?.length || 0) : 0,
-                teams: allStats[10].status === 'fulfilled' ? (allStats[10].value.data.data?.length || 0) : 0,
-                applications: allStats[11].status === 'fulfilled' ? (allStats[11].value.data.data?.length || 0) : 0,
-                events: allStats[12].status === 'fulfilled' ? (allStats[12].value.data.data?.length || 0) : 0,
-                galleries: allStats[13].status === 'fulfilled' ? (allStats[13].value.data.data?.length || 0) : 0,
-                videoGalleries: allStats[14].status === 'fulfilled' ? (allStats[14].value.data.data?.length || 0) : 0,
-                news: allStats[15].status === 'fulfilled' ? (allStats[15].value.data.data?.length || 0) : 0,
-                pages: allStats[16].status === 'fulfilled' ? (allStats[16].value.data.data?.length || 0) : 0,
-                logs: allStats[17].status === 'fulfilled' ? (allStats[17].value.data.data?.length || 0) : 0,
+                users: allStats[11].status === 'fulfilled' ? (allStats[11].value.data?.length || allStats[11].value.data.data?.length || 0) : 0,
+                teams: allStats[12].status === 'fulfilled' ? (allStats[12].value.data.data?.length || 0) : 0,
+                applications: allStats[13].status === 'fulfilled' ? (allStats[13].value.data.data?.length || 0) : 0,
+                events: allStats[14].status === 'fulfilled' ? (allStats[14].value.data.data?.length || 0) : 0,
+                galleries: allStats[15].status === 'fulfilled' ? (allStats[15].value.data.data?.length || 0) : 0,
+                videoGalleries: allStats[16].status === 'fulfilled' ? (allStats[16].value.data.data?.length || 0) : 0,
+                news: allStats[17].status === 'fulfilled' ? (allStats[17].value.data.data?.length || 0) : 0,
+                pages: allStats[18].status === 'fulfilled' ? (allStats[18].value.data.data?.length || 0) : 0,
+                logs: allStats[19].status === 'fulfilled' ? (allStats[19].value.data.data?.length || 0) : 0,
                 
                 // Finance
-                feeSchedules: allStats[18].status === 'fulfilled' ? (allStats[18].value.data?.data?.length || 0) : 0,
-                invoices: allStats[19].status === 'fulfilled' ? (allStats[19].value.data?.data?.length || 0) : 0,
-                payments: allStats[20].status === 'fulfilled' ? (allStats[20].value.data?.data?.length || 0) : 0,
-                receipts: allStats[21].status === 'fulfilled' ? (allStats[21].value.data?.data?.length || 0) : 0
+                feeSchedules: allStats[20].status === 'fulfilled' ? (allStats[20].value.data?.data?.length || 0) : 0,
+                invoices: allStats[21].status === 'fulfilled' ? (allStats[21].value.data?.data?.length || 0) : 0,
+                payments: allStats[22].status === 'fulfilled' ? (allStats[22].value.data?.data?.length || 0) : 0,
+                receipts: allStats[23].status === 'fulfilled' ? (allStats[23].value.data?.data?.length || 0) : 0
             };
 
             // Update UI with all data at once

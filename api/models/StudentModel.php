@@ -522,5 +522,53 @@ class StudentModel extends BaseModel {
             throw new Exception('Error fetching basic student information: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get gender statistics for students
+     */
+    public function getGenderStatistics() {
+        $sql = "
+            SELECT 
+                gender,
+                COUNT(*) as count,
+                ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM students WHERE status = 'active')), 2) as percentage
+            FROM students 
+            WHERE status = 'active' 
+            GROUP BY gender 
+            ORDER BY count DESC
+        ";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get gender statistics by class
+     */
+    public function getGenderStatisticsByClass($classId = null) {
+        $sql = "
+            SELECT 
+                c.name as class_name,
+                c.section as class_section,
+                s.gender,
+                COUNT(*) as count
+            FROM students s
+            LEFT JOIN classes c ON s.current_class_id = c.id
+            WHERE s.status = 'active'
+        ";
+        
+        $params = [];
+        if ($classId) {
+            $sql .= " AND s.current_class_id = ?";
+            $params[] = $classId;
+        }
+        
+        $sql .= " GROUP BY c.id, s.gender ORDER BY c.name, s.gender";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?> 

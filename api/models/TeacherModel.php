@@ -753,5 +753,45 @@ class TeacherModel extends BaseModel {
             throw new Exception('Error fetching teacher classes: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get gender statistics for teachers
+     */
+    public function getGenderStatistics() {
+        $sql = "
+            SELECT 
+                gender,
+                COUNT(*) as count,
+                ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM teachers WHERE status = 'active')), 2) as percentage
+            FROM teachers 
+            WHERE status = 'active' 
+            GROUP BY gender 
+            ORDER BY count DESC
+        ";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get gender statistics by department (if available)
+     */
+    public function getGenderStatisticsByDepartment() {
+        $sql = "
+            SELECT 
+                COALESCE(t.specialization, 'General') as department,
+                t.gender,
+                COUNT(*) as count
+            FROM teachers t
+            WHERE t.status = 'active'
+            GROUP BY t.specialization, t.gender 
+            ORDER BY t.specialization, t.gender
+        ";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?> 

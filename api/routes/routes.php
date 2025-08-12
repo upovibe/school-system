@@ -157,6 +157,7 @@ Router::get('/teachers/with-assignment-counts', 'TeacherController@getWithAssign
 Router::get('/teachers/specializations', 'TeacherController@getSpecializations');
 Router::get('/teachers/by-specialization', 'TeacherController@getBySpecialization');
 Router::get('/teachers/statistics', 'TeacherController@getStatistics');
+Router::get('/teachers/gender-statistics', 'TeacherController@getGenderStatistics');
 Router::get('/teachers/class-teachers', 'TeacherController@getClassTeachers');
 Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasses');
 Router::get('/teachers/my-class', 'TeacherController@getMyClass');
@@ -195,6 +196,7 @@ Router::get('/students/search', 'StudentController@search');
 Router::get('/students/by-class', 'StudentController@getByClass');
 Router::get('/students/current-class', 'StudentController@getCurrentClass');
 Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
+Router::get('/students/gender-statistics', 'StudentController@getGenderStatistics');
 
 // Student Assignment Management Routes (student only) - Must come before /students/{id}
 Router::get('/students/my-assignments', 'StudentController@getMyAssignments');

@@ -4,18 +4,19 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Checkbox.js';
 import '@/components/ui/Toast.js';
+
 import api from '@/services/api.js';
 
 /**
  * Login Page Component (/auth/login)
  * 
- * Login form with email and password fields.
+ * Smart login form that automatically detects email or ID input.
  */
 class LoginPage extends App {
     constructor() {
         super();
         this.formData = {
-            email: '',
+            emailOrId: '',
             password: '',
             rememberMe: false
         };
@@ -30,10 +31,25 @@ class LoginPage extends App {
         this.formData[field] = value;
     }
 
-    async handleSubmit() {
-        const { email, password, rememberMe } = this.formData;
+    // Auto-detect if input is email or ID
+    detectInputType(input) {
+        // Check if it looks like an email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(input)) {
+            return 'email';
+        }
         
-        if (!email || !password) {
+        // If not email, it's an ID (let backend figure out if teacher or student)
+        return 'id';
+    }
+
+    async handleSubmit() {
+        const { emailOrId, password, rememberMe } = this.formData;
+        
+        console.log('Login attempt with:', { emailOrId, password }); // Debug log
+        
+        if (!emailOrId || !password) {
+            console.log('Validation failed - missing fields'); // Debug log
             Toast.show({
                 title: 'Validation Error',
                 message: 'Please fill in all fields',
@@ -44,9 +60,23 @@ class LoginPage extends App {
         }
 
         try {
-            // Call the actual API
-            await this.authenticateUser(email, password);
+            const inputType = this.detectInputType(emailOrId);
+            console.log('Detected input type:', inputType); // Debug log
+            
+            if (inputType === 'email') {
+                console.log('Attempting email login...'); // Debug log
+                await this.authenticateUser({ email: emailOrId, password }, 'email');
+            } else {
+                console.log('Attempting ID login...'); // Debug log
+                // For ID-based login, just send the ID and password
+                // Backend will automatically search both teachers and students tables
+                await this.authenticateUser({ 
+                    id: emailOrId, 
+                    password
+                }, 'id');
+            }
         } catch (error) {
+            console.log('Login error caught:', error); // Debug log
             Toast.show({
                 title: 'Login Failed',
                 message: error.response?.data?.error || 'An error occurred during login',
@@ -56,13 +86,16 @@ class LoginPage extends App {
         }
     }
 
-    async authenticateUser(email, password) {
+    async authenticateUser(credentials, loginType) {
         try {
+            // Add login type to credentials
+            const requestData = {
+                ...credentials,
+                login_type: loginType
+            };
+
             // Make API call to authenticate
-            const response = await api.post('/auth/login', {
-                email: email,
-                password: password
-            });
+            const response = await api.post('/auth/login', requestData);
 
             const { user, requires_password_change } = response.data;
             
@@ -85,7 +118,8 @@ class LoginPage extends App {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: roleName
+                role: roleName,
+                profileData: user.profile_data || null
             }));
             localStorage.setItem('token', user.token);
 
@@ -124,26 +158,34 @@ class LoginPage extends App {
             }, 2000);
 
         } catch (error) {
+            console.log('Full error object:', error); // Debug log
+            console.log('Error response:', error.response); // Debug log
+            
             // Handle specific API errors
             if (error.response?.status === 401) {
-                throw new Error('Invalid email or password');
+                throw new Error('Invalid credentials');
             } else if (error.response?.status === 422) {
                 throw new Error('Please check your input and try again');
+            } else if (error.response?.status) {
+                // Server returned an error status
+                throw new Error(error.response.data?.error || `Server error: ${error.response.status}`);
+            } else if (error.code === 'ERR_NETWORK') {
+                throw new Error('Network error. Please check your connection and try again.');
             } else {
-                throw new Error('Network error. Please try again.');
+                throw new Error(error.message || 'An unexpected error occurred. Please try again.');
             }
         }
     }
 
     redirectToDashboard(role) {
-            const dashboardRoutes = {
-                'admin': '/dashboard/admin',
-                'teacher': '/dashboard/teacher',
-                'student': '/dashboard/student',
-                'parent': '/dashboard/parent',
-                'staff': '/dashboard/staff',
-                'cashier': '/dashboard/cashier'
-            };
+        const dashboardRoutes = {
+            'admin': '/dashboard/admin',
+            'teacher': '/dashboard/teacher',
+            'student': '/dashboard/student',
+            'parent': '/dashboard/parent',
+            'staff': '/dashboard/staff',
+            'cashier': '/dashboard/cashier'
+        };
 
         const route = dashboardRoutes[role] || '/dashboard/admin';
         window.location.href = route;
@@ -152,76 +194,80 @@ class LoginPage extends App {
     render() {
         return `
             <div class="flex items-center justify-center min-h-screen p-5">
-                    <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm">
-                        <!-- Logo/Icon Section -->
-                        <div class="text-center mb-4">
-                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200" onclick="window.location.href='/'">
-                                <i class="fas fa-lock text-white text-2xl"></i>
-                            </div>
-                            <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
-                                Welcome Back
-                            </h1>
+                <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm w-full max-w-md">
+                    <!-- Logo/Icon Section -->
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200" onclick="window.location.href='/'">
+                            <i class="fas fa-lock text-white text-2xl"></i>
                         </div>
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+                            Welcome Back
+                        </h1>
+                        <p class="text-gray-600 text-sm">Sign in with your email or ID</p>
+                    </div>
 
-                        <!-- Form Section -->
-                        <form class="space-y-3" onsubmit="event.preventDefault(); this.closest('app-login-page').handleSubmit();">
-                            <div class="space-y-1">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">
-                                    Email Address
-                                </label>
-                                <ui-input 
-                                    type="email" 
-                                    placeholder="Enter your email"
-                                    class="transition-all duration-300 hover:shadow-md focus:shadow-lg"
-                                    oninput="this.closest('app-login-page').handleInputChange('email', this.value)">
-                                </ui-input>
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="block text-sm font-semibold text-gray-700">
-                                    Password
-                                </label>
-                                <ui-input 
-                                    type="password" 
-                                    placeholder="Enter your password"
-                                    class="transition-all duration-300 hover:shadow-md focus:shadow-lg"
-                                    oninput="this.closest('app-login-page').handleInputChange('password', this.value)">
-                                </ui-input>
-                            </div>
-
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <ui-checkbox 
-                                        label="Remember me"
-                                        class="transition-all duration-200 hover:scale-105"
-                                        onchange="this.closest('app-login-page').handleInputChange('rememberMe', this.checked)">
-                                    </ui-checkbox>
-                                </div>
-                                <div class="text-sm">
-                                    <a href="/auth/forgot-password" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200 hover:underline">
-                                        Forgot password?
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="pt-4">
-                                <ui-button 
-                                    type="submit" 
-                                    color="primary" 
-                                    class="w-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95">
-                                    <i class="fas fa-sign-in-alt text-lg mr-2"></i>
-                                    Sign In
-                                </ui-button>
-                            </div>
-                        </form>
-
-                        <!-- Footer Section -->
-                        <div class="mt-8 pt-6 border-t border-gray-100">
-                            <p class="text-center text-sm text-gray-500">
-                                Secure login powered by School Management System
+                    <!-- Smart Login Form -->
+                    <form class="space-y-4" onsubmit="event.preventDefault(); this.closest('app-login-page').handleSubmit();">
+                        <div class="space-y-1">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                Email or ID
+                            </label>
+                            <ui-input 
+                                type="text" 
+                                placeholder="Enter your email, Employee ID, or Student ID"
+                                class="transition-all duration-300 hover:shadow-md focus:shadow-lg"
+                                oninput="this.closest('app-login-page').handleInputChange('emailOrId', this.value)">
+                            </ui-input>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Examples: teacher@school.com, EMP001, STU001
                             </p>
                         </div>
-                    </ui-card>
+
+                        <div class="space-y-1">
+                            <label class="block text-sm font-semibold text-gray-700">
+                                Password
+                            </label>
+                            <ui-input 
+                                type="password" 
+                                placeholder="Enter your password"
+                                class="transition-all duration-300 hover:shadow-md focus:shadow-lg"
+                                oninput="this.closest('app-login-page').handleInputChange('password', this.value)">
+                            </ui-input>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <ui-checkbox 
+                                    label="Remember me"
+                                    class="transition-all duration-200 hover:scale-105"
+                                    onchange="this.closest('app-login-page').handleInputChange('rememberMe', this.checked)">
+                                </ui-checkbox>
+                            </div>
+                            <div class="text-sm">
+                                <a href="/auth/forgot-password" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200 hover:underline">
+                                    Forgot password?
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <ui-button 
+                                type="submit" 
+                                color="primary" 
+                                class="w-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95">
+                                <i class="fas fa-sign-in-alt text-lg mr-2"></i>
+                                Sign In
+                            </ui-button>
+                        </div>
+                    </form>                                        
+
+                    <!-- Footer Section -->
+                    <div class="pt-4">
+                        <p class="text-center text-sm text-gray-500">
+                            Secure login powered by School Management System
+                        </p>
+                    </div>
+                </ui-card>
             </div>
         `;
     }

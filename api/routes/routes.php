@@ -325,6 +325,9 @@ Router::get('/finance/receipts/{id}', 'FinanceController@showReceipt');
 Router::get('/finance/receipts/{id}/print', 'FinanceController@printReceipt');
 Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateReceipt');
 
+// Finance - Analytics (admin only)
+Router::get('/finance/monthly-income', 'FinanceController@getMonthlyIncome');
+
 // Cashier - Fee Schedules (cashier only)
 Router::get('/cashier/schedules', 'CashierController@indexSchedules');
 Router::get('/cashier/schedules/{id}', 'CashierController@showSchedule');

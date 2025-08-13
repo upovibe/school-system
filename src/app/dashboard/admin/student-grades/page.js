@@ -52,7 +52,7 @@ class StudentGradesManagementPage extends App {
                         <div>
                             <div class="flex items-center gap-2">
                                 <h1 class="text-2xl sm:text-3xl font-bold">Student Grades</h1>
-                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-student-grades-info" title="About Student Grades">
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-grades-info" title="About Student Grades">
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>

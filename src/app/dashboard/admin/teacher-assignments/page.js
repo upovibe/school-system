@@ -54,8 +54,13 @@ class TeacherAssignmentManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Teacher Assignments</h1>
-                            <p class="text-blue-100 text-base sm:text-lg">Manage class and subject assignments for teachers</p>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Teacher Assignments</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-teacher-assignments-info" title="About Teacher Assignments">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
+                            <p class="text-blue-100 text-base sm:text-lg">Manage subject assignments for teachers</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -108,6 +113,7 @@ class TeacherAssignmentManagementPage extends App {
         super.connectedCallback();
         document.title = 'Teacher Assignment Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -222,6 +228,56 @@ class TeacherAssignmentManagementPage extends App {
                 this.loadData();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-teacher-assignments-info') {
+            this.showTeacherAssignmentsInfo();
+        }
+    }
+
+    showTeacherAssignmentsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-user-tie text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Teacher Assignments</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What are Teacher Assignments?</h4>
+                    <p class="text-gray-700">Teacher assignments specify which subjects a teacher teaches in specific classes. These subject-level assignments grant permission to record grades for those subjects in those classes.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Subject Teacher</span>
+                        <span class="text-sm text-gray-600">Assign subjects per class for grade entry (e.g., French, ICT, Twi across multiple classes)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Class & Section</span>
+                        <span class="text-sm text-gray-600">E.g., JHS 1 - A</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Grading Rights</span>
+                        <span class="text-sm text-gray-600">Only subjects assigned to the teacher for that class can be graded by that teacher</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        First assign subjects to classes in Class Subjects, then assign teachers here to those class-subjects for grading.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

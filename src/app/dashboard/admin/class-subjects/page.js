@@ -52,7 +52,7 @@ class ClassSubjectManagementPage extends App {
                         <div>
                             <div class="flex items-center gap-2">
                                 <h1 class="text-2xl sm:text-3xl font-bold">Class Subjects</h1>
-                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-class-subjects-info" title="About Class Subjects">
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-class-subjects-info" title="About Class Subjects">
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>

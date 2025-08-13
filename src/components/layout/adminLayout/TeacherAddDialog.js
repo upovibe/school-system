@@ -126,6 +126,17 @@ class TeacherAddDialog extends HTMLElement {
                 class_id: classDropdown ? (classDropdown.value ? parseInt(classDropdown.value) : null) : null
             };
 
+            // Client-side future date guard
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (teacherData.hire_date && teacherData.hire_date > todayStr) {
+                Toast.show({ title: 'Validation Error', message: 'Hire date cannot be in the future', variant: 'error', duration: 3000 });
+                return;
+            }
+            if (teacherData.date_of_birth && teacherData.date_of_birth > todayStr) {
+                Toast.show({ title: 'Validation Error', message: 'Date of birth cannot be in the future', variant: 'error', duration: 3000 });
+                return;
+            }
+
             // Validate required fields
             if (!teacherData.employee_id) {
                 Toast.show({
@@ -333,6 +344,7 @@ class TeacherAddDialog extends HTMLElement {
                                 <ui-input 
                                     data-field="date_of_birth"
                                     type="date" 
+                                    max="${new Date().toISOString().split('T')[0]}"
                                     class="w-full">
                                 </ui-input>
                             </div>
@@ -376,6 +388,7 @@ class TeacherAddDialog extends HTMLElement {
                                 <ui-input 
                                     data-field="hire_date"
                                     type="date" 
+                                    max="${new Date().toISOString().split('T')[0]}"
                                     class="w-full">
                                 </ui-input>
                             </div>

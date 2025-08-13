@@ -113,6 +113,25 @@ class TeacherController {
                 return;
             }
 
+            // Validate dates are not in the future
+            $today = date('Y-m-d');
+            if (!empty($data['hire_date']) && strtotime($data['hire_date']) > strtotime($today)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Hire date cannot be in the future'
+                ]);
+                return;
+            }
+            if (!empty($data['date_of_birth']) && strtotime($data['date_of_birth']) > strtotime($today)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Date of birth cannot be in the future'
+                ]);
+                return;
+            }
+
             // Check if employee ID already exists
             if ($this->teacherModel->employeeIdExists($data['employee_id'])) {
                 http_response_code(400);
@@ -288,6 +307,25 @@ class TeacherController {
                 echo json_encode([
                     'success' => false,
                     'message' => 'Hire date is required'
+                ]);
+                return;
+            }
+
+            // Validate dates are not in the future
+            $today = date('Y-m-d');
+            if (!empty($data['hire_date']) && strtotime($data['hire_date']) > strtotime($today)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Hire date cannot be in the future'
+                ]);
+                return;
+            }
+            if (!empty($data['date_of_birth']) && strtotime($data['date_of_birth']) > strtotime($today)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Date of birth cannot be in the future'
                 ]);
                 return;
             }

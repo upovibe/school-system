@@ -51,7 +51,12 @@ class SubjectManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Subjects</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Subjects</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-subjects-info" title="About Subjects">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage subjects and categories</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -116,6 +121,7 @@ class SubjectManagementPage extends App {
         super.connectedCallback();
         document.title = 'Subject Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -166,6 +172,60 @@ class SubjectManagementPage extends App {
                 this.loadData();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-subjects-info') {
+            this.showSubjectsInfo();
+        }
+    }
+
+    showSubjectsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-book text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Subjects</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is a Subject in this system?</h4>
+                    <p class="text-gray-700">Subjects represent courses taught in the school (e.g., Mathematics, English). Each subject has a name, code, category, and status. Subjects can be assigned to classes and linked to grading periods for recording student grades.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name</span>
+                        <span class="text-sm text-gray-600">Human-readable title (e.g., Mathematics)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Code</span>
+                        <span class="text-sm text-gray-600">Short identifier (e.g., MTH101)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Category</span>
+                        <span class="text-sm text-gray-600">Core or elective grouping used for reporting</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Status</span>
+                        <span class="text-sm text-gray-600">Active subjects are selectable throughout the app</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Assign subjects to classes in Class Subjects. Grades recorded against a subject roll up into class and student reports.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

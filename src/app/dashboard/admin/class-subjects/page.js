@@ -50,7 +50,12 @@ class ClassSubjectManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Class Subjects</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Class Subjects</h1>
+                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-class-subjects-info" title="About Class Subjects">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage subject assignments to classes</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -104,6 +109,7 @@ class ClassSubjectManagementPage extends App {
         super.connectedCallback();
         document.title = 'Class Subject Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -181,6 +187,56 @@ class ClassSubjectManagementPage extends App {
             const { className, classSection, subjectName, subjectCode } = event.detail;
             this.onDeleteSubject(className, classSection, subjectName, subjectCode);
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-class-subjects-info') {
+            this.showClassSubjectsInfo();
+        }
+    }
+
+    showClassSubjectsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-book text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Class Subjects</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What are Class Subjects?</h4>
+                    <p class="text-gray-700">Class subject assignments connect subjects to specific classes. This is how the system knows which subjects are taught in each class, and which teachers can record grades for those subjects.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Subject</span>
+                        <span class="text-sm text-gray-600">e.g., Mathematics (MTH101)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Class</span>
+                        <span class="text-sm text-gray-600">e.g., JHS 1, Section A</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Teachers</span>
+                        <span class="text-sm text-gray-600">Subject teachers can be assigned per class via Teacher Assignments</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Update class subjects here, then assign teachers to these subjects in Teacher Assignments for grading access.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

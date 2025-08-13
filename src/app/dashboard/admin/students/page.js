@@ -49,7 +49,12 @@ class StudentManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Students</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Students</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-students-info" title="About Students">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage student records and enrollment</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -114,6 +119,7 @@ class StudentManagementPage extends App {
         super.connectedCallback();
         document.title = 'Student Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -168,6 +174,64 @@ class StudentManagementPage extends App {
                 this.loadData();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-students-info') {
+            this.showStudentsInfo();
+        }
+    }
+
+    showStudentsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-user-graduate text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Students</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Student Records</h4>
+                    <p class="text-gray-700">This page manages student enrollment records, class membership, and profile information. Key rules include preventing future dates of birth and ensuring students are at least 3 months old.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Student ID</span>
+                        <span class="text-sm text-gray-600">Unique identifier for each student</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Class</span>
+                        <span class="text-sm text-gray-600">Optional at creation; can be assigned later</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Gender</span>
+                        <span class="text-sm text-gray-600">Male or Female only</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Medical Conditions</span>
+                        <span class="text-sm text-gray-600">Select predefined options or specify “Other”</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Date of Birth</span>
+                        <span class="text-sm text-gray-600">Not in the future; at least 3 months old</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        You can update class membership, emergency contacts, and other details at any time.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

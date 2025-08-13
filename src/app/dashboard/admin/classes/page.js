@@ -128,11 +128,13 @@ class ClassManagementPage extends App {
         // Listen for success events to refresh data
         this.addEventListener('class-deleted', (event) => {
             // Remove the deleted class from the current data
-            const deletedClassId = event.detail.classId;
-            const currentClasses = this.get('classes') || [];
-            const updatedClasses = currentClasses.filter(classItem => classItem.id !== deletedClassId);
-            this.set('classes', updatedClasses);
-            this.updateTableData();
+            const deletedClass = event.detail.class;
+            if (deletedClass && deletedClass.id) {
+                const currentClasses = this.get('classes') || [];
+                const updatedClasses = currentClasses.filter(classItem => classItem.id != deletedClass.id);
+                this.set('classes', updatedClasses);
+                this.updateTableData();
+            }
             
             // Close the delete dialog
             this.set('showDeleteDialog', false);

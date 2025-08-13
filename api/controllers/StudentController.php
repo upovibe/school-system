@@ -111,6 +111,28 @@ class StudentController {
                 return;
             }
 
+            // Validate date_of_birth if provided: not future and at least 3 months old
+            $today = date('Y-m-d');
+            if (!empty($data['date_of_birth'])) {
+                if (strtotime($data['date_of_birth']) > strtotime($today)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Date of birth cannot be in the future'
+                    ]);
+                    return;
+                }
+                $minDob = date('Y-m-d', strtotime('-3 months'));
+                if (strtotime($data['date_of_birth']) > strtotime($minDob)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Student must be at least 3 months old'
+                    ]);
+                    return;
+                }
+            }
+
             // Check if student_id already exists
             if ($this->studentModel->studentIdExists($data['student_id'])) {
                 http_response_code(400);
@@ -277,6 +299,28 @@ class StudentController {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Invalid student_type. Allowed: Day, Boarding'
+                    ]);
+                    return;
+                }
+            }
+
+            // Validate date_of_birth if provided: not future and at least 3 months old
+            $today = date('Y-m-d');
+            if (!empty($data['date_of_birth'])) {
+                if (strtotime($data['date_of_birth']) > strtotime($today)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Date of birth cannot be in the future'
+                    ]);
+                    return;
+                }
+                $minDob = date('Y-m-d', strtotime('-3 months'));
+                if (strtotime($data['date_of_birth']) > strtotime($minDob)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Student must be at least 3 months old'
                     ]);
                     return;
                 }

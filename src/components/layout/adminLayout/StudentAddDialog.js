@@ -152,6 +152,22 @@ class StudentAddDialog extends HTMLElement {
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
+            // Client-side DOB guards: not future and at least 3 months old
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (studentData.date_of_birth && studentData.date_of_birth > todayStr) {
+                Toast.show({ title: 'Validation Error', message: 'Date of birth cannot be in the future', variant: 'error', duration: 3000 });
+                return;
+            }
+            if (studentData.date_of_birth) {
+                const threeMonthsAgo = new Date();
+                threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                const threeMonthsAgoStr = threeMonthsAgo.toISOString().split('T')[0];
+                if (studentData.date_of_birth > threeMonthsAgoStr) {
+                    Toast.show({ title: 'Validation Error', message: 'Student must be at least 3 months old', variant: 'error', duration: 3000 });
+                    return;
+                }
+            }
+
             // Validate required fields
             if (!studentData.student_id) {
                 Toast.show({

@@ -162,6 +162,22 @@ class StudentUpdateDialog extends HTMLElement {
                 status: statusSwitch ? (statusSwitch.hasAttribute('checked') ? 'active' : 'inactive') : 'active'
             };
 
+            // Client-side DOB guards: not future and at least 3 months old
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (updatedData.date_of_birth && updatedData.date_of_birth > todayStr) {
+                Toast.show({ title: 'Validation Error', message: 'Date of birth cannot be in the future', variant: 'error' });
+                return;
+            }
+            if (updatedData.date_of_birth) {
+                const threeMonthsAgo = new Date();
+                threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                const threeMonthsAgoStr = threeMonthsAgo.toISOString().split('T')[0];
+                if (updatedData.date_of_birth > threeMonthsAgoStr) {
+                    Toast.show({ title: 'Validation Error', message: 'Student must be at least 3 months old', variant: 'error' });
+                    return;
+                }
+            }
+
             // Add password only if provided
             if (passwordInput && passwordInput.value) {
                 updatedData.password = passwordInput.value;

@@ -397,15 +397,16 @@ class StudentAddDialog extends HTMLElement {
                             </ui-input>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                                <ui-input 
-                                    data-field="date_of_birth"
-                                    type="date" 
-                                    class="w-full">
-                                </ui-input>
-                            </div>
+                                                 <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                 <ui-input 
+                                     data-field="date_of_birth"
+                                     type="date" 
+                                     max="${new Date().toISOString().split('T')[0]}"
+                                     class="w-full">
+                                 </ui-input>
+                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>

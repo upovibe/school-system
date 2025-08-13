@@ -50,6 +50,29 @@ class ClassModel extends BaseModel {
             throw new Exception('Error finding class by unique key: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Find class by name and section (to check uniqueness within same class name)
+     */
+    public function findByNameAndSection($name, $section) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM {$this->getTableName()} 
+                WHERE UPPER(REPLACE(TRIM(name), ' ', '')) = UPPER(REPLACE(TRIM(?), ' ', ''))
+                  AND UPPER(TRIM(section)) = UPPER(TRIM(?))
+            ");
+            $stmt->execute([$name, $section]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error finding class by name and section: ' . $e->getMessage());
+        }
+    }
     
     /**
      * Get active classes only

@@ -50,7 +50,18 @@ class ClassController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+			$data = json_decode(file_get_contents('php://input'), true);
+
+			// Normalize inputs to prevent duplicates due to casing/whitespace
+			if (isset($data['name'])) {
+				$data['name'] = preg_replace('/\s+/', ' ', trim($data['name']));
+			}
+			if (isset($data['section'])) {
+				$data['section'] = strtoupper(trim($data['section']));
+			}
+			if (isset($data['academic_year'])) {
+				$data['academic_year'] = trim($data['academic_year']);
+			}
             
             // Validate required fields
             if (empty($data['name'])) {
@@ -76,6 +87,17 @@ class ClassController {
                 echo json_encode([
                     'success' => false,
                     'message' => 'Academic year is required'
+                ]);
+                return;
+            }
+
+            // Check if this class name already has this section
+            $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
+            if ($existingClassByNameAndSection) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class "' . $data['name'] . '" already has Section "' . $data['section'] . '". Each class name can only have one section with a specific name.'
                 ]);
                 return;
             }
@@ -165,7 +187,18 @@ class ClassController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+			$data = json_decode(file_get_contents('php://input'), true);
+
+			// Normalize inputs to prevent duplicates due to casing/whitespace
+			if (isset($data['name'])) {
+				$data['name'] = preg_replace('/\s+/', ' ', trim($data['name']));
+			}
+			if (isset($data['section'])) {
+				$data['section'] = strtoupper(trim($data['section']));
+			}
+			if (isset($data['academic_year'])) {
+				$data['academic_year'] = trim($data['academic_year']);
+			}
             
             // Check if class exists
             $existingClass = $this->classModel->findById($id);
@@ -202,6 +235,17 @@ class ClassController {
                 echo json_encode([
                     'success' => false,
                     'message' => 'Academic year is required'
+                ]);
+                return;
+            }
+
+            // Check if this class name already has this section for different class
+            $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
+            if ($existingClassByNameAndSection && $existingClassByNameAndSection['id'] != $id) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class "' . $data['name'] . '" already has Section "' . $data['section'] . '". Each class name can only have one section with a specific name.'
                 ]);
                 return;
             }

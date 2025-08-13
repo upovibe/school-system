@@ -24,7 +24,12 @@ class ClassController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $classes = $this->classModel->findAll();
+            // Include class teacher info
+            if (method_exists($this->classModel, 'getAllWithClassTeacher')) {
+                $classes = $this->classModel->getAllWithClassTeacher();
+            } else {
+                $classes = $this->classModel->findAll();
+            }
             
             http_response_code(200);
             echo json_encode([

@@ -28,6 +28,25 @@ class ClassModel extends BaseModel {
     public function __construct($pdo) {
         parent::__construct($pdo);
     }
+
+    /**
+     * Get all classes with optional class teacher information (teacher assigned via teachers.class_id)
+     */
+    public function getAllWithClassTeacher() {
+        try {
+            $stmt = $this->pdo->prepare("\n                SELECT \n                    c.*, \n                    CONCAT(COALESCE(t.first_name, ''), ' ', COALESCE(t.last_name, '')) AS class_teacher_name,\n                    t.email AS class_teacher_email,\n                    t.gender AS class_teacher_gender\n                FROM {$this->getTableName()} c\n                LEFT JOIN teachers t ON t.class_id = c.id AND t.status = 'active'\n                ORDER BY c.name ASC, c.section ASC\n            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching classes with class teacher: ' . $e->getMessage());
+        }
+    }
     
     /**
      * Find class by name, section and academic year

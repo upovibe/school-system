@@ -254,8 +254,10 @@
 
                     // Load classes data
                     const classesResponse = await api.withToken(token).get('/classes');
+                    const rawClasses = classesResponse?.data?.data || [];
+                    // Data loaded
                     
-                    this.set('classes', classesResponse.data.data);
+                    this.set('classes', rawClasses);
                     this.set('loading', false);
                     
                 } catch (error) {
@@ -338,11 +340,13 @@
                     name: classItem.name,
                     section: classItem.section,
                     academic_year: classItem.academic_year,
+                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
                     capacity: classItem.capacity,
                     status: classItem.status === 'active' ? 'Active' : 'Inactive',
                     created: classItem.created_at,
                     updated: classItem.updated_at
                 }));
+                // Table data prepared
 
                 // Find the table component and update its data
                 const tableComponent = this.querySelector('ui-table');
@@ -376,6 +380,7 @@
                     name: classItem.name,
                     section: classItem.section,
                     academic_year: classItem.academic_year,
+                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
                     capacity: classItem.capacity,
                     status: classItem.status === 'active' ? 'Active' : 'Inactive',
                     created: classItem.created_at,
@@ -387,10 +392,12 @@
                     { key: 'name', label: 'Class Name' },
                     { key: 'section', label: 'Section' },
                     { key: 'academic_year', label: 'Academic Year' },
+                    { key: 'class_teacher', label: 'Class Teacher' },
                     { key: 'capacity', label: 'Capacity' },
                     { key: 'status', label: 'Status' },
                     { key: 'updated', label: 'Updated' }
                 ];
+                // Columns and data ready
                 
                 return `
                     ${this.renderHeader()}

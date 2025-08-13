@@ -848,6 +848,23 @@ class StudentController {
                     'academic_year' => $student['class_academic_year']
                 ];
                 
+                // Resolve class teacher (homeroom teacher) if any
+                $classTeacher = null;
+                try {
+                    $stmt = $pdo->prepare("SELECT first_name, last_name, gender, email FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt->execute([$student['class_id']]);
+                    $t = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($t) {
+                        $classTeacher = [
+                            'name' => trim(($t['first_name'] ?? '') . ' ' . ($t['last_name'] ?? '')),
+                            'gender' => $t['gender'] ?? null,
+                            'email' => $t['email'] ?? null,
+                        ];
+                    }
+                } catch (Exception $_) {
+                    $classTeacher = null;
+                }
+                
                 // Get subjects for this class with teacher assignments
                 require_once __DIR__ . '/../models/ClassSubjectModel.php';
                 require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
@@ -884,6 +901,7 @@ class StudentController {
                 'success' => true,
                 'data' => [
                     'class' => $classInfo,
+                    'class_teacher' => $classTeacher ?? null,
                     'subjects' => $subjects
                 ],
                 'message' => 'Current class retrieved successfully'

@@ -123,6 +123,7 @@ class StudentClassPage extends App {
         const loading = this.get('loading');
         const error = this.get('error');
         const classData = this.get('classData');
+        const classTeacher = classData?.class_teacher || null;
         const showSubjectModal = this.get('showSubjectModal');
 
         if (loading) {
@@ -222,8 +223,12 @@ class StudentClassPage extends App {
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
-                                <div class="text-xl sm:text-2xl font-bold">${subjects?.length || 0}</div>
-                                <div class="text-blue-100 text-xs sm:text-sm">Total Subjects</div>
+                                ${classTeacher ? `
+                                <div class="text-sm sm:text-base font-semibold">${classTeacher?.gender === 'female' ? 'Class Teacher: Madam' : classTeacher?.gender === 'male' ? 'Class Teacher: Sir' : 'Class Teacher:'} ${classTeacher?.name || ''}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">${classTeacher?.email || ''}</div>
+                                ` : `
+                                <div class="text-sm sm:text-base font-semibold">Class Teacher: Not assigned</div>
+                                `}
                             </div>
                         </div>
                     </div>

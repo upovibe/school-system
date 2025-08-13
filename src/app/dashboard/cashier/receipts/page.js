@@ -41,7 +41,12 @@ class CashierReceiptsPage extends App {
         <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Fee Receipts</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Fee Receipts</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-cashier-receipts-info" title="About Fee Receipts">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-blue-100 text-base sm:text-lg">View and manage payment receipts</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
@@ -104,6 +109,7 @@ class CashierReceiptsPage extends App {
     super.connectedCallback();
     document.title = 'Cashier - Fee Receipts';
     this.loadData();
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
     this.addEventListener('table-view', this.onView.bind(this));
     this.addEventListener('table-refresh', this.loadData.bind(this));
     this.addEventListener('receipt-regenerated', () => {
@@ -112,6 +118,37 @@ class CashierReceiptsPage extends App {
       this.set('viewReceiptData', null);
       this.loadData();
     });
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-cashier-receipts-info') {
+      this.showCashierReceiptsInfo();
+    }
+  }
+
+  showCashierReceiptsInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-receipt text-blue-500 mr-2"></i>
+        <span class="font-semibold">About Fee Receipts</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <p class="text-gray-700">Receipts are generated from payments. Use this page to view and print receipts and check statuses.</p>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between"><span class="text-sm font-medium">Receipt Number</span><span class="text-sm text-gray-600">Unique identifier</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Printed / Voided</span><span class="text-sm text-gray-600">Track print and void actions</span></div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async loadData() {

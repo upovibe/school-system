@@ -18,6 +18,39 @@ class CashierPage extends App {
     super.connectedCallback();
     document.title = 'Cashier Dashboard | School System';
     this.loadAll();
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-cashier-dashboard-info') {
+      this.showCashierDashboardInfo();
+    }
+  }
+
+  showCashierDashboardInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-cash-register text-green-500 mr-2"></i>
+        <span class="font-semibold">About Cashier Dashboard</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <p class="text-gray-700">Overview of invoices, payments, receipts and quick links for cashier operations.</p>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between"><span class="text-sm font-medium">Summary Cards</span><span class="text-sm text-gray-600">Quick KPI snapshots for today and totals</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Financial Overview</span><span class="text-sm text-gray-600">Invoice status, payment totals, collection rate</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Quick Actions</span><span class="text-sm text-gray-600">Record payments, manage invoices, view receipts</span></div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async loadAll() {
@@ -113,7 +146,12 @@ class CashierPage extends App {
         <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Cashier Dashboard</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Cashier Dashboard</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-cashier-dashboard-info" title="About Cashier Dashboard">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-green-100 text-base sm:text-lg">Welcome back, ${userName}.</p>
               <p class="text-green-100 text-sm mt-1">
                 <i class="fas fa-calendar-alt mr-1"></i>

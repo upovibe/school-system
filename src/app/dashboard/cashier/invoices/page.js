@@ -94,7 +94,12 @@ class CashierInvoicesPage extends App {
         <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Fee Invoices</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Fee Invoices</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-cashier-invoices-info" title="About Fee Invoices">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-green-100 text-base sm:text-lg">Manage invoices for student fees</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
@@ -157,6 +162,7 @@ class CashierInvoicesPage extends App {
     super.connectedCallback();
     document.title = 'Cashier - Fee Invoices';
     this.loadData(); // Add this line to load data on page load
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
     
     // Event listeners for table actions - use the correct event names that match the admin version
     this.addEventListener('table-view', this.onView.bind(this));
@@ -217,6 +223,38 @@ class CashierInvoicesPage extends App {
     });
 
     // Removed add/update listeners
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-cashier-invoices-info') {
+      this.showCashierInvoicesInfo();
+    }
+  }
+
+  showCashierInvoicesInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-file-invoice-dollar text-green-500 mr-2"></i>
+        <span class="font-semibold">About Fee Invoices</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <p class="text-gray-700">View student invoices and track status (Open/Paid) and balances. Cashiers can view and delete where allowed.</p>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between"><span class="text-sm font-medium">Academic Year & Term</span><span class="text-sm text-gray-600">Billing period</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Amount Due/Paid/Balance</span><span class="text-sm text-gray-600">Computed from payments</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Status</span><span class="text-sm text-gray-600">Open or Paid</span></div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async loadData() {

@@ -109,11 +109,12 @@ class StudentClassPage extends App {
             this.set('selectedSubjectData', subject);
             this.set('showSubjectModal', true);
             
-            // Set the subject data in the modal
+            // Set the subject data in the modal with fallback class teacher
             setTimeout(() => {
                 const modal = this.querySelector('student-subject-detail-modal');
+                const classTeacher = (this.get('classData') && this.get('classData').class_teacher) ? this.get('classData').class_teacher : null;
                 if (modal) {
-                    modal.setSubjectData(subject);
+                    modal.setSubjectData(subject, classTeacher);
                 }
             }, 0);
         }

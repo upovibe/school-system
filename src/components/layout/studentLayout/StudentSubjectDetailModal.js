@@ -18,6 +18,7 @@ class StudentSubjectDetailModal extends HTMLElement {
     constructor() {
         super();
         this.subjectData = null;
+        this.classTeacher = null;
     }
 
     static get observedAttributes() {
@@ -56,9 +57,10 @@ class StudentSubjectDetailModal extends HTMLElement {
         this.render();
     }
 
-    // Set subject data for viewing
-    setSubjectData(subjectData) {
+    // Set subject data for viewing (optionally pass classTeacher for fallback)
+    setSubjectData(subjectData, classTeacher = null) {
         this.subjectData = { ...subjectData };
+        this.classTeacher = classTeacher ? { ...classTeacher } : null;
         this.render();
     }
 
@@ -157,7 +159,7 @@ class StudentSubjectDetailModal extends HTMLElement {
                         </div>
 
                         <!-- Teacher Information -->
-                         ${this.subjectData.teacher ? `
+                         ${this.subjectData.teacher || this.classTeacher ? `
                              <div class="border-b pb-4">
                                  <div class="flex items-center gap-2 mb-3">
                                      <i class="fas fa-chalkboard-teacher text-green-500"></i>
@@ -166,15 +168,15 @@ class StudentSubjectDetailModal extends HTMLElement {
                                  <div class="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
                                      <ui-avatar 
                                          size="lg" 
-                                         src="${this.subjectData.teacher.profile_image || ''}"
-                                         alt="${this.subjectData.teacher.name}"
-                                         name="${this.subjectData.teacher.name || 'Teacher'}">
+                                          src="${(this.subjectData.teacher && this.subjectData.teacher.profile_image) || ''}"
+                                          alt="${(this.subjectData.teacher?.name) || (this.classTeacher?.name) || 'Teacher'}"
+                                          name="${(this.subjectData.teacher?.name) || (this.classTeacher?.name) || 'Teacher'}">
                                      </ui-avatar>
                                      <div class="flex-1">
                                          <h5 class="text-lg font-semibold text-gray-900">
-                                             ${this.getTeacherTitle(this.subjectData.teacher.gender)} ${this.subjectData.teacher.name}
+                                             ${this.getTeacherTitle((this.subjectData.teacher?.gender) || (this.classTeacher?.gender))} ${(this.subjectData.teacher?.name) || (this.classTeacher?.name)}
                                          </h5>
-                                         <p class="text-gray-600 text-sm">${this.subjectData.teacher.specialization || 'General Teacher'}</p>
+                                         ${this.subjectData.teacher?.specialization ? `<p class=\"text-gray-600 text-sm\">${this.subjectData.teacher.specialization}</p>` : (this.classTeacher?.email ? `<p class=\"text-gray-600 text-sm\">${this.classTeacher.email}</p>` : '')}
                                      </div>
                                  </div>
                              </div>

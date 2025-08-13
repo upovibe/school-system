@@ -48,7 +48,12 @@ class TeacherManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Teachers</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Teachers</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-teachers-info" title="About Teachers">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage teacher records and assignments</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -113,6 +118,7 @@ class TeacherManagementPage extends App {
         super.connectedCallback();
         document.title = 'Teacher Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -165,6 +171,68 @@ class TeacherManagementPage extends App {
                 this.loadData();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-teachers-info') {
+            this.showTeachersInfo();
+        }
+    }
+
+    showTeachersInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-chalkboard-teacher text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Teachers</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Teacher Records</h4>
+                    <p class="text-gray-700">This page manages teacher profiles, employment details, class teacher assignments, and subject teaching assignments. Important validations include no future dates for hire or birth and minimum age requirements.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Employee ID</span>
+                        <span class="text-sm text-gray-600">Unique identifier for each teacher</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Hire Date</span>
+                        <span class="text-sm text-gray-600">Cannot be in the future</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Date of Birth</span>
+                        <span class="text-sm text-gray-600">At least 10 years old; not in the future</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Class Teacher</span>
+                        <span class="text-sm text-gray-600">Optional homeroom/class ownership</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Subject Teacher</span>
+                        <span class="text-sm text-gray-600">Assign teachers to teach specific subjects in specific classes</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Status</span>
+                        <span class="text-sm text-gray-600">Active teachers are visible and assignable</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        As subject teachers, they can record grades for their assigned subjects/classes. Without a class teacher assignment, class-dependent pages will show empty results instead of errors.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

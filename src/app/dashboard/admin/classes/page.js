@@ -198,7 +198,7 @@
                     <div slot="content" class="space-y-4">
                         <div>
                             <h4 class="font-semibold text-gray-900 mb-2">What is a Class?</h4>
-                            <p class="text-gray-700">A class combines a class name (e.g., JHS 1) and a section (e.g., A). Each class belongs to an academic year and can have a capacity and status. Class and section together must be unique (case and whitespace insensitive).</p>
+                            <p class="text-gray-700">A class is the homeroom/group that students belong to for a given school year. It combines a class name (e.g., JHS 1) and a section (e.g., A). Subjects are assigned to a class, a teacher can be designated as the class teacher, and grades, attendance, and assignments are recorded within this class context. The academic year is auto-computed each year and shown read-only on forms. The combination of class name and section must be unique (case and whitespace insensitive).</p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                             <div class="flex justify-between">
@@ -211,7 +211,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Academic Year</span>
-                                <span class="text-sm text-gray-600">Auto-computed based on September boundary</span>
+                                <span class="text-sm text-gray-600">Auto-computed each year; no input required</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Capacity</span>
@@ -224,8 +224,8 @@
                         </div>
                         <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <p class="text-sm text-blue-800">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Class academic year is enforced on the server and shown read-only on forms.
+                        <i class="fas fa-info-circle mr-1"></i>
+                        The academic year is auto-computed and shown read-only; you don't need to enter it.
                             </p>
                         </div>
                     </div>

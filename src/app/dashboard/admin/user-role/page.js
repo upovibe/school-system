@@ -47,7 +47,12 @@ class UserRolePage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">User Roles</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">User Roles</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-user-roles-info" title="About User Roles">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage roles and permissions</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -101,6 +106,7 @@ class UserRolePage extends App {
         super.connectedCallback();
         document.title = 'User Role Settings | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -167,6 +173,46 @@ class UserRolePage extends App {
                 }
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-user-roles-info') {
+            this.showUserRolesInfo();
+        }
+    }
+
+    showUserRolesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-user-shield text-blue-500 mr-2"></i>
+                <span class="font-semibold">About User Roles</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What are roles?</h4>
+                    <p class="text-gray-700">Roles define permissions and access within the system (e.g., Admin, Teacher, Student, Cashier). Assign appropriate roles to users via the Users page.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name</span>
+                        <span class="text-sm text-gray-600">Role label shown in the app</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Description</span>
+                        <span class="text-sm text-gray-600">Explain intended use and scope</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

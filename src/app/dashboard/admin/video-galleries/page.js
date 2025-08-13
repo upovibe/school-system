@@ -55,7 +55,12 @@ class VideoGalleriesPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Video Galleries</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Video Galleries</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-video-galleries-info" title="About Video Galleries">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage video gallery posts</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -120,6 +125,7 @@ class VideoGalleriesPage extends App {
         super.connectedCallback();
         document.title = 'Video Gallery Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -209,6 +215,50 @@ class VideoGalleriesPage extends App {
                 }
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-video-galleries-info') {
+            this.showVideoGalleriesInfo();
+        }
+    }
+
+    showVideoGalleriesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-video text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Video Galleries</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+                    <p class="text-gray-700">Video gallery posts used on the public site. Organize links, manage visibility, and keep content current.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name & Slug</span>
+                        <span class="text-sm text-gray-600">Public title and unique URL key</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Videos</span>
+                        <span class="text-sm text-gray-600">Add and manage video links</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Status</span>
+                        <span class="text-sm text-gray-600">Active items appear on the website</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

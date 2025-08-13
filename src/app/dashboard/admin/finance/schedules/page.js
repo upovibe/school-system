@@ -72,7 +72,12 @@ class FinanceSchedulesPage extends App {
         <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Fee Schedules</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Fee Schedules</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-finance-schedules-info" title="About Fee Schedules">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-emerald-100 text-base sm:text-lg">Manage class fee schedules by year and term</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
@@ -188,6 +193,7 @@ class FinanceSchedulesPage extends App {
     super.connectedCallback();
     document.title = 'Fee Schedules | School System';
     this.loadData();
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
 
     this.addEventListener('table-view', this.onView.bind(this));
     this.addEventListener('table-edit', this.onEdit.bind(this));
@@ -278,6 +284,50 @@ class FinanceSchedulesPage extends App {
         this.loadData();
       }
     });
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-finance-schedules-info') {
+      this.showFinanceSchedulesInfo();
+    }
+  }
+
+  showFinanceSchedulesInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-calendar-alt text-emerald-500 mr-2"></i>
+        <span class="font-semibold">About Fee Schedules</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+          <p class="text-gray-700">Per-class billing schedules by academic year and term. Used to auto-fill invoice amounts.</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Class</span>
+            <span class="text-sm text-gray-600">Class and section the schedule applies to</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Academic Year & Term</span>
+            <span class="text-sm text-gray-600">Billing period context</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Total Fee</span>
+            <span class="text-sm text-gray-600">Used to compute invoice amount due</span>
+          </div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   applyFilters() {

@@ -44,7 +44,12 @@ class FinancePaymentsPage extends App {
         <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Fee Payments</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Fee Payments</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-finance-payments-info" title="About Fee Payments">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-emerald-100 text-base sm:text-lg">Record and manage payments for invoices</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
@@ -107,6 +112,7 @@ class FinancePaymentsPage extends App {
     super.connectedCallback();
     document.title = 'Fee Payments | School System';
     this.loadData();
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
 
     this.addEventListener('table-view', this.onView.bind(this));
     this.addEventListener('table-delete', this.onDelete.bind(this));
@@ -131,6 +137,50 @@ class FinancePaymentsPage extends App {
       this.loadData();
       this.set('showViewModal', false);
     });
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-finance-payments-info') {
+      this.showFinancePaymentsInfo();
+    }
+  }
+
+  showFinancePaymentsInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-coins text-emerald-500 mr-2"></i>
+        <span class="font-semibold">About Fee Payments</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+          <p class="text-gray-700">Record payments against invoices, track amounts, methods, and status (posted/voided).</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Invoice</span>
+            <span class="text-sm text-gray-600">Link each payment to its invoice</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Amount & Method</span>
+            <span class="text-sm text-gray-600">Cash, Bank, Mobile Money, Cheque</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium">Paid On</span>
+            <span class="text-sm text-gray-600">Payment date (cannot be backdated in cashier UI)</span>
+          </div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async loadData() {

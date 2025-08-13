@@ -42,6 +42,7 @@ class UsersPage extends App {
         super.connectedCallback();
         document.title = 'Users Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -110,6 +111,50 @@ class UsersPage extends App {
         });
     }
 
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-users-info') {
+            this.showUsersInfo();
+        }
+    }
+
+    showUsersInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-users text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Users</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+                    <p class="text-gray-700">Create and manage application users, assign roles, and control access. Keep emails unique and set appropriate statuses.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Role</span>
+                        <span class="text-sm text-gray-600">Determines access (Admin, Teacher, Student, Cashier)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Status</span>
+                        <span class="text-sm text-gray-600">Active users can sign in; inactive users cannot</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Security</span>
+                        <span class="text-sm text-gray-600">Passwords are hashed; avoid sharing credentials</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+    }
+
     getHeaderCounts() {
         const users = this.get('users') || [];
         const total = users.length;
@@ -126,7 +171,12 @@ class UsersPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Users</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Users</h1>
+                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-users-info" title="About Users">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage user accounts and roles</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -367,6 +417,7 @@ class UsersPage extends App {
                             page-size="50"
                             action
                             addable
+                            actions="view, edit"
                             refresh
                             print
                             bordered

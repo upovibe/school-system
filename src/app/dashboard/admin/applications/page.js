@@ -42,7 +42,12 @@ class ApplicationsPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Applications</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Applications</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-applications-info" title="About Applications">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage guest/student applications</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -107,8 +112,53 @@ class ApplicationsPage extends App {
         super.connectedCallback();
         document.title = 'Applications | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         this.addEventListener('table-row-click', this.onRowClick.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-applications-info') {
+            this.showApplicationsInfo();
+        }
+    }
+
+    showApplicationsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Applications</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+                    <p class="text-gray-700">Incoming admission applications submitted by guardians/students. Review details and follow up via provided contacts.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Applicant</span>
+                        <span class="text-sm text-gray-600">Student name and application number</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Grade</span>
+                        <span class="text-sm text-gray-600">Target class/grade level</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Contact</span>
+                        <span class="text-sm text-gray-600">Parent phone and email for communication</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

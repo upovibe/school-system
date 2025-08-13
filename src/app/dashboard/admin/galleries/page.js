@@ -58,7 +58,12 @@ class GalleriesPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Galleries</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Galleries</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-galleries-info" title="About Galleries">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage image galleries</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -123,6 +128,7 @@ class GalleriesPage extends App {
         super.connectedCallback();
         document.title = 'Photo Gallery Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -214,6 +220,50 @@ class GalleriesPage extends App {
         });
 
 
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-galleries-info') {
+            this.showGalleriesInfo();
+        }
+    }
+
+    showGalleriesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-images text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Galleries</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
+                    <p class="text-gray-700">Photo galleries used on the public site. Organize images by gallery and category; control visibility with status.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name & Slug</span>
+                        <span class="text-sm text-gray-600">Public title and unique URL key</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Images</span>
+                        <span class="text-sm text-gray-600">Upload and manage gallery photos</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Status</span>
+                        <span class="text-sm text-gray-600">Active galleries appear on the website</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

@@ -81,7 +81,12 @@ class TeacherStudentGradesPage extends App {
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">My Class Grades</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">My Class Grades</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-teacher-grades-info" title="About My Class Grades">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-blue-100 text-base sm:text-lg">Track and manage your class academic performance</p>
             </div>
             <div class="mt-4 sm:mt-0">
@@ -149,6 +154,7 @@ class TeacherStudentGradesPage extends App {
   connectedCallback() {
     super.connectedCallback();
     document.title = 'My Class Grades | School System';
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
     
     // Initialize state
     this.set('filters', { subject_id: '', grading_period_id: '', student_id: '' });
@@ -225,6 +231,38 @@ class TeacherStudentGradesPage extends App {
         this.render();
       }
     });
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-teacher-grades-info') {
+      this.showTeacherGradesInfo();
+    }
+  }
+
+  showTeacherGradesInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+        <span class="font-semibold">About My Class Grades</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <p class="text-gray-700">Record and review grades for your class. Filters are auto-scoped to your assigned class.</p>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between"><span class="text-sm font-medium">Subject</span><span class="text-sm text-gray-600">Select one of your subjects</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Grading Period</span><span class="text-sm text-gray-600">Choose the term/period</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Student</span><span class="text-sm text-gray-600">Optionally narrow to a student</span></div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async bootstrap() {

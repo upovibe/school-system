@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Dialog.js';
 
 /**
  * Teacher Dashboard Page Component (/dashboard/teacher)
@@ -21,6 +22,39 @@ class TeacherDashboardPage extends App {
     super.connectedCallback();
     document.title = 'Teacher Dashboard | School System';
     this.loadAll();
+    this.addEventListener('click', this.handleHeaderActions.bind(this));
+  }
+
+  handleHeaderActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.getAttribute('data-action');
+    if (action === 'show-teacher-dashboard-info') {
+      this.showTeacherDashboardInfo();
+    }
+  }
+
+  showTeacherDashboardInfo() {
+    const dialog = document.createElement('ui-dialog');
+    dialog.setAttribute('open', '');
+    dialog.innerHTML = `
+      <div slot="header" class="flex items-center">
+        <i class="fas fa-chalkboard-teacher text-blue-500 mr-2"></i>
+        <span class="font-semibold">About Teacher Dashboard</span>
+      </div>
+      <div slot="content" class="space-y-4">
+        <p class="text-gray-700">Overview of your class assignment, assignments you created, and quick actions.</p>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between"><span class="text-sm font-medium">Class Card</span><span class="text-sm text-gray-600">Shows your assigned class and student count</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Summary Cards</span><span class="text-sm text-gray-600">Published/Draft/Archived assignment counts</span></div>
+          <div class="flex justify-between"><span class="text-sm font-medium">Quick Actions</span><span class="text-sm text-gray-600">Navigate to class, assignments, and grades</span></div>
+        </div>
+      </div>
+      <div slot="footer" class="flex justify-end">
+        <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
   }
 
   async loadAll() {
@@ -111,7 +145,12 @@ class TeacherDashboardPage extends App {
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold">Teacher Dashboard</h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold">Teacher Dashboard</h1>
+                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-teacher-dashboard-info" title="About Teacher Dashboard">
+                  <i class="fas fa-question-circle text-lg"></i>
+                </button>
+              </div>
               <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacherName}.</p>
               <p class="text-blue-100 text-sm mt-1">
                 <i class="fas fa-calendar-alt mr-1"></i>

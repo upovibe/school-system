@@ -7,6 +7,7 @@ import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Accordion.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
@@ -96,6 +97,7 @@ class TeacherAssignmentsPage extends App {
         super.connectedCallback();
         document.title = 'My Assignments | School System';
         await this.loadAssignments();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for button clicks
         this.addEventListener('click', this.onButtonClick.bind(this));
@@ -116,6 +118,38 @@ class TeacherAssignmentsPage extends App {
         
         // Add event listener for tab clicks
         this.addEventListener('click', this.handleTabClick.bind(this));
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-teacher-assignments-info') {
+            this.showTeacherAssignmentsInfo();
+        }
+    }
+
+    showTeacherAssignmentsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-tasks text-blue-500 mr-2"></i>
+                <span class="font-semibold">About My Class Assignments</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <p class="text-gray-700">Manage assignments you created for your classes. Filter, search, and open student submissions.</p>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex justify-between"><span class="text-sm font-medium">Tabs</span><span class="text-sm text-gray-600">Published, Draft, Archived, Deleted</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Filters</span><span class="text-sm text-gray-600">Type, Class, Subject, Sort</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Actions</span><span class="text-sm text-gray-600">View, Edit, Archive, Delete, Restore</span></div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     // Handle tab changes
@@ -935,7 +969,12 @@ class TeacherAssignmentsPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">My Class Assignments</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">My Class Assignments</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-teacher-assignments-info" title="About My Class Assignments">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage and review your created assignments</p>
                         </div>
                         <div class="mt-4 sm:mt-0">

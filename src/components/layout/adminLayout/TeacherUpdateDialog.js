@@ -133,6 +133,16 @@ class TeacherUpdateDialog extends HTMLElement {
                 Toast.show({ title: 'Validation Error', message: 'Date of birth cannot be in the future', variant: 'error' });
                 return;
             }
+            // Minimum age 10 years
+            if (updatedData.date_of_birth) {
+                const tenYearsAgo = new Date();
+                tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+                const tenYearsAgoStr = tenYearsAgo.toISOString().split('T')[0];
+                if (updatedData.date_of_birth > tenYearsAgoStr) {
+                    Toast.show({ title: 'Validation Error', message: 'Teacher must be at least 10 years old', variant: 'error' });
+                    return;
+                }
+            }
 
             // Validate required fields
             if (!updatedData.employee_id) {

@@ -131,6 +131,18 @@ class TeacherController {
                 ]);
                 return;
             }
+            // Enforce minimum age: at least 10 years old if DOB provided
+            if (!empty($data['date_of_birth'])) {
+                $minDob = date('Y-m-d', strtotime('-10 years'));
+                if (strtotime($data['date_of_birth']) > strtotime($minDob)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Teacher must be at least 10 years old'
+                    ]);
+                    return;
+                }
+            }
 
             // Check if employee ID already exists
             if ($this->teacherModel->employeeIdExists($data['employee_id'])) {
@@ -328,6 +340,18 @@ class TeacherController {
                     'message' => 'Date of birth cannot be in the future'
                 ]);
                 return;
+            }
+            // Enforce minimum age: at least 10 years old if DOB provided
+            if (!empty($data['date_of_birth'])) {
+                $minDob = date('Y-m-d', strtotime('-10 years'));
+                if (strtotime($data['date_of_birth']) > strtotime($minDob)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Teacher must be at least 10 years old'
+                    ]);
+                    return;
+                }
             }
 
             // Check if employee ID already exists for different teacher

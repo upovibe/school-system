@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Dialog.js';
 
 /**
  * Student Dashboard Page Component (/dashboard/student)
@@ -30,6 +31,7 @@ class StudentDashboardPage extends App {
         this.loadAll();
         // Add event listeners for help buttons
         this.addEventListener('click', this.handleButtonClick.bind(this));
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
     }
 
      handleButtonClick(event) {
@@ -92,6 +94,38 @@ class StudentDashboardPage extends App {
         } finally {
             this.set('loading', false);
         }
+    }
+
+    handleHeaderActions(event) {
+        const btn = event.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        if (action === 'show-student-dashboard-info') {
+            this.showStudentDashboardInfo();
+        }
+    }
+
+    showStudentDashboardInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-user-graduate text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Student Dashboard</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <p class="text-gray-700">Overview of your class info, grades, assignments, achievements and level.</p>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex justify-between"><span class="text-sm font-medium">Class Info</span><span class="text-sm text-gray-600">Your class, section, academic year</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Performance</span><span class="text-sm text-gray-600">Average grade and subject counts</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Assignments</span><span class="text-sm text-gray-600">Pending, submitted, graded</span></div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadUserData() {
@@ -437,7 +471,12 @@ class StudentDashboardPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Student Dashboard</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Student Dashboard</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-dashboard-info" title="About Student Dashboard">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${userName}! Here's your academic overview.</p>
                             <p class="text-blue-100 text-sm mt-1">
                                 <i class="fas fa-calendar-alt mr-1"></i>

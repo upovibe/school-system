@@ -156,7 +156,7 @@ class StudentSubjectDetailModal extends HTMLElement {
                             </div>
                         </div>
 
-                                                 <!-- Teacher Information -->
+                        <!-- Teacher Information -->
                          ${this.subjectData.teacher ? `
                              <div class="border-b pb-4">
                                  <div class="flex items-center gap-2 mb-3">

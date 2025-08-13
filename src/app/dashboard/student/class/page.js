@@ -5,6 +5,7 @@ import '@/components/ui/Badge.js';
 import '@/components/ui/Avatar.js';
 import '@/components/ui/Alert.js';
 import '@/components/ui/Table.js';
+import '@/components/ui/Dialog.js';
 import '@/components/layout/studentLayout/StudentSubjectDetailModal.js';
 
 /**
@@ -29,6 +30,39 @@ class StudentClassPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onSubjectClick.bind(this));
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-student-class-info') {
+            this.showStudentClassInfo();
+        }
+    }
+
+    showStudentClassInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-chalkboard text-blue-500 mr-2"></i>
+                <span class="font-semibold">About My Class</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <p class="text-gray-700">See your class details and subjects with assigned teachers.</p>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex justify-between"><span class="text-sm font-medium">Class & Section</span><span class="text-sm text-gray-600">Class name and section</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Academic Year</span><span class="text-sm text-gray-600">Year for the class</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Subjects</span><span class="text-sm text-gray-600">Click a row to view subject details</span></div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadClassData() {
@@ -168,7 +202,7 @@ class StudentClassPage extends App {
             { key: 'subject_code_display', label: 'Subject Code' },
             { key: 'subject_category', label: 'Category' },
             { key: 'term', label: 'Term' },
-            { key: 'teacher', label: 'Teacher' },
+            // { key: 'teacher', label: 'Teacher' },
             { key: 'status', label: 'Status' }
         ];
 
@@ -178,7 +212,12 @@ class StudentClassPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">My Class</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">My Class</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-class-info" title="About My Class">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">View your class information and subjects</p>
                         </div>
                         <div class="mt-4 sm:mt-0">

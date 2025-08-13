@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Dialog.js';
 import '@/components/ui/SearchDropdown.js';
 import api from '@/services/api.js';
 
@@ -32,6 +33,7 @@ class StudentGradesPage extends App {
         super.connectedCallback();
         document.title = 'My Grades | School System';
         this.bootstrap();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
 
         // Filter interactions
         this.addEventListener('change', (e) => {
@@ -56,6 +58,37 @@ class StudentGradesPage extends App {
                 this.loadGrades();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-student-grades-info') {
+            this.showStudentGradesInfo();
+        }
+    }
+
+    showStudentGradesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+                <span class="font-semibold">About My Grades</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <p class="text-gray-700">View your subject grades by period. Use filters to narrow by subject and grading period.</p>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex justify-between"><span class="text-sm font-medium">Subject</span><span class="text-sm text-gray-600">Choose a subject</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Grading Period</span><span class="text-sm text-gray-600">Term/semester</span></div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async bootstrap() {
@@ -199,7 +232,12 @@ class StudentGradesPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">My Grades</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">My Grades</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-grades-info" title="About My Grades">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Track your academic performance and achievements</p>
                         </div>
                         <div class="mt-4 sm:mt-0">

@@ -52,6 +52,16 @@ class StudentAddDialog extends HTMLElement {
         });
     }
 
+    // Handle medical conditions change to show/hide "other" input
+    handleMedicalConditionsChange(value) {
+        const otherInput = this.querySelector('#medical-conditions-other-input');
+        if (value === 'Other') {
+            otherInput.classList.remove('hidden');
+        } else {
+            otherInput.classList.add('hidden');
+        }
+    }
+
     async loadClasses() {
         try {
             const token = localStorage.getItem('token');
@@ -109,6 +119,16 @@ class StudentAddDialog extends HTMLElement {
             const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
+            // Get the "other" input values
+            const medicalConditionsOtherInput = this.querySelector('ui-input[data-field="medical_conditions_other"]');
+
+            // Determine the final values (use "other" input if "other" is selected)
+            let finalMedicalConditions = medicalConditionsDropdown ? medicalConditionsDropdown.value : '';
+
+            if (finalMedicalConditions === 'Other' && medicalConditionsOtherInput) {
+                finalMedicalConditions = medicalConditionsOtherInput.value || 'Other';
+            }
+
             const studentData = {
                 current_class_id: classDropdown ? classDropdown.value : '',
                 student_id: studentIdInput ? studentIdInput.value : '',
@@ -127,7 +147,7 @@ class StudentAddDialog extends HTMLElement {
                 emergency_contact: emergencyContactInput ? emergencyContactInput.value : '',
                 emergency_phone: emergencyPhoneInput ? emergencyPhoneInput.value : '',
                 blood_group: bloodGroupDropdown ? bloodGroupDropdown.value : '',
-                medical_conditions: medicalConditionsDropdown ? medicalConditionsDropdown.value : '',
+                medical_conditions: finalMedicalConditions,
                 password: passwordInput ? passwordInput.value : '',
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
@@ -395,7 +415,6 @@ class StudentAddDialog extends HTMLElement {
                                     class="w-full">
                                     <ui-option value="male">Male</ui-option>
                                     <ui-option value="female">Female</ui-option>
-                                    <ui-option value="other">Other</ui-option>
                                 </ui-search-dropdown>
                             </div>
                         </div>
@@ -496,7 +515,8 @@ class StudentAddDialog extends HTMLElement {
                                 <ui-search-dropdown 
                                     name="medical_conditions" 
                                     placeholder="Select medical conditions..."
-                                    class="w-full">
+                                    class="w-full"
+                                    onchange="this.closest('student-add-dialog').handleMedicalConditionsChange(this.value)">
                                     <ui-option value="None">None</ui-option>
                                     <ui-option value="Asthma">Asthma</ui-option>
                                     <ui-option value="Diabetes">Diabetes</ui-option>
@@ -507,6 +527,14 @@ class StudentAddDialog extends HTMLElement {
                                     <ui-option value="Hearing Problems">Hearing Problems</ui-option>
                                     <ui-option value="Other">Other</ui-option>
                                 </ui-search-dropdown>
+                                <div id="medical-conditions-other-input" class="mt-2 hidden">
+                                    <ui-input 
+                                        data-field="medical_conditions_other"
+                                        type="text" 
+                                        placeholder="Please specify medical condition"
+                                        class="w-full">
+                                    </ui-input>
+                                </div>
                             </div>
                         </div>
                         

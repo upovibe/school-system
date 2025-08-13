@@ -33,6 +33,16 @@ class StudentUpdateDialog extends HTMLElement {
         this.addEventListener('cancel', this.close.bind(this));
     }
 
+    // Handle medical conditions change to show/hide "other" input
+    handleMedicalConditionsChange(value) {
+        const otherInput = this.querySelector('#medical-conditions-other-input');
+        if (value === 'Other') {
+            otherInput.classList.remove('hidden');
+        } else {
+            otherInput.classList.add('hidden');
+        }
+    }
+
     async loadClasses() {
         try {
             const token = localStorage.getItem('token');
@@ -120,6 +130,16 @@ class StudentUpdateDialog extends HTMLElement {
             const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
+            // Get the "other" input values
+            const medicalConditionsOtherInput = this.querySelector('ui-input[data-field="medical_conditions_other"]');
+
+            // Determine the final values (use "other" input if "other" is selected)
+            let finalMedicalConditions = medicalConditionsDropdown ? medicalConditionsDropdown.value : '';
+
+            if (finalMedicalConditions === 'Other' && medicalConditionsOtherInput) {
+                finalMedicalConditions = medicalConditionsOtherInput.value || 'Other';
+            }
+
             const updatedData = {
                 current_class_id: classDropdown ? classDropdown.value : '',
                 student_id: studentIdInput ? studentIdInput.value : '',
@@ -138,7 +158,7 @@ class StudentUpdateDialog extends HTMLElement {
                 emergency_contact: emergencyContactInput ? emergencyContactInput.value : '',
                 emergency_phone: emergencyPhoneInput ? emergencyPhoneInput.value : '',
                 blood_group: bloodGroupDropdown ? bloodGroupDropdown.value : '',
-                medical_conditions: medicalConditionsDropdown ? medicalConditionsDropdown.value : '',
+                medical_conditions: finalMedicalConditions,
                 status: statusSwitch ? (statusSwitch.hasAttribute('checked') ? 'active' : 'inactive') : 'active'
             };
 
@@ -335,7 +355,6 @@ class StudentUpdateDialog extends HTMLElement {
                                     class="w-full">
                                     <ui-option value="male" ${student && student.gender === 'male' ? 'selected' : ''}>Male</ui-option>
                                     <ui-option value="female" ${student && student.gender === 'female' ? 'selected' : ''}>Female</ui-option>
-                                    <ui-option value="other" ${student && student.gender === 'other' ? 'selected' : ''}>Other</ui-option>
                                 </ui-search-dropdown>
                             </div>
                         </div>
@@ -444,7 +463,8 @@ class StudentUpdateDialog extends HTMLElement {
                                     name="medical_conditions" 
                                     placeholder="Select medical conditions..."
                                     value="${student?.medical_conditions || ''}"
-                                    class="w-full">
+                                    class="w-full"
+                                    onchange="this.closest('student-update-dialog').handleMedicalConditionsChange(this.value)">
                                     <ui-option value="None" ${student && student.medical_conditions === 'None' ? 'selected' : ''}>None</ui-option>
                                     <ui-option value="Asthma" ${student && student.medical_conditions === 'Asthma' ? 'selected' : ''}>Asthma</ui-option>
                                     <ui-option value="Diabetes" ${student && student.medical_conditions === 'Diabetes' ? 'selected' : ''}>Diabetes</ui-option>
@@ -455,6 +475,15 @@ class StudentUpdateDialog extends HTMLElement {
                                     <ui-option value="Hearing Problems" ${student && student.medical_conditions === 'Hearing Problems' ? 'selected' : ''}>Hearing Problems</ui-option>
                                     <ui-option value="Other" ${student && student.medical_conditions === 'Other' ? 'selected' : ''}>Other</ui-option>
                                 </ui-search-dropdown>
+                                <div id="medical-conditions-other-input" class="mt-2 ${student && student.medical_conditions === 'Other' ? '' : 'hidden'}">
+                                    <ui-input 
+                                        data-field="medical_conditions_other"
+                                        type="text" 
+                                        placeholder="Please specify medical condition"
+                                        value="${student && student.medical_conditions === 'Other' ? student.medical_conditions : ''}"
+                                        class="w-full">
+                                    </ui-input>
+                                </div>
                             </div>
                         </div>
                         

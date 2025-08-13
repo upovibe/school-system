@@ -33,6 +33,7 @@ class PageSettingsPage extends App {
         super.connectedCallback();
         document.title = 'Page Settings | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -101,6 +102,67 @@ class PageSettingsPage extends App {
                 }
             }
         });
+    }
+
+    renderHeader() {
+        return `
+            <div class="space-y-8 mb-4">
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Page Settings</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-page-settings-info" title="About Page Settings">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
+                            <p class="text-indigo-100 text-base sm:text-lg">Manage CMS pages metadata, visibility and ordering</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-page-settings-info') {
+            this.showPageSettingsInfo();
+        }
+    }
+
+    showPageSettingsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-file-alt text-indigo-500 mr-2"></i>
+                <span class="font-semibold">About Page Settings</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <p class="text-gray-700">Control which pages appear on the site and how they are presented, including names, titles, categories and sort order.</p>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name & Title</span>
+                        <span class="text-sm text-gray-600">Displayed labels for each page</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Category & Status</span>
+                        <span class="text-sm text-gray-600">Group pages and toggle visibility</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Sort Order</span>
+                        <span class="text-sm text-gray-600">Controls page listing order</span>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {
@@ -282,6 +344,7 @@ class PageSettingsPage extends App {
         ];
         
         return `
+            ${this.renderHeader()}
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->

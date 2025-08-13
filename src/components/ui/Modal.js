@@ -74,7 +74,7 @@ class Modal extends HTMLElement {
         // Backdrop click
         this.shadowRoot.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop') && this.getAttribute('close-on-backdrop-click') !== 'false') {
-                this.close();
+                this.showCloseConfirmation();
             }
         });
 
@@ -94,7 +94,7 @@ class Modal extends HTMLElement {
 
     handleBackdropClick(event) {
         if (event.target.classList.contains('modal-backdrop') && this.getAttribute('close-on-backdrop-click') !== 'false') {
-            this.close();
+            this.showCloseConfirmation();
         }
     }
 
@@ -563,6 +563,13 @@ class Modal extends HTMLElement {
                 } catch (_) { /* noop */ }
             });
             this._customFooterBound = true;
+        }
+    }
+
+    showCloseConfirmation() {
+        const userWantsToClose = confirm('Do you want to close this modal?');
+        if (userWantsToClose) {
+            this.close();
         }
     }
 }

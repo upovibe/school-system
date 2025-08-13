@@ -284,7 +284,7 @@ class Dialog extends HTMLElement {
         if (overlay) {
             overlay.onclick = (e) => {
                 if (e.target === overlay) {
-                    this.close();
+                    this.showCloseConfirmation();
                 }
             };
         }
@@ -318,9 +318,16 @@ class Dialog extends HTMLElement {
         // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) {
-                this.close();
+                this.showCloseConfirmation();
             }
         });
+    }
+
+    showCloseConfirmation() {
+        const userWantsToClose = confirm('Do you want to close this dialog?');
+        if (userWantsToClose) {
+            this.close();
+        }
     }
 
     open() {

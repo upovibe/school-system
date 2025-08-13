@@ -43,6 +43,17 @@ class ClassUpdateModal extends HTMLElement {
         });
     }
 
+    // Compute academic year on client (display-only)
+    computeAcademicYear() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; // 1-12
+        if (month >= 9) {
+            return `${year}-${year + 1}`;
+        }
+        return `${year - 1}-${year}`;
+    }
+
     open() {
         this.setAttribute('open', '');
     }
@@ -69,7 +80,10 @@ class ClassUpdateModal extends HTMLElement {
 
         if (nameInput) nameInput.value = this.classData.name || '';
         if (sectionInput) sectionInput.value = this.classData.section || '';
-        if (academicYearInput) academicYearInput.value = this.classData.academic_year || '';
+        if (academicYearInput) {
+            academicYearInput.value = this.classData.academic_year || this.computeAcademicYear();
+            academicYearInput.setAttribute('readonly', '');
+        }
         if (capacityInput) capacityInput.value = this.classData.capacity || 30;
         if (statusSwitch) {
             if (this.classData.status === 'active') {
@@ -103,7 +117,7 @@ class ClassUpdateModal extends HTMLElement {
             const classData = {
                 name: nameInput ? nameInput.value : '',
                 section: sectionInput ? sectionInput.value : '',
-                academic_year: academicYearInput ? academicYearInput.value : '',
+                academic_year: academicYearInput ? (academicYearInput.value || this.computeAcademicYear()) : this.computeAcademicYear(),
                 capacity: capacityInput ? parseInt(capacityInput.value) || 30 : 30,
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
@@ -131,15 +145,7 @@ class ClassUpdateModal extends HTMLElement {
                 return;
             }
 
-            if (!classData.academic_year) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please fill in the academic year',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
+            // Academic year is read-only and server-enforced; no validation needed
 
             // Get auth token
             const token = localStorage.getItem('token');

@@ -82,14 +82,9 @@ class ClassController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
+
+			// Always compute academic year on the server (ignore client input)
+			$data['academic_year'] = $this->getCurrentAcademicYear();
 
             // Check if this class name already has this section
             $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
@@ -230,14 +225,8 @@ class ClassController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
+			// Do not allow client to change academic year on update; keep original
+			$data['academic_year'] = $existingClass['academic_year'];
 
             // Check if this class name already has this section for different class
             $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
@@ -574,5 +563,23 @@ class ClassController {
         
         return null;
     }
+
+	/**
+	 * Compute current academic year based on today's date.
+	 * Boundary: September 1st starts a new academic year (YYYY-YYYY+1).
+	 */
+	private function getCurrentAcademicYear() {
+		$now = new DateTime('now');
+		$year = (int)$now->format('Y');
+		$month = (int)$now->format('n');
+		if ($month >= 9) {
+			$start = $year;
+			$end = $year + 1;
+		} else {
+			$start = $year - 1;
+			$end = $year;
+		}
+		return $start . '-' . $end;
+	}
 }
 ?> 

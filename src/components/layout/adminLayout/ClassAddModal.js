@@ -42,6 +42,17 @@ class ClassAddModal extends HTMLElement {
         });
     }
 
+    // Compute academic year on client (display-only)
+    computeAcademicYear() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; // 1-12
+        if (month >= 9) {
+            return `${year}-${year + 1}`;
+        }
+        return `${year - 1}-${year}`;
+    }
+
     open() {
         this.setAttribute('open', '');
     }
@@ -63,12 +74,10 @@ class ClassAddModal extends HTMLElement {
             const classData = {
                 name: nameInput ? nameInput.value : '',
                 section: sectionInput ? sectionInput.value : '',
-                academic_year: academicYearInput ? academicYearInput.value : '',
+                academic_year: academicYearInput ? (academicYearInput.value || this.computeAcademicYear()) : this.computeAcademicYear(),
                 capacity: capacityInput ? parseInt(capacityInput.value) || 30 : 30,
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
-
-            console.log('Class data being sent:', classData); // Debug log
 
             // Validate required fields
             if (!classData.name) {
@@ -85,16 +94,6 @@ class ClassAddModal extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please fill in the class section',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!classData.academic_year) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please fill in the academic year',
                     variant: 'error',
                     duration: 3000
                 });
@@ -161,6 +160,7 @@ class ClassAddModal extends HTMLElement {
     }
 
     render() {
+        const computedYear = this.computeAcademicYear();
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -193,7 +193,9 @@ class ClassAddModal extends HTMLElement {
                         <ui-input 
                             data-field="academic_year"
                             type="text" 
-                            placeholder="Enter academic year (e.g., 2024-2025)"
+                            placeholder="Academic year is auto-computed"
+                            value="${computedYear}"
+                            readonly
                             class="w-full">
                         </ui-input>
                     </div>

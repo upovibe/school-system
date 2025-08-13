@@ -39,6 +39,81 @@ class StudentGradesManagementPage extends App {
         this.deleteGradeData = null;
     }
 
+    connectedCallback() {
+        super.connectedCallback();
+        this.addEventListener('click', this.handleHeaderActions?.bind(this));
+    }
+
+    renderHeader() {
+        return `
+            <div class="space-y-8 mb-4">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Student Grades</h1>
+                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-student-grades-info" title="About Student Grades">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
+                            <p class="text-blue-100 text-base sm:text-lg">Filter by class, subject, period, and student to view or enter grades</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-student-grades-info') {
+            this.showStudentGradesInfo();
+        }
+    }
+
+    showStudentGradesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-clipboard-check text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Student Grades</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">How grading works</h4>
+                    <p class="text-gray-700">Grades are recorded per student, per subject, and per grading period. Use the filters to narrow down to the exact class, subject, period, and student.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Assignments Total</span>
+                        <span class="text-sm text-gray-600">Sum of continuous assessments (bounded by policy)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Exam Total</span>
+                        <span class="text-sm text-gray-600">Exam score (bounded by policy)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Final Percentage</span>
+                        <span class="text-sm text-gray-600">Computed from assignment and exam totals</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Ensure the grading policy for the subject is set so maximum scores and validations apply correctly.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+    }
+
     formatNumber(value) {
         if (value === null || value === undefined || value === '') return '—';
         const num = Number(value);

@@ -51,7 +51,12 @@ class GradingPolicyManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Grading Policies</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Grading Policies</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-grading-policies-info" title="About Grading Policies">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Define assignment and exam weightings per subject</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -116,6 +121,7 @@ class GradingPolicyManagementPage extends App {
         super.connectedCallback();
         document.title = 'Grading Policy Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
 
         // Table actions
         this.addEventListener('table-view', this.onView.bind(this));
@@ -156,6 +162,56 @@ class GradingPolicyManagementPage extends App {
                 this.loadData();
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-grading-policies-info') {
+            this.showGradingPoliciesInfo();
+        }
+    }
+
+    showGradingPoliciesInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-balance-scale text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Grading Policies</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is a Grading Policy?</h4>
+                    <p class="text-gray-700">Grading policies define the maximum scores and weighting rules for assignments and exams per subject. They ensure consistent grading across classes.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Subject</span>
+                        <span class="text-sm text-gray-600">The policy applies to this subject</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Assignment Max</span>
+                        <span class="text-sm text-gray-600">Maximum total for continuous assessments</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Exam Max</span>
+                        <span class="text-sm text-gray-600">Maximum total for exams</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Set policies before entering grades so totals and validations are enforced correctly.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

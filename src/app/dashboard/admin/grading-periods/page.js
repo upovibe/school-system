@@ -49,7 +49,12 @@ class GradingPeriodManagementPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Grading Periods</h1>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl sm:text-3xl font-bold">Grading Periods</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-grading-periods-info" title="About Grading Periods">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage academic periods and timelines</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -114,6 +119,7 @@ class GradingPeriodManagementPage extends App {
         super.connectedCallback();
         document.title = 'Grading Period Management | School System';
         this.loadData();
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -176,6 +182,56 @@ class GradingPeriodManagementPage extends App {
                 this.set('deleteGradingPeriodData', data);
             }
         });
+    }
+
+    handleHeaderActions(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        if (action === 'show-grading-periods-info') {
+            this.showGradingPeriodsInfo();
+        }
+    }
+
+    showGradingPeriodsInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-calendar-alt text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Grading Periods</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What is a Grading Period?</h4>
+                    <p class="text-gray-700">Grading periods define date ranges (e.g., Term 1, Term 2) used to group and filter grades. Each grade belongs to exactly one period.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Name</span>
+                        <span class="text-sm text-gray-600">e.g., Term 1, Semester 2, Quarter 3</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Academic Year</span>
+                        <span class="text-sm text-gray-600">Matches the class academic year</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Start/End Dates</span>
+                        <span class="text-sm text-gray-600">Used to constrain grade entry windows</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Create periods first; grading policies and grade entry use these periods for organization and filtering.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadData() {

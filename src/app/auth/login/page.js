@@ -181,7 +181,7 @@ class LoginPage extends App {
     render() {
         return `
             <div class="flex items-center justify-center min-h-screen p-5">
-                <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm w-full max-w-md">
+                <ui-card class="p-8 shadow-2xl rounded-2xl border-0 bg-white/95 backdrop-blur-sm max-w-sm w-full">
                     <!-- Logo/Icon Section -->
                     <div class="text-center mb-6">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200" onclick="window.location.href='/'">
@@ -219,7 +219,7 @@ class LoginPage extends App {
                             </ui-input>
                         </div>
 
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between gap-10">
                             <div class="flex items-center">
                                 <ui-checkbox 
                                     label="Remember me"

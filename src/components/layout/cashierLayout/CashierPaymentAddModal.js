@@ -1,6 +1,7 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
+import '@/components/ui/Button.js';
 import '@/components/ui/SearchDropdown.js';
 import api from '@/services/api.js';
 
@@ -24,7 +25,6 @@ class CashierPaymentAddModal extends HTMLElement {
   }
 
   setup() {
-    this.addEventListener('confirm', () => this.save());
     this.addEventListener('cancel', () => this.close());
     // Set current date as default and minimum for paid_on field
     setTimeout(() => {
@@ -112,6 +112,42 @@ class CashierPaymentAddModal extends HTMLElement {
     }
   }
 
+  // Validate required fields and toggle Save button
+  validateForm() {
+    try {
+      const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+      const amountInput = this.querySelector('ui-input[data-field="amount"]');
+      const paidOn = this.querySelector('ui-input[data-field="paid_on"]');
+      const methodDd = this.querySelector('ui-search-dropdown[name="method"]');
+      const saveBtn = this.querySelector('#save-payment-btn');
+      const allFilled = !!String(invoiceDd?.value || '').trim() &&
+        Number(amountInput?.value || 0) > 0 &&
+        !!String(paidOn?.value || '').trim() &&
+        !!String(methodDd?.value || '').trim();
+      if (saveBtn) {
+        if (allFilled) saveBtn.removeAttribute('disabled');
+        else saveBtn.setAttribute('disabled', '');
+      }
+    } catch (_) { /* noop */ }
+  }
+
+  addFormEventListeners() {
+    const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    const amountInput = this.querySelector('ui-input[data-field="amount"]');
+    const paidOn = this.querySelector('ui-input[data-field="paid_on"]');
+    const methodDd = this.querySelector('ui-search-dropdown[name="method"]');
+    const saveBtn = this.querySelector('#save-payment-btn');
+    if (invoiceDd) invoiceDd.addEventListener('change', () => this.validateForm());
+    if (methodDd) methodDd.addEventListener('change', () => this.validateForm());
+    [amountInput, paidOn].forEach(el => {
+      if (!el) return;
+      el.addEventListener('input', () => this.validateForm());
+      el.addEventListener('change', () => this.validateForm());
+    });
+    if (saveBtn) saveBtn.addEventListener('click', () => this.save());
+    this.validateForm();
+  }
+
   render() {
     const openInvoices = (this._invoices || []).filter(i => String(i.status).toLowerCase() !== 'paid' && Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0);
     const today = new Date().toISOString().split('T')[0];
@@ -120,7 +156,7 @@ class CashierPaymentAddModal extends HTMLElement {
         <div slot="content">
         <form class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice *</label>
             <ui-search-dropdown name="invoice_id" placeholder="Select invoice" class="w-full">
               ${openInvoices.map(i => `<ui-option value="${i.id}">${this.invoiceDisplay(i)}</ui-option>`).join('')}
             </ui-search-dropdown>
@@ -128,16 +164,16 @@ class CashierPaymentAddModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
               <ui-input data-field="amount" type="number" step="0.01" placeholder="0.00" class="w-full"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Paid On</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Paid On *</label>
               <ui-input data-field="paid_on" type="date" value="${today}" min="${today}" class="w-full"></ui-input>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Method *</label>
             <ui-search-dropdown name="method" placeholder="Select method" class="w-full">
               <ui-option value="Cash">Cash</ui-option>
               <ui-option value="Bank">Bank</ui-option>
@@ -170,8 +206,14 @@ class CashierPaymentAddModal extends HTMLElement {
             </div>
           </div>
         </div>
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+          <ui-button id="save-payment-btn" color="primary" disabled>Save</ui-button>
+        </div>
       </ui-dialog>
     `;
+    // Attach validation and save wiring
+    this.addFormEventListeners();
   }
 }
 

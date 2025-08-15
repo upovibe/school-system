@@ -2,6 +2,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 class FinanceInvoiceAddModal extends HTMLElement {
@@ -27,7 +28,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
   setupEventListeners() {
     if (this._listenersAttached) return;
-    this.addEventListener('confirm', () => this.saveInvoice());
     this.addEventListener('cancel', () => this.close());
     // Auto-fill amount_due when student/year/term changes (debounced)
     const rebindAuto = () => {
@@ -176,6 +176,41 @@ class FinanceInvoiceAddModal extends HTMLElement {
     }
   }
 
+  // Validate required fields and toggle Save button
+  validateForm() {
+    try {
+      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+      const saveBtn = this.querySelector('#save-invoice-btn');
+      const allFilled = !!String(studentDropdown?.value || '').trim() &&
+        !!String(yearInput?.value || '').trim() &&
+        !!String(termInput?.value || '').trim() &&
+        Number(amountDueInput?.value || 0) > 0;
+      if (saveBtn) {
+        if (allFilled) saveBtn.removeAttribute('disabled');
+        else saveBtn.setAttribute('disabled', '');
+      }
+    } catch (_) { /* noop */ }
+  }
+
+  addFormEventListeners() {
+    const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+    const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+    const saveBtn = this.querySelector('#save-invoice-btn');
+    if (studentDropdown) studentDropdown.addEventListener('change', () => this.validateForm());
+    [yearInput, termInput, amountDueInput].forEach(el => {
+      if (!el) return;
+      el.addEventListener('input', () => this.validateForm());
+      el.addEventListener('change', () => this.validateForm());
+    });
+    if (saveBtn) saveBtn.addEventListener('click', () => this.saveInvoice());
+    this.validateForm();
+  }
+
   autoFillAmountDueDebounced() {
     clearTimeout(this._autoDueTimeout);
     this._autoDueTimeout = setTimeout(() => this.autoFillAmountDue(), 200);
@@ -275,7 +310,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
         <div slot="title">Add Fee Invoice</div>
         <form class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student *</label>
             <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full">
               ${(this._students || []).map(s => {
                 const name = s.name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.full_name || s.username || s.email || `Student #${s.id}`;
@@ -286,17 +321,17 @@ class FinanceInvoiceAddModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
               <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
               <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount Due</label>
+              <label class="block text sm font-medium text-gray-700 mb-1">Amount Due *</label>
               <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
             </div>
             <div>
@@ -335,8 +370,14 @@ class FinanceInvoiceAddModal extends HTMLElement {
             </div>
           </div>
         </div>
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+          <ui-button id="save-invoice-btn" color="primary" disabled>Save</ui-button>
+        </div>
       </ui-modal>
     `;
+    // Attach validation/save wiring
+    this.addFormEventListeners();
   }
 }
 

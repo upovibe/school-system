@@ -3,6 +3,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Dropdown.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 /**
@@ -32,11 +33,6 @@ class SubjectAddModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for confirm button click (Save Subject)
-        this.addEventListener('confirm', () => {
-            this.saveSubject();
-        });
-
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
@@ -49,6 +45,51 @@ class SubjectAddModal extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+    }
+
+    // Validate form and toggle Save button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const codeInput = this.querySelector('ui-input[data-field="code"]');
+            const saveBtn = this.querySelector('#save-subject-btn');
+            const name = nameInput ? String(nameInput.value || '').trim() : '';
+            const code = codeInput ? String(codeInput.value || '').trim() : '';
+            const isValid = !!name && !!code;
+            if (saveBtn) {
+                if (isValid) {
+                    saveBtn.removeAttribute('disabled');
+                } else {
+                    saveBtn.setAttribute('disabled', '');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events for live validation and save
+    addFormEventListeners() {
+        const nameInput = this.querySelector('ui-input[data-field="name"]');
+        const codeInput = this.querySelector('ui-input[data-field="code"]');
+        const categoryDropdown = this.querySelector('ui-dropdown[name="category"]');
+        const saveBtn = this.querySelector('#save-subject-btn');
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => this.validateForm());
+            nameInput.addEventListener('change', () => this.validateForm());
+        }
+        if (codeInput) {
+            codeInput.addEventListener('input', () => this.validateForm());
+            codeInput.addEventListener('change', () => this.validateForm());
+        }
+        if (categoryDropdown) {
+            categoryDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSubject());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     // Save the new subject
@@ -68,8 +109,6 @@ class SubjectAddModal extends HTMLElement {
                 category: categoryDropdown ? categoryDropdown.value : 'core',
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
-
-            console.log('Subject data being sent:', subjectData); // Debug log
 
             // Validate required fields
             if (!subjectData.name) {
@@ -230,8 +269,16 @@ class SubjectAddModal extends HTMLElement {
                         </div>
                     </div>
                 </div>
+
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-subject-btn" color="primary" disabled>Save</ui-button>
+                </div>
             </ui-modal>
         `;
+
+        // Attach form events
+        this.addFormEventListeners();
     }
 }
 

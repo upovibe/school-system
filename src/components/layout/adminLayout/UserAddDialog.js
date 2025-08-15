@@ -2,6 +2,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 /**
@@ -44,11 +45,6 @@ class UserAddDialog extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for dialog events
-        this.addEventListener('confirm', () => {
-            this.saveUser();
-        });
-        
         this.addEventListener('cancel', () => {
             this.close();
         });
@@ -79,8 +75,12 @@ class UserAddDialog extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/roles');
-            // Handle both response formats (direct array or wrapped in data)
-            this.roles = response.data.data || response.data || [];
+            // Handle both response formats (direct array or wrapped in data) and filter out disallowed roles
+            const roles = response.data.data || response.data || [];
+            this.roles = (roles || []).filter((role) => {
+                const name = String(role?.name || '').trim().toLowerCase();
+                return name !== 'teacher' && name !== 'student';
+            });
             this.render();
         } catch (error) {
             console.error('❌ Error loading roles:', error);
@@ -127,10 +127,34 @@ class UserAddDialog extends HTMLElement {
                 return;
             }
 
+            // Validate email format
+            if (!this.isValidEmail(userData.email)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter a valid email address',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
             if (!userData.role_id) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Role is required',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Extra guard: prevent selecting filtered roles if present
+            const selectedRole = (this.roles || []).find(r => String(r.id) === String(userData.role_id));
+            const roleName = String(selectedRole?.name || '').trim().toLowerCase();
+            if (roleName === 'teacher' || roleName === 'student') {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'You cannot assign Teacher or Student roles here',
                     variant: 'error',
                     duration: 3000
                 });
@@ -201,6 +225,51 @@ class UserAddDialog extends HTMLElement {
                 duration: 3000
             });
         }
+    }
+
+    // Validate required fields and toggle Save button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('#user-name-input');
+            const emailInput = this.querySelector('#user-email-input');
+            const roleDropdown = this.querySelector('#user-role-dropdown');
+            const saveBtn = this.querySelector('#save-user-btn');
+            const emailVal = String(emailInput?.value || '').trim();
+            const allFilled = !!String(nameInput?.value || '').trim() &&
+                !!emailVal && this.isValidEmail(emailVal) &&
+                !!String(roleDropdown?.value || '').trim();
+            if (saveBtn) {
+                if (allFilled) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', '');
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events and initial validation
+    addFormEventListeners() {
+        const nameInput = this.querySelector('#user-name-input');
+        const emailInput = this.querySelector('#user-email-input');
+        const roleDropdown = this.querySelector('#user-role-dropdown');
+        const saveBtn = this.querySelector('#save-user-btn');
+        if (nameInput) {
+            nameInput.addEventListener('input', () => this.validateForm());
+            nameInput.addEventListener('change', () => this.validateForm());
+        }
+        if (emailInput) {
+            emailInput.addEventListener('input', () => this.validateForm());
+            emailInput.addEventListener('change', () => this.validateForm());
+        }
+        if (roleDropdown) {
+            roleDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (saveBtn) saveBtn.addEventListener('click', () => this.saveUser());
+        this.validateForm();
+    }
+
+    // Simple email format validator
+    isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        return re.test(String(email).toLowerCase());
     }
 
     render() {
@@ -277,8 +346,14 @@ class UserAddDialog extends HTMLElement {
                         </div>
                     </div>
                 </div>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-user-btn" color="primary" disabled>Save</ui-button>
+                </div>
             </ui-dialog>
         `;
+        // Attach validation and save wiring
+        this.addFormEventListeners();
     }
 }
 

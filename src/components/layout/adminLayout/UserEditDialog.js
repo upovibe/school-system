@@ -86,8 +86,12 @@ class UserEditDialog extends HTMLElement {
             if (!token) return;
 
             const response = await api.withToken(token).get('/roles');
-            // Handle both response formats (direct array or wrapped in data)
-            this.roles = response.data.data || response.data || [];
+            // Handle both response formats (direct array or wrapped in data) and filter out disallowed roles
+            const roles = response.data.data || response.data || [];
+            this.roles = (roles || []).filter((role) => {
+                const name = String(role?.name || '').trim().toLowerCase();
+                return name !== 'teacher' && name !== 'student';
+            });
             this.render();
         } catch (error) {
             console.error('❌ Error loading roles:', error);

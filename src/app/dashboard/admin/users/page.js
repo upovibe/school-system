@@ -417,7 +417,7 @@ class UsersPage extends App {
                             page-size="50"
                             action
                             addable
-                            actions="view, edit"
+                            actions="view, edit, delete"
                             refresh
                             print
                             bordered

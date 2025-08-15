@@ -4,6 +4,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/SearchDropdown.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 class GradingPolicyAddModal extends HTMLElement {
@@ -83,7 +84,6 @@ class GradingPolicyAddModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        this.addEventListener('confirm', () => this.savePolicy());
         this.addEventListener('cancel', () => this.close());
         this.addEventListener('change', (e) => {
             if (e.target && e.target.matches('ui-search-dropdown[name="subject_id"]')) {
@@ -107,15 +107,90 @@ class GradingPolicyAddModal extends HTMLElement {
         });
     }
 
+    // Validate required fields and toggle Save button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
+            const assignMaxInput = this.querySelector('ui-input[data-field="assignment_max_score"]');
+            const examMaxInput = this.querySelector('ui-input[data-field="exam_max_score"]');
+            const saveBtn = this.querySelector('#save-policy-btn');
+
+            // Boundary rows must have at least one valid entry
+            const boundaries = this.readBoundaryItemsFromDOM();
+            const hasBoundary = Array.isArray(boundaries) && boundaries.length > 0;
+
+            const allFilled = !!String(nameInput?.value || '').trim() &&
+                !!String(descriptionTextarea?.getValue() || '').trim() &&
+                !!String(subjectDropdown?.value || '').trim() &&
+                Number(assignMaxInput?.value || 0) > 0 &&
+                Number(examMaxInput?.value || 0) > 0 &&
+                hasBoundary;
+
+            if (saveBtn) {
+                if (allFilled) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', '');
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events and initial validation
+    addFormEventListeners() {
+        const selectors = [
+            'ui-input[data-field="name"]',
+            'ui-textarea[data-field="description"]',
+            'ui-search-dropdown[name="subject_id"]',
+            'ui-input[data-field="assignment_max_score"]',
+            'ui-input[data-field="exam_max_score"]'
+        ];
+        selectors.forEach(sel => {
+            const el = this.querySelector(sel);
+            if (el) {
+                el.addEventListener('input', () => this.validateForm());
+                el.addEventListener('change', () => this.validateForm());
+            }
+        });
+        const gb = this.querySelector('#gb-inputs');
+        if (gb) {
+            gb.addEventListener('input', () => this.validateForm());
+            gb.addEventListener('change', () => this.validateForm());
+        }
+        const saveBtn = this.querySelector('#save-policy-btn');
+        if (saveBtn) saveBtn.addEventListener('click', () => this.savePolicy());
+        this.validateForm();
+    }
+
     async loadSubjectsWithoutPolicies() {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
             const resp = await api.withToken(token).get('/grading-policies/subjects/without-policies');
-            this.subjects = resp.data.data || [];
+            this.subjects = resp.data?.data || [];
+            if (!Array.isArray(this.subjects) || this.subjects.length === 0) {
+                // Fallback: load all subjects so user can still create/update policies
+                await this.loadAllSubjectsFallback();
+            }
             this.populateSubjectsDropdown();
         } catch (e) {
-            // Fallback: leave empty
+            // Fallback to all subjects if special endpoint fails
+            await this.loadAllSubjectsFallback();
+            this.populateSubjectsDropdown();
+        }
+    }
+
+    async loadAllSubjectsFallback() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const respAll = await api.withToken(token).get('/subjects');
+            // Expecting array in respAll.data.data
+            const list = respAll.data?.data || [];
+            // Normalize to id/name pairs
+            this.subjects = list.map(s => ({ id: s.id || s.subject_id || s.id, name: s.name || s.subject_name || s.name }));
+        } catch (_) {
+            // keep subjects as empty array
+            this.subjects = [];
         }
     }
 
@@ -170,8 +245,8 @@ class GradingPolicyAddModal extends HTMLElement {
                 return;
             }
 
-            const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmBtn) { confirmBtn.setAttribute('loading', ''); confirmBtn.textContent = 'Creating...'; }
+            const confirmBtn = this.querySelector('#save-policy-btn');
+            if (confirmBtn) { confirmBtn.setAttribute('loading', ''); }
 
             const resp = await api.withToken(token).post('/grading-policies', payload);
             if (resp.data.success) {
@@ -202,8 +277,8 @@ class GradingPolicyAddModal extends HTMLElement {
         } catch (error) {
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to create policy', variant: 'error', duration: 3000 });
         } finally {
-            const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmBtn) { confirmBtn.removeAttribute('loading'); confirmBtn.textContent = 'Create Policy'; }
+            const confirmBtn = this.querySelector('#save-policy-btn');
+            if (confirmBtn) { confirmBtn.removeAttribute('loading'); }
         }
     }
 
@@ -213,29 +288,29 @@ class GradingPolicyAddModal extends HTMLElement {
                 <div slot="title">Add New Grading Policy</div>
                 <form class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Policy Name</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Policy Name *</label>
                         <ui-input data-field="name" type="text" placeholder="e.g., Standard Policy" class="w-full"></ui-input>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                         <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full"></ui-search-dropdown>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Max Score</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Max Score *</label>
                             <ui-input data-field="assignment_max_score" type="number" min="1" placeholder="e.g., 40" class="w-full"></ui-input>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Exam Max Score</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Exam Max Score *</label>
                             <ui-input data-field="exam_max_score" type="number" min="1" placeholder="e.g., 60" class="w-full"></ui-input>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                         <ui-textarea data-field="description" rows="3" placeholder="Short description..." class="w-full"></ui-textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Grade Boundaries</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Grade Boundaries *</label>
                         <div class="space-y-2">
                             <div id="gb-inputs" class="space-y-2">
                                 ${this.renderBoundaryInputs()}
@@ -254,8 +329,14 @@ class GradingPolicyAddModal extends HTMLElement {
                         <ui-switch name="is_active" checked class="w-full"><span slot="label">Active</span></ui-switch>
                     </div>
                 </form>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-policy-btn" color="primary" disabled>Create Policy</ui-button>
+                </div>
             </ui-modal>
         `;
+        // Attach validation and save wiring
+        this.addFormEventListeners();
     }
 }
 

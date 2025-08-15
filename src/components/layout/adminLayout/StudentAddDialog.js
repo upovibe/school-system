@@ -92,14 +92,25 @@ class StudentAddDialog extends HTMLElement {
                 'ui-input[data-field="last_name"]',
                 'ui-input[data-field="email"]',
                 'ui-input[data-field="password"]',
-                'ui-input[data-field="admission_date"]'
+                'ui-input[data-field="admission_date"]',
+                'ui-input[data-field="parent_name"]',
+                'ui-input[data-field="parent_phone"]',
+                'ui-input[data-field="parent_email"]'
             ];
             const saveBtn = this.querySelector('#save-student-btn');
-            const allFilled = requiredSelectors.every(sel => {
+            let allFilled = requiredSelectors.every(sel => {
                 const el = this.querySelector(sel);
                 const val = el ? String(el.value || '').trim() : '';
                 return !!val;
             });
+
+            // Medical conditions required; if Other selected, other input must be provided
+            const medicalDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
+            const medicalOther = this.querySelector('ui-input[data-field="medical_conditions_other"]');
+            const medVal = medicalDropdown ? String(medicalDropdown.value || '').trim() : '';
+            const otherOk = medVal !== 'Other' || (medicalOther && String(medicalOther.value || '').trim() !== '');
+            allFilled = allFilled && !!medVal && otherOk;
+
             if (saveBtn) {
                 if (allFilled) saveBtn.removeAttribute('disabled');
                 else saveBtn.setAttribute('disabled', '');
@@ -115,7 +126,11 @@ class StudentAddDialog extends HTMLElement {
             'ui-input[data-field="last_name"]',
             'ui-input[data-field="email"]',
             'ui-input[data-field="password"]',
-            'ui-input[data-field="admission_date"]'
+            'ui-input[data-field="admission_date"]',
+            'ui-input[data-field="parent_name"]',
+            'ui-input[data-field="parent_phone"]',
+            'ui-input[data-field="parent_email"]',
+            'ui-input[data-field="medical_conditions_other"]'
         ];
         selectors.forEach(sel => {
             const el = this.querySelector(sel);
@@ -124,6 +139,10 @@ class StudentAddDialog extends HTMLElement {
                 el.addEventListener('change', () => this.validateForm());
             }
         });
+        const medicalDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
+        if (medicalDropdown) {
+            medicalDropdown.addEventListener('change', () => this.validateForm());
+        }
         const saveBtn = this.querySelector('#save-student-btn');
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveStudent());
         this.validateForm();
@@ -499,7 +518,7 @@ class StudentAddDialog extends HTMLElement {
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Name *</label>
                                 <ui-input 
                                     data-field="parent_name"
                                     type="text" 
@@ -509,7 +528,7 @@ class StudentAddDialog extends HTMLElement {
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Phone</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Phone *</label>
                                 <ui-input 
                                     data-field="parent_phone"
                                     type="tel" 
@@ -520,7 +539,7 @@ class StudentAddDialog extends HTMLElement {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Parent Email *</label>
                             <ui-input 
                                 data-field="parent_email"
                                 type="email" 
@@ -570,7 +589,7 @@ class StudentAddDialog extends HTMLElement {
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Medical Conditions</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Medical Conditions *</label>
                                 <ui-search-dropdown 
                                     name="medical_conditions" 
                                     placeholder="Select medical conditions..."

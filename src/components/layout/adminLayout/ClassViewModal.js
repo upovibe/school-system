@@ -120,6 +120,32 @@ class ClassViewModal extends HTMLElement {
                             </div>
                         </div>
 
+                        <!-- Class Teacher -->
+                        <div class="border-b pb-4 mt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-user-tie text-purple-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Class Teacher</h4>
+                            </div>
+                            ${this.classData.class_teacher_name && String(this.classData.class_teacher_name).trim() !== '' ? `
+                                <div class="flex items-center gap-4 p-4 bg-purple-50 rounded-lg">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center text-white flex-shrink-0">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-gray-900 font-semibold truncate">
+                                            ${(this.classData.class_teacher_gender || '').toLowerCase() === 'female' ? 'Madam' : 'Sir'} ${this.classData.class_teacher_name}
+                                        </div>
+                                        <div class="text-gray-600 text-sm truncate">${this.classData.class_teacher_email || 'No email provided'}</div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="bg-gray-50 p-4 rounded-lg text-center">
+                                    <i class="fas fa-user-slash text-gray-400 text-2xl mb-2"></i>
+                                    <p class="text-gray-600 text-sm">No class teacher assigned.</p>
+                                </div>
+                            `}
+                        </div>
+
                         <!-- Timestamps -->
                         <div>
                             <div class="flex items-center gap-2 mb-3">

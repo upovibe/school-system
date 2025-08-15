@@ -3,6 +3,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/SearchDropdown.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 class FinanceScheduleAddModal extends HTMLElement {
@@ -31,9 +32,7 @@ class FinanceScheduleAddModal extends HTMLElement {
 
   setupEventListeners() {
     if (this._listenersAttached) return;
-    this._onConfirm = () => this.saveSchedule();
     this._onCancel = () => this.close();
-    this.addEventListener('confirm', this._onConfirm);
     this.addEventListener('cancel', this._onCancel);
     this._listenersAttached = true;
   }
@@ -93,13 +92,53 @@ class FinanceScheduleAddModal extends HTMLElement {
     }
   }
 
+  // Validate required fields and toggle Save button
+  validateForm() {
+    try {
+      const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
+      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
+      const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
+      const saveBtn = this.querySelector('#save-schedule-btn');
+      const allFilled = !!String(classDropdown?.value || '').trim() &&
+        !!String(yearInput?.value || '').trim() &&
+        !!String(termInput?.value || '').trim() &&
+        !!String(studentTypeDd?.value || '').trim() &&
+        Number(totalFeeInput?.value || 0) > 0;
+      if (saveBtn) {
+        if (allFilled) saveBtn.removeAttribute('disabled');
+        else saveBtn.setAttribute('disabled', '');
+      }
+    } catch (_) { /* noop */ }
+  }
+
+  // Wire up validation and save
+  addFormEventListeners() {
+    const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
+    const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
+    const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
+    const saveBtn = this.querySelector('#save-schedule-btn');
+    [yearInput, termInput, totalFeeInput].forEach(el => {
+      if (!el) return;
+      el.addEventListener('input', () => this.validateForm());
+      el.addEventListener('change', () => this.validateForm());
+    });
+    if (classDropdown) classDropdown.addEventListener('change', () => this.validateForm());
+    if (studentTypeDd) studentTypeDd.addEventListener('change', () => this.validateForm());
+    if (saveBtn) saveBtn.addEventListener('click', () => this.saveSchedule());
+    this.validateForm();
+  }
+
   render() {
     this.innerHTML = `
       <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
         <div slot="title">Add Fee Schedule</div>
         <form class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
             <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
               ${(this._classes || []).map(c => `
                 <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
@@ -108,23 +147,23 @@ class FinanceScheduleAddModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
               <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
               <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type *</label>
             <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full">
               <ui-option value="Day">Day</ui-option>
               <ui-option value="Boarding">Boarding</ui-option>
             </ui-search-dropdown>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Total Fee</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Fee *</label>
             <ui-input data-field="total_fee" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full"></ui-input>
           </div>
           <div>
@@ -151,8 +190,14 @@ class FinanceScheduleAddModal extends HTMLElement {
             </div>
           </div>
         </div>
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+          <ui-button id="save-schedule-btn" color="primary" disabled>Save</ui-button>
+        </div>
       </ui-modal>
     `;
+    // Attach validation and save wiring
+    this.addFormEventListeners();
   }
 }
 

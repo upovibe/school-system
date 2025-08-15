@@ -3,6 +3,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 /**
@@ -41,11 +42,6 @@ class StudentAddDialog extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for confirm button click (Add Student)
-        this.addEventListener('confirm', () => {
-            this.saveStudent();
-        });
-
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
@@ -85,6 +81,52 @@ class StudentAddDialog extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+    }
+
+    // Validate required fields and toggle Save button
+    validateForm() {
+        try {
+            const requiredSelectors = [
+                'ui-input[data-field="student_id"]',
+                'ui-input[data-field="first_name"]',
+                'ui-input[data-field="last_name"]',
+                'ui-input[data-field="email"]',
+                'ui-input[data-field="password"]',
+                'ui-input[data-field="admission_date"]'
+            ];
+            const saveBtn = this.querySelector('#save-student-btn');
+            const allFilled = requiredSelectors.every(sel => {
+                const el = this.querySelector(sel);
+                const val = el ? String(el.value || '').trim() : '';
+                return !!val;
+            });
+            if (saveBtn) {
+                if (allFilled) saveBtn.removeAttribute('disabled');
+                else saveBtn.setAttribute('disabled', '');
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events and initial validation
+    addFormEventListeners() {
+        const selectors = [
+            'ui-input[data-field="student_id"]',
+            'ui-input[data-field="first_name"]',
+            'ui-input[data-field="last_name"]',
+            'ui-input[data-field="email"]',
+            'ui-input[data-field="password"]',
+            'ui-input[data-field="admission_date"]'
+        ];
+        selectors.forEach(sel => {
+            const el = this.querySelector(sel);
+            if (el) {
+                el.addEventListener('input', () => this.validateForm());
+                el.addEventListener('change', () => this.validateForm());
+            }
+        });
+        const saveBtn = this.querySelector('#save-student-btn');
+        if (saveBtn) saveBtn.addEventListener('click', () => this.saveStudent());
+        this.validateForm();
     }
 
     resetForm() {
@@ -566,8 +608,14 @@ class StudentAddDialog extends HTMLElement {
                         </div>
                     </form>
                 </div>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-student-btn" color="primary" disabled>Save</ui-button>
+                </div>
             </ui-dialog>
         `;
+        // Attach validation and save wiring
+        this.addFormEventListeners();
     }
 }
 

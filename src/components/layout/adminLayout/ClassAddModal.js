@@ -2,6 +2,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
+import '@/components/ui/Button.js';
 import api from '@/services/api.js';
 
 /**
@@ -31,11 +32,6 @@ class ClassAddModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for confirm button click (Add Class)
-        this.addEventListener('confirm', () => {
-            this.saveClass();
-        });
-
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
@@ -59,6 +55,47 @@ class ClassAddModal extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+    }
+
+    // Validate form and toggle Save button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const sectionInput = this.querySelector('ui-input[data-field="section"]');
+            const saveBtn = this.querySelector('#save-class-btn');
+            const name = nameInput ? String(nameInput.value || '').trim() : '';
+            const section = sectionInput ? String(sectionInput.value || '').trim() : '';
+            const isValid = !!name && !!section;
+            if (saveBtn) {
+                if (isValid) {
+                    saveBtn.removeAttribute('disabled');
+                } else {
+                    saveBtn.setAttribute('disabled', '');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events for live validation and save
+    addFormEventListeners() {
+        const nameInput = this.querySelector('ui-input[data-field="name"]');
+        const sectionInput = this.querySelector('ui-input[data-field="section"]');
+        const saveBtn = this.querySelector('#save-class-btn');
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => this.validateForm());
+            nameInput.addEventListener('change', () => this.validateForm());
+        }
+        if (sectionInput) {
+            sectionInput.addEventListener('input', () => this.validateForm());
+            sectionInput.addEventListener('change', () => this.validateForm());
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveClass());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     // Save the new class
@@ -238,8 +275,15 @@ class ClassAddModal extends HTMLElement {
                         </div>
                     </div>
                 </div>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-class-btn" color="primary" disabled>Save</ui-button>
+                </div>
             </ui-modal>
         `;
+
+        // Attach form events and initialize validation
+        this.addFormEventListeners();
     }
 }
 

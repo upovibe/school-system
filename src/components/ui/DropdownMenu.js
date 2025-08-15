@@ -317,6 +317,19 @@ class DropdownMenu extends HTMLElement {
                     return;
                 }
                 
+                // If the item contains a link, navigate even if the click wasn't directly on the link
+                const anchorEl = menuItem.querySelector('a[href]');
+                if (anchorEl) {
+                    const href = anchorEl.getAttribute('href');
+                    if (href && href !== '#') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.close();
+                        window.location.href = href;
+                        return;
+                    }
+                }
+
                 this.close();
                 // Dispatch custom event
                 this.dispatchEvent(new CustomEvent('item-click', {

@@ -25,6 +25,10 @@ class TeacherAssignmentAddDialog extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
             this.render();
+            // Ensure validation is called after render when dialog opens
+            setTimeout(() => {
+                this.validateForm();
+            }, 100);
         }
     }
 
@@ -90,6 +94,58 @@ class TeacherAssignmentAddDialog extends HTMLElement {
     setupEventListeners() {
         // Listen for dialog events
         this.addEventListener('confirm', this.saveTeacherAssignment.bind(this));
+        
+        // Add form validation listeners after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
+    }
+
+    // Validate form and toggle Confirm button
+    validateForm() {
+        try {
+            const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+            
+            const teacherId = teacherDropdown ? teacherDropdown.value : '';
+            const classIds = classDropdown ? classDropdown.value : [];
+            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+            
+            const isValid = !!teacherId && 
+                           Array.isArray(classIds) && classIds.length > 0 && 
+                           Array.isArray(subjectIds) && subjectIds.length > 0;
+            
+            // Get the confirm button by dialog-action attribute
+            const confirmBtn = this.querySelector('ui-button[dialog-action="confirm"]');
+            if (confirmBtn) {
+                if (isValid) {
+                    confirmBtn.removeAttribute('disabled');
+                } else {
+                    confirmBtn.setAttribute('disabled', '');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events for live validation
+    addFormEventListeners() {
+        const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
+        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
+        const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+
+        if (teacherDropdown) {
+            teacherDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (classDropdown) {
+            classDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (subjectDropdown) {
+            subjectDropdown.addEventListener('change', () => this.validateForm());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     resetForm() {
@@ -100,6 +156,9 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         if (teacherDropdown) teacherDropdown.value = '';
         if (classDropdown) classDropdown.value = [];
         if (subjectDropdown) subjectDropdown.value = [];
+        
+        // Re-validate after reset
+        this.validateForm();
     }
 
     async saveTeacherAssignment() {
@@ -267,6 +326,10 @@ class TeacherAssignmentAddDialog extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // Ensure validation is called after opening
+        setTimeout(() => {
+            this.validateForm();
+        }, 100);
     }
 
     close() {
@@ -337,7 +400,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                         </div>
 
                         <!-- How it works -->
-                        <div class="p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                        <div class="p-3 my-5 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
                             <div class="flex items-start space-x-2">
                                 <i class="fas fa-info-circle mt-0.5"></i>
                                 <div>
@@ -353,8 +416,17 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                             </div>
                         </div>
                 </div>
+                <div slot="footer" class="flex justify-end space-x-3">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+                    <ui-button color="primary" dialog-action="confirm" disabled>Add Assignment</ui-button>
+                </div>
             </ui-dialog>
         `;
+        
+        // Re-setup event listeners and validate form after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
     }
 }
 

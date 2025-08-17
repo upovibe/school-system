@@ -24,6 +24,10 @@ class ClassSubjectAddDialog extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
             this.render();
+            // Ensure validation is called after render when dialog opens
+            setTimeout(() => {
+                this.validateForm();
+            }, 100);
         }
     }
 
@@ -73,6 +77,51 @@ class ClassSubjectAddDialog extends HTMLElement {
     setupEventListeners() {
         // Listen for dialog events
         this.addEventListener('confirm', this.saveClassSubject.bind(this));
+        
+        // Add form validation listeners after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
+    }
+
+    // Validate form and toggle Confirm button
+    validateForm() {
+        try {
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+            const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+            
+            const classId = classDropdown ? classDropdown.value : '';
+            const subjectIds = subjectDropdown ? subjectDropdown.value : [];
+            
+            const isValid = !!classId && 
+                           Array.isArray(subjectIds) && subjectIds.length > 0;
+            
+            // Get the confirm button by dialog-action attribute
+            const confirmBtn = this.querySelector('ui-button[dialog-action="confirm"]');
+            if (confirmBtn) {
+                if (isValid) {
+                    confirmBtn.removeAttribute('disabled');
+                } else {
+                    confirmBtn.setAttribute('disabled', '');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events for live validation
+    addFormEventListeners() {
+        const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+        const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
+
+        if (classDropdown) {
+            classDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (subjectDropdown) {
+            subjectDropdown.addEventListener('change', () => this.validateForm());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     resetForm() {
@@ -87,6 +136,9 @@ class ClassSubjectAddDialog extends HTMLElement {
         if (academicYearDropdown) academicYearDropdown.value = '';
         if (termDropdown) termDropdown.value = 'full_year';
         if (teachingHoursInput) teachingHoursInput.value = '0';
+        
+        // Re-validate after reset
+        this.validateForm();
     }
 
     async saveClassSubject() {
@@ -226,6 +278,10 @@ class ClassSubjectAddDialog extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // Ensure validation is called after opening
+        setTimeout(() => {
+            this.validateForm();
+        }, 100);
     }
 
     close() {
@@ -299,8 +355,17 @@ class ClassSubjectAddDialog extends HTMLElement {
                         </div>
                     </div>
                 </div>
+                <div slot="footer" class="flex justify-end space-x-3">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+                    <ui-button color="primary" dialog-action="confirm" disabled>Add Assignment</ui-button>
+                </div>
             </ui-dialog>
         `;
+        
+        // Re-setup event listeners and validate form after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
     }
 }
 

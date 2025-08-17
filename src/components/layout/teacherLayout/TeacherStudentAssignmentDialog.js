@@ -330,10 +330,20 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                                                         <div class="text-xs text-gray-500">Document</div>
                                                     </div>
                                                 </div>
-                                                <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors duration-200">
+                                                <ui-button 
+                                                    variant="secondary" 
+                                                    size="sm"
+                                                    data-file="${(submission.submission_file || '').split('/').pop()}"
+                                                    onclick="(function(btn){
+                                                        const token = localStorage.getItem('token');
+                                                        const file = btn.getAttribute('data-file');
+                                                        if (token && file) {
+                                                            window.open('/api/uploads/assignments/submissions/' + file + '?token=' + encodeURIComponent(token), '_blank');
+                                                        }
+                                                    })(this)">
                                                     <i class="fas fa-download mr-1"></i>
                                                     Download
-                                                </button>
+                                                </ui-button>
                                             </div>
                                         </div>
                                     </div>

@@ -26,6 +26,16 @@ class GradingPeriodAddModal extends HTMLElement {
         return ['open'];
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null) {
+            this.render();
+            // Ensure validation is called after render when modal opens
+            setTimeout(() => {
+                this.validateForm();
+            }, 100);
+        }
+    }
+
     connectedCallback() {
         this.render();
         this.setupEventListeners();
@@ -41,10 +51,78 @@ class GradingPeriodAddModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+        
+        // Add form validation listeners after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
+    }
+
+    // Validate form and toggle Confirm button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
+            const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
+            const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
+            
+            const name = nameInput ? String(nameInput.value || '').trim() : '';
+            const academicYear = academicYearInput ? String(academicYearInput.value || '').trim() : '';
+            const startDate = startDateInput ? startDateInput.value : '';
+            const endDate = endDateInput ? endDateInput.value : '';
+            
+            const isValid = !!name && !!academicYear && !!startDate && !!endDate;
+            
+            // Get the custom confirm button by ID
+            const confirmBtn = this.querySelector('#save-period-btn');
+            if (confirmBtn) {
+                if (isValid) {
+                    confirmBtn.removeAttribute('disabled');
+                } else {
+                    confirmBtn.setAttribute('disabled', '');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
+    // Wire events for live validation
+    addFormEventListeners() {
+        const nameInput = this.querySelector('ui-input[data-field="name"]');
+        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
+        const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
+        const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => this.validateForm());
+            nameInput.addEventListener('change', () => this.validateForm());
+        }
+        if (academicYearInput) {
+            academicYearInput.addEventListener('input', () => this.validateForm());
+            academicYearInput.addEventListener('change', () => this.validateForm());
+        }
+        if (startDateInput) {
+            startDateInput.addEventListener('change', () => this.validateForm());
+        }
+        if (endDateInput) {
+            endDateInput.addEventListener('change', () => this.validateForm());
+        }
+
+        // Add click event for the custom save button
+        const saveBtn = this.querySelector('#save-period-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveGradingPeriod());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     open() {
         this.setAttribute('open', '');
+        // Ensure validation is called after opening
+        setTimeout(() => {
+            this.validateForm();
+        }, 100);
     }
 
     close() {
@@ -141,7 +219,7 @@ class GradingPeriodAddModal extends HTMLElement {
             }
 
             // Show loading state
-            const confirmButton = this.querySelector('ui-button[slot="confirm"]');
+            const confirmButton = this.querySelector('#save-period-btn');
             if (confirmButton) {
                 confirmButton.setAttribute('loading', '');
                 confirmButton.textContent = 'Creating...';
@@ -198,10 +276,10 @@ class GradingPeriodAddModal extends HTMLElement {
             });
         } finally {
             // Reset loading state
-            const confirmButton = this.querySelector('ui-button[slot="confirm"]');
+            const confirmButton = this.querySelector('#save-period-btn');
             if (confirmButton) {
                 confirmButton.removeAttribute('loading');
-                confirmButton.textContent = 'Create Grading Period';
+                confirmButton.textContent = 'Create Period';
             }
         }
     }
@@ -216,6 +294,9 @@ class GradingPeriodAddModal extends HTMLElement {
         if (switchElement) {
             switchElement.checked = true;
         }
+        
+        // Re-validate after reset
+        this.validateForm();
     }
 
     render() {
@@ -284,8 +365,17 @@ class GradingPeriodAddModal extends HTMLElement {
                         </ui-switch>
                     </div>
                 </form>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="save-period-btn" color="primary" disabled>Create Period</ui-button>
+                </div>
             </ui-modal>
         `;
+        
+        // Re-setup event listeners and validate form after render
+        setTimeout(() => {
+            this.addFormEventListeners();
+        }, 0);
     }
 }
 

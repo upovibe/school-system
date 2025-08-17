@@ -317,34 +317,27 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                                 ${
                                   submission.submission_file
                                     ? `
-                                    <div class="mb-6">
-                                        <label class="text-sm font-medium text-gray-600 mb-2 block">Attached File</label>
-                                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center space-x-3">
-                                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                        <i class="fas fa-file-alt text-blue-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="text-sm font-medium text-gray-900">${submission.submission_file}</div>
-                                                        <div class="text-xs text-gray-500">Document</div>
-                                                    </div>
-                                                </div>
-                                                <ui-button 
-                                                    variant="secondary" 
-                                                    size="sm"
-                                                    data-file="${(submission.submission_file || '').split('/').pop()}"
-                                                    onclick="(function(btn){
-                                                        const token = localStorage.getItem('token');
-                                                        const file = btn.getAttribute('data-file');
-                                                        if (token && file) {
-                                                            window.open('/api/uploads/assignments/submissions/' + file + '?token=' + encodeURIComponent(token), '_blank');
-                                                        }
-                                                    })(this)">
-                                                    <i class="fas fa-download mr-1"></i>
-                                                    Download
-                                                </ui-button>
+                                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-paperclip text-blue-600 mr-2"></i>
+                                                <span class="text-sm font-medium text-blue-800">
+                                                    ${(submission.submission_file || '').split('/').pop()}
+                                                </span>
                                             </div>
+                                            <ui-button 
+                                                variant="secondary" 
+                                                size="sm"
+                                                onclick="(function(){
+                                                    const token = localStorage.getItem('token');
+                                                    const file = '${(submission.submission_file || '').split('/').pop()}';
+                                                    if (token && file) {
+                                                        window.open('/api/uploads/assignments/submissions/' + file + '?token=' + encodeURIComponent(token), '_blank');
+                                                    }
+                                                })()">
+                                                <i class="fas fa-download mr-1"></i>
+                                                Download
+                                            </ui-button>
                                         </div>
                                     </div>
                                 `
@@ -352,7 +345,7 @@ class TeacherStudentAssignmentDialog extends HTMLElement {
                                 }
                             
                             <!-- Submission Details Section -->
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Submission Details</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 my-4">Submission Details</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="text-sm font-medium text-gray-600">Submission Status</label>

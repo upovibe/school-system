@@ -39,24 +39,78 @@ class StudentGradesManagementPage extends App {
         this.deleteGradeData = null;
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        this.addEventListener('click', this.handleHeaderActions?.bind(this));
-    }
+
 
     renderHeader() {
+        const c = this.getGradeCounts();
         return `
             <div class="space-y-8 mb-4">
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
                             <div class="flex items-center gap-2">
-                                <h1 class="text-2xl sm:text-3xl font-bold">Student Grades</h1>
+                                <h1 class="text-2xl sm:text-3xl font-bold">Student Grades Overview</h1>
                                 <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-grades-info" title="About Student Grades">
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Filter by class, subject, period, and student to view or enter grades</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Summary of recorded grades across filters</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Grades</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-star text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.a_plus + c.a}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">A Grades</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-star-half-alt text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.b_plus + c.b}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">B Grades</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-orange-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-circle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.c_plus + c.c}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">C Grades</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.d + c.f}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">D/F Grades</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -151,83 +205,15 @@ class StudentGradesManagementPage extends App {
         return counts;
     }
 
-    // Admin-styled header with summary metrics (match student/teacher gradient bg)
-    renderHeader() {
-        const c = this.getGradeCounts();
-        return `
-            <div class="space-y-8 mb-4">
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-                        <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold">Student Grades Overview</h1>
-                            <p class="text-blue-100 text-base sm:text-lg">Summary of recorded grades across filters</p>
-                        </div>
-                        <div class="mt-4 sm:mt-0">
-                            <div class="text-right">
-                                <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
-                                <div class="text-blue-100 text-xs sm:text-sm">Total Grades</div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-star text-white text-lg sm:text-xl"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.a_plus + c.a}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">A Grades</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-star-half-alt text-white text-lg sm:text-xl"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.b_plus + c.b}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">B Grades</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-orange-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-circle text-white text-lg sm:text-xl"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.c_plus + c.c}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">C Grades</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-exclamation-triangle text-white text-lg sm:text-xl"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.d + c.f}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">D/F Grades</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
 
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Student Grades | School System';
         this.bootstrap();
+
+        // Header actions (question mark button)
+        this.addEventListener('click', this.handleHeaderActions.bind(this));
 
         // Table actions
         this.addEventListener('table-view', this.onView.bind(this));

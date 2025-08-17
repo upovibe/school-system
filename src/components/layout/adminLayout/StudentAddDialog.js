@@ -149,6 +149,16 @@ class StudentAddDialog extends HTMLElement {
             const otherOk = medVal !== 'Other' || (medicalOther && String(medicalOther.value || '').trim() !== '');
             allFilled = allFilled && !!medVal && otherOk;
 
+            // Student type is required
+            const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
+            const studentTypeSelected = studentTypeDropdown ? String(studentTypeDropdown.value || '').trim() : '';
+            allFilled = allFilled && !!studentTypeSelected;
+
+            // Class is required
+            const classDropdown = this.querySelector('ui-search-dropdown[name="current_class_id"]');
+            const classSelected = classDropdown ? String(classDropdown.value || '').trim() : '';
+            allFilled = allFilled && !!classSelected;
+
             if (saveBtn) {
                 if (allFilled && isStudentEmailValid && isParentEmailValid) {
                     saveBtn.removeAttribute('disabled');
@@ -197,6 +207,16 @@ class StudentAddDialog extends HTMLElement {
         const medicalDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
         if (medicalDropdown) {
             medicalDropdown.addEventListener('change', () => this.validateForm());
+        }
+        
+        const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
+        if (studentTypeDropdown) {
+            studentTypeDropdown.addEventListener('change', () => this.validateForm());
+        }
+        
+        const classDropdown = this.querySelector('ui-search-dropdown[name="current_class_id"]');
+        if (classDropdown) {
+            classDropdown.addEventListener('change', () => this.validateForm());
         }
         const saveBtn = this.querySelector('#save-student-btn');
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveStudent());
@@ -464,7 +484,7 @@ class StudentAddDialog extends HTMLElement {
                 <div slot="content">
                     <form id="student-form" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type *</label>
                             <ui-search-dropdown 
                                 name="student_type" 
                                 placeholder="Select student type..."
@@ -474,7 +494,7 @@ class StudentAddDialog extends HTMLElement {
                             </ui-search-dropdown>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
                             ${this.classes.length > 0 ? `
                                 <ui-search-dropdown 
                                     name="current_class_id" 

@@ -875,7 +875,7 @@ class TeacherAssignmentManagementPage extends App {
                                                                 
                                                                 <!-- Subjects List -->
                                                                 <div class="p-4">
-                                                                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                                                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                                                                         ${classGroup.subjects.map(subject => `
                                                                             <div class="bg-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
                                                                                 <div class="flex items-center justify-between">

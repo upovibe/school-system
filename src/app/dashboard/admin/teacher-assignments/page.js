@@ -822,12 +822,12 @@ class TeacherAssignmentManagementPage extends App {
                                                                     title="Edit assignments">
                                                                     <i class="fas fa-edit text-sm"></i>
                                                                 </button>
-                                                                <button 
+                                                                <!-- <button 
                                                                     onclick="this.closest('app-teacher-assignment-management-page').onDeleteTeacher('${teacherGroup.employeeId}')"
                                                                     class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                                                                     title="Delete assignments">
                                                                     <i class="fas fa-trash text-sm"></i>
-                                                                </button>
+                                                                </button> -->
                                                             </div>
                                                         </div>
                                                     </div>

@@ -122,17 +122,7 @@ class TeacherAssignmentManagementPage extends App {
         this.addEventListener('table-add', this.onAdd.bind(this));
         
         // Listen for success events to refresh data
-        this.addEventListener('teacher-assignment-deleted', (event) => {
-            // Remove the deleted teacher assignment from the current data
-            const deletedTeacherAssignmentId = event.detail.teacherAssignmentId;
-            const currentTeacherAssignments = this.get('teacherAssignments') || [];
-            const updatedTeacherAssignments = currentTeacherAssignments.filter(teacherAssignment => teacherAssignment.id !== deletedTeacherAssignmentId);
-            this.set('teacherAssignments', updatedTeacherAssignments);
-            this.updateTableData();
-            
-            // Close the delete dialog
-            this.set('showDeleteDialog', false);
-        });
+
         
         this.addEventListener('teacher-class-assignments-deleted', (event) => {
             // Remove the deleted class assignments from the current data
@@ -366,22 +356,22 @@ class TeacherAssignmentManagementPage extends App {
         const { detail } = event;
         const rowData = detail.row;
         
-        // For grouped table, handle teacher-level delete
-        if (rowData.teacher_employee_id) {
+        // For grouped table, handle class-level delete (delete entire class and all subjects for that teacher)
+        if (rowData.teacher_employee_id && rowData.class_name && rowData.class_section) {
+            this.onDeleteClass(rowData.teacher_employee_id, rowData.class_name, rowData.class_section);
+        } else if (rowData.teacher_employee_id) {
+            // If only teacher info available, delete all assignments for that teacher
             this.onDeleteTeacher(rowData.teacher_employee_id);
         } else {
             // Fallback to original logic for non-grouped data
             const deleteTeacherAssignment = this.get('teacherAssignments').find(teacherAssignment => teacherAssignment.id === detail.row.id);
             if (deleteTeacherAssignment) {
-                this.closeAllModals();
-                this.set('deleteTeacherAssignmentData', deleteTeacherAssignment);
-                this.set('showDeleteDialog', true);
-                setTimeout(() => {
-                    const deleteDialog = this.querySelector('teacher-assignment-delete-dialog');
-                    if (deleteDialog) {
-                        deleteDialog.setTeacherAssignmentData(deleteTeacherAssignment);
-                    }
-                }, 0);
+                // For individual rows, delete the entire class assignment for that teacher
+                this.onDeleteClass(
+                    deleteTeacherAssignment.employee_id, 
+                    deleteTeacherAssignment.class_name, 
+                    deleteTeacherAssignment.class_section
+                );
             }
         }
     }

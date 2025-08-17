@@ -31,7 +31,7 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
 
     setupEventListeners() {
         // Listen for dialog events
-        this.addEventListener('confirm', this.deleteTeacherAssignment.bind(this));
+        this.addEventListener('confirm', this.deleteClassAssignments.bind(this));
     }
 
     setTeacherAssignmentData(teacherAssignment) {
@@ -39,7 +39,7 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
         this.render();
     }
 
-    async deleteTeacherAssignment() {
+    async deleteClassAssignments() {
         if (this.loading || !this.teacherAssignmentData) return;
         
         try {
@@ -56,21 +56,26 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
                 return;
             }
 
-            const response = await api.withToken(token).delete(`/teacher-assignments/${this.teacherAssignmentData.id}`);
+            // Delete the entire class assignment for this teacher (all subjects)
+            const response = await api.withToken(token).delete(`/teacher-assignments/teacher/${this.teacherAssignmentData.teacher_id}/class/${this.teacherAssignmentData.class_id}`);
             
             if (response.data.success) {
                 Toast.show({
                     title: 'Success',
-                    message: 'Teacher assignment deleted successfully',
+                    message: `Successfully deleted all subject assignments for ${this.teacherAssignmentData.class_name} - ${this.teacherAssignmentData.class_section}`,
                     variant: 'success',
                     duration: 3000
                 });
 
                 // Close modal and dispatch event
                 this.close();
-                this.dispatchEvent(new CustomEvent('teacher-assignment-deleted', {
+                this.dispatchEvent(new CustomEvent('teacher-class-assignments-deleted', {
                     detail: {
-                        teacherAssignmentId: this.teacherAssignmentData.id
+                        deletedAssignments: [this.teacherAssignmentData], // Pass as array for consistency
+                        teacherId: this.teacherAssignmentData.teacher_id,
+                        employeeId: this.teacherAssignmentData.employee_id,
+                        className: this.teacherAssignmentData.class_name,
+                        classSection: this.teacherAssignmentData.class_section
                     },
                     bubbles: true,
                     composed: true
@@ -78,16 +83,16 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
             } else {
                 Toast.show({
                     title: 'Error',
-                    message: response.data.message || 'Failed to delete teacher assignment',
+                    message: response.data.message || 'Failed to delete class assignments',
                     variant: 'error',
                     duration: 3000
                 });
             }
         } catch (error) {
-            console.error('Error deleting teacher assignment:', error);
+            console.error('Error deleting class assignments:', error);
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to delete teacher assignment',
+                message: error.response?.data?.message || 'Failed to delete class assignments',
                 variant: 'error',
                 duration: 3000
             });
@@ -114,16 +119,16 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
         
         if (!teacherAssignment) {
             this.innerHTML = `
-                <ui-dialog 
-                    ${this.hasAttribute('open') ? 'open' : ''} 
-                    title="Delete Teacher Assignment"
-                    variant="danger">
-                    <div slot="content">
-                        <div class="text-center py-8">
-                            <p class="text-gray-500">No data to delete</p>
-                        </div>
+                            <ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                title="Delete Teacher Class Assignment"
+                variant="danger">
+                <div slot="content">
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No data to delete</p>
                     </div>
-                </ui-dialog>
+                </div>
+            </ui-dialog>
             `;
             return;
         }
@@ -131,7 +136,7 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                title="Delete Teacher Assignment"
+                title="Delete Teacher Class Assignment"
                 variant="danger">
                 <div slot="content">
                     <div class="text-center">
@@ -143,12 +148,12 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
                         <!-- Warning Message -->
                         <h3 class="text-lg font-medium text-gray-900 mb-2">Are you sure?</h3>
                         <p class="text-sm text-gray-500 mb-6">
-                            This action cannot be undone. This will permanently delete the teacher assignment.
+                            This action cannot be undone. This will permanently delete <strong>ALL subject assignments</strong> for this teacher and class.
                         </p>
                         
                         <!-- Assignment Details -->
                         <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                            <h4 class="text-sm font-medium text-gray-900 mb-3">Assignment Details</h4>
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Class Assignment Details</h4>
                             <div class="space-y-3 text-sm">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
@@ -172,12 +177,20 @@ class TeacherAssignmentDeleteDialog extends HTMLElement {
                                     <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                                         <i class="fas fa-book text-green-600 text-xs"></i>
                                     </div>
-                                    <span class="text-gray-500">Subject:</span>
+                                    <span class="text-gray-500">Subjects:</span>
                                     <span class="font-medium text-gray-900">
-                                        ${teacherAssignment.subject_name || 'N/A'} (${teacherAssignment.subject_code || 'N/A'})
+                                        All subjects for this class will be deleted
                                     </span>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Additional Warning -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p class="text-sm text-red-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Warning:</strong> This will remove the teacher from teaching all subjects in this class.
+                            </p>
                         </div>
                     </div>
                 </div>

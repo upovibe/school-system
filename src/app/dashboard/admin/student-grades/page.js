@@ -545,7 +545,7 @@ class StudentGradesManagementPage extends App {
             { key: 'assign_total', label: 'Assign. Total' },
             { key: 'exam_total', label: 'Exam Total' },
             { key: 'final_pct', label: 'Final %' },
-            { key: 'final_grade', label: 'Letter' },
+            { key: 'final_grade', label: 'Grade' },
             { key: 'updated', label: 'Updated' }
         ];
 

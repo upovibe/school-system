@@ -179,7 +179,18 @@ class TeacherStudentGradeAddModal extends HTMLElement {
         Toast.show({ title: 'Error', message: resp.data.message || 'Failed to create grade', variant: 'error', duration: 3000 });
       }
     } catch (error) {
-      Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to create grade', variant: 'error', duration: 3000 });
+      // Check for duplicate grade error
+      const errorMessage = error.response?.data?.message || '';
+      if (errorMessage.includes('Duplicate entry') || errorMessage.includes('unique_grade') || errorMessage.includes('1062')) {
+        Toast.show({ 
+          title: 'Grade Already Exists', 
+          message: 'A grade for this student, class, subject, and grading period already exists. Please use the update function instead.', 
+          variant: 'warning', 
+          duration: 5000 
+        });
+      } else {
+        Toast.show({ title: 'Error', message: errorMessage || 'Failed to create grade', variant: 'error', duration: 3000 });
+      }
     } finally {
       const confirmBtn = this.querySelector('ui-button[slot="confirm"]');
       if (confirmBtn) { confirmBtn.removeAttribute('loading'); confirmBtn.textContent = 'Create Grade'; }

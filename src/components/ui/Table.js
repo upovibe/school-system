@@ -385,20 +385,56 @@ class Table extends HTMLElement {
                 
                 .upo-table-controls-row {
                     display: flex;
+                    flex-direction: row;
                     justify-content: space-between;
-                    align-items: center;
-                    gap: 0.5rem;
+                    align-items: flex-start;
+                    gap: 0.75rem;
                 }
                 
                 .upo-table-controls-left {
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
+                    width: auto;
                 }
                 
                 .upo-table-controls-right {
                     display: flex;
                     align-items: center;
+                    gap: 0.5rem;
+                    justify-content: flex-end;
+                }
+                
+                /* Responsive layout - switch to vertical on small screens */
+                @media (max-width: 640px) {
+                    .upo-table-controls-row {
+                        gap: 0.75rem;
+                    }
+                    
+                    .upo-table-controls-left {
+                        // flex-direction: column;
+                        align-items: stretch;
+                        width: 100%;
+                    }
+                    
+                    .upo-table-search-input {
+                        width: 100%;
+                    }
+                    
+                    .upo-table-filter-select {
+                        width: 100%;
+                    }
+                    
+                    .upo-table-pagination {
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+                    
+                    .upo-table-pagination-left {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.75rem;
+                    }
                 }
                 
                 .upo-table-search {
@@ -414,7 +450,7 @@ class Table extends HTMLElement {
                     border-radius: 0.375rem;
                     outline: none;
                     transition: all 0.15s ease-in-out;
-                    width: 200px;
+                    width: 100%;
                 }
                 
                 .upo-table-search-input:focus {
@@ -480,6 +516,7 @@ class Table extends HTMLElement {
                     color: #374151;
                     cursor: pointer;
                     transition: all 0.15s ease-in-out;
+                    width: 100%;
                 }
                 
                 .upo-table-filter-select:focus {
@@ -527,8 +564,10 @@ class Table extends HTMLElement {
                 
                 .upo-table-pagination {
                     display: flex;
+                    flex-direction: col;
                     justify-content: space-between;
                     align-items: center;
+                    gap: 1rem;
                     padding: 1rem;
                     background-color: #f9fafb;
                     border-top: 1px solid #e5e7eb;

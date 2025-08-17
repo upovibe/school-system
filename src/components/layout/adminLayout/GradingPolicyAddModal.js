@@ -104,6 +104,13 @@ class GradingPolicyAddModal extends HTMLElement {
                 const index = parseInt(removeBtn.getAttribute('data-index'), 10);
                 this.removeBoundaryItem(index);
             }
+            
+            // Show grading policy info
+            const infoBtn = e.target.closest('[data-action="show-grading-policy-info"]');
+            if (infoBtn) {
+                e.preventDefault();
+                this.showGradingPolicyInfo();
+            }
         });
     }
 
@@ -121,16 +128,33 @@ class GradingPolicyAddModal extends HTMLElement {
             const boundaries = this.readBoundaryItemsFromDOM();
             const hasBoundary = Array.isArray(boundaries) && boundaries.length > 0;
 
+            // Check if assignment + exam = 100
+            const assignMax = Number(assignMaxInput?.value || 0);
+            const examMax = Number(examMaxInput?.value || 0);
+            const totalEquals100 = assignMax + examMax === 100;
+
             const allFilled = !!String(nameInput?.value || '').trim() &&
                 !!String(descriptionTextarea?.getValue() || '').trim() &&
                 !!String(subjectDropdown?.value || '').trim() &&
-                Number(assignMaxInput?.value || 0) > 0 &&
-                Number(examMaxInput?.value || 0) > 0 &&
+                assignMax > 0 &&
+                examMax > 0 &&
+                totalEquals100 &&
                 hasBoundary;
 
             if (saveBtn) {
                 if (allFilled) saveBtn.removeAttribute('disabled');
                 else saveBtn.setAttribute('disabled', '');
+            }
+
+            // Show/hide validation message
+            const validationMsg = this.querySelector('#score-validation-msg');
+            if (validationMsg) {
+                if (assignMax > 0 && examMax > 0 && !totalEquals100) {
+                    validationMsg.textContent = `Assignment (${assignMax}) + Exam (${examMax}) = ${assignMax + examMax}. Total must equal 100.`;
+                    validationMsg.classList.remove('hidden');
+                } else {
+                    validationMsg.classList.add('hidden');
+                }
             }
         } catch (_) { /* noop */ }
     }
@@ -159,6 +183,88 @@ class GradingPolicyAddModal extends HTMLElement {
         const saveBtn = this.querySelector('#save-policy-btn');
         if (saveBtn) saveBtn.addEventListener('click', () => this.savePolicy());
         this.validateForm();
+    }
+
+    showGradingPolicyInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-graduation-cap text-blue-500 mr-2"></i>
+                <span class="font-semibold">About Grading Policies</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What are Grading Policies?</h4>
+                    <p class="text-gray-700">Grading policies define how student performance is evaluated and converted to letter grades. They establish the scoring system and grade boundaries for each subject.</p>
+                </div>
+                
+                <div class="bg-blue-50 rounded-lg p-4 space-y-3">
+                    <h5 class="font-semibold text-blue-900">Key Components:</h5>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Total Score</span>
+                            <span class="text-blue-600">Always 100 points</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Assignment Score</span>
+                            <span class="text-blue-600">e.g., 40 points (40%)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Exam Score</span>
+                            <span class="text-blue-600">e.g., 60 points (60%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-4 space-y-3">
+                    <h5 class="font-semibold text-green-900">Grade Boundaries Example:</h5>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-medium">A Grade</span>
+                            <span class="text-green-600">80-100 points</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">B Grade</span>
+                            <span class="text-green-600">70-79 points</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">C Grade</span>
+                            <span class="text-green-600">60-69 points</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">D Grade</span>
+                            <span class="text-green-600">50-59 points</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">F Grade</span>
+                            <span class="text-green-600">0-49 points</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 rounded-lg p-4 space-y-3">
+                    <h5 class="font-semibold text-yellow-900">How It Works:</h5>
+                    <div class="space-y-2 text-sm text-yellow-800">
+                        <p>1. <strong>Student earns scores:</strong> Assignment (35/40) + Exam (55/60) = 90/100</p>
+                        <p>2. <strong>System calculates percentage:</strong> 90 ÷ 100 = 90%</p>
+                        <p>3. <strong>Grade assigned:</strong> 90% falls in A Grade range (80-100)</p>
+                        <p>4. <strong>Final grade:</strong> A</p>
+                    </div>
+                </div>
+
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        <strong>Tip:</strong> Assignment and Exam scores must always add up to 100. This ensures the total possible score is always 100%.
+                    </p>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     async loadSubjectsWithoutPolicies() {
@@ -285,7 +391,14 @@ class GradingPolicyAddModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal ${this.hasAttribute('open') ? 'open' : ''} position="right" close-button="true">
-                <div slot="title">Add New Grading Policy</div>
+                <div slot="title">
+                    <div class="flex items-center gap-2">
+                        <span>Add New Grading Policy</span>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors" data-action="show-grading-policy-info" title="About Grading Policies">
+                            <i class="fas fa-question-circle text-lg"></i>
+                        </button>
+                    </div>
+                </div>
                 <form class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Policy Name *</label>
@@ -298,12 +411,17 @@ class GradingPolicyAddModal extends HTMLElement {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Max Score *</label>
-                            <ui-input data-field="assignment_max_score" type="number" min="1" placeholder="e.g., 40" class="w-full"></ui-input>
+                            <ui-input data-field="assignment_max_score" type="number" min="1" max="99" placeholder="e.g., 40" class="w-full"></ui-input>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Exam Max Score *</label>
-                            <ui-input data-field="exam_max_score" type="number" min="1" placeholder="e.g., 60" class="w-full"></ui-input>
+                            <ui-input data-field="exam_max_score" type="number" min="1" max="99" placeholder="e.g., 60" class="w-full"></ui-input>
                         </div>
+                    </div>
+                    <div id="score-validation-msg" class="hidden text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200"></div>
+                    <div class="text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-200">
+                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                        Assignment and Exam scores must add up to 100. For example: Assignment (40) + Exam (60) = 100.
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>

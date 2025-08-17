@@ -18,6 +18,7 @@ class ClassSubjectDeleteDialog extends HTMLElement {
     constructor() {
         super();
         this.classSubjectData = null;
+        this.loading = false;
     }
 
     static get observedAttributes() {
@@ -55,13 +56,13 @@ class ClassSubjectDeleteDialog extends HTMLElement {
         this.render(); // Re-render to show the new data
     }
 
-    // Delete the class subject
+    // Delete the entire class and all its subjects
     async deleteClassSubject() {
         try {
             if (!this.classSubjectData) {
                 Toast.show({
                     title: 'Error',
-                    message: 'No class subject data available for deletion',
+                    message: 'No class data available for deletion',
                     variant: 'error',
                     duration: 3000
                 });
@@ -73,21 +74,24 @@ class ClassSubjectDeleteDialog extends HTMLElement {
             if (!token) {
                 Toast.show({
                     title: 'Authentication Error',
-                    message: 'Please log in to delete class subjects',
+                    message: 'Please log in to delete classes',
                     variant: 'error',
                     duration: 3000
                 });
                 return;
             }
 
-            // Delete class subject
-            const response = await api.withToken(token).delete(`/class-subjects/${this.classSubjectData.id}`);
+            // Show loading state
+            this.setLoading(true);
+
+            // Delete the entire class (this will cascade delete all class-subject assignments)
+            const response = await api.withToken(token).delete(`/classes/${this.classSubjectData.class_id}`);
             
-            // Check if class subject was deleted successfully
+            // Check if class was deleted successfully
             if (response.status === 200 || response.data.success) {
                 Toast.show({
                     title: 'Success',
-                    message: 'Class subject assignment deleted successfully',
+                    message: `Successfully deleted class ${this.classSubjectData.class_name} - ${this.classSubjectData.class_section} and all its subject assignments`,
                     variant: 'success',
                     duration: 3000
                 });
@@ -95,24 +99,37 @@ class ClassSubjectDeleteDialog extends HTMLElement {
                 // Close dialog and dispatch event
                 this.close();
                 this.dispatchEvent(new CustomEvent('class-subject-deleted', {
-                    detail: { classSubjectId: this.classSubjectData.id },
+                    detail: { 
+                        deletedClass: {
+                            classId: this.classSubjectData.class_id,
+                            className: this.classSubjectData.class_name,
+                            classSection: this.classSubjectData.class_section
+                        }
+                    },
                     bubbles: true,
                     composed: true
                 }));
             } else {
-                throw new Error(response.data.message || 'Failed to delete class subject assignment');
+                throw new Error(response.data.message || 'Failed to delete class');
             }
 
         } catch (error) {
-            console.error('❌ Error deleting class subject:', error);
+            console.error('❌ Error deleting class:', error);
             
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to delete class subject assignment',
+                message: error.response?.data?.message || 'Failed to delete class',
                 variant: 'error',
                 duration: 3000
             });
+        } finally {
+            this.setLoading(false);
         }
+    }
+
+    setLoading(loading) {
+        this.loading = loading;
+        // The ui-dialog component handles the loading state automatically
     }
 
     render() {
@@ -123,7 +140,7 @@ class ClassSubjectDeleteDialog extends HTMLElement {
                 <ui-dialog 
                     ${this.hasAttribute('open') ? 'open' : ''} 
                     variant="danger">
-                    <div slot="title">Delete Class Subject Assignment</div>
+                    <div slot="title">Delete Class</div>
                     <div slot="content">
                         <p class="text-gray-500">No data to delete</p>
                     </div>
@@ -136,7 +153,7 @@ class ClassSubjectDeleteDialog extends HTMLElement {
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 variant="danger">
-                <div slot="title">Delete Class Subject Assignment</div>
+                <div slot="title">Delete Class and All Subjects</div>
                 <div slot="content">
                     <div class="flex items-center mb-4">
                         <div class="flex-shrink-0">
@@ -147,24 +164,23 @@ class ClassSubjectDeleteDialog extends HTMLElement {
                         <div class="ml-3">
                             <h3 class="text-lg font-medium text-gray-900">Are you sure?</h3>
                             <p class="text-sm text-gray-500 mt-1">
-                                This action cannot be undone. This will permanently delete the class subject assignment.
+                                This action cannot be undone. This will permanently delete the entire class and ALL its subject assignments.
                             </p>
                         </div>
                     </div>
                     
-                    <!-- Assignment Details -->
+                    <!-- Class Details -->
                     <div class="bg-red-50 rounded-lg p-4 mb-4">
-                        <h4 class="text-sm font-medium text-red-800 mb-2">Assignment to be deleted:</h4>
+                        <h4 class="text-sm font-medium text-red-800 mb-2">Class to be deleted:</h4>
                         <div class="space-y-2 text-sm">
                             <div>
                                 <span class="font-medium text-gray-700">Class:</span>
                                 <span class="text-gray-900 ml-2">${classSubject.class_name || 'N/A'} - ${classSubject.class_section || 'N/A'}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-gray-700">Subject:</span>
-                                <span class="text-gray-900 ml-2">${classSubject.subject_name || 'N/A'} (${classSubject.subject_code || 'N/A'})</span>
+                                <span class="font-medium text-gray-700">Warning:</span>
+                                <span class="text-red-700 ml-2">This will delete ALL subject assignments for this class</span>
                             </div>
-                            
                         </div>
                     </div>
                 </div>

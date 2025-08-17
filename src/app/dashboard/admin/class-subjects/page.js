@@ -119,15 +119,46 @@ class ClassSubjectManagementPage extends App {
         
         // Listen for success events to refresh data
         this.addEventListener('class-subject-deleted', (event) => {
-            // Remove the deleted class subject from the current data
-            const deletedClassSubjectId = event.detail.classSubjectId;
-            const currentClassSubjects = this.get('classSubjects') || [];
-            const updatedClassSubjects = currentClassSubjects.filter(classSubject => classSubject.id !== deletedClassSubjectId);
-            this.set('classSubjects', updatedClassSubjects);
-            this.updateTableData();
-            
-            // Close the delete dialog
-            this.set('showDeleteDialog', false);
+            // Check if this is a class deletion (new format) or subject deletion (old format)
+            if (event.detail.deletedClass) {
+                // Class deletion - remove all subjects for the deleted class
+                const deletedClass = event.detail.deletedClass;
+                const currentClassSubjects = this.get('classSubjects') || [];
+                const updatedClassSubjects = currentClassSubjects.filter(classSubject => 
+                    !(classSubject.class_name === deletedClass.className && 
+                      classSubject.class_section === deletedClass.classSection)
+                );
+                this.set('classSubjects', updatedClassSubjects);
+                this.updateTableData();
+                
+                // Close the delete dialog
+                this.set('showDeleteDialog', false);
+            } else if (event.detail.deletedSubject) {
+                // Subject deletion - remove the specific subject from the class
+                const deletedSubject = event.detail.deletedSubject;
+                const currentClassSubjects = this.get('classSubjects') || [];
+                const updatedClassSubjects = currentClassSubjects.filter(classSubject => 
+                    !(classSubject.class_name === deletedSubject.className && 
+                      classSubject.class_section === deletedSubject.classSection &&
+                      classSubject.subject_name === deletedSubject.subjectName &&
+                      classSubject.subject_code === deletedSubject.subjectCode)
+                );
+                this.set('classSubjects', updatedClassSubjects);
+                this.updateTableData();
+                
+                // Close the delete dialog
+                this.set('showDeleteSubjectDialog', false);
+            } else if (event.detail.classSubjectId) {
+                // Old format - individual class subject deletion
+                const deletedClassSubjectId = event.detail.classSubjectId;
+                const currentClassSubjects = this.get('classSubjects') || [];
+                const updatedClassSubjects = currentClassSubjects.filter(classSubject => classSubject.id !== deletedClassSubjectId);
+                this.set('classSubjects', updatedClassSubjects);
+                this.updateTableData();
+                
+                // Close the delete dialog
+                this.set('showDeleteDialog', false);
+            }
         });
         
         this.addEventListener('class-subject-saved', (event) => {
@@ -161,24 +192,6 @@ class ClassSubjectManagementPage extends App {
             } else {
                 this.loadData();
             }
-        });
-
-        // Listen for subject deletion events
-        this.addEventListener('class-subject-deleted', (event) => {
-            // Remove the deleted subject from the current data
-            const deletedSubject = event.detail.deletedSubject;
-            const currentClassSubjects = this.get('classSubjects') || [];
-            const updatedClassSubjects = currentClassSubjects.filter(classSubject => 
-                !(classSubject.class_name === deletedSubject.className && 
-                  classSubject.class_section === deletedSubject.classSection &&
-                  classSubject.subject_name === deletedSubject.subjectName &&
-                  classSubject.subject_code === deletedSubject.subjectCode)
-            );
-            this.set('classSubjects', updatedClassSubjects);
-            this.updateTableData();
-            
-            // Close the delete dialog
-            this.set('showDeleteSubjectDialog', false);
         });
 
         // Listen for delete events from view dialog

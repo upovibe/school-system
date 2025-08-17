@@ -83,6 +83,12 @@ class StudentAddDialog extends HTMLElement {
         this.removeAttribute('open');
     }
 
+    // Email validation function
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     // Validate required fields and toggle Save button
     validateForm() {
         try {
@@ -97,6 +103,38 @@ class StudentAddDialog extends HTMLElement {
                 'ui-input[data-field="parent_phone"]',
                 'ui-input[data-field="parent_email"]'
             ];
+            
+            // Email validation
+            const studentEmailInput = this.querySelector('ui-input[data-field="email"]');
+            const parentEmailInput = this.querySelector('ui-input[data-field="parent_email"]');
+            const studentEmailError = this.querySelector('#student-email-error');
+            const parentEmailError = this.querySelector('#parent-email-error');
+            
+            const studentEmailValue = studentEmailInput ? String(studentEmailInput.value || '').trim() : '';
+            const parentEmailValue = parentEmailInput ? String(parentEmailInput.value || '').trim() : '';
+            
+            const isStudentEmailValid = studentEmailValue === '' || this.isValidEmail(studentEmailValue);
+            const isParentEmailValid = parentEmailValue === '' || this.isValidEmail(parentEmailValue);
+            
+            // Show/hide email error messages
+            if (studentEmailError) {
+                if (studentEmailValue && !isStudentEmailValid) {
+                    studentEmailError.textContent = 'Please enter a valid email address';
+                    studentEmailError.classList.remove('hidden');
+                } else {
+                    studentEmailError.classList.add('hidden');
+                }
+            }
+            
+            if (parentEmailError) {
+                if (parentEmailValue && !isParentEmailValid) {
+                    parentEmailError.textContent = 'Please enter a valid email address';
+                    parentEmailError.classList.remove('hidden');
+                } else {
+                    parentEmailError.classList.add('hidden');
+                }
+            }
+            
             const saveBtn = this.querySelector('#save-student-btn');
             let allFilled = requiredSelectors.every(sel => {
                 const el = this.querySelector(sel);
@@ -112,8 +150,11 @@ class StudentAddDialog extends HTMLElement {
             allFilled = allFilled && !!medVal && otherOk;
 
             if (saveBtn) {
-                if (allFilled) saveBtn.removeAttribute('disabled');
-                else saveBtn.setAttribute('disabled', '');
+                if (allFilled && isStudentEmailValid && isParentEmailValid) {
+                    saveBtn.removeAttribute('disabled');
+                } else {
+                    saveBtn.setAttribute('disabled', '');
+                }
             }
         } catch (_) { /* noop */ }
     }
@@ -124,12 +165,10 @@ class StudentAddDialog extends HTMLElement {
             'ui-input[data-field="student_id"]',
             'ui-input[data-field="first_name"]',
             'ui-input[data-field="last_name"]',
-            'ui-input[data-field="email"]',
             'ui-input[data-field="password"]',
             'ui-input[data-field="admission_date"]',
             'ui-input[data-field="parent_name"]',
             'ui-input[data-field="parent_phone"]',
-            'ui-input[data-field="parent_email"]',
             'ui-input[data-field="medical_conditions_other"]'
         ];
         selectors.forEach(sel => {
@@ -139,6 +178,22 @@ class StudentAddDialog extends HTMLElement {
                 el.addEventListener('change', () => this.validateForm());
             }
         });
+        
+        // Special handling for email fields with real-time validation
+        const studentEmailInput = this.querySelector('ui-input[data-field="email"]');
+        if (studentEmailInput) {
+            studentEmailInput.addEventListener('input', () => this.validateForm());
+            studentEmailInput.addEventListener('change', () => this.validateForm());
+            studentEmailInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        const parentEmailInput = this.querySelector('ui-input[data-field="parent_email"]');
+        if (parentEmailInput) {
+            parentEmailInput.addEventListener('input', () => this.validateForm());
+            parentEmailInput.addEventListener('change', () => this.validateForm());
+            parentEmailInput.addEventListener('blur', () => this.validateForm());
+        }
+        
         const medicalDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
         if (medicalDropdown) {
             medicalDropdown.addEventListener('change', () => this.validateForm());
@@ -264,6 +319,28 @@ class StudentAddDialog extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please enter email',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate student email format
+            if (!this.isValidEmail(studentData.email)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter a valid student email address',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate parent email format
+            if (!this.isValidEmail(studentData.parent_email)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter a valid parent email address',
                     variant: 'error',
                     duration: 3000
                 });
@@ -450,6 +527,7 @@ class StudentAddDialog extends HTMLElement {
                                 data-field="email"
                                 type="email" 
                                 placeholder="Enter email address"
+                                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                 class="w-full">
                             </ui-input>
                         </div>
@@ -544,13 +622,15 @@ class StudentAddDialog extends HTMLElement {
                                 data-field="parent_email"
                                 type="email" 
                                 placeholder="Enter parent email"
+                                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                 class="w-full">
                             </ui-input>
+                            <div id="parent-email-error" class="hidden text-sm text-red-600 mt-1"></div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact (Optional)</label>
                                 <ui-input 
                                     data-field="emergency_contact"
                                     type="text" 
@@ -560,7 +640,7 @@ class StudentAddDialog extends HTMLElement {
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Phone</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Phone (Optional)</label>
                                 <ui-input 
                                     data-field="emergency_phone"
                                     type="tel" 

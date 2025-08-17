@@ -77,6 +77,12 @@ class TeacherAddDialog extends HTMLElement {
         this.removeAttribute('open');
     }
 
+    // Email validation function
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     // Validate required fields and toggle Save button
     validateForm() {
         try {
@@ -88,15 +94,35 @@ class TeacherAddDialog extends HTMLElement {
                 'ui-input[data-field="password"]',
                 'ui-input[data-field="hire_date"]'
             ];
+            
+            const emailInput = this.querySelector('ui-input[data-field="email"]');
+            const emailError = this.querySelector('#email-error');
+            const emailValue = emailInput ? String(emailInput.value || '').trim() : '';
+            const isEmailValid = emailValue === '' || this.isValidEmail(emailValue);
+            
+            // Show/hide email error message
+            if (emailError) {
+                if (emailValue && !isEmailValid) {
+                    emailError.textContent = 'Please enter a valid email address';
+                    emailError.classList.remove('hidden');
+                } else {
+                    emailError.classList.add('hidden');
+                }
+            }
+            
             const saveBtn = this.querySelector('#save-teacher-btn');
             const allFilled = requiredSelectors.every(sel => {
                 const el = this.querySelector(sel);
                 const val = el ? String(el.value || '').trim() : '';
                 return !!val;
             });
+            
             if (saveBtn) {
-                if (allFilled) saveBtn.removeAttribute('disabled');
-                else saveBtn.setAttribute('disabled', '');
+                if (allFilled && isEmailValid) {
+                    saveBtn.removeAttribute('disabled');
+                } else {
+                    saveBtn.setAttribute('disabled', '');
+                }
             }
         } catch (_) { /* noop */ }
     }
@@ -107,7 +133,6 @@ class TeacherAddDialog extends HTMLElement {
             'ui-input[data-field="employee_id"]',
             'ui-input[data-field="first_name"]',
             'ui-input[data-field="last_name"]',
-            'ui-input[data-field="email"]',
             'ui-input[data-field="password"]',
             'ui-input[data-field="hire_date"]'
         ];
@@ -118,6 +143,15 @@ class TeacherAddDialog extends HTMLElement {
                 el.addEventListener('change', () => this.validateForm());
             }
         });
+        
+        // Special handling for email field with real-time validation
+        const emailInput = this.querySelector('ui-input[data-field="email"]');
+        if (emailInput) {
+            emailInput.addEventListener('input', () => this.validateForm());
+            emailInput.addEventListener('change', () => this.validateForm());
+            emailInput.addEventListener('blur', () => this.validateForm());
+        }
+        
         const saveBtn = this.querySelector('#save-teacher-btn');
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveTeacher());
         this.validateForm();
@@ -224,6 +258,17 @@ class TeacherAddDialog extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please enter email',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate email format
+            if (!this.isValidEmail(teacherData.email)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter a valid email address',
                     variant: 'error',
                     duration: 3000
                 });
@@ -365,6 +410,7 @@ class TeacherAddDialog extends HTMLElement {
                                     data-field="email"
                                     type="email" 
                                     placeholder="Enter email address"
+                                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                     class="w-full">
                                 </ui-input>
                             </div>

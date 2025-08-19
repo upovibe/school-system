@@ -22,11 +22,10 @@ class StudentGradeReportPage extends App {
         // Initialize reactive state for filters to avoid undefined access during first render
         this.set('filters', { ...this.filters });
         this.classes = [];
-        this.subjects = [];
+        this.subjects = []; // Will be replaced with class-specific subjects
+        this.classSubjects = []; // Store subjects specific to selected class
         this.periods = [];
         this.students = [];
-
-
     }
 
     renderHeader() {
@@ -214,9 +213,13 @@ class StudentGradeReportPage extends App {
             if (!name) return;
             const next = { ...this.get('filters'), [name]: dd.value };
             this.set('filters', next);
+            
             if (name === 'class_id') {
                 this.loadStudentsByClass(dd.value);
+                // When class changes, load subjects for that class
+                this.loadClassSubjectsAndAutoSelect(dd.value);
             }
+            
             // Auto load when any filter changes if a primary filter (class or student) is set
             const primarySet = (next.class_id && String(next.class_id).length > 0) || (next.student_id && String(next.student_id).length > 0);
             if (primarySet) {
@@ -249,13 +252,12 @@ class StudentGradeReportPage extends App {
                 Toast.show({ title: 'Authentication Error', message: 'Please log in to view data', variant: 'error', duration: 3000 });
                 return;
             }
-            const [classesResp, subjectsResp, periodsResp] = await Promise.all([
+            const [classesResp, periodsResp] = await Promise.all([
                 api.withToken(token).get('/classes'),
-                api.withToken(token).get('/subjects'),
                 api.withToken(token).get('/grading-periods'),
             ]);
             this.classes = classesResp.data.data || [];
-            this.subjects = subjectsResp.data.data || [];
+            this.subjects = []; // Don't load all subjects globally - only class-specific ones
             this.periods = periodsResp.data.data || [];
 
             // Default: preselect the last existing class id
@@ -272,6 +274,7 @@ class StudentGradeReportPage extends App {
                     const next = { ...currentFilters, class_id: lastId };
                     this.set('filters', next);
                     await this.loadStudentsByClass(lastId);
+                    await this.loadClassSubjectsAndAutoSelect(lastId);
                     this.loadGrades();
                 }
             }
@@ -295,6 +298,51 @@ class StudentGradeReportPage extends App {
             }
         } catch (_) {
             this.students = [];
+        }
+    }
+
+    async loadClassSubjects(classId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token || !classId) return [];
+            
+            // Get subjects assigned to this specific class from class-subject system
+            const resp = await api.withToken(token).get('/class-subjects', { class_id: classId });
+            const classSubjects = resp.data.data || [];
+            
+            // Extract subject IDs and names
+            const subjects = classSubjects.map(cs => ({
+                id: cs.subject_id,
+                name: cs.subject_name || cs.subject_code
+            }));
+            
+            return subjects;
+        } catch (error) {
+            console.error('❌ Error loading class subjects:', error);
+            return [];
+        }
+    }
+
+    async loadClassSubjectsAndAutoSelect(classId) {
+        try {
+            const classSubjects = await this.loadClassSubjects(classId);
+            
+            // Update and render only class-specific subjects
+            this.classSubjects = classSubjects;
+            this.subjects = classSubjects; // Update this.subjects for backward compatibility
+            
+            // Auto-select the first subject for the selected class (like teacher page)
+            if (classSubjects && classSubjects.length > 0) {
+                const firstSubjectId = String(classSubjects[0].id);
+                const currentFilters = this.get('filters');
+                this.set('filters', { ...currentFilters, subject_id: firstSubjectId });
+            } else {
+                // Clear subject selection if no subjects available
+                const currentFilters = this.get('filters');
+                this.set('filters', { ...currentFilters, subject_id: '' });
+            }
+        } catch (error) {
+            console.error('❌ Error in loadClassSubjectsAndAutoSelect:', error);
         }
     }
 
@@ -362,12 +410,18 @@ class StudentGradeReportPage extends App {
 
     renderFilters() {
         const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
-        const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
+        
+        // Use class-specific subjects if available, otherwise show message
+        const subjectOptions = (this.subjects && this.subjects.length > 0)
+            ? this.subjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
+            : '<ui-option value="" disabled>No subjects assigned to this class</ui-option>';
+        
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
         const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
         const { class_id, subject_id, grading_period_id, student_id } = filters;
+        
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -379,7 +433,7 @@ class StudentGradeReportPage extends App {
                     </div>
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Subject</label>
-                        <ui-search-dropdown name="subject_id" placeholder="All subjects" class="w-full" value="${subject_id || ''}">
+                        <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full" value="${subject_id || ''}">
                             ${subjectOptions}
                         </ui-search-dropdown>
                     </div>

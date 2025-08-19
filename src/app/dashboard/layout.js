@@ -284,6 +284,12 @@ class DashboardLayout extends App {
                     ]
                 },
                 {
+                    group: 'Reports',
+                    items: [
+                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                    ]
+                },
+                {
                     group: 'Management',
                     items: [
                         { label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role' },
@@ -334,6 +340,12 @@ class DashboardLayout extends App {
                         { label: 'My Class Assignments', icon: 'fas fa-tasks', href: '/dashboard/teacher/assignments' },
                         { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
                     ]
+                },
+                {
+                    group: 'Reports',
+                    items: [
+                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                    ]
                 }
             ],
             student: [
@@ -350,6 +362,12 @@ class DashboardLayout extends App {
                         { label: 'My Assignment', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
                         { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
                     ]
+                },
+                {
+                    group: 'Reports',
+                    items: [
+                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                    ]
                 }
             ],
             parent: [
@@ -365,6 +383,12 @@ class DashboardLayout extends App {
                         { label: 'Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
                         { label: 'Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
                         { label: 'Messages', icon: 'fas fa-comments', href: '/dashboard/parent/messages' },
+                    ]
+                },
+                {
+                    group: 'Reports',
+                    items: [
+                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
                     ]
                 }
             ],
@@ -427,6 +451,7 @@ class DashboardLayout extends App {
             'grading-periods': 'Grading Period Management',
             'grading-policies': 'Grading Policy Management',
             'student-grades': 'Student Grades Management',
+            'student-grade-report': 'Student Grade Report',
             // Finance
             'finance': 'Finance',
             'schedules': 'Fee Schedules',

@@ -39,7 +39,7 @@
  */
 class Table extends HTMLElement {
     static get observedAttributes() {
-        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'actions', 'refresh', 'print'];
+        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'actions', 'custom-actions', 'refresh', 'print'];
     }
 
     constructor() {
@@ -65,6 +65,7 @@ class Table extends HTMLElement {
         this.refresh = this.hasAttribute('refresh');
         this.print = this.hasAttribute('print');
         this.actions = (this.getAttribute('actions') || '').split(',').map(a => a.trim()).filter(Boolean);
+        this.customActions = this.parseJSONAttribute('custom-actions', []);
         
         // Internal state
         this.currentPage = 1;
@@ -276,6 +277,16 @@ class Table extends HTMLElement {
                 
                 .upo-table-action-button.delete:hover {
                     color: #ef4444;
+                }
+
+                .upo-table-action-button.custom {
+                    background-color: #f3f4f6;
+                    color: #374151;
+                }
+
+                .upo-table-action-button.custom:hover {
+                    background-color: #e5e7eb;
+                    color: #111827;
                 }
                 
                 .upo-table-checkbox {
@@ -921,6 +932,21 @@ class Table extends HTMLElement {
         if (row) {
             this.dispatchEvent(new CustomEvent('table-delete', {
                 detail: { row, rowIndex },
+                bubbles: true
+            }));
+        }
+    }
+
+    /**
+     * Custom action handler
+     * @param {number} rowIndex - The index of the row
+     * @param {string} actionName - The name of the custom action
+     */
+    customAction(rowIndex, actionName) {
+        const row = this.getVisibleData()[rowIndex];
+        if (row) {
+            this.dispatchEvent(new CustomEvent('table-custom-action', {
+                detail: { row, rowIndex, actionName },
                 bubbles: true
             }));
         }
@@ -1713,6 +1739,11 @@ class Table extends HTMLElement {
                                         </svg>
                                     </button>
                                     ` : ''}
+                                    ${this.customActions.map(customAction => `
+                                    <button class="upo-table-action-button custom" onclick="this.closest('ui-table').customAction(${index}, '${customAction.name}')" aria-label="${customAction.label || customAction.name}" title="${customAction.tooltip || customAction.label || customAction.name}">
+                                        ${customAction.icon ? `<i class="${customAction.icon}"></i>` : customAction.text || customAction.name}
+                                    </button>
+                                    `).join('')}
                                 </div>
                             </td>
                         ` : ''}

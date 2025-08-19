@@ -53,7 +53,7 @@ class ClassSubjectUpdateDialog extends HTMLElement {
     this.addEventListener('confirm', this.save.bind(this));
   }
 
-  setClassSubjectData(data, classAssignments) {
+  async setClassSubjectData(data, classAssignments) {
     this.classData = data || null;
 
     // Normalize incoming assignments: prefer explicit list if provided
@@ -88,9 +88,14 @@ class ClassSubjectUpdateDialog extends HTMLElement {
 
     this.render();
 
-    // Load authoritative subject list for the class (replaces fallback options) and re-apply selection each time
-    // Ensure full subject list is available; preselection uses selectedSubjectIds
-    this.loadSubjects();
+    // Load ALL subjects first, then merge with class-specific subjects
+    // This ensures users can see and select new subjects to add
+    await this.loadSubjects();
+    
+    // Now load class-specific subjects and merge them
+    if (classId) {
+      await this.loadClassSubjects(classId);
+    }
 
     // Try multiple times to ensure options are rendered before setting values
     const trySync = () => this.syncDropdownSelections();
@@ -103,13 +108,16 @@ class ClassSubjectUpdateDialog extends HTMLElement {
     setTimeout(() => {
       const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
       if (classDropdown && !classDropdown._classChangeBound) {
-        classDropdown.addEventListener('change', () => {
+        classDropdown.addEventListener('change', async () => {
           const value = Array.isArray(classDropdown.value) ? classDropdown.value[0] : classDropdown.value;
           const newClassId = parseInt(value);
           this.logDebug('classDropdown.change', { value: classDropdown.value, newClassId });
           if (newClassId && !isNaN(newClassId)) {
             this.selectedClassIds = [newClassId];
-            this.loadClassSubjects(newClassId).then(() => this.syncDropdownSelections());
+            // Load all subjects first, then merge with class-specific subjects
+            await this.loadSubjects();
+            await this.loadClassSubjects(newClassId);
+            this.syncDropdownSelections();
           }
         });
         classDropdown._classChangeBound = true;
@@ -145,7 +153,9 @@ class ClassSubjectUpdateDialog extends HTMLElement {
       if (CSU_CACHED_SUBJECTS_BY_CLASS.has(cacheKey)) {
         const cached = CSU_CACHED_SUBJECTS_BY_CLASS.get(cacheKey) || [];
         if (cached.length > 0) {
-          this.subjects = this._mergeSubjects(cached, this.subjects);
+          // For update dialog, we want to merge with ALL subjects, not just class subjects
+          // This ensures users can see and select new subjects to add
+          this.subjects = this._mergeSubjects(this.subjects, cached);
           this.logDebug('loadClassSubjects.cache', { classId, count: cached.length });
           this.render();
           const sync = () => this.syncDropdownSelections();
@@ -165,7 +175,9 @@ class ClassSubjectUpdateDialog extends HTMLElement {
         }));
         CSU_CACHED_SUBJECTS_BY_CLASS.set(cacheKey, list);
         if (Array.isArray(list) && list.length > 0) {
-          this.subjects = this._mergeSubjects(list, this.subjects);
+          // For update dialog, we want to merge with ALL subjects, not just class subjects
+          // This ensures users can see and select new subjects to add
+          this.subjects = this._mergeSubjects(this.subjects, list);
           this.logDebug('loadClassSubjects.success', { classId, count: list.length, subjectIds: list.map(s => s.id) });
           this.render();
           // After render, re-apply selection (multiple retries)

@@ -97,19 +97,12 @@ class TeacherAssignmentAddDialog extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            console.log('Fetching class-subjects for class ID:', classId);
-            
             // Use the class-subjects endpoint to get subjects for a specific class
             const response = await api.withToken(token).get('/class-subjects');
             
-            console.log('Class-subjects API response:', response);
-            
             if (response.status === 200 && response.data.success) {
-                console.log('Class-subjects data:', response.data.data);
-                
                 // Filter class-subjects by the specific class ID
                 const classSubjects = response.data.data.filter(cs => cs.class_id == classId);
-                console.log('Filtered class-subjects for class', classId, ':', classSubjects);
                 
                 // Extract the subject information from class-subjects
                 const subjects = classSubjects.map(cs => ({
@@ -118,7 +111,6 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                     code: cs.subject_code
                 }));
                 
-                console.log('Extracted subjects:', subjects);
                 return subjects;
             }
         } catch (error) {
@@ -192,11 +184,8 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         const classDropdown = event.target;
         const selectedClassIds = classDropdown.value || [];
         
-        console.log('Class selection changed:', selectedClassIds);
-        
         if (selectedClassIds.length === 0) {
             // If no classes selected, show all subjects
-            console.log('No classes selected, showing all subjects');
             this.updateSubjectsDropdown(this.subjects);
             return;
         }
@@ -204,24 +193,17 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         // Get all subjects for all selected classes
         const allClassSubjects = [];
         for (const classId of selectedClassIds) {
-            console.log('Loading subjects for class ID:', classId);
             const classSubjects = await this.loadClassSubjects(classId);
-            console.log('Subjects found for class', classId, ':', classSubjects);
             allClassSubjects.push(...classSubjects);
         }
-
-        console.log('All class subjects combined:', allClassSubjects);
 
         // Remove duplicates based on subject ID
         const uniqueSubjects = allClassSubjects.filter((subject, index, self) => 
             index === self.findIndex(s => s.id === subject.id)
         );
 
-        console.log('Unique subjects after deduplication:', uniqueSubjects);
-
         // If no subjects found for selected classes, show a message and disable subjects dropdown
         if (uniqueSubjects.length === 0) {
-            console.log('No subjects found for selected classes, showing message');
             this.showNoSubjectsMessage();
             return;
         }
@@ -232,32 +214,22 @@ class TeacherAssignmentAddDialog extends HTMLElement {
 
     // Update subjects dropdown with filtered subjects
     updateSubjectsDropdown(subjects) {
-        console.log('Updating subjects dropdown with:', subjects);
-        
         const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-        if (!subjectDropdown) {
-            console.error('Subject dropdown not found!');
-            return;
-        }
+        if (!subjectDropdown) return;
 
-        console.log('Clearing current subject dropdown options');
         // Clear current options
         subjectDropdown.innerHTML = '';
         
-        console.log('Adding new subject options:', subjects.length);
         // Add new options
         subjects.forEach(subject => {
             const option = document.createElement('ui-option');
             option.value = subject.id;
             option.textContent = `${subject.name} (${subject.code})`;
             subjectDropdown.appendChild(option);
-            console.log('Added option:', option.textContent);
         });
 
         // Reset selection
         subjectDropdown.value = [];
-        
-        console.log('Subject dropdown updated, current innerHTML length:', subjectDropdown.innerHTML.length);
         
         // Re-validate form
         this.validateForm();
@@ -521,7 +493,6 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                         <!-- Subject Selection -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subjects *</label>
-                            <p class="text-xs text-gray-500 mb-2">Subjects will be filtered based on selected classes</p>
                             ${this.subjects.length > 0 ? `
                                 <ui-search-dropdown 
                                     data-field="subject_ids" 

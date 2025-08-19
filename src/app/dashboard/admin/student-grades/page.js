@@ -283,8 +283,14 @@ class StudentGradesManagementPage extends App {
             const readyToLoad = Boolean(next.class_id && String(next.class_id).length > 0 && next.subject_id && String(next.subject_id).length > 0);
             if (readyToLoad) { this.loadGrades(); }
             
-            // When class changes, load subjects for that class and clear subject selection
+            // When class changes, load subjects for that class and auto-select first subject
             if (name === 'class_id' && value) {
+                // Clear current subject selection first
+                const currentFilters = this.get('filters');
+                this.set('filters', { ...currentFilters, subject_id: '' });
+                this.render(); // Re-render to clear subject dropdown
+                
+                // Load new class subjects and auto-select first one
                 this.loadClassSubjectsAndAutoSelect(value);
             }
             
@@ -424,9 +430,20 @@ class StudentGradesManagementPage extends App {
             // Update and render only class-specific subjects
             this.classSubjects = classSubjects;
             this.updateSubjectDropdown(classSubjects);
-            // Clear subject selection (force user to pick one)
-            const currentFilters = this.get('filters');
-            this.set('filters', { ...currentFilters, subject_id: '' });
+            
+            // Auto-select the first subject for the selected class (like teacher page)
+            if (classSubjects && classSubjects.length > 0) {
+                const firstSubjectId = String(classSubjects[0].id);
+                const currentFilters = this.get('filters');
+                this.set('filters', { ...currentFilters, subject_id: firstSubjectId });
+                
+                // Update the dropdown to reflect the selected value
+                this.updateSubjectDropdown(classSubjects);
+            } else {
+                // Clear subject selection if no subjects available
+                const currentFilters = this.get('filters');
+                this.set('filters', { ...currentFilters, subject_id: '' });
+            }
         } catch (error) {
             console.error('Error loading class subjects:', error);
         }
@@ -447,8 +464,11 @@ class StudentGradesManagementPage extends App {
                 subjectDropdown.appendChild(option);
             });
             
-            // Ensure no default selection
-            subjectDropdown.setAttribute('value', '');
+            // Set the selected value based on current filters
+            const currentFilters = this.get('filters') || {};
+            if (currentFilters.subject_id) {
+                subjectDropdown.setAttribute('value', currentFilters.subject_id);
+            }
         }
     }
 
@@ -771,7 +791,7 @@ class StudentGradesManagementPage extends App {
         const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
         const subjectOptions = (this.classSubjects && this.classSubjects.length > 0)
             ? this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
-            : '';
+            : '<ui-option value="" disabled>No subjects assigned to this class</ui-option>';
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };

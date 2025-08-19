@@ -29,6 +29,7 @@ class StudentGradesManagementPage extends App {
         this.subjects = [];
         this.periods = [];
         this.students = [];
+        this.classSubjects = []; // Store subjects specific to selected class
 
         this.showAddModal = false;
         this.showUpdateModal = false;
@@ -277,6 +278,16 @@ class StudentGradesManagementPage extends App {
             if (primarySet) {
                 this.loadGrades();
             }
+            
+            // When class changes, also load subjects for that class and auto-select the last subject
+            if (name === 'class_id' && dd.value) {
+                this.loadClassSubjectsAndAutoSelect(dd.value);
+            }
+            
+            // When subject or period changes, reload grades for the class
+            if ((name === 'subject_id' || name === 'grading_period_id') && dd.value) {
+                this.loadGrades();
+            }
         });
 
         this.addEventListener('click', (e) => {
@@ -325,9 +336,10 @@ class StudentGradesManagementPage extends App {
                         .slice(-1)[0]
                 );
                 if (lastId) {
-                    const next = { ...currentFilters, class_id: lastId };
+                    const next = { ...currentFilters, class_id: lastId, subject_id: '' };
                     this.set('filters', next);
                     await this.loadStudentsByClass(lastId);
+                    await this.loadClassSubjectsAndAutoSelect(lastId);
                     this.loadGrades();
                 }
             }
@@ -344,13 +356,136 @@ class StudentGradesManagementPage extends App {
             if (!token || !classId) { this.students = []; return; }
             const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
-            // If student filter was set but not in new list, clear it
+            
+            // Auto-select all students in the class (no individual student selection needed)
+            // Clear any existing student filter since we want all students in the class
             const flt = this.get('filters');
-            if (flt.student_id && !(this.students || []).some(s => String(s.id) === String(flt.student_id))) {
-                this.set('filters', { ...flt, student_id: '' });
-            }
+            this.set('filters', { ...flt, student_id: '' });
         } catch (_) {
             this.students = [];
+        }
+    }
+
+    async loadClassSubjects(classId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token || !classId) return [];
+            
+            // Get subjects assigned to this specific class from class-subject system
+            const resp = await api.withToken(token).get('/class-subjects', { class_id: classId });
+            const classSubjects = resp.data.data || [];
+            
+            // Extract subject IDs and names
+            const subjects = classSubjects.map(cs => ({
+                id: cs.subject_id,
+                name: cs.subject_name || cs.subject_code
+            }));
+            
+            return subjects;
+        } catch (_) {
+            return [];
+        }
+    }
+
+    async loadClassSubjectsAndAutoSelect(classId) {
+        try {
+            const classSubjects = await this.loadClassSubjects(classId);
+            
+            // Update the subjects array to only show subjects assigned to this class
+            this.classSubjects = classSubjects;
+            
+            // Don't auto-select a subject - let user choose or show all subjects for the class
+            // Update the subject dropdown to show only class-specific subjects
+            this.updateSubjectDropdown(classSubjects);
+            
+            // Clear subject filter to show all subjects for the class
+            const currentFilters = this.get('filters');
+            this.set('filters', { ...currentFilters, subject_id: '' });
+        } catch (error) {
+            console.error('Error loading class subjects:', error);
+        }
+    }
+
+    updateSubjectDropdown(classSubjects) {
+        // Find the subject dropdown and update its options
+        const subjectDropdown = this.querySelector('ui-search-dropdown[name="subject_id"]');
+        if (subjectDropdown) {
+            // Clear existing options
+            subjectDropdown.innerHTML = '';
+            
+            // Add "All subjects" option first
+            const allOption = document.createElement('ui-option');
+            allOption.setAttribute('value', '');
+            allOption.textContent = 'All subjects';
+            subjectDropdown.appendChild(allOption);
+            
+            // Add options for subjects assigned to this class
+            classSubjects.forEach(subject => {
+                const option = document.createElement('ui-option');
+                option.setAttribute('value', subject.id);
+                option.textContent = subject.name;
+                subjectDropdown.appendChild(option);
+            });
+            
+            // Set the value to empty (All subjects)
+            subjectDropdown.setAttribute('value', '');
+        }
+    }
+
+    createGradeEntriesForClass(classId, subjectId, gradingPeriodId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token || !classId) return;
+
+            // Get the selected class and subject info
+            const selectedClass = this.classes.find(c => String(c.id) === String(classId));
+            const selectedSubject = this.classSubjects.find(s => String(s.id) === String(subjectId));
+            const selectedPeriod = this.periods.find(p => String(p.id) === String(gradingPeriodId));
+
+            // Create grade entries for all students in the class
+            const gradeEntries = this.students.map(student => {
+                // Try to find existing grade for this student
+                const existingGrade = this.get('grades')?.find(g => 
+                    String(g.student_id) === String(student.id) && 
+                    String(g.class_id) === String(classId) &&
+                    (!subjectId || String(g.subject_id) === String(subjectId)) &&
+                    (!gradingPeriodId || String(g.grading_period_id) === String(gradingPeriodId))
+                );
+
+                if (existingGrade) {
+                    return existingGrade;
+                }
+
+                // Create a new grade entry structure for grading
+                return {
+                    id: null, // Will be set when saved
+                    student_id: student.id,
+                    student_first_name: student.first_name,
+                    student_last_name: student.last_name,
+                    student_number: student.student_id,
+                    class_id: classId,
+                    class_name: selectedClass?.name || '',
+                    class_section: selectedClass?.section || '',
+                    subject_id: subjectId || '',
+                    subject_name: selectedSubject?.name || '',
+                    subject_code: selectedSubject?.code || '',
+                    grading_period_id: gradingPeriodId || '',
+                    grading_period_name: selectedPeriod?.name || '',
+                    assignment_total: null,
+                    exam_total: null,
+                    final_percentage: null,
+                    final_letter_grade: null,
+                    created_at: null,
+                    updated_at: null,
+                    is_new: true // Flag to indicate this is a new entry for grading
+                };
+            });
+
+            this.set('grades', gradeEntries);
+            this.updateTableData();
+        } catch (error) {
+            console.error('Error creating grade entries:', error);
+            Toast.show({ title: 'Error', message: 'Failed to create grade entries for class', variant: 'error', duration: 3000 });
         }
     }
 
@@ -372,6 +507,15 @@ class StudentGradesManagementPage extends App {
                 return;
             }
 
+            // If class is selected, show all students in that class (for grading purposes)
+            if (class_id) {
+                await this.loadStudentsByClass(class_id);
+                this.createGradeEntriesForClass(class_id, subject_id, grading_period_id);
+                this.set('loading', false);
+                return;
+            }
+
+            // Original logic for individual student grades
             const params = {};
             if (class_id) params.class_id = class_id;
             if (student_id) params.student_id = student_id;
@@ -447,7 +591,7 @@ class StudentGradesManagementPage extends App {
         if (!grades) return;
 
         const tableData = grades.map((g, index) => ({
-            id: g.id,
+            id: g.id || `new_${g.student_id}_${index}`, // Use temporary ID for new entries
             index: index + 1,
             student: [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || '',
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
@@ -456,8 +600,8 @@ class StudentGradesManagementPage extends App {
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
+            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
         }));
 
         const tableComponent = this.querySelector('ui-table');
@@ -468,15 +612,16 @@ class StudentGradesManagementPage extends App {
 
     renderFilters() {
         const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
-        const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
+        const subjectOptions = (this.classSubjects && this.classSubjects.length > 0) 
+            ? `<ui-option value="">All subjects</ui-option>` + this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
+            : (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
-        const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
-        const { class_id, subject_id, grading_period_id, student_id } = filters;
+        const { class_id, subject_id, grading_period_id } = filters;
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Class</label>
                         <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full" value="${class_id || ''}">
@@ -493,12 +638,6 @@ class StudentGradesManagementPage extends App {
                         <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
                         <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
                             ${periodOptions}
-                        </ui-search-dropdown>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-600 mb-1">Student</label>
-                        <ui-search-dropdown name="student_id" placeholder="All students (optional)" class="w-full" value="${student_id || ''}">
-                            ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                 </div>

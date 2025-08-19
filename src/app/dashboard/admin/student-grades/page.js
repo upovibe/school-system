@@ -279,21 +279,25 @@ class StudentGradesManagementPage extends App {
                 this.loadStudentsByClass(value);
             }
             
-            // Auto load when any filter changes if a primary filter (class or student) is set
-            const primarySet = (next.class_id && String(next.class_id).length > 0) || (next.student_id && String(next.student_id).length > 0);
+            // Only load when BOTH class and subject are selected
+            const readyToLoad = Boolean(next.class_id && String(next.class_id).length > 0 && next.subject_id && String(next.subject_id).length > 0);
+            if (readyToLoad) { this.loadGrades(); }
             
-            if (primarySet) {
-                this.loadGrades();
-            }
-            
-            // When class changes, also load subjects for that class and auto-select the last subject
+            // When class changes, load subjects for that class and clear subject selection
             if (name === 'class_id' && value) {
                 this.loadClassSubjectsAndAutoSelect(value);
             }
             
-            // When subject or period changes, reload grades for the class
-            if ((name === 'subject_id' || name === 'grading_period_id') && value) {
-                this.loadGrades();
+            // When subject or period changes, reload grades only if class + subject are set
+            if (name === 'subject_id' || name === 'grading_period_id') {
+                const f = this.get('filters');
+                const both = Boolean(f.class_id && String(f.class_id).length > 0 && f.subject_id && String(f.subject_id).length > 0);
+                if (both) { this.loadGrades(); }
+                else {
+                    // Clear table if not ready
+                    this.set('grades', []);
+                    this.render();
+                }
             }
             
             // When grading period changes, re-render to update custom actions
@@ -307,7 +311,14 @@ class StudentGradesManagementPage extends App {
 
         this.addEventListener('click', (e) => {
             const applyBtn = e.target.closest('[data-action="apply-filters"]');
-            if (applyBtn) { e.preventDefault(); this.closeAllModals(); this.loadGrades(); return; }
+            if (applyBtn) {
+                e.preventDefault();
+                this.closeAllModals();
+                const f = this.get('filters');
+                const both = Boolean(f.class_id && String(f.class_id).length > 0 && f.subject_id && String(f.subject_id).length > 0);
+                if (both) { this.loadGrades(); } else { this.set('grades', []); this.render(); }
+                return;
+            }
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
@@ -410,15 +421,10 @@ class StudentGradesManagementPage extends App {
     async loadClassSubjectsAndAutoSelect(classId) {
         try {
             const classSubjects = await this.loadClassSubjects(classId);
-            
-            // Update the subjects array to only show subjects assigned to this class
+            // Update and render only class-specific subjects
             this.classSubjects = classSubjects;
-            
-            // Don't auto-select a subject - let user choose or show all subjects for the class
-            // Update the subject dropdown to show only class-specific subjects
             this.updateSubjectDropdown(classSubjects);
-            
-            // Clear subject filter to show all subjects for the class
+            // Clear subject selection (force user to pick one)
             const currentFilters = this.get('filters');
             this.set('filters', { ...currentFilters, subject_id: '' });
         } catch (error) {
@@ -433,12 +439,6 @@ class StudentGradesManagementPage extends App {
             // Clear existing options
             subjectDropdown.innerHTML = '';
             
-            // Add "All subjects" option first
-            const allOption = document.createElement('ui-option');
-            allOption.setAttribute('value', '');
-            allOption.textContent = 'All subjects';
-            subjectDropdown.appendChild(allOption);
-            
             // Add options for subjects assigned to this class
             classSubjects.forEach(subject => {
                 const option = document.createElement('ui-option');
@@ -447,7 +447,7 @@ class StudentGradesManagementPage extends App {
                 subjectDropdown.appendChild(option);
             });
             
-            // Set the value to empty (All subjects)
+            // Ensure no default selection
             subjectDropdown.setAttribute('value', '');
         }
     }
@@ -544,18 +544,24 @@ class StudentGradesManagementPage extends App {
 
             const { class_id, subject_id, grading_period_id, student_id } = this.get('filters');
             
-            if (!class_id && !student_id) {
+            // Require BOTH class and subject to be selected before loading
+            if (!class_id || !subject_id) {
                 this.set('grades', []);
                 this.render();
                 this.set('loading', false);
-                Toast.show({ title: 'Filter Required', message: 'Select a class or a student to view grades', variant: 'info', duration: 2500 });
+                // No toast here to avoid noise while selecting filters
                 return;
             }
 
-            // If class is selected, show all students in that class (for grading purposes)
+            // If class is selected, fetch existing grades for the class with optional filters
             if (class_id) {
                 await this.loadStudentsByClass(class_id);
-                this.createGradeEntriesForClass(class_id, subject_id, grading_period_id);
+                const params = { class_id };
+                if (subject_id) params.subject_id = subject_id;
+                if (grading_period_id) params.grading_period_id = grading_period_id;
+                const response = await api.withToken(token).get('/student-grades', params);
+                this.set('grades', response.data.data || []);
+                this.render();
                 this.set('loading', false);
                 return;
             }
@@ -670,9 +676,10 @@ class StudentGradesManagementPage extends App {
     }
 
     onCustomAction(event) {
-        const { action, row } = event.detail;
+        const { actionName, action, row } = event.detail;
+        const act = actionName || action;
         
-        if (action === 'add-grade') {
+        if (act === 'add-grade') {
             // Find the grade data for this student
             const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id);
             if (gradeData) {
@@ -702,9 +709,9 @@ class StudentGradesManagementPage extends App {
 
     renderFilters() {
         const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
-        const subjectOptions = (this.classSubjects && this.classSubjects.length > 0) 
-            ? `<ui-option value="">All subjects</ui-option>` + this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
-            : (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
+        const subjectOptions = (this.classSubjects && this.classSubjects.length > 0)
+            ? this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
+            : '';
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
@@ -720,7 +727,7 @@ class StudentGradesManagementPage extends App {
                     </div>
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Subject</label>
-                        <ui-search-dropdown name="subject_id" placeholder="All subjects" class="w-full" value="${subject_id || ''}">
+                        <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full" value="${subject_id || ''}">
                             ${subjectOptions}
                         </ui-search-dropdown>
                     </div>
@@ -808,6 +815,7 @@ class StudentGradesManagementPage extends App {
                             action
                             refresh
                             print
+                            addable
                             bordered
                             striped
                             custom-actions='${JSON.stringify(this.getCustomActions())}'

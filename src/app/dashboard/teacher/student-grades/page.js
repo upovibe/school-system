@@ -205,7 +205,7 @@ class TeacherStudentGradesPage extends App {
       }
     });
 
-    // Filter changes
+    // Filter changes - auto-load when both subject and period are selected
     this.addEventListener('change', (e) => {
       const dd = e.target.closest('ui-search-dropdown');
       if (!dd) return;
@@ -214,21 +214,26 @@ class TeacherStudentGradesPage extends App {
       if (!name) return;
       const next = { ...this.get('filters'), [name]: dd.value };
       this.set('filters', next);
-      this.loadGrades();
+      
+      // Auto-load grades when both filters are selected
+      if (next.subject_id && next.grading_period_id) {
+        this.loadGrades();
+      } else {
+        // Clear grades if either filter is missing
+        this.set('grades', []);
+        this.render();
+      }
     });
 
-    // Apply / Clear
+    // Clear filters
     this.addEventListener('click', (e) => {
-      const applyBtn = e.target.closest('[data-action="apply-filters"]');
-      if (applyBtn) { e.preventDefault(); this.closeAllModals(); this.loadGrades(); return; }
       const clearBtn = e.target.closest('[data-action="clear-filters"]');
       if (clearBtn) {
         e.preventDefault();
         this.closeAllModals();
-        const defaults = { subject_id: '', grading_period_id: '', student_id: '' };
+        const defaults = { subject_id: '', grading_period_id: '' };
         this.set('filters', defaults);
         this.set('grades', []);
-        this.updateTableData();
         this.render();
       }
     });
@@ -252,11 +257,10 @@ class TeacherStudentGradesPage extends App {
         <span class="font-semibold">About My Class Grades</span>
       </div>
       <div slot="content" class="space-y-4">
-        <p class="text-gray-700">Record and review grades for your class. Filters are auto-scoped to your assigned class.</p>
+        <p class="text-gray-700">Record and review grades for your class. Select a subject and grading period to view all students. Grades load automatically when both filters are selected.</p>
         <div class="bg-gray-50 rounded-lg p-4 space-y-2">
           <div class="flex justify-between"><span class="text-sm font-medium">Subject</span><span class="text-sm text-gray-600">Select one of your subjects</span></div>
           <div class="flex justify-between"><span class="text-sm font-medium">Grading Period</span><span class="text-sm text-gray-600">Choose the term/period</span></div>
-          <div class="flex justify-between"><span class="text-sm font-medium">Student</span><span class="text-sm text-gray-600">Optionally narrow to a student</span></div>
         </div>
       </div>
       <div slot="footer" class="flex justify-end">
@@ -349,10 +353,10 @@ class TeacherStudentGradesPage extends App {
         return;
       }
 
-      const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+      const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
       const { subject_id, grading_period_id } = filters;
-      // Require subject selection for teacher view
-      if (!subject_id) {
+      // Require both subject and grading period selection for teacher view
+      if (!subject_id || !grading_period_id) {
         this.set('grades', []);
         this.render();
         this.set('loading', false);
@@ -452,8 +456,8 @@ class TeacherStudentGradesPage extends App {
     setTimeout(() => {
       const modal = this.querySelector('teacher-student-grade-add-modal');
       if (modal) {
-        const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-        const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, student_id: filters.student_id, class_id: this.teacherClass?.class_id };
+        const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
+        const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
         modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
         modal.open?.();
       }
@@ -472,7 +476,7 @@ class TeacherStudentGradesPage extends App {
           const modal = this.querySelector('teacher-student-grade-add-modal');
           if (modal) {
             const filters = this.get('filters') || {};
-            const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, student_id: gradeData.student_id, class_id: this.teacherClass?.class_id };
+            const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
             modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
             modal.open?.();
           }
@@ -498,36 +502,25 @@ class TeacherStudentGradesPage extends App {
   renderFilters() {
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
     const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
-    const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
-    const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-    const { subject_id, grading_period_id, student_id } = filters;
+    const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
+    const { subject_id, grading_period_id } = filters;
     return `
-      <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="bg-gray-100 rounded-md p-3 border border-gray-300 my-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-gray-600 mb-1">Subject</label>
-            <ui-search-dropdown name="subject_id" placeholder="All subjects" class="w-full" value="${subject_id || ''}">
+            <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full" value="${subject_id || ''}">
               ${subjectOptions}
             </ui-search-dropdown>
           </div>
           <div>
             <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
-            <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
+            <ui-search-dropdown name="grading_period_id" placeholder="Select period" class="w-full" value="${grading_period_id || ''}">
               ${periodOptions}
             </ui-search-dropdown>
           </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Student</label>
-            <ui-search-dropdown name="student_id" placeholder="All students (optional)" class="w-full" value="${student_id || ''}">
-              ${studentOptions}
-            </ui-search-dropdown>
-          </div>
-        </div>
-        <div class="flex justify-end gap-2 mt-3">
-          <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
-            <i class="fas fa-filter mr-1"></i> Apply Filters
-          </ui-button>
+        <div class="flex justify-end gap-2 mt-3 ml-auto">
           <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
             <i class="fas fa-times mr-1"></i> Clear Filters
           </ui-button>
@@ -544,7 +537,7 @@ class TeacherStudentGradesPage extends App {
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
 
-    const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+    const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
     const periodSelected = Boolean(filters.grading_period_id && String(filters.grading_period_id).length > 0);
     const tableData = (grades || []).map((g, index) => {
       const hasGrades = g.assignment_total !== null || g.exam_total !== null;
@@ -588,7 +581,13 @@ class TeacherStudentGradesPage extends App {
 
     return `
       ${this.renderHeader()}
-      ${this.renderFilters()}
+      
+      <!-- Filters Section -->
+      <div class="mb-6">
+        ${this.renderFilters()}
+      </div>
+      
+      <!-- Table Section -->
       <div class="bg-white rounded-lg shadow-lg p-4">
         ${loading ? `
           <div class="space-y-4">

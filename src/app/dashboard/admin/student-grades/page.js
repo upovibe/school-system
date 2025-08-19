@@ -232,7 +232,7 @@ class StudentGradesManagementPage extends App {
             const deletedId = event.detail.gradeId;
             const current = this.get('grades') || [];
             this.set('grades', current.filter(g => g.id !== deletedId));
-            this.updateTableData();
+            this.render();
             this.set('showDeleteDialog', false);
         });
 
@@ -241,7 +241,7 @@ class StudentGradesManagementPage extends App {
             if (newItem) {
                 const current = this.get('grades') || [];
                 this.set('grades', [newItem, ...current]);
-                this.updateTableData();
+                this.render();
                 this.set('showAddModal', false);
             } else {
                 this.loadGrades();
@@ -254,7 +254,7 @@ class StudentGradesManagementPage extends App {
                 const current = this.get('grades') || [];
                 const mapped = current.map(g => g.id === updated.id ? updated : g);
                 this.set('grades', mapped);
-                this.updateTableData();
+                this.render();
                 this.set('showUpdateModal', false);
             } else {
                 this.loadGrades();
@@ -295,6 +295,14 @@ class StudentGradesManagementPage extends App {
             if ((name === 'subject_id' || name === 'grading_period_id') && value) {
                 this.loadGrades();
             }
+            
+            // When grading period changes, re-render to update custom actions
+            if (name === 'grading_period_id') {
+                // Force a re-render to update custom actions based on grading period selection
+                setTimeout(() => {
+                    this.render();
+                }, 100);
+            }
         });
 
         this.addEventListener('click', (e) => {
@@ -308,7 +316,7 @@ class StudentGradesManagementPage extends App {
                 this.set('filters', defaults);
                 this.students = [];
                 this.set('grades', []);
-                this.updateTableData();
+                this.render();
                 // Re-render to reset dropdowns
                 this.render();
             }
@@ -498,7 +506,8 @@ class StudentGradesManagementPage extends App {
             });
 
             this.set('grades', gradeEntries);
-            this.updateTableData();
+            // Force a full re-render to ensure custom actions are properly updated
+            this.render();
         } catch (error) {
             console.error('Error creating grade entries:', error);
             Toast.show({ title: 'Error', message: 'Failed to create grade entries for class', variant: 'error', duration: 3000 });
@@ -537,7 +546,7 @@ class StudentGradesManagementPage extends App {
             
             if (!class_id && !student_id) {
                 this.set('grades', []);
-                this.updateTableData();
+                this.render();
                 this.set('loading', false);
                 Toast.show({ title: 'Filter Required', message: 'Select a class or a student to view grades', variant: 'info', duration: 2500 });
                 return;
@@ -560,7 +569,7 @@ class StudentGradesManagementPage extends App {
 
             const response = await api.withToken(token).get('/student-grades', params);
             this.set('grades', response.data.data || []);
-            this.updateTableData();
+            this.render();
             this.set('loading', false);
         } catch (error) {
             console.error('Error in loadGrades:', error);
@@ -571,42 +580,75 @@ class StudentGradesManagementPage extends App {
 
     onView(event) {
         const { detail } = event;
-        const item = (this.get('grades') || []).find(g => g.id === detail.row.id);
+        const item = (this.get('grades') || []).find(g => {
+            // For new entries, match by student_id and other identifiers
+            if (detail.row.is_new) {
+                return g.student_id === detail.row.student_id && g.is_new;
+            }
+            // For existing entries, match by id
+            return g.id === detail.row.id;
+        });
+        
         if (item) {
             this.closeAllModals();
             this.set('viewGradeData', item);
             this.set('showViewModal', true);
             setTimeout(() => {
                 const modal = this.querySelector('student-grade-view-modal');
-                if (modal) { modal.setGradeData(item); modal.open?.(); }
+                if (modal) { 
+                    modal.setGradeData(item); 
+                    modal.open?.(); 
+                }
             }, 0);
         }
     }
 
     onEdit(event) {
         const { detail } = event;
-        const item = (this.get('grades') || []).find(g => g.id === detail.row.id);
+        const item = (this.get('grades') || []).find(g => {
+            // For new entries, match by student_id and other identifiers
+            if (detail.row.is_new) {
+                return g.student_id === detail.row.student_id && g.is_new;
+            }
+            // For existing entries, match by id
+            return g.id === detail.row.id;
+        });
+        
         if (item) {
             this.closeAllModals();
             this.set('updateGradeData', item);
             this.set('showUpdateModal', true);
             setTimeout(() => {
                 const modal = this.querySelector('student-grade-update-modal');
-                if (modal) { modal.setGradeData(item); modal.open?.(); }
+                if (modal) { 
+                    modal.setGradeData(item); 
+                    modal.open?.(); 
+                }
             }, 0);
         }
     }
 
     onDelete(event) {
         const { detail } = event;
-        const item = (this.get('grades') || []).find(g => g.id === detail.row.id);
+        const item = (this.get('grades') || []).find(g => {
+            // For new entries, match by student_id and other identifiers
+            if (detail.row.is_new) {
+                return g.student_id === detail.row.student_id && g.is_new;
+            }
+            // For existing entries, match by id
+            return g.id === detail.row.id;
+        });
+        
         if (item) {
             this.closeAllModals();
             this.set('deleteGradeData', item);
             this.set('showDeleteDialog', true);
             setTimeout(() => {
                 const dialog = this.querySelector('student-grade-delete-dialog');
-                if (dialog) { dialog.setGradeData(item); dialog.open?.(); }
+                if (dialog) { 
+                    dialog.setGradeData(item); 
+                    dialog.open?.(); 
+                }
             }, 0);
         }
     }
@@ -617,7 +659,11 @@ class StudentGradesManagementPage extends App {
         setTimeout(() => {
             const modal = this.querySelector('student-grade-add-modal');
             if (modal) {
-                modal.setFilterPrefill(this.get('filters') || {}, { classes: this.classes, subjects: this.subjects, periods: this.periods });
+                modal.setFilterPrefill(this.get('filters') || {}, { 
+                    classes: this.classes, 
+                    subjects: this.classSubjects, 
+                    periods: this.periods 
+                });
                 modal.open?.();
             }
         }, 0);
@@ -651,34 +697,6 @@ class StudentGradesManagementPage extends App {
                     }
                 }, 0);
             }
-        }
-    }
-
-    updateTableData() {
-        const grades = this.get('grades');
-        if (!grades) return;
-
-        const tableData = grades.map((g, index) => ({
-            id: g.id || `new_${g.student_id}_${index}`, // Use temporary ID for new entries
-            index: index + 1,
-            student: [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || '',
-            class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-            subject: g.subject_name || g.subject_code || '',
-            period: g.grading_period_name || '',
-            assign_total: this.formatNumber(g.assignment_total),
-            exam_total: this.formatNumber(g.exam_total),
-            final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
-            // Add metadata for custom actions
-            student_id: g.student_id,
-            is_new: g.is_new,
-            has_grades: g.assignment_total !== null || g.exam_total !== null
-        }));
-
-        const tableComponent = this.querySelector('ui-table');
-        if (tableComponent) {
-            tableComponent.setAttribute('data', JSON.stringify(tableData));
         }
     }
 

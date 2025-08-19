@@ -94,18 +94,12 @@ class TeacherAssignmentAddDialog extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return [];
 
-            console.log('🔍 Loading subjects for class ID:', classId);
-            
             // Use the class-subjects endpoint to get subjects for a specific class
             const response = await api.withToken(token).get('/class-subjects');
-            
-            console.log('🔍 Raw response from /class-subjects:', response.data);
             
             if (response.status === 200 && response.data.success) {
                 // Filter class-subjects by the specific class ID
                 const classSubjects = response.data.data.filter(cs => cs.class_id == classId);
-                
-                console.log('🔍 Filtered class subjects for class', classId, ':', classSubjects);
                 
                 // Extract the subject information from class-subjects
                 const subjects = classSubjects.map(cs => ({
@@ -114,12 +108,10 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                     code: cs.subject_code
                 }));
                 
-                console.log('🔍 Processed subjects:', subjects);
-                
                 return subjects;
             }
         } catch (error) {
-            console.error('❌ Error loading class subjects:', error);
+            console.error('Error loading class subjects:', error);
         }
         return [];
     }
@@ -163,25 +155,15 @@ class TeacherAssignmentAddDialog extends HTMLElement {
 
     // Wire events for live validation
     addFormEventListeners() {
-        console.log('🔍 Setting up form event listeners...');
-        
         const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
         const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
         const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
-
-        console.log('🔍 Found dropdowns:', {
-            teacher: !!teacherDropdown,
-            class: !!classDropdown,
-            subject: !!subjectDropdown
-        });
 
         if (teacherDropdown) {
             teacherDropdown.addEventListener('change', () => this.validateForm());
         }
         if (classDropdown) {
-            console.log('🔍 Adding change listener to class dropdown');
             classDropdown.addEventListener('change', async (event) => {
-                console.log('🔍 Class dropdown change event triggered!');
                 await this.onClassSelectionChange(event);
                 this.validateForm();
             });
@@ -199,8 +181,6 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         const classDropdown = event.target;
         const selectedClassIds = classDropdown.value || [];
         
-        console.log('Class selection changed:', selectedClassIds);
-        
         if (selectedClassIds.length === 0) {
             // If no classes selected, show all subjects
             this.updateSubjectsDropdown(this.subjects);
@@ -210,9 +190,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         // Get all subjects for all selected classes
         const allClassSubjects = [];
         for (const classId of selectedClassIds) {
-            console.log('Loading subjects for class ID:', classId);
             const classSubjects = await this.loadClassSubjects(classId);
-            console.log('Subjects for class', classId, ':', classSubjects);
             allClassSubjects.push(...classSubjects);
         }
 
@@ -220,8 +198,6 @@ class TeacherAssignmentAddDialog extends HTMLElement {
         const uniqueSubjects = allClassSubjects.filter((subject, index, self) => 
             index === self.findIndex(s => s.id === subject.id)
         );
-
-        console.log('All unique subjects for selected classes:', uniqueSubjects);
 
         // If no subjects found for selected classes, show a message and disable subjects dropdown
         if (uniqueSubjects.length === 0) {
@@ -235,21 +211,15 @@ class TeacherAssignmentAddDialog extends HTMLElement {
 
     // Update subjects dropdown with filtered subjects
     updateSubjectsDropdown(subjects) {
-        console.log('🔍 updateSubjectsDropdown called with subjects:', subjects);
-        
         const subjectDropdown = this.querySelector('ui-search-dropdown[data-field="subject_ids"]');
         if (!subjectDropdown) {
-            console.error('❌ Subject dropdown not found!');
+            console.error('Subject dropdown not found!');
             return;
         }
 
-        console.log('🔍 Found subject dropdown, clearing options...');
-        
         // Clear current options by removing all ui-option elements
         const existingOptions = subjectDropdown.querySelectorAll('ui-option');
         existingOptions.forEach(option => option.remove());
-        
-        console.log('🔍 Adding', subjects.length, 'new options...');
         
         // Add new options
         subjects.forEach(subject => {
@@ -257,13 +227,10 @@ class TeacherAssignmentAddDialog extends HTMLElement {
             option.setAttribute('value', subject.id);
             option.textContent = `${subject.name} (${subject.code})`;
             subjectDropdown.appendChild(option);
-            console.log('🔍 Added option:', subject.name, '(', subject.code, ')');
         });
 
         // Reset selection
         subjectDropdown.value = [];
-        
-        console.log('🔍 Final dropdown HTML:', subjectDropdown.innerHTML);
         
         // Re-validate form
         this.validateForm();
@@ -323,12 +290,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
             const classIds = classDropdown ? classDropdown.value : [];
             const subjectIds = subjectDropdown ? subjectDropdown.value : [];
 
-            // Debug logging
-            console.log('Form Data:', {
-                teacherId,
-                classIds,
-                subjectIds
-            });
+
 
             // Validation
             if (!teacherId) {
@@ -373,14 +335,10 @@ class TeacherAssignmentAddDialog extends HTMLElement {
             }
 
             // Create multiple teacher assignments
-            console.log('Creating assignments for class IDs:', classIds, 'and subject IDs:', subjectIds);
             
             // Filter out any invalid class and subject IDs
             const validClassIds = classIds.filter(id => id && id !== '' && !isNaN(id));
             const validSubjectIds = subjectIds.filter(id => id && id !== '' && !isNaN(id));
-            
-            console.log('Valid class IDs:', validClassIds);
-            console.log('Valid subject IDs:', validSubjectIds);
             
             if (validClassIds.length === 0) {
                 Toast.show({
@@ -411,13 +369,11 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                         class_id: parseInt(classId),
                         subject_id: parseInt(subjectId)
                     };
-                    console.log('Creating assignment:', teacherAssignmentData);
                     promises.push(api.withToken(token).post('/teacher-assignments', teacherAssignmentData));
                 });
             });
 
             const responses = await Promise.all(promises);
-            console.log('API Responses:', responses);
             
             // Check if all responses were successful
             const allSuccessful = responses.every(response => response.data.success);

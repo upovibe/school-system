@@ -281,7 +281,7 @@ class DashboardLayout extends App {
                         { label: 'Grading Periods', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/grading-periods' },
                         { label: 'Grading Policies', icon: 'fas fa-balance-scale', href: '/dashboard/admin/grading-policies' },
                         { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
-                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/admin/student-grade-report' },
+                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },
                     ]
                 },
                 {
@@ -339,7 +339,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Reports',
                     items: [
-                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
                     ]
                 }
             ],
@@ -361,7 +361,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Reports',
                     items: [
-                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
                     ]
                 }
             ],
@@ -383,7 +383,7 @@ class DashboardLayout extends App {
                 {
                     group: 'Reports',
                     items: [
-                        { label: 'Student Grade Report', icon: 'fas fa-chart-line', href: '/dashboard/student-grade-report' },
+                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
                     ]
                 }
             ],

@@ -520,6 +520,7 @@ class TeacherStudentGradesPage extends App {
               ${periodOptions}
             </ui-search-dropdown>
           </div>
+        </div>
         <div class="flex justify-end gap-2 mt-3 ml-auto">
           <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
             <i class="fas fa-times mr-1"></i> Clear Filters

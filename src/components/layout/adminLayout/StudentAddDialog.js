@@ -97,6 +97,9 @@ class StudentAddDialog extends HTMLElement {
                 'ui-input[data-field="first_name"]',
                 'ui-input[data-field="last_name"]',
                 'ui-input[data-field="email"]',
+                'ui-input[data-field="phone"]',
+                'ui-input[data-field="address"]',
+                'ui-input[data-field="date_of_birth"]',
                 'ui-input[data-field="password"]',
                 'ui-input[data-field="admission_date"]',
                 'ui-input[data-field="parent_name"]',
@@ -159,6 +162,11 @@ class StudentAddDialog extends HTMLElement {
             const classSelected = classDropdown ? String(classDropdown.value || '').trim() : '';
             allFilled = allFilled && !!classSelected;
 
+            // Gender is required
+            const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+            const genderSelected = genderDropdown ? String(genderDropdown.value || '').trim() : '';
+            allFilled = allFilled && !!genderSelected;
+
             if (saveBtn) {
                 if (allFilled && isStudentEmailValid && isParentEmailValid) {
                     saveBtn.removeAttribute('disabled');
@@ -175,6 +183,9 @@ class StudentAddDialog extends HTMLElement {
             'ui-input[data-field="student_id"]',
             'ui-input[data-field="first_name"]',
             'ui-input[data-field="last_name"]',
+            'ui-input[data-field="phone"]',
+            'ui-input[data-field="address"]',
+            'ui-input[data-field="date_of_birth"]',
             'ui-input[data-field="password"]',
             'ui-input[data-field="admission_date"]',
             'ui-input[data-field="parent_name"]',
@@ -217,6 +228,11 @@ class StudentAddDialog extends HTMLElement {
         const classDropdown = this.querySelector('ui-search-dropdown[name="current_class_id"]');
         if (classDropdown) {
             classDropdown.addEventListener('change', () => this.validateForm());
+        }
+        
+        const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+        if (genderDropdown) {
+            genderDropdown.addEventListener('change', () => this.validateForm());
         }
         const saveBtn = this.querySelector('#save-student-btn');
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveStudent());
@@ -350,6 +366,46 @@ class StudentAddDialog extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please enter a valid student email address',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!studentData.phone) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter phone number',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!studentData.address) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter Ghana Post address',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!studentData.date_of_birth) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter date of birth',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!studentData.gender) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please select gender',
                     variant: 'error',
                     duration: 3000
                 });
@@ -553,17 +609,18 @@ class StudentAddDialog extends HTMLElement {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
                             <ui-input 
                                 data-field="phone"
                                 type="tel" 
-                                placeholder="Enter phone number"
+                                placeholder="Enter phone number (10 digits)"
+                                maxlength="10"
                                 class="w-full">
                             </ui-input>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ghana Post *</label>
                             <ui-input 
                                 data-field="address"
                                 type="text" 
@@ -574,7 +631,7 @@ class StudentAddDialog extends HTMLElement {
 
                                                  <div class="grid grid-cols-2 gap-4">
                              <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                 <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
                                  <ui-input 
                                      data-field="date_of_birth"
                                      type="date" 
@@ -584,7 +641,7 @@ class StudentAddDialog extends HTMLElement {
                              </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
                                 <ui-search-dropdown 
                                     name="gender" 
                                     placeholder="Select gender..."

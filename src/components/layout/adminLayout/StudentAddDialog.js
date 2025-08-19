@@ -103,7 +103,6 @@ class StudentAddDialog extends HTMLElement {
                 'ui-input[data-field="first_name"]',
                 'ui-input[data-field="last_name"]',
                 'ui-input[data-field="email"]',
-                'ui-input[data-field="phone"]',
                 'ui-input[data-field="address"]',
                 'ui-input[data-field="date_of_birth"]',
                 'ui-input[data-field="password"]',
@@ -129,6 +128,9 @@ class StudentAddDialog extends HTMLElement {
             const studentPhoneInput = this.querySelector('ui-input[data-field="phone"]');
             const parentPhoneInput = this.querySelector('ui-input[data-field="parent_phone"]');
             const emergencyPhoneInput = this.querySelector('ui-input[data-field="emergency_phone"]');
+            const studentPhoneError = this.querySelector('#student-phone-error');
+            const parentPhoneError = this.querySelector('#parent-phone-error');
+            const emergencyPhoneError = this.querySelector('#emergency-phone-error');
             
             const studentPhoneValue = studentPhoneInput ? String(studentPhoneInput.value || '').trim() : '';
             const parentPhoneValue = parentPhoneInput ? String(parentPhoneInput.value || '').trim() : '';
@@ -140,6 +142,39 @@ class StudentAddDialog extends HTMLElement {
             const isParentPhoneValid = parentPhoneValue !== '' && this.isValidPhone(parentPhoneValue);
             // Emergency phone is optional but must be valid if provided
             const isEmergencyPhoneValid = emergencyPhoneValue === '' || this.isValidPhone(emergencyPhoneValue);
+            
+            // Show/hide student phone error message
+            if (studentPhoneError) {
+                if (studentPhoneValue && !isStudentPhoneValid) {
+                    studentPhoneError.textContent = 'Phone number must be at least 10 digits';
+                    studentPhoneError.classList.remove('hidden');
+                } else {
+                    studentPhoneError.classList.add('hidden');
+                }
+            }
+            
+            // Show/hide parent phone error message
+            if (parentPhoneError) {
+                if (!parentPhoneValue) {
+                    parentPhoneError.textContent = 'Parent phone number is required';
+                    parentPhoneError.classList.remove('hidden');
+                } else if (!this.isValidPhone(parentPhoneValue)) {
+                    parentPhoneError.textContent = 'Phone number must be at least 10 digits';
+                    parentPhoneError.classList.remove('hidden');
+                } else {
+                    parentPhoneError.classList.add('hidden');
+                }
+            }
+            
+            // Show/hide emergency phone error message
+            if (emergencyPhoneError) {
+                if (emergencyPhoneValue && !isEmergencyPhoneValid) {
+                    emergencyPhoneError.textContent = 'Phone number must be at least 10 digits';
+                    emergencyPhoneError.classList.remove('hidden');
+                } else {
+                    emergencyPhoneError.classList.add('hidden');
+                }
+            }
             
             // Show/hide email error messages
             if (studentEmailError) {
@@ -206,7 +241,6 @@ class StudentAddDialog extends HTMLElement {
             'ui-input[data-field="student_id"]',
             'ui-input[data-field="first_name"]',
             'ui-input[data-field="last_name"]',
-            'ui-input[data-field="phone"]',
             'ui-input[data-field="address"]',
             'ui-input[data-field="date_of_birth"]',
             'ui-input[data-field="password"]',
@@ -694,6 +728,7 @@ class StudentAddDialog extends HTMLElement {
                                 placeholder="Enter phone number (min 10 digits)"
                                 class="w-full">
                             </ui-input>
+                            <div id="student-phone-error" class="hidden text-red-500 text-sm mt-1"></div>
                         </div>
 
                         <div>
@@ -767,6 +802,7 @@ class StudentAddDialog extends HTMLElement {
                                     placeholder="Enter parent phone"
                                     class="w-full">
                                 </ui-input>
+                                <div id="parent-phone-error" class="hidden text-red-500 text-sm mt-1"></div>
                             </div>
                         </div>
 
@@ -801,6 +837,7 @@ class StudentAddDialog extends HTMLElement {
                                     placeholder="Enter emergency phone"
                                     class="w-full">
                                 </ui-input>
+                                <div id="emergency-phone-error" class="hidden text-red-500 text-sm mt-1"></div>
                             </div>
                         </div>
 

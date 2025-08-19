@@ -167,6 +167,7 @@ class TeacherStudentGradesPage extends App {
     this.addEventListener('table-edit', this.onEdit.bind(this));
     this.addEventListener('table-delete', this.onDelete.bind(this));
     this.addEventListener('table-add', this.onAdd.bind(this));
+    this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
 
     this.addEventListener('modal-close', () => this.closeAllModals());
     this.addEventListener('modal-closed', () => this.closeAllModals());
@@ -175,7 +176,7 @@ class TeacherStudentGradesPage extends App {
       const deletedId = event.detail.gradeId;
       const current = this.get('grades') || [];
       this.set('grades', current.filter(g => g.id !== deletedId));
-      this.updateTableData();
+      this.render();
       this.set('showDeleteDialog', false);
     });
 
@@ -184,7 +185,7 @@ class TeacherStudentGradesPage extends App {
       if (newItem) {
         const current = this.get('grades') || [];
         this.set('grades', [newItem, ...current]);
-        this.updateTableData();
+        this.render();
         this.set('showAddModal', false);
       } else {
         this.loadGrades();
@@ -197,7 +198,7 @@ class TeacherStudentGradesPage extends App {
         const current = this.get('grades') || [];
         const mapped = current.map(g => g.id === updated.id ? updated : g);
         this.set('grades', mapped);
-        this.updateTableData();
+        this.render();
         this.set('showUpdateModal', false);
       } else {
         this.loadGrades();
@@ -265,6 +266,27 @@ class TeacherStudentGradesPage extends App {
     document.body.appendChild(dialog);
   }
 
+  getCustomActions() {
+    return [
+      {
+        name: 'add-grade',
+        label: 'Add',
+        icon: 'fas fa-plus',
+        variant: 'primary',
+        size: 'sm',
+        showField: 'can_add'
+      },
+      {
+        name: 'edit-grade',
+        label: 'Edit',
+        icon: 'fas fa-edit',
+        variant: 'secondary',
+        size: 'sm',
+        showField: 'can_edit'
+      }
+    ];
+  }
+
   async bootstrap() {
     try {
       this.set('loading', true);
@@ -322,21 +344,59 @@ class TeacherStudentGradesPage extends App {
       }
       if (!this.teacherClass?.class_id) {
         this.set('grades', []);
-        this.updateTableData();
+        this.render();
         this.set('loading', false);
         return;
       }
 
       const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-      const { subject_id, grading_period_id, student_id } = filters;
-      const params = {};
-      if (student_id) params.student_id = student_id;
-      if (subject_id) params.subject_id = subject_id;
-      if (grading_period_id) params.grading_period_id = grading_period_id;
+      const { subject_id, grading_period_id } = filters;
+      // Require subject selection for teacher view
+      if (!subject_id) {
+        this.set('grades', []);
+        this.render();
+        this.set('loading', false);
+        return;
+      }
 
+      // Fetch existing grades for teacher's class
+      const params = { subject_id };
+      if (grading_period_id) params.grading_period_id = grading_period_id;
       const response = await api.withToken(token).get('/teacher/student-grades', params);
-      this.set('grades', response.data?.data || []);
-      this.updateTableData();
+      const existing = response.data?.data || [];
+
+      // Merge with class roster to show placeholders for not-yet-graded
+      const selectedSubject = (this.subjects || []).find(s => String(s.id) === String(subject_id));
+      const selectedPeriod = (this.periods || []).find(p => String(p.id) === String(grading_period_id));
+      const byStudent = new Map(existing.map(g => [String(g.student_id), { ...g, is_new: false }]));
+      const merged = (this.students || []).map(stu => {
+        const key = String(stu.id);
+        if (byStudent.has(key)) return byStudent.get(key);
+        return {
+          id: null,
+          student_id: stu.id,
+          student_first_name: stu.first_name,
+          student_last_name: stu.last_name,
+          student_number: stu.student_id,
+          class_id: this.teacherClass.class_id,
+          class_name: this.teacherClass.class_name || '',
+          class_section: this.teacherClass.class_section || '',
+          subject_id: subject_id,
+          subject_name: selectedSubject?.name || '',
+          grading_period_id: grading_period_id || '',
+          grading_period_name: selectedPeriod?.name || '',
+          assignment_total: null,
+          exam_total: null,
+          final_percentage: null,
+          final_letter_grade: null,
+          is_new: true,
+          created_at: null,
+          updated_at: null
+        };
+      });
+
+      this.set('grades', merged);
+      this.render();
       this.set('loading', false);
     } catch (error) {
       this.set('loading', false);
@@ -400,27 +460,40 @@ class TeacherStudentGradesPage extends App {
     }, 0);
   }
 
-  updateTableData() {
-    const grades = this.get('grades') || [];
-    const tableData = grades.map((g, index) => ({
-      id: g.id,
-      index: index + 1,
-      student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
-      class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-      subject: g.subject_name || g.subject_code || '',
-      period: g.grading_period_name || '',
-      assign_total: this.formatNumber(g.assignment_total),
-      exam_total: this.formatNumber(g.exam_total),
-      final_pct: this.formatNumber(g.final_percentage),
-      final_grade: g.final_letter_grade,
-      updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
-    }));
-
-    const tableComponent = this.querySelector('ui-table');
-    if (tableComponent) {
-      tableComponent.setAttribute('data', JSON.stringify(tableData));
+  onCustomAction(event) {
+    const { actionName, action, row } = event.detail;
+    const act = actionName || action;
+    if (act === 'add-grade') {
+      const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id);
+      if (gradeData) {
+        this.closeAllModals();
+        this.set('showAddModal', true);
+        setTimeout(() => {
+          const modal = this.querySelector('teacher-student-grade-add-modal');
+          if (modal) {
+            const filters = this.get('filters') || {};
+            const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, student_id: gradeData.student_id, class_id: this.teacherClass?.class_id };
+            modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
+            modal.open?.();
+          }
+        }, 0);
+      }
+    }
+    if (act === 'edit-grade') {
+      const existing = this.get('grades')?.find(g => g.student_id === row.student_id && !g.is_new);
+      if (existing) {
+        this.closeAllModals();
+        this.set('updateGradeData', existing);
+        this.set('showUpdateModal', true);
+        setTimeout(() => {
+          const modal = this.querySelector('teacher-student-grade-update-modal');
+          if (modal) { modal.setGradeData(existing); modal.open?.(); }
+        }, 0);
+      }
     }
   }
+
+  // removed updateTableData; table data is derived in render()
 
   renderFilters() {
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
@@ -471,19 +544,32 @@ class TeacherStudentGradesPage extends App {
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
 
-    const tableData = (grades || []).map((g, index) => ({
-      id: g.id,
-      index: index + 1,
-      student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
-      class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-      subject: g.subject_name || '',
-      period: g.grading_period_name || '',
-      assign_total: this.formatNumber(g.assignment_total),
-      exam_total: this.formatNumber(g.exam_total),
-      final_pct: this.formatNumber(g.final_percentage),
-      final_grade: g.final_letter_grade,
-      updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
-    }));
+    const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
+    const periodSelected = Boolean(filters.grading_period_id && String(filters.grading_period_id).length > 0);
+    const tableData = (grades || []).map((g, index) => {
+      const hasGrades = g.assignment_total !== null || g.exam_total !== null;
+      const canAdd = periodSelected && (g.is_new === true || !g.id) && !hasGrades;
+      const canEdit = periodSelected ? (!g.is_new && hasGrades) : Boolean(g.id);
+      return ({
+        id: g.id || `new_${g.student_id}_${index}`,
+        index: index + 1,
+        student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
+        class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
+        subject: g.subject_name || g.subject_code || '',
+        period: g.grading_period_name || '',
+        assign_total: this.formatNumber(g.assignment_total),
+        exam_total: this.formatNumber(g.exam_total),
+        final_pct: this.formatNumber(g.final_percentage),
+        final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
+        updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
+        // Flags for custom actions
+        student_id: g.student_id,
+        is_new: g.is_new,
+        has_grades: hasGrades,
+        can_add: canAdd,
+        can_edit: canEdit
+      });
+    });
 
     const tableColumns = [
       { key: 'index', label: 'No.' },
@@ -498,8 +584,7 @@ class TeacherStudentGradesPage extends App {
       { key: 'updated', label: 'Updated' }
     ];
 
-    const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-    const canAdd = Boolean(this.teacherClass?.class_id && filters.subject_id && filters.grading_period_id && filters.student_id);
+    const canAdd = Boolean(this.teacherClass?.class_id && filters.subject_id && filters.grading_period_id);
 
     return `
       ${this.renderHeader()}
@@ -523,11 +608,12 @@ class TeacherStudentGradesPage extends App {
               pagination
               page-size="50"
               action
-              ${canAdd ? 'addable' : ''}
+              addable
               refresh
               print
               bordered
               striped
+              custom-actions='${JSON.stringify(this.getCustomActions())}'
               class="w-full">
             </ui-table>
           </div>

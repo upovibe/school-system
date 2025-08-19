@@ -516,19 +516,24 @@ class StudentGradesManagementPage extends App {
 
     getCustomActions() {
         const filters = this.get('filters') || {};
-        const gradingPeriodSelected = Boolean(filters.grading_period_id && filters.grading_period_id.length > 0);
+        const gradingPeriodSelected = Boolean(filters.grading_period_id && String(filters.grading_period_id).length > 0);
         
         return [
             {
                 name: 'add-grade',
-                label: 'Add Grade',
+                label: 'Add',
                 icon: 'fas fa-plus',
                 variant: 'primary',
                 size: 'sm',
-                show: (row) => {
-                    // Only show if grading period is selected and student has no grades
-                    return gradingPeriodSelected && row.is_new && !row.has_grades;
-                }
+                show: (row) => gradingPeriodSelected && row.is_new && !row.has_grades
+            },
+            {
+                name: 'edit-grade',
+                label: 'Edit',
+                icon: 'fas fa-edit',
+                variant: 'secondary',
+                size: 'sm',
+                show: (row) => gradingPeriodSelected && !row.is_new && row.has_grades
             }
         ];
     }
@@ -560,7 +565,48 @@ class StudentGradesManagementPage extends App {
                 if (subject_id) params.subject_id = subject_id;
                 if (grading_period_id) params.grading_period_id = grading_period_id;
                 const response = await api.withToken(token).get('/student-grades', params);
-                this.set('grades', response.data.data || []);
+                const existingGrades = response?.data?.data || [];
+
+                // Build per-student rows (existing grade or placeholder)
+                const selectedClass = (this.classes || []).find(c => String(c.id) === String(class_id));
+                const selectedSubject = (this.classSubjects || []).find(s => String(s.id) === String(subject_id));
+                const selectedPeriod = (this.periods || []).find(p => String(p.id) === String(grading_period_id));
+
+                const byStudentId = new Map();
+                existingGrades.forEach(g => { byStudentId.set(String(g.student_id), { ...g, is_new: false }); });
+
+                const merged = (this.students || []).map(student => {
+                    const key = String(student.id);
+                    if (byStudentId.has(key)) {
+                        const g = byStudentId.get(key);
+                        return { ...g, is_new: false };
+                    }
+                    // Placeholder row (no grade yet for this subject/period)
+                    return {
+                        id: null,
+                        student_id: student.id,
+                        student_first_name: student.first_name,
+                        student_last_name: student.last_name,
+                        student_number: student.student_id,
+                        class_id: class_id,
+                        class_name: selectedClass?.name || '',
+                        class_section: selectedClass?.section || '',
+                        subject_id: subject_id,
+                        subject_name: selectedSubject?.name || '',
+                        subject_code: selectedSubject?.code || '',
+                        grading_period_id: grading_period_id || '',
+                        grading_period_name: selectedPeriod?.name || '',
+                        assignment_total: null,
+                        exam_total: null,
+                        final_percentage: null,
+                        final_letter_grade: null,
+                        created_at: null,
+                        updated_at: null,
+                        is_new: true
+                    };
+                });
+
+                this.set('grades', merged);
                 this.render();
                 this.set('loading', false);
                 return;
@@ -705,6 +751,22 @@ class StudentGradesManagementPage extends App {
                 }, 0);
             }
         }
+
+        if (act === 'edit-grade') {
+            const existing = this.get('grades')?.find(g => g.student_id === row.student_id && !g.is_new);
+            if (existing) {
+                this.closeAllModals();
+                this.set('updateGradeData', existing);
+                this.set('showUpdateModal', true);
+                setTimeout(() => {
+                    const modal = this.querySelector('student-grade-update-modal');
+                    if (modal) { 
+                        modal.setGradeData(existing); 
+                        modal.open?.(); 
+                    }
+                }, 0);
+            }
+        }
     }
 
     renderFilters() {
@@ -813,6 +875,7 @@ class StudentGradesManagementPage extends App {
                             pagination
                             page-size="50"
                             action
+                            actions="view, delete"
                             refresh
                             print
                             addable

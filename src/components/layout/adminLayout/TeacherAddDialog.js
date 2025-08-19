@@ -83,6 +83,12 @@ class TeacherAddDialog extends HTMLElement {
         return emailRegex.test(email);
     }
 
+    // Phone validation function
+    isValidPhone(phone) {
+        const phoneRegex = /^\d{10}$/;
+        return phoneRegex.test(phone);
+    }
+
     // Validate required fields and toggle Save button
     validateForm() {
         try {
@@ -91,14 +97,25 @@ class TeacherAddDialog extends HTMLElement {
                 'ui-input[data-field="first_name"]',
                 'ui-input[data-field="last_name"]',
                 'ui-input[data-field="email"]',
-                'ui-input[data-field="password"]',
-                'ui-input[data-field="hire_date"]'
+                'ui-input[data-field="phone"]',
+                'ui-input[data-field="address"]',
+                'ui-input[data-field="date_of_birth"]',
+                'ui-input[data-field="hire_date"]',
+                'ui-input[data-field="password"]'
             ];
             
             const emailInput = this.querySelector('ui-input[data-field="email"]');
+            const phoneInput = this.querySelector('ui-input[data-field="phone"]');
+            const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
             const emailError = this.querySelector('#email-error');
+            const phoneError = this.querySelector('#phone-error');
+            
             const emailValue = emailInput ? String(emailInput.value || '').trim() : '';
+            const phoneValue = phoneInput ? String(phoneInput.value || '').trim() : '';
+            const genderValue = genderDropdown ? String(genderDropdown.value || '').trim() : '';
+            
             const isEmailValid = emailValue === '' || this.isValidEmail(emailValue);
+            const isPhoneValid = phoneValue === '' || this.isValidPhone(phoneValue);
             
             // Show/hide email error message
             if (emailError) {
@@ -110,15 +127,33 @@ class TeacherAddDialog extends HTMLElement {
                 }
             }
             
+            // Show/hide phone error message
+            if (phoneError) {
+                if (phoneValue && !isPhoneValid) {
+                    phoneError.textContent = 'Phone number must be exactly 10 digits';
+                    phoneError.classList.remove('hidden');
+                } else {
+                    phoneError.classList.add('hidden');
+                }
+            }
+            
             const saveBtn = this.querySelector('#save-teacher-btn');
+            
+            // Check all required fields including dropdowns
             const allFilled = requiredSelectors.every(sel => {
                 const el = this.querySelector(sel);
-                const val = el ? String(el.value || '').trim() : '';
-                return !!val;
+                if (el) {
+                    const val = String(el.value || '').trim();
+                    return !!val;
+                }
+                return false;
             });
             
+            // Check gender dropdown separately since it's not a ui-input
+            const genderFilled = !!genderValue;
+            
             if (saveBtn) {
-                if (allFilled && isEmailValid) {
+                if (allFilled && genderFilled && isEmailValid && isPhoneValid) {
                     saveBtn.removeAttribute('disabled');
                 } else {
                     saveBtn.setAttribute('disabled', '');
@@ -133,8 +168,11 @@ class TeacherAddDialog extends HTMLElement {
             'ui-input[data-field="employee_id"]',
             'ui-input[data-field="first_name"]',
             'ui-input[data-field="last_name"]',
-            'ui-input[data-field="password"]',
-            'ui-input[data-field="hire_date"]'
+            'ui-input[data-field="phone"]',
+            'ui-input[data-field="address"]',
+            'ui-input[data-field="date_of_birth"]',
+            'ui-input[data-field="hire_date"]',
+            'ui-input[data-field="password"]'
         ];
         selectors.forEach(sel => {
             const el = this.querySelector(sel);
@@ -150,6 +188,20 @@ class TeacherAddDialog extends HTMLElement {
             emailInput.addEventListener('input', () => this.validateForm());
             emailInput.addEventListener('change', () => this.validateForm());
             emailInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        // Special handling for phone field with real-time validation
+        const phoneInput = this.querySelector('ui-input[data-field="phone"]');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', () => this.validateForm());
+            phoneInput.addEventListener('change', () => this.validateForm());
+            phoneInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        // Handle gender dropdown validation
+        const genderDropdown = this.querySelector('ui-search-dropdown[name="gender"]');
+        if (genderDropdown) {
+            genderDropdown.addEventListener('change', () => this.validateForm());
         }
         
         const saveBtn = this.querySelector('#save-teacher-btn');
@@ -275,6 +327,57 @@ class TeacherAddDialog extends HTMLElement {
                 return;
             }
 
+            // Validate phone number (now required)
+            if (!teacherData.phone) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter phone number',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!this.isValidPhone(teacherData.phone)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Phone number must be exactly 10 digits',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!teacherData.address) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter Ghana Post address',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!teacherData.date_of_birth) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter date of birth',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!teacherData.gender) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please select gender',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
             if (!teacherData.password) {
                 Toast.show({
                     title: 'Validation Error',
@@ -372,7 +475,7 @@ class TeacherAddDialog extends HTMLElement {
                 <div slot="content">
                     <form id="teacher-form" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID *</label>
                             <ui-input 
                                 data-field="employee_id"
                                 type="text" 
@@ -381,9 +484,22 @@ class TeacherAddDialog extends HTMLElement {
                             </ui-input>
                         </div>
                         
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class Teacher (Optional)</label>
+                            <ui-search-dropdown 
+                                name="class_id" 
+                                placeholder="Select class to assign as class teacher"
+                                class="w-full">
+                                <ui-option value="">No Class Assignment</ui-option>
+                                ${this.classes.map(
+                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name}-${classItem.section}</ui-option>`
+                                ).join('')}
+                            </ui-search-dropdown>
+                        </div>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                                 <ui-input 
                                     data-field="first_name"
                                     type="text" 
@@ -393,7 +509,7 @@ class TeacherAddDialog extends HTMLElement {
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
                                 <ui-input 
                                     data-field="last_name"
                                     type="text" 
@@ -405,7 +521,7 @@ class TeacherAddDialog extends HTMLElement {
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                                 <ui-input 
                                     data-field="email"
                                     type="email" 
@@ -413,21 +529,24 @@ class TeacherAddDialog extends HTMLElement {
                                     pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                     class="w-full">
                                 </ui-input>
+                                <div id="email-error" class="hidden text-red-500 text-sm mt-1"></div>
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
                                 <ui-input 
                                     data-field="phone"
                                     type="tel" 
-                                    placeholder="Enter phone number"
+                                    placeholder="Enter phone number (10 digits)"
+                                    maxlength="10"
                                     class="w-full">
                                 </ui-input>
+                                <div id="phone-error" class="hidden text-red-500 text-sm mt-1"></div>
                             </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ghana Post *</label>
                             <ui-input 
                                 data-field="address"
                                 type="text" 
@@ -438,7 +557,7 @@ class TeacherAddDialog extends HTMLElement {
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
                                 <ui-input 
                                     data-field="date_of_birth"
                                     type="date" 
@@ -448,7 +567,7 @@ class TeacherAddDialog extends HTMLElement {
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
                                 <ui-search-dropdown 
                                     name="gender" 
                                     placeholder="Select gender"
@@ -457,6 +576,30 @@ class TeacherAddDialog extends HTMLElement {
                                     <ui-option value="female">Female</ui-option>
                                     <ui-option value="other">Other</ui-option>
                                 </ui-search-dropdown>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date *</label>
+                                <ui-input 
+                                    data-field="hire_date"
+                                    type="date" 
+                                    max="${new Date().toISOString().split('T')[0]}"
+                                    class="w-full">
+                                </ui-input>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵) (optional)</label>
+                                <ui-input 
+                                    data-field="salary"
+                                    type="number" 
+                                    placeholder="Enter salary amount"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full">
+                                </ui-input>
                             </div>
                         </div>
                         
@@ -480,45 +623,8 @@ class TeacherAddDialog extends HTMLElement {
                             </ui-input>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                                <ui-input 
-                                    data-field="hire_date"
-                                    type="date" 
-                                    max="${new Date().toISOString().split('T')[0]}"
-                                    class="w-full">
-                                </ui-input>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary (₵)</label>
-                                <ui-input 
-                                    data-field="salary"
-                                    type="number" 
-                                    placeholder="Enter salary amount"
-                                    step="0.01"
-                                    min="0"
-                                    class="w-full">
-                                </ui-input>
-                            </div>
-                        </div>
-                        
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Class Teacher (Optional)</label>
-                            <ui-search-dropdown 
-                                name="class_id" 
-                                placeholder="Select class to assign as class teacher"
-                                class="w-full">
-                                <ui-option value="">No Class Assignment</ui-option>
-                                ${this.classes.map(
-                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name}-${classItem.section}</ui-option>`
-                                ).join('')}
-                            </ui-search-dropdown>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
                             <ui-input 
                                 data-field="password"
                                 type="password" 

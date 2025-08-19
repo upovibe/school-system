@@ -515,9 +515,7 @@ class StudentGradesManagementPage extends App {
     }
 
     getCustomActions() {
-        const filters = this.get('filters') || {};
-        const gradingPeriodSelected = Boolean(filters.grading_period_id && String(filters.grading_period_id).length > 0);
-        
+        // Use showField flags from the table row instead of functions (which can't be JSON-serialized)
         return [
             {
                 name: 'add-grade',
@@ -525,7 +523,7 @@ class StudentGradesManagementPage extends App {
                 icon: 'fas fa-plus',
                 variant: 'primary',
                 size: 'sm',
-                show: (row) => gradingPeriodSelected && row.is_new && !row.has_grades
+                showField: 'can_add'
             },
             {
                 name: 'edit-grade',
@@ -533,7 +531,7 @@ class StudentGradesManagementPage extends App {
                 icon: 'fas fa-edit',
                 variant: 'secondary',
                 size: 'sm',
-                show: (row) => gradingPeriodSelected && !row.is_new && row.has_grades
+                showField: 'can_edit'
             }
         ];
     }
@@ -820,7 +818,13 @@ class StudentGradesManagementPage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
 
-        const tableData = grades ? grades.map((g, index) => ({
+        const currentFilters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+        const periodSelected = Boolean(currentFilters.grading_period_id && String(currentFilters.grading_period_id).length > 0);
+        const tableData = grades ? grades.map((g, index) => {
+            const hasGrades = g.assignment_total !== null || g.exam_total !== null;
+            const canAdd = periodSelected && (g.is_new === true || !g.id) && !hasGrades;
+            const canEdit = periodSelected ? (!g.is_new && hasGrades) : Boolean(g.id);
+            return ({
             id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
             student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
@@ -835,8 +839,10 @@ class StudentGradesManagementPage extends App {
             // Add metadata for custom actions
             student_id: g.student_id,
             is_new: g.is_new,
-            has_grades: g.assignment_total !== null || g.exam_total !== null
-        })) : [];
+            has_grades: hasGrades,
+            can_add: canAdd,
+            can_edit: canEdit
+        }); }) : [];
 
         const tableColumns = [
             { key: 'index', label: 'No.' },
@@ -851,8 +857,7 @@ class StudentGradesManagementPage extends App {
             { key: 'updated', label: 'Updated' }
         ];
 
-        const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
-
+        const filters = currentFilters;
         return `
             ${this.renderHeader()}
             ${this.renderFilters()}

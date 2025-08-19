@@ -1743,7 +1743,13 @@ class Table extends HTMLElement {
                                     ` : ''}
                                     ${this.customActions.map(customAction => {
                                         // Check if the custom action should be shown for this row
-                                        const shouldShow = typeof customAction.show === 'function' ? customAction.show(row) : true;
+                                        let shouldShow = true;
+                                        if (typeof customAction.show === 'function') {
+                                            shouldShow = customAction.show(row);
+                                        } else if (customAction.showField) {
+                                            // If a showField string is provided, use the row boolean value
+                                            try { shouldShow = !!row[customAction.showField]; } catch (_) { shouldShow = false; }
+                                        }
                                         if (!shouldShow) return '';
                                         
                                         return `

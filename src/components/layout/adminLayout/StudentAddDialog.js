@@ -89,6 +89,12 @@ class StudentAddDialog extends HTMLElement {
         return emailRegex.test(email);
     }
 
+    // Phone validation function
+    isValidPhone(phone) {
+        const phoneRegex = /^\d{10,}$/;
+        return phoneRegex.test(phone);
+    }
+
     // Validate required fields and toggle Save button
     validateForm() {
         try {
@@ -118,6 +124,22 @@ class StudentAddDialog extends HTMLElement {
             
             const isStudentEmailValid = studentEmailValue === '' || this.isValidEmail(studentEmailValue);
             const isParentEmailValid = parentEmailValue === '' || this.isValidEmail(parentEmailValue);
+
+            // Phone validation
+            const studentPhoneInput = this.querySelector('ui-input[data-field="phone"]');
+            const parentPhoneInput = this.querySelector('ui-input[data-field="parent_phone"]');
+            const emergencyPhoneInput = this.querySelector('ui-input[data-field="emergency_phone"]');
+            
+            const studentPhoneValue = studentPhoneInput ? String(studentPhoneInput.value || '').trim() : '';
+            const parentPhoneValue = parentPhoneInput ? String(parentPhoneInput.value || '').trim() : '';
+            const emergencyPhoneValue = emergencyPhoneInput ? String(emergencyPhoneInput.value || '').trim() : '';
+            
+            // Student phone is optional but must be valid if provided
+            const isStudentPhoneValid = studentPhoneValue === '' || this.isValidPhone(studentPhoneValue);
+            // Parent phone is required and must be valid
+            const isParentPhoneValid = parentPhoneValue !== '' && this.isValidPhone(parentPhoneValue);
+            // Emergency phone is optional but must be valid if provided
+            const isEmergencyPhoneValid = emergencyPhoneValue === '' || this.isValidPhone(emergencyPhoneValue);
             
             // Show/hide email error messages
             if (studentEmailError) {
@@ -168,7 +190,8 @@ class StudentAddDialog extends HTMLElement {
             allFilled = allFilled && !!genderSelected;
 
             if (saveBtn) {
-                if (allFilled && isStudentEmailValid && isParentEmailValid) {
+                if (allFilled && isStudentEmailValid && isParentEmailValid && 
+                    isStudentPhoneValid && isParentPhoneValid && isEmergencyPhoneValid) {
                     saveBtn.removeAttribute('disabled');
                 } else {
                     saveBtn.setAttribute('disabled', '');
@@ -213,6 +236,28 @@ class StudentAddDialog extends HTMLElement {
             parentEmailInput.addEventListener('input', () => this.validateForm());
             parentEmailInput.addEventListener('change', () => this.validateForm());
             parentEmailInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        // Phone validation event listeners
+        const studentPhoneInput = this.querySelector('ui-input[data-field="phone"]');
+        if (studentPhoneInput) {
+            studentPhoneInput.addEventListener('input', () => this.validateForm());
+            studentPhoneInput.addEventListener('change', () => this.validateForm());
+            studentPhoneInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        const parentPhoneInput = this.querySelector('ui-input[data-field="parent_phone"]');
+        if (parentPhoneInput) {
+            parentPhoneInput.addEventListener('input', () => this.validateForm());
+            parentPhoneInput.addEventListener('change', () => this.validateForm());
+            parentPhoneInput.addEventListener('blur', () => this.validateForm());
+        }
+        
+        const emergencyPhoneInput = this.querySelector('ui-input[data-field="emergency_phone"]');
+        if (emergencyPhoneInput) {
+            emergencyPhoneInput.addEventListener('input', () => this.validateForm());
+            emergencyPhoneInput.addEventListener('change', () => this.validateForm());
+            emergencyPhoneInput.addEventListener('blur', () => this.validateForm());
         }
         
         const medicalDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
@@ -372,10 +417,11 @@ class StudentAddDialog extends HTMLElement {
                 return;
             }
 
-            if (!studentData.phone) {
+            // Validate student phone if provided (optional)
+            if (studentData.phone && !this.isValidPhone(studentData.phone)) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please enter phone number',
+                    message: 'Student phone number must be at least 10 digits',
                     variant: 'error',
                     duration: 3000
                 });
@@ -406,6 +452,38 @@ class StudentAddDialog extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select gender',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate parent phone (required)
+            if (!studentData.parent_phone) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please enter parent phone number',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (!this.isValidPhone(studentData.parent_phone)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Parent phone number must be at least 10 digits',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate emergency phone if provided (optional)
+            if (studentData.emergency_phone && !this.isValidPhone(studentData.emergency_phone)) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Emergency phone number must be at least 10 digits',
                     variant: 'error',
                     duration: 3000
                 });
@@ -609,12 +687,11 @@ class StudentAddDialog extends HTMLElement {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                             <ui-input 
                                 data-field="phone"
                                 type="tel" 
-                                placeholder="Enter phone number (10 digits)"
-                                maxlength="10"
+                                placeholder="Enter phone number (min 10 digits)"
                                 class="w-full">
                             </ui-input>
                         </div>

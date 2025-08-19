@@ -738,6 +738,8 @@ class Table extends HTMLElement {
                 this[name] = this.hasAttribute(name);
             } else if (name === 'actions') {
                 this.actions = (newValue || '').split(',').map(a => a.trim()).filter(Boolean);
+            } else if (name === 'custom-actions') {
+                this.customActions = this.parseJSONAttribute('custom-actions', []);
             } else if (name === 'page-size') {
                 this.pageSize = parseInt(newValue) || 10;
             } else if (name === 'search-placeholder') {
@@ -1739,11 +1741,17 @@ class Table extends HTMLElement {
                                         </svg>
                                     </button>
                                     ` : ''}
-                                    ${this.customActions.map(customAction => `
-                                    <button class="upo-table-action-button custom" onclick="this.closest('ui-table').customAction(${index}, '${customAction.name}')" aria-label="${customAction.label || customAction.name}" title="${customAction.tooltip || customAction.label || customAction.name}">
-                                        ${customAction.icon ? `<i class="${customAction.icon}"></i>` : customAction.text || customAction.name}
-                                    </button>
-                                    `).join('')}
+                                    ${this.customActions.map(customAction => {
+                                        // Check if the custom action should be shown for this row
+                                        const shouldShow = typeof customAction.show === 'function' ? customAction.show(row) : true;
+                                        if (!shouldShow) return '';
+                                        
+                                        return `
+                                        <button class="upo-table-action-button custom" onclick="this.closest('ui-table').customAction(${index}, '${customAction.name}')" aria-label="${customAction.label || customAction.name}" title="${customAction.tooltip || customAction.label || customAction.name}">
+                                            ${customAction.icon ? `<i class="${customAction.icon}"></i>` : customAction.text || customAction.name}
+                                        </button>
+                                        `;
+                                    }).join('')}
                                 </div>
                             </td>
                         ` : ''}

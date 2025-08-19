@@ -221,6 +221,7 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
 
         // Keep page state in sync when modals close via backdrop/X
         this.addEventListener('modal-close', () => this.closeAllModals());
@@ -264,28 +265,34 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('change', (e) => {
             const dd = e.target.closest('ui-search-dropdown');
             if (!dd) return;
+            
             // Any dropdown change should close any open modal
             this.closeAllModals();
             const name = dd.getAttribute('name');
+            const value = dd.value;
+            
             if (!name) return;
-            const next = { ...this.get('filters'), [name]: dd.value };
+            const next = { ...this.get('filters'), [name]: value };
             this.set('filters', next);
+            
             if (name === 'class_id') {
-                this.loadStudentsByClass(dd.value);
+                this.loadStudentsByClass(value);
             }
+            
             // Auto load when any filter changes if a primary filter (class or student) is set
             const primarySet = (next.class_id && String(next.class_id).length > 0) || (next.student_id && String(next.student_id).length > 0);
+            
             if (primarySet) {
                 this.loadGrades();
             }
             
             // When class changes, also load subjects for that class and auto-select the last subject
-            if (name === 'class_id' && dd.value) {
-                this.loadClassSubjectsAndAutoSelect(dd.value);
+            if (name === 'class_id' && value) {
+                this.loadClassSubjectsAndAutoSelect(value);
             }
             
             // When subject or period changes, reload grades for the class
-            if ((name === 'subject_id' || name === 'grading_period_id') && dd.value) {
+            if ((name === 'subject_id' || name === 'grading_period_id') && value) {
                 this.loadGrades();
             }
         });
@@ -353,7 +360,11 @@ class StudentGradesManagementPage extends App {
     async loadStudentsByClass(classId) {
         try {
             const token = localStorage.getItem('token');
-            if (!token || !classId) { this.students = []; return; }
+            if (!token || !classId) { 
+                this.students = []; 
+                return; 
+            }
+            
             const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
             
@@ -361,7 +372,8 @@ class StudentGradesManagementPage extends App {
             // Clear any existing student filter since we want all students in the class
             const flt = this.get('filters');
             this.set('filters', { ...flt, student_id: '' });
-        } catch (_) {
+        } catch (error) {
+            console.error('Error in loadStudentsByClass:', error);
             this.students = [];
         }
     }
@@ -435,7 +447,9 @@ class StudentGradesManagementPage extends App {
     createGradeEntriesForClass(classId, subjectId, gradingPeriodId) {
         try {
             const token = localStorage.getItem('token');
-            if (!token || !classId) return;
+            if (!token || !classId) {
+                return;
+            }
 
             // Get the selected class and subject info
             const selectedClass = this.classes.find(c => String(c.id) === String(classId));
@@ -457,7 +471,7 @@ class StudentGradesManagementPage extends App {
                 }
 
                 // Create a new grade entry structure for grading
-                return {
+                const newEntry = {
                     id: null, // Will be set when saved
                     student_id: student.id,
                     student_first_name: student.first_name,
@@ -479,6 +493,8 @@ class StudentGradesManagementPage extends App {
                     updated_at: null,
                     is_new: true // Flag to indicate this is a new entry for grading
                 };
+                
+                return newEntry;
             });
 
             this.set('grades', gradeEntries);
@@ -487,6 +503,25 @@ class StudentGradesManagementPage extends App {
             console.error('Error creating grade entries:', error);
             Toast.show({ title: 'Error', message: 'Failed to create grade entries for class', variant: 'error', duration: 3000 });
         }
+    }
+
+    getCustomActions() {
+        const filters = this.get('filters') || {};
+        const gradingPeriodSelected = Boolean(filters.grading_period_id && filters.grading_period_id.length > 0);
+        
+        return [
+            {
+                name: 'add-grade',
+                label: 'Add Grade',
+                icon: 'fas fa-plus',
+                variant: 'primary',
+                size: 'sm',
+                show: (row) => {
+                    // Only show if grading period is selected and student has no grades
+                    return gradingPeriodSelected && row.is_new && !row.has_grades;
+                }
+            }
+        ];
     }
 
     async loadGrades() {
@@ -499,6 +534,7 @@ class StudentGradesManagementPage extends App {
             }
 
             const { class_id, subject_id, grading_period_id, student_id } = this.get('filters');
+            
             if (!class_id && !student_id) {
                 this.set('grades', []);
                 this.updateTableData();
@@ -527,6 +563,7 @@ class StudentGradesManagementPage extends App {
             this.updateTableData();
             this.set('loading', false);
         } catch (error) {
+            console.error('Error in loadGrades:', error);
             this.set('loading', false);
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load grades', variant: 'error', duration: 3000 });
         }
@@ -586,6 +623,37 @@ class StudentGradesManagementPage extends App {
         }, 0);
     }
 
+    onCustomAction(event) {
+        const { action, row } = event.detail;
+        
+        if (action === 'add-grade') {
+            // Find the grade data for this student
+            const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id);
+            if (gradeData) {
+                this.closeAllModals();
+                this.set('showAddModal', true);
+                setTimeout(() => {
+                    const modal = this.querySelector('student-grade-add-modal');
+                    if (modal) {
+                        // Pre-fill the modal with the student's data and current filters
+                        const filters = this.get('filters') || {};
+                        const prefillData = {
+                            ...filters,
+                            student_id: gradeData.student_id,
+                            student_name: `${gradeData.student_first_name} ${gradeData.student_last_name}`.trim()
+                        };
+                        modal.setFilterPrefill(prefillData, { 
+                            classes: this.classes, 
+                            subjects: this.classSubjects, 
+                            periods: this.periods 
+                        });
+                        modal.open?.();
+                    }
+                }, 0);
+            }
+        }
+    }
+
     updateTableData() {
         const grades = this.get('grades');
         if (!grades) return;
@@ -601,7 +669,11 @@ class StudentGradesManagementPage extends App {
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
             final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
+            // Add metadata for custom actions
+            student_id: g.student_id,
+            is_new: g.is_new,
+            has_grades: g.assignment_total !== null || g.exam_total !== null
         }));
 
         const tableComponent = this.querySelector('ui-table');
@@ -662,7 +734,7 @@ class StudentGradesManagementPage extends App {
         const showDeleteDialog = this.get('showDeleteDialog');
 
         const tableData = grades ? grades.map((g, index) => ({
-            id: g.id,
+            id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
             student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
@@ -671,8 +743,12 @@ class StudentGradesManagementPage extends App {
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
+            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
+            // Add metadata for custom actions
+            student_id: g.student_id,
+            is_new: g.is_new,
+            has_grades: g.assignment_total !== null || g.exam_total !== null
         })) : [];
 
         const tableColumns = [
@@ -689,7 +765,6 @@ class StudentGradesManagementPage extends App {
         ];
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
-        const canAdd = Boolean(filters.class_id && filters.subject_id && filters.grading_period_id && filters.student_id);
 
         return `
             ${this.renderHeader()}
@@ -713,11 +788,11 @@ class StudentGradesManagementPage extends App {
                             pagination
                             page-size="50"
                             action
-                            ${canAdd ? 'addable' : ''}
                             refresh
                             print
                             bordered
                             striped
+                            custom-actions='${JSON.stringify(this.getCustomActions())}'
                             class="w-full">
                         </ui-table>
                     </div>

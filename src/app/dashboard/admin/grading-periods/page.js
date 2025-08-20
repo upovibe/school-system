@@ -5,6 +5,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/GradingPeriodAddModal.js';
 import '@/components/layout/adminLayout/GradingPeriodDeleteDialog.js';
 import '@/components/layout/adminLayout/GradingPeriodViewModal.js';
+import '@/components/layout/adminLayout/GradingPeriodUpdateModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -20,6 +21,7 @@ class GradingPeriodManagementPage extends App {
         this.showAddModal = false;
         this.showDeleteDialog = false;
         this.showViewModal = false;
+        this.showUpdateModal = false;
     }
 
     // Summary counts for header
@@ -129,6 +131,9 @@ class GradingPeriodManagementPage extends App {
         // Listen for table view button clicks
         this.addEventListener('table-view', this.onView.bind(this));
         
+        // Listen for table edit button clicks
+        this.addEventListener('table-edit', this.onEdit.bind(this));
+        
         // Listen for success events to refresh data
         this.addEventListener('grading-period-saved', (event) => {
             // Add the new grading period to the existing data
@@ -160,6 +165,24 @@ class GradingPeriodManagementPage extends App {
                 this.render();
                 // Close the delete dialog
                 this.set('showDeleteDialog', false);
+            }
+        });
+        
+        // Listen for update success events
+        this.addEventListener('grading-period-updated', (event) => {
+            // Update the existing grading period in the data
+            const updatedGradingPeriod = event.detail.gradingPeriod;
+            if (updatedGradingPeriod) {
+                const currentGradingPeriods = this.get('gradingPeriods') || [];
+                const updatedGradingPeriods = currentGradingPeriods.map(period => 
+                    period.id === updatedGradingPeriod.id ? updatedGradingPeriod : period
+                );
+                this.set('gradingPeriods', updatedGradingPeriods);
+                this.updateTableData();
+                // Force re-render to update header counts
+                this.render();
+                // Close the update modal
+                this.set('showUpdateModal', false);
             }
         });
     }
@@ -252,10 +275,27 @@ class GradingPeriodManagementPage extends App {
         this.set('showAddModal', true);
     }
 
+    onEdit(event) {
+        const { detail } = event;
+        const editGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
+        if (editGradingPeriod) {
+            // Close any open modals first
+            this.closeAllModals();
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('grading-period-update-modal');
+                if (updateModal) {
+                    updateModal.setGradingPeriodData(editGradingPeriod);
+                }
+            }, 0);
+        }
+    }
+
     closeAllModals() {
         this.set('showAddModal', false);
         this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
+        this.set('showUpdateModal', false);
     }
 
     async loadData() {
@@ -326,6 +366,7 @@ class GradingPeriodManagementPage extends App {
         const showAddModal = this.get('showAddModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         const showViewModal = this.get('showViewModal');
+        const showUpdateModal = this.get('showUpdateModal');
         
         // Prepare table data and columns for grading periods
         const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
@@ -394,6 +435,9 @@ class GradingPeriodManagementPage extends App {
             
             <!-- View Grading Period Modal -->
             <grading-period-view-modal ${showViewModal ? 'open' : ''}></grading-period-view-modal>
+
+            <!-- Update Grading Period Modal -->
+            <grading-period-update-modal ${showUpdateModal ? 'open' : ''}></grading-period-update-modal>
         `;
     }
 }

@@ -12,7 +12,6 @@ import api from '@/services/api.js';
  * 
  * Attributes:
  * - open: boolean - controls modal visibility
- * - grading-period-data: object - the grading period data to update
  * 
  * Events:
  * - grading-period-updated: Fired when a grading period is successfully updated
@@ -50,7 +49,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
     }
 
     close() {
-        this.removeAttribute('open');
+        this.removeAttribute('open', '');
     }
 
     // Set grading period data for editing
@@ -66,12 +65,17 @@ class GradingPeriodUpdateModal extends HTMLElement {
         const nameInput = this.querySelector('ui-input[data-field="name"]');
         const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
         const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
+        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
         const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
         const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
         if (nameInput) nameInput.value = this.gradingPeriodData.name || '';
         if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
         if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
+        if (academicYearInput) {
+            academicYearInput.value = this.gradingPeriodData.academic_year || '';
+            academicYearInput.setAttribute('readonly', '');
+        }
         if (descriptionTextarea) descriptionTextarea.setValue(this.gradingPeriodData.description || '');
         if (statusSwitch) {
             if (this.gradingPeriodData.is_active == 1) {
@@ -80,21 +84,15 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 statusSwitch.removeAttribute('checked');
             }
         }
-
-        // Update the academic year display
-        const yearDisplay = this.querySelector('#academic-year-display');
-        if (yearDisplay) {
-            yearDisplay.textContent = this.gradingPeriodData.academic_year || 'N/A';
-        }
     }
 
     // Update the grading period
     async updateGradingPeriod() {
         try {
-            if (!this.gradingPeriodData || !this.gradingPeriodData.id) {
+            if (!this.gradingPeriodData) {
                 Toast.show({
                     title: 'Error',
-                    message: 'No grading period data to update',
+                    message: 'No grading period data available for update',
                     variant: 'error',
                     duration: 3000
                 });
@@ -115,8 +113,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
-
-            //console.log('Grading period update data being sent:', gradingPeriodData); // Debug log
 
             // Validate required fields
             if (!gradingPeriodData.name) {
@@ -163,29 +159,23 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 return;
             }
 
-            // Get the auth token
+            // Get auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
                     title: 'Authentication Error',
-                    message: 'Please log in to perform this action',
+                    message: 'Please log in to update grading periods',
                     variant: 'error',
                     duration: 3000
                 });
                 return;
             }
 
-            // Show loading state
-            const confirmButton = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmButton) {
-                confirmButton.setAttribute('loading', '');
-                confirmButton.textContent = 'Updating...';
-            }
-
-            // Send the request
+            // Update grading period
             const response = await api.withToken(token).put(`/grading-periods/${this.gradingPeriodData.id}`, gradingPeriodData);
-
-            if (response.data.success) {
+            
+            // Check if grading period was updated successfully
+            if (response.status === 200 || response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Grading period updated successfully',
@@ -193,53 +183,39 @@ class GradingPeriodUpdateModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Dispatch event with the updated grading period data
+                // Construct the updated grading period data
+                const updatedGradingPeriod = {
+                    ...this.gradingPeriodData,
+                    name: gradingPeriodData.name,
+                    start_date: gradingPeriodData.start_date,
+                    end_date: gradingPeriodData.end_date,
+                    description: gradingPeriodData.description,
+                    is_active: gradingPeriodData.is_active,
+                    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                };
+
+                // Close modal and dispatch event
+                this.close();
                 this.dispatchEvent(new CustomEvent('grading-period-updated', {
-                    detail: {
-                        gradingPeriod: {
-                            id: this.gradingPeriodData.id,
-                            name: gradingPeriodData.name,
-                            academic_year: gradingPeriodData.academic_year,
-                            start_date: gradingPeriodData.start_date,
-                            end_date: gradingPeriodData.end_date,
-                            description: gradingPeriodData.description,
-                            is_active: gradingPeriodData.is_active,
-                            created_at: this.gradingPeriodData.created_at,
-                            updated_at: new Date().toISOString()
-                        }
-                    },
+                    detail: { gradingPeriod: updatedGradingPeriod },
                     bubbles: true,
                     composed: true
                 }));
-
-                this.close();
             } else {
-                Toast.show({
-                    title: 'Error',
-                    message: response.data.message || 'Failed to update grading period',
-                    variant: 'error',
-                    duration: 3000
-                });
+                throw new Error(response.data.message || 'Failed to update grading period');
             }
+
         } catch (error) {
-            console.error('Error updating grading period:', error);
+            console.error('❌ Error updating grading period:', error);
+            
             Toast.show({
                 title: 'Error',
-                message: 'Failed to update grading period. Please try again.',
+                message: error.response?.data?.message || 'Failed to update grading period. Please try again.',
                 variant: 'error',
                 duration: 3000
             });
-        } finally {
-            // Reset loading state
-            const confirmButton = this.querySelector('ui-button[slot="confirm"]');
-            if (confirmButton) {
-                confirmButton.removeAttribute('loading');
-                confirmButton.textContent = 'Update Grading Period';
-            }
         }
     }
-
-
 
     render() {
         this.innerHTML = `
@@ -261,12 +237,13 @@ class GradingPeriodUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <div class="flex items-center space-x-2">
-                            <div id="academic-year-display" class="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border w-full">
-                                ${this.gradingPeriodData ? (this.gradingPeriodData.academic_year || 'N/A') : 'N/A'}
-                            </div>
-                            <span class="text-xs text-gray-500">(Cannot be changed)</span>
-                        </div>
+                        <ui-input 
+                            data-field="academic_year"
+                            type="text" 
+                            placeholder="Academic year (read-only)"
+                            readonly
+                            class="w-full">
+                        </ui-input>
                     </div>
                     
                     <div>
@@ -306,6 +283,22 @@ class GradingPeriodUpdateModal extends HTMLElement {
                         </ui-switch>
                     </div>
                 </form>
+                
+                <!-- How this works (bottom) -->
+                <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-medium">How this works</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li>Update <strong>Name</strong>, <strong>Start Date</strong>, and <strong>End Date</strong> as needed.</li>
+                                <li><strong>Academic Year</strong> cannot be changed once set.</li>
+                                <li>Set <strong>Status</strong> to inactive to hide the period from new assignments.</li>
+                                <li><strong>Description</strong> is optional but helpful for organization.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </ui-modal>
         `;
     }

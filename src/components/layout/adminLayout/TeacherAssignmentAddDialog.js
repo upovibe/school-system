@@ -68,7 +68,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                 this.render();
             }
         } catch (error) {
-            console.error('Error loading classes:', error);
+            // Silent error handling for timeout issues
         }
     }
 
@@ -84,7 +84,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                 this.render();
             }
         } catch (error) {
-            console.error('Error loading subjects:', error);
+            // Silent error handling for timeout issues
         }
     }
 
@@ -111,7 +111,7 @@ class TeacherAssignmentAddDialog extends HTMLElement {
                 return subjects;
             }
         } catch (error) {
-            console.error('Error loading class subjects:', error);
+            // Silent error handling for timeout issues
         }
         return [];
     }

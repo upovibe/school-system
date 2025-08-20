@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/layout/adminLayout/GradingPeriodAddModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -14,6 +15,7 @@ class GradingPeriodManagementPage extends App {
         super();
         this.gradingPeriods = null;
         this.loading = false;
+        this.showAddModal = false;
     }
 
     // Summary counts for header
@@ -110,6 +112,24 @@ class GradingPeriodManagementPage extends App {
         document.title = 'Grading Period Management | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Listen for table add button clicks
+        this.addEventListener('table-add', this.onAdd.bind(this));
+        
+        // Listen for success events to refresh data
+        this.addEventListener('grading-period-saved', (event) => {
+            // Add the new grading period to the existing data
+            const newGradingPeriod = event.detail.gradingPeriod;
+            if (newGradingPeriod) {
+                const currentGradingPeriods = this.get('gradingPeriods') || [];
+                this.set('gradingPeriods', [...currentGradingPeriods, newGradingPeriod]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -160,6 +180,13 @@ class GradingPeriodManagementPage extends App {
             </div>
         `;
         document.body.appendChild(dialog);
+    }
+
+    onAdd(event) {
+        console.log('➕ Add button clicked!');
+        console.log('Event:', event);
+        this.set('showAddModal', true);
+        console.log('showAddModal set to:', this.get('showAddModal'));
     }
 
     async loadData() {
@@ -227,6 +254,7 @@ class GradingPeriodManagementPage extends App {
     render() {
         const gradingPeriods = this.get('gradingPeriods');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
         
         // Prepare table data and columns for grading periods
         const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
@@ -275,6 +303,8 @@ class GradingPeriodManagementPage extends App {
                             search-placeholder="Search grading periods..."
                             pagination
                             page-size="50"
+                            action
+                            addable
                             refresh
                             print
                             bordered
@@ -284,6 +314,9 @@ class GradingPeriodManagementPage extends App {
                     </div>
                 `}
             </div>
+            
+            <!-- Add Grading Period Modal -->
+            <grading-period-add-modal ${showAddModal ? 'open' : ''}></grading-period-add-modal>
         `;
     }
 }

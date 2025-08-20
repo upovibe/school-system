@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import store from '@/core/store.js';
 import api from '@/services/api.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
+import authManager from '@/core/authManager.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';
@@ -333,8 +334,8 @@ class DashboardLayout extends App {
                         { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/teacher/class' },
                         { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'My Class Assignments', icon: 'fas fa-tasks', href: '/dashboard/teacher/assignments' },
-                        { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
-                        { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/teacher/student-grade-report' },
+                        { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
+                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/teacher/student-grade-report' },
                     ]
                 }
             ],

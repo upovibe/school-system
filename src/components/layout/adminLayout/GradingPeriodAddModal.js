@@ -29,8 +29,9 @@ class GradingPeriodAddModal extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
             this.render();
-            // Ensure validation is called after render when modal opens
+            // Load current academic year and ensure validation is called after render when modal opens
             setTimeout(() => {
+                this.loadCurrentAcademicYear();
                 this.validateForm();
             }, 100);
         }
@@ -39,6 +40,8 @@ class GradingPeriodAddModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+        // Load current academic year when component is connected
+        this.loadCurrentAcademicYear();
     }
 
     setupEventListeners() {
@@ -62,16 +65,14 @@ class GradingPeriodAddModal extends HTMLElement {
     validateForm() {
         try {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
-            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
             const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
             const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
             
             const name = nameInput ? String(nameInput.value || '').trim() : '';
-            const academicYear = academicYearInput ? String(academicYearInput.value || '').trim() : '';
             const startDate = startDateInput ? startDateInput.value : '';
             const endDate = endDateInput ? endDateInput.value : '';
             
-            const isValid = !!name && !!academicYear && !!startDate && !!endDate;
+            const isValid = !!name && !!startDate && !!endDate;
             
             // Get the custom confirm button by ID
             const confirmBtn = this.querySelector('#save-period-btn');
@@ -88,17 +89,12 @@ class GradingPeriodAddModal extends HTMLElement {
     // Wire events for live validation
     addFormEventListeners() {
         const nameInput = this.querySelector('ui-input[data-field="name"]');
-        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
         const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
         const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
 
         if (nameInput) {
             nameInput.addEventListener('input', () => this.validateForm());
             nameInput.addEventListener('change', () => this.validateForm());
-        }
-        if (academicYearInput) {
-            academicYearInput.addEventListener('input', () => this.validateForm());
-            academicYearInput.addEventListener('change', () => this.validateForm());
         }
         if (startDateInput) {
             startDateInput.addEventListener('change', () => this.validateForm());
@@ -115,6 +111,31 @@ class GradingPeriodAddModal extends HTMLElement {
 
         // Initial validation state
         this.validateForm();
+    }
+
+    // Load and display the current academic year
+    async loadCurrentAcademicYear() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/grading-periods/academic-year-switch-date');
+            if (response.data.success) {
+                const currentYear = response.data.data.current_academic_year;
+                const yearDisplay = this.querySelector('#current-academic-year');
+                if (yearDisplay) {
+                    yearDisplay.textContent = currentYear;
+                    yearDisplay.className = 'text-sm text-green-700 bg-green-50 px-3 py-2 rounded border border-green-200';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading current academic year:', error);
+            const yearDisplay = this.querySelector('#current-academic-year');
+            if (yearDisplay) {
+                yearDisplay.textContent = 'Error loading';
+                yearDisplay.className = 'text-sm text-red-700 bg-red-50 px-3 py-2 rounded border border-red-200';
+            }
+        }
     }
 
     open() {
@@ -134,15 +155,40 @@ class GradingPeriodAddModal extends HTMLElement {
         try {
             // Get form data using the data-field attributes for reliable selection
             const nameInput = this.querySelector('ui-input[data-field="name"]');
-            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
             const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
             const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
             const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
+            // Get the current academic year from the API
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to perform this action',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Fetch current academic year
+            const academicYearResponse = await api.withToken(token).get('/grading-periods/academic-year-switch-date');
+            if (!academicYearResponse.data.success) {
+                Toast.show({
+                    title: 'Error',
+                    message: 'Failed to get current academic year',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            const currentAcademicYear = academicYearResponse.data.data.current_academic_year;
+
             const gradingPeriodData = {
                 name: nameInput ? nameInput.value : '',
-                academic_year: academicYearInput ? academicYearInput.value : '',
+                academic_year: currentAcademicYear, // Automatically set from API
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
@@ -156,16 +202,6 @@ class GradingPeriodAddModal extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please fill in the period name',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!gradingPeriodData.academic_year) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please fill in the academic year',
                     variant: 'error',
                     duration: 3000
                 });
@@ -319,12 +355,12 @@ class GradingPeriodAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-input 
-                            data-field="academic_year"
-                            type="text" 
-                            placeholder="e.g., 2024-2025"
-                            class="w-full">
-                        </ui-input>
+                        <div class="flex items-center space-x-2">
+                            <div id="current-academic-year" class="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
+                                Loading...
+                            </div>
+                            <span class="text-xs text-gray-500">(Automatically set)</span>
+                        </div>
                     </div>
                     
                     <div>

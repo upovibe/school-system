@@ -280,6 +280,7 @@ Router::post('/grading-periods', 'GradingPeriodController@store');
 Router::get('/grading-periods/{id}', 'GradingPeriodController@show');
 Router::put('/grading-periods/{id}', 'GradingPeriodController@update');
 Router::delete('/grading-periods/{id}', 'GradingPeriodController@destroy');
+Router::get('/grading-periods/academic-year-switch-date', 'GradingPeriodController@getAcademicYearSwitchDate');
 
 // Student Grades Management Routes (admin + teacher)
 Router::get('/student-grades', 'StudentGradeController@index');

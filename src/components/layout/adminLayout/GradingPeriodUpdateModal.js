@@ -64,14 +64,12 @@ class GradingPeriodUpdateModal extends HTMLElement {
         if (!this.gradingPeriodData) return;
 
         const nameInput = this.querySelector('ui-input[data-field="name"]');
-        const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
         const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
         const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
         const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
         const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
         if (nameInput) nameInput.value = this.gradingPeriodData.name || '';
-        if (academicYearInput) academicYearInput.value = this.gradingPeriodData.academic_year || '';
         if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
         if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
         if (descriptionTextarea) descriptionTextarea.setValue(this.gradingPeriodData.description || '');
@@ -81,6 +79,12 @@ class GradingPeriodUpdateModal extends HTMLElement {
             } else {
                 statusSwitch.removeAttribute('checked');
             }
+        }
+
+        // Update the academic year display
+        const yearDisplay = this.querySelector('#academic-year-display');
+        if (yearDisplay) {
+            yearDisplay.textContent = this.gradingPeriodData.academic_year || 'N/A';
         }
     }
 
@@ -99,7 +103,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
 
             // Get form data using the data-field attributes for reliable selection
             const nameInput = this.querySelector('ui-input[data-field="name"]');
-            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
             const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
             const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
             const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
@@ -107,7 +110,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
 
             const gradingPeriodData = {
                 name: nameInput ? nameInput.value : '',
-                academic_year: academicYearInput ? academicYearInput.value : '',
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
@@ -121,16 +123,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please fill in the period name',
-                    variant: 'error',
-                    duration: 3000
-                });
-                return;
-            }
-
-            if (!gradingPeriodData.academic_year) {
-                Toast.show({
-                    title: 'Validation Error',
-                    message: 'Please fill in the academic year',
                     variant: 'error',
                     duration: 3000
                 });
@@ -269,12 +261,12 @@ class GradingPeriodUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-input 
-                            data-field="academic_year"
-                            type="text" 
-                            placeholder="e.g., 2024-2025"
-                            class="w-full">
-                        </ui-input>
+                        <div class="flex items-center space-x-2">
+                            <div id="academic-year-display" class="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border w-full">
+                                ${this.gradingPeriodData ? (this.gradingPeriodData.academic_year || 'N/A') : 'N/A'}
+                            </div>
+                            <span class="text-xs text-gray-500">(Cannot be changed)</span>
+                        </div>
                     </div>
                     
                     <div>

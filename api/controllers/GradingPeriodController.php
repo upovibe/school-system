@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../models/GradingPeriodModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -15,6 +16,36 @@ class GradingPeriodController {
         $this->gradingPeriodModel = new GradingPeriodModel($pdo);
     }
     
+    /**
+     * Get current academic year switch date (admin only)
+     */
+    public function getAcademicYearSwitchDate() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $settingModel = new SettingModel($this->pdo);
+            $switchDate = $settingModel->getAcademicYearSwitchDate();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'switch_date' => $switchDate,
+                    'current_academic_year' => $this->getCurrentAcademicYear()
+                ],
+                'message' => 'Academic year switch date retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving academic year switch date: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     /**
      * Get all grading periods (admin only)
      */
@@ -97,14 +128,8 @@ class GradingPeriodController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
+            // Always compute academic year on the server (ignore client input)
+            $data['academic_year'] = $this->getCurrentAcademicYear();
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -203,14 +228,8 @@ class GradingPeriodController {
                 return;
             }
 
-            if (empty($data['academic_year'])) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Academic year is required'
-                ]);
-                return;
-            }
+            // Do not allow client to change academic year on update; keep original
+            $data['academic_year'] = $existingPeriod['academic_year'];
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -318,6 +337,60 @@ class GradingPeriodController {
         }
     }
     
+    /**
+     * Compute current academic year based on the configured switch date.
+     * Uses the 'academic_year_switch_date' setting to determine when the academic year changes.
+     */
+    private function getCurrentAcademicYear() {
+        try {
+            // Get the academic year switch date from settings
+            $settingModel = new SettingModel($this->pdo);
+            $switchDate = $settingModel->getAcademicYearSwitchDate();
+            
+            // Parse the switch date (format: MM-DD)
+            $switchParts = explode('-', $switchDate);
+            if (count($switchParts) !== 2) {
+                // Fallback to default September 1st if format is invalid
+                $switchMonth = 9;
+                $switchDay = 1;
+            } else {
+                $switchMonth = (int)$switchParts[0];
+                $switchDay = (int)$switchParts[1];
+            }
+            
+            $now = new DateTime('now');
+            $currentYear = (int)$now->format('Y');
+            
+            // Create the switch date for current year
+            $switchDateThisYear = new DateTime("$currentYear-$switchMonth-$switchDay");
+            
+            // If today is on or after the switch date, start new academic year
+            // If today is before the switch date, we're still in the previous academic year
+            if ($now >= $switchDateThisYear) {
+                $start = $currentYear;
+                $end = $currentYear + 1;
+            } else {
+                $start = $currentYear - 1;
+                $end = $currentYear;
+            }
+            
+            return $start . '-' . $end;
+        } catch (Exception $e) {
+            // Fallback to default September 1st logic if there's an error
+            $now = new DateTime('now');
+            $year = (int)$now->format('Y');
+            $month = (int)$now->format('n');
+            if ($month >= 9) {
+                $start = $year;
+                $end = $year + 1;
+            } else {
+                $start = $year - 1;
+                $end = $year;
+            }
+            return $start . '-' . $end;
+        }
+    }
+
     /**
      * Log action to user log
      */

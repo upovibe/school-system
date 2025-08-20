@@ -404,9 +404,6 @@ class TeacherAssignmentManagementPage extends App {
         const teacherAssignments = this.get('teacherAssignments');
         const teacherData = teacherAssignments.filter(assignment => assignment.employee_id === employeeId);
         
-        console.log('🔍 onEditTeacher called for employee:', employeeId, 'class:', className, 'section:', classSection);
-        console.log('📚 Teacher data found:', teacherData);
-        
         if (teacherData.length > 0) {
             // Find the specific assignment for the clicked class
             let primaryAssignment = teacherData[0]; // fallback to first
@@ -417,13 +414,8 @@ class TeacherAssignmentManagementPage extends App {
                 );
                 if (specificAssignment) {
                     primaryAssignment = specificAssignment;
-                    console.log('🎯 Found specific assignment for class:', primaryAssignment);
-                } else {
-                    console.log('⚠️ Specific class assignment not found, using first assignment');
                 }
             }
-            
-            console.log('🎯 Primary assignment to edit:', primaryAssignment);
             
             this.closeAllModals();
             this.set('updateTeacherAssignmentData', primaryAssignment);
@@ -431,11 +423,8 @@ class TeacherAssignmentManagementPage extends App {
             setTimeout(() => {
                 const updateModal = this.querySelector('teacher-assignment-update-dialog');
                 if (updateModal) {
-                    console.log('✅ Update modal found, calling setTeacherAssignmentData');
                     // Pass the specific assignment as the main data, but also pass all assignments
                     updateModal.setTeacherAssignmentData(primaryAssignment, teacherData);
-                } else {
-                    console.error('❌ Update modal not found');
                 }
             }, 0);
         }
@@ -797,26 +786,20 @@ class TeacherAssignmentManagementPage extends App {
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                                 ${teacherGroup.classes.length} class${teacherGroup.classes.length !== 1 ? 'es' : ''}
                                                             </span>
-                                                            <div class="flex items-center space-x-1">
-                                                                <button 
-                                                                    onclick="this.closest('app-teacher-assignment-management-page').onViewTeacher('${teacherGroup.employeeId}')"
-                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                                                                    title="View assignments">
-                                                                    <i class="fas fa-eye text-sm"></i>
-                                                                </button>
-                                                                <button 
-                                                                    onclick="this.closest('app-teacher-assignment-management-page').onEditTeacher('${teacherGroup.employeeId}')"
-                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
-                                                                    title="Edit assignments">
-                                                                    <i class="fas fa-edit text-sm"></i>
-                                                                </button>
-                                                                <!-- <button 
-                                                                    onclick="this.closest('app-teacher-assignment-management-page').onDeleteTeacher('${teacherGroup.employeeId}')"
-                                                                    class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                                                    title="Delete assignments">
-                                                                    <i class="fas fa-trash text-sm"></i>
-                                                                </button> -->
-                                                            </div>
+                                                                                                                         <div class="flex items-center space-x-1">
+                                                                 <button 
+                                                                     onclick="this.closest('app-teacher-assignment-management-page').onViewTeacher('${teacherGroup.employeeId}')"
+                                                                     class="inline-flex items-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                                                     title="View assignments">
+                                                                     <i class="fas fa-eye text-sm"></i>
+                                                                 </button>
+                                                                 <!-- <button 
+                                                                     onclick="this.closest('app-teacher-assignment-management-page').onDeleteTeacher('${teacherGroup.employeeId}')"
+                                                                     class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                                     title="Delete assignments">
+                                                                     <i class="fas fa-trash text-sm"></i>
+                                                                 </button> -->
+                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>

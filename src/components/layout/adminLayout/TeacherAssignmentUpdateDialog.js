@@ -31,7 +31,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
 
   attributeChangedCallback(name, _old, newVal) {
     if (name === 'open' && newVal !== null) {
-      console.log('🚪 Dialog opened, rendering...');
       this.render();
     }
   }
@@ -47,11 +46,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     this.primaryAssignment = primaryAssignment || null;
     this.teacherAssignments = Array.isArray(teacherAssignments) ? teacherAssignments : null;
 
-    console.log('🔍 setTeacherAssignmentData called with:', {
-      primaryAssignment,
-      teacherAssignments: teacherAssignments?.length || 0
-    });
-
     // Determine the working class assignments (for the selected class)
     if (this.teacherAssignments && this.primaryAssignment) {
       this.classAssignments = this.teacherAssignments.filter(a =>
@@ -64,18 +58,9 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
       this.classAssignments = [];
     }
 
-    console.log('📚 Class assignments found:', this.classAssignments);
-
     // Current class ids (default to existing single class)
     const existingClassId = this.classAssignments?.[0]?.class_id ?? null;
     this.selectedClassIds = existingClassId ? [existingClassId] : [];
-
-    console.log('🎯 Selected class IDs:', this.selectedClassIds);
-    console.log('📖 Primary assignment class info:', {
-      class_name: this.primaryAssignment?.class_name,
-      class_section: this.primaryAssignment?.class_section,
-      class_id: this.primaryAssignment?.class_id
-    });
 
     // Build fallback subjects from current class assignments so tags render with names immediately
     if (this.classAssignments && this.classAssignments.length > 0) {
@@ -99,18 +84,13 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
 
     // After render: load class-specific subjects for the current class and sync
     if (existingClassId) {
-      console.log('📚 Loading class subjects for existing class ID:', existingClassId);
       this.loadClassSubjects(existingClassId).then(() => {
-        console.log('✅ Class subjects loaded, syncing dropdowns');
         this.syncDropdownSelections();
       });
     }
 
     // Extra retries to ensure options exist before applying selection
-    const trySync = () => {
-      console.log('🔄 Retry sync attempt');
-      this.syncDropdownSelections();
-    };
+    const trySync = () => this.syncDropdownSelections();
     setTimeout(trySync, 50);
     setTimeout(trySync, 200);
     setTimeout(trySync, 400);
@@ -120,12 +100,9 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     setTimeout(() => {
       const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
       if (classDropdown && !classDropdown._classChangeBound) {
-        console.log('🔗 Binding class dropdown change event');
         classDropdown.addEventListener('change', () => {
-          console.log('🔄 Class dropdown changed, new value:', classDropdown.value);
           const value = Array.isArray(classDropdown.value) ? classDropdown.value[0] : classDropdown.value;
           const newClassId = parseInt(value);
-          console.log('🆕 New class ID:', newClassId);
           if (newClassId && !isNaN(newClassId)) {
             this.loadClassSubjects(newClassId).then(() => this.syncDropdownSelections());
           }
@@ -142,13 +119,10 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
       const res = await api.withToken(token).get('/classes');
       if (res.status === 200 && res.data.success) {
         this.classes = res.data.data;
-        console.log('📚 Loaded classes:', this.classes);
         this.render();
         this.syncDropdownSelections();
       }
-    } catch (error) { 
-      console.error('❌ Error loading classes:', error);
-    }
+    } catch (_) { /* silent */ }
   }
 
   async loadTeachers() {
@@ -192,23 +166,13 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
   }
 
   syncDropdownSelections() {
-    console.log('🔄 syncDropdownSelections called');
-    console.log('🎯 Current selectedClassIds:', this.selectedClassIds);
-    
     const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_ids"]');
-    console.log('📋 Class dropdown found:', !!classDropdown);
     
     if (classDropdown && this.selectedClassIds?.length) {
-      console.log('✅ Setting class dropdown value to:', this.selectedClassIds);
       classDropdown.setAttribute('value', JSON.stringify(this.selectedClassIds));
       try { 
         classDropdown.value = this.selectedClassIds.map(id => String(id)); 
-        console.log('✅ Class dropdown value set successfully');
-      } catch (error) { 
-        console.error('❌ Error setting class dropdown value:', error);
-      }
-    } else {
-      console.log('⚠️ Cannot set class dropdown - missing dropdown or selectedClassIds');
+      } catch (_) { /* silent */ }
     }
 
     const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_id"]');
@@ -337,7 +301,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
         composed: true
       }));
     } catch (error) {
-      console.error('Update failed:', error);
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to update assignment', variant: 'error', duration: 3000 });
     } finally {
       this.setLoading(false);
@@ -355,14 +318,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
     const a = this.primaryAssignment;
     const currentClassLabel = a ? `${a.class_name || 'N/A'} - ${a.class_section || 'N/A'}` : 'N/A';
     const currentTeacherLabel = a ? `${a.teacher_first_name || 'N/A'} ${a.teacher_last_name || 'N/A'} (${a.employee_id || 'N/A'})` : 'N/A';
-    
-    console.log('🎨 Render called with:', {
-      primaryAssignment: a,
-      currentClassLabel,
-      currentTeacherLabel,
-      selectedClassIds: this.selectedClassIds,
-      classesCount: this.classes.length
-    });
 
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Edit Teacher Class & Subjects">
@@ -397,7 +352,6 @@ class TeacherAssignmentUpdateDialog extends HTMLElement {
                 <ui-search-dropdown data-field="class_ids" placeholder="Search and select multiple classes..." multiple class="w-full">
                   ${this.classes.map(cls => {
                     const isSelected = this.selectedClassIds.includes(cls.id);
-                    console.log(`🏷️ Class option: ${cls.name}-${cls.section} (ID: ${cls.id}, Selected: ${isSelected})`);
                     return `<ui-option value="${cls.id}" ${isSelected ? 'selected' : ''}>${cls.name}-${cls.section}</ui-option>`;
                   }).join('')}
                 </ui-search-dropdown>

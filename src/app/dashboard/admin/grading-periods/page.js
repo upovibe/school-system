@@ -1,33 +1,22 @@
 import App from '@/core/App.js';
 import '@/components/ui/Table.js';
-import '@/components/ui/Modal.js';
-import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
-import '@/components/layout/adminLayout/GradingPeriodAddModal.js';
-import '@/components/layout/adminLayout/GradingPeriodUpdateModal.js';
-import '@/components/layout/adminLayout/GradingPeriodViewModal.js';
-import '@/components/layout/adminLayout/GradingPeriodDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
  * Grading Period Management Page
  * 
- * Displays grading periods data using Table component
+ * Displays grading periods data using Table component (read-only)
  */
 class GradingPeriodManagementPage extends App {
     constructor() {
         super();
         this.gradingPeriods = null;
         this.loading = false;
-        this.showAddModal = false;
-        this.showUpdateModal = false;
-        this.showViewModal = false;
-        this.updateGradingPeriodData = null;
-        this.viewGradingPeriodData = null;
-        this.deleteGradingPeriodData = null;
     }
 
+    // Summary counts for header
     getHeaderCounts() {
         const periods = this.get('gradingPeriods') || [];
         const total = periods.length;
@@ -42,6 +31,7 @@ class GradingPeriodManagementPage extends App {
         return { total, active, inactive, years: yearSet.size };
     }
 
+    // Gradient header consistent with other pages
     renderHeader() {
         const c = this.getHeaderCounts();
         return `
@@ -120,68 +110,6 @@ class GradingPeriodManagementPage extends App {
         document.title = 'Grading Period Management | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
-        
-        // Add event listeners for table events
-        this.addEventListener('table-view', this.onView.bind(this));
-        this.addEventListener('table-edit', this.onEdit.bind(this));
-        this.addEventListener('table-delete', this.onDelete.bind(this));
-        this.addEventListener('table-add', this.onAdd.bind(this));
-        
-        // Listen for success events to refresh data
-        this.addEventListener('grading-period-deleted', (event) => {
-            // Remove the deleted grading period from the current data
-            const deletedGradingPeriodId = event.detail.gradingPeriodId;
-            const currentGradingPeriods = this.get('gradingPeriods') || [];
-            const updatedGradingPeriods = currentGradingPeriods.filter(period => period.id !== deletedGradingPeriodId);
-            this.set('gradingPeriods', updatedGradingPeriods);
-            this.updateTableData();
-            
-            // Close the delete dialog
-            this.set('showDeleteDialog', false);
-        });
-        
-        this.addEventListener('grading-period-saved', (event) => {
-            // Add the new grading period to the existing data
-            const newGradingPeriod = event.detail.gradingPeriod;
-            if (newGradingPeriod) {
-                const currentGradingPeriods = this.get('gradingPeriods') || [];
-                this.set('gradingPeriods', [...currentGradingPeriods, newGradingPeriod]);
-                this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
-            } else {
-                this.loadData();
-            }
-        });
-        
-        this.addEventListener('grading-period-updated', (event) => {
-            // Update the existing grading period in the data
-            const updatedGradingPeriod = event.detail.gradingPeriod;
-            if (updatedGradingPeriod) {
-                const currentGradingPeriods = this.get('gradingPeriods') || [];
-                const updatedGradingPeriods = currentGradingPeriods.map(period => 
-                    period.id === updatedGradingPeriod.id ? updatedGradingPeriod : period
-                );
-                this.set('gradingPeriods', updatedGradingPeriods);
-                this.updateTableData();
-                // Close the update modal
-                this.set('showUpdateModal', false);
-            } else {
-                this.loadData();
-            }
-        });
-        
-        // Listen for modal data updates
-        this.addEventListener('update-modal-data', (event) => {
-            const { modalType, data } = event.detail;
-            if (modalType === 'update' && data) {
-                this.set('updateGradingPeriodData', data);
-            } else if (modalType === 'view' && data) {
-                this.set('viewGradingPeriodData', data);
-            } else if (modalType === 'delete' && data) {
-                this.set('deleteGradingPeriodData', data);
-            }
-        });
     }
 
     handleHeaderActions(event) {
@@ -250,12 +178,14 @@ class GradingPeriodManagementPage extends App {
                 return;
             }
 
-            // Fetch grading periods data
+            // Load grading periods data
             const response = await api.withToken(token).get('/grading-periods');
+            const rawPeriods = response?.data?.data || [];
+            // Data loaded
             
-            this.set('gradingPeriods', response.data.data);
-            this.updateTableData();
+            this.set('gradingPeriods', rawPeriods);
             this.set('loading', false);
+            
         } catch (error) {
             console.error('❌ Error loading data:', error);
             this.set('loading', false);
@@ -267,62 +197,6 @@ class GradingPeriodManagementPage extends App {
                 duration: 3000
             });
         }
-    }
-
-    onView(event) {
-        const { detail } = event;
-        const viewGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
-        if (viewGradingPeriod) {
-            this.closeAllModals();
-            this.set('viewGradingPeriodData', viewGradingPeriod);
-            this.set('showViewModal', true);
-            setTimeout(() => {
-                const viewModal = this.querySelector('grading-period-view-modal');
-                if (viewModal) {
-                    viewModal.setGradingPeriodData(viewGradingPeriod);
-                }
-            }, 0);
-        }
-    }
-
-    onEdit(event) {
-        const { detail } = event;
-        const editGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
-        if (editGradingPeriod) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('updateGradingPeriodData', editGradingPeriod);
-            this.set('showUpdateModal', true);
-            setTimeout(() => {
-                const updateModal = this.querySelector('grading-period-update-modal');
-                if (updateModal) {
-                    updateModal.setGradingPeriodData(editGradingPeriod);
-                }
-            }, 0);
-        }
-    }
-
-    onDelete(event) {
-        const { detail } = event;
-        const deleteGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
-        if (deleteGradingPeriod) {
-            // Close any open modals first
-            this.closeAllModals();
-            this.set('deleteGradingPeriodData', deleteGradingPeriod);
-            this.set('showDeleteDialog', true);
-            setTimeout(() => {
-                const deleteDialog = this.querySelector('grading-period-delete-dialog');
-                if (deleteDialog) {
-                    deleteDialog.setGradingPeriodData(deleteGradingPeriod);
-                }
-            }, 0);
-        }
-    }
-
-    onAdd(event) {
-        // Close any open modals first
-        this.closeAllModals();
-        this.set('showAddModal', true);
     }
 
     updateTableData() {
@@ -350,23 +224,9 @@ class GradingPeriodManagementPage extends App {
         }
     }
 
-    closeAllModals() {
-        this.set('showAddModal', false);
-        this.set('showUpdateModal', false);
-        this.set('showViewModal', false);
-        this.set('showDeleteDialog', false);
-        this.set('updateGradingPeriodData', null);
-        this.set('viewGradingPeriodData', null);
-        this.set('deleteGradingPeriodData', null);
-    }
-
     render() {
         const gradingPeriods = this.get('gradingPeriods');
         const loading = this.get('loading');
-        const showAddModal = this.get('showAddModal');
-        const showUpdateModal = this.get('showUpdateModal');
-        const showViewModal = this.get('showViewModal');
-        const showDeleteDialog = this.get('showDeleteDialog');
         
         // Prepare table data and columns for grading periods
         const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
@@ -415,8 +275,6 @@ class GradingPeriodManagementPage extends App {
                             search-placeholder="Search grading periods..."
                             pagination
                             page-size="50"
-                            action
-                            addable
                             refresh
                             print
                             bordered
@@ -426,18 +284,6 @@ class GradingPeriodManagementPage extends App {
                     </div>
                 `}
             </div>
-            
-            <!-- Add Grading Period Modal -->
-            <grading-period-add-modal ${showAddModal ? 'open' : ''}></grading-period-add-modal>
-            
-            <!-- Update Grading Period Modal -->
-            <grading-period-update-modal ${showUpdateModal ? 'open' : ''}></grading-period-update-modal>
-            
-            <!-- View Grading Period Modal -->
-            <grading-period-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></grading-period-view-modal>
-            
-            <!-- Delete Grading Period Dialog -->
-            <grading-period-delete-dialog ${showDeleteDialog ? 'open' : ''}></grading-period-delete-dialog>
         `;
     }
 }

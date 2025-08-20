@@ -452,3 +452,4 @@ class TeacherStudentGradeReportPage extends App {
 
 customElements.define('app-teacher-student-grade-report-page', TeacherStudentGradeReportPage);
 export default TeacherStudentGradeReportPage;
+

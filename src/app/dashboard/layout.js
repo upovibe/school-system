@@ -272,16 +272,16 @@ class DashboardLayout extends App {
                 {
                     group: 'Academic Management',
                     items: [
-                        { label: 'Subjects', icon: 'fas fa-book-open', href: '/dashboard/admin/subjects' },
-                        { label: 'Classes', icon: 'fas fa-chalkboard', href: '/dashboard/admin/classes' },
-                        { label: 'Teachers', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/admin/teachers' },
-                        { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
-                        { label: 'Class Subjects', icon: 'fas fa-link', href: '/dashboard/admin/class-subjects' },
-                        { label: 'Teacher Assignments', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
                         { label: 'Grading Periods', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/grading-periods' },
+                        { label: 'Subjects', icon: 'fas fa-book-open', href: '/dashboard/admin/subjects' },
                         { label: 'Grading Policies', icon: 'fas fa-balance-scale', href: '/dashboard/admin/grading-policies' },
-                        { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
-                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },
+                        { label: 'Classes', icon: 'fas fa-chalkboard', href: '/dashboard/admin/classes' },
+                        { label: 'Class Subjects', icon: 'fas fa-link', href: '/dashboard/admin/class-subjects' },
+                        { label: 'Teachers', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/admin/teachers' },
+                        { label: 'Subject Teachers', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
+                        { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
+                        { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
+                        { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },
                     ]
                 },
                 {

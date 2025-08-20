@@ -92,11 +92,7 @@ class TeacherClassesSubjectsPage extends App {
             const response = await api.withToken(token).get('/teachers/my-assignments');
             
             if (response.data && response.data.success) {
-                                    // Log the raw data for debugging
-                    const rawData = response.data.data;
-                    console.log('Raw API response:', rawData);
-                
-                this.set('scheduleData', rawData);
+                this.set('scheduleData', response.data.data);
             } else {
                 this.set('error', 'Failed to load schedule data');
             }
@@ -159,73 +155,7 @@ class TeacherClassesSubjectsPage extends App {
         }
     }
 
-    // Debug method to check API data
-    debugData() {
-        const scheduleData = this.get('scheduleData');
-        console.log('=== DEBUG: Teacher Schedule Data ===');
-        console.log('Full schedule data:', scheduleData);
-        
-        if (scheduleData && scheduleData.assignments) {
-            console.log('Number of assignments:', scheduleData.assignments.length);
-            scheduleData.assignments.forEach((assignment, index) => {
-                console.log(`Assignment ${index + 1}:`, {
-                    class_name: assignment.class_name,
-                    class_section: assignment.class_section,
-                    class_id: assignment.class_id,
-                    subjects_count: assignment.subjects?.length || 0,
-                    students_count: assignment.students?.length || 0
-                });
-            });
-        }
-        
-        // Show alert with key info
-        const info = `
-Debug Info:
-- Total assignments: ${scheduleData?.assignments?.length || 0}
-- Classes found: ${scheduleData?.assignments?.map(a => `${a.class_name}-${a.class_section}`).join(', ') || 'None'}
 
-Check browser console for full details.
-        `;
-        alert(info);
-    }
-
-    // Debug method to check raw database data
-    async debugRawData() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('No authentication token found');
-                return;
-            }
-
-            const response = await api.withToken(token).get('/teachers/debug-assignments');
-            
-            if (response.data && response.data.success) {
-                const debugData = response.data.data;
-                console.log('=== RAW DATABASE DATA ===');
-                console.log('Teacher ID:', debugData.teacher_id);
-                console.log('Teacher Name:', debugData.teacher_name);
-                console.log('Total Records:', debugData.total_records);
-                console.log('Raw Assignments:', debugData.raw_assignments);
-                
-                // Show alert with key info
-                const info = `
-Raw Database Data:
-- Teacher: ${debugData.teacher_name} (ID: ${debugData.teacher_id})
-- Total Records: ${debugData.total_records}
-- Classes Found: ${[...new Set(debugData.raw_assignments.map(r => `${r.class_name}-${r.class_section}`))].join(', ')}
-
-Check browser console for full details.
-                `;
-                alert(info);
-            } else {
-                alert('Failed to get debug data');
-            }
-        } catch (error) {
-            console.error('Error getting debug data:', error);
-            alert('Error getting debug data: ' + error.message);
-        }
-    }
 
     // Open assignment creation modal
     openAssignmentModal(classId, subjectId) {
@@ -332,18 +262,6 @@ Check browser console for full details.
                                 </button>
                             </div>
                             <div class="flex items-center gap-3">
-                                <button 
-                                    onclick="this.closest('app-teacher-classes-subjects-page').debugData()"
-                                    class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
-                                    <i class="fas fa-bug mr-2"></i>
-                                    Debug Data
-                                </button>
-                                <button 
-                                    onclick="this.closest('app-teacher-classes-subjects-page').debugRawData()"
-                                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-                                    <i class="fas fa-database mr-2"></i>
-                                    Debug DB
-                                </button>
                                 <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacher_name}</p>
                             </div>
                     </div>

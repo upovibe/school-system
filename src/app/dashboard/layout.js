@@ -334,11 +334,6 @@ class DashboardLayout extends App {
                         { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'My Class Assignments', icon: 'fas fa-tasks', href: '/dashboard/teacher/assignments' },
                         { label: 'Student Grades', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
-                    ]
-                },
-                {
-                    group: 'Reports',
-                    items: [
                         { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
                     ]
                 }

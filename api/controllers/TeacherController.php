@@ -2464,5 +2464,73 @@ class TeacherController {
         }
     }
 
+                    /**
+                 * Debug method to check teacher assignments data (temporary)
+                 */
+                public function debugTeacherAssignments() {
+                    try {
+                        // Require teacher authentication
+                        global $pdo;
+                        require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+                        TeacherMiddleware::requireTeacher($pdo);
+
+                        // Get current teacher from middleware
+                        $teacher = $_REQUEST['current_teacher'];
+
+                        // Get raw data from teacher_assignments table
+                        $stmt = $pdo->prepare("
+                            SELECT
+                                ta.*,
+                                c.name as class_name,
+                                c.section as class_section,
+                                s.name as subject_name,
+                                s.code as subject_code
+                            FROM teacher_assignments ta
+                            JOIN classes c ON ta.class_id = c.id
+                            JOIN subjects s ON ta.subject_id = s.id
+                            WHERE ta.teacher_id = ?
+                            ORDER BY c.name ASC, c.section ASC, s.name ASC
+                        ");
+                        $stmt->execute([$teacher['id']]);
+                        $rawData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Also check for potential duplicate entries
+                        $duplicateCheck = $pdo->prepare("
+                            SELECT 
+                                class_id, 
+                                subject_id, 
+                                COUNT(*) as count
+                            FROM teacher_assignments 
+                            WHERE teacher_id = ?
+                            GROUP BY class_id, subject_id 
+                            HAVING COUNT(*) > 1
+                        ");
+                        $duplicateCheck->execute([$teacher['id']]);
+                        $duplicates = $duplicateCheck->fetchAll(PDO::FETCH_ASSOC);
+
+                        http_response_code(200);
+                        echo json_encode([
+                            'success' => true,
+                            'data' => [
+                                'teacher_id' => $teacher['id'],
+                                'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                                'raw_assignments' => $rawData,
+                                'total_records' => count($rawData),
+                                'duplicate_check' => $duplicates,
+                                'classes_found' => array_unique(array_map(function($item) {
+                                    return $item['class_name'] . '-' . $item['class_section'];
+                                }, $rawData))
+                            ],
+                            'message' => 'Debug data retrieved successfully'
+                        ]);
+                    } catch (Exception $e) {
+                        http_response_code(500);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Error retrieving debug data: ' . $e->getMessage()
+                        ]);
+                    }
+                }
+
 }
 ?> 

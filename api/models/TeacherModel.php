@@ -580,67 +580,43 @@ class TeacherModel extends BaseModel {
      */
     public function getTeacherAssignments($teacherId, $filters = []) {
         try {
-            $where = 'WHERE ta.teacher_id = ?';
-            $params = [$teacherId];
-            if (!empty($filters['class_id'])) { $where .= ' AND ta.class_id = ?'; $params[] = $filters['class_id']; }
-            if (!empty($filters['subject_id'])) { $where .= ' AND ta.subject_id = ?'; $params[] = $filters['subject_id']; }
-
-            $sql = "
-                SELECT 
-                    ta.id,
-                    ta.created_at,
-                    c.id as class_id,
-                    c.name as class_name,
-                    c.section as class_section,
-                    c.academic_year as class_academic_year,
-                    c.capacity as class_capacity,
-                    c.status as class_status,
-                    s.id as subject_id,
-                    s.name as subject_name,
-                    s.code as subject_code,
-                    s.category as subject_category,
-                    s.description as subject_description
-                FROM teacher_assignments ta
-                JOIN classes c ON ta.class_id = c.id
-                JOIN subjects s ON ta.subject_id = s.id
-                $where
-                ORDER BY c.name ASC, c.section ASC, s.name ASC
-            ";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($params);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // First, get unique classes assigned to this teacher
+            $classes = $this->getTeacherClasses($teacherId);
             
-            // Group results by class
-            $groupedResults = [];
-            foreach ($results as $result) {
-                $classId = $result['class_id'];
-                
-                // If this class hasn't been added yet, create the class entry
-                if (!isset($groupedResults[$classId])) {
-                    $groupedResults[$classId] = [
-                        'class_id' => $result['class_id'],
-                        'class_name' => $result['class_name'],
-                        'class_section' => $result['class_section'],
-                        'class_academic_year' => $result['class_academic_year'],
-                        'class_capacity' => $result['class_capacity'],
-                        'class_status' => $result['class_status'],
-                        'subjects' => [],
-                        'students' => []
-                    ];
-                }
-                
-                // Add the subject to this class
-                $groupedResults[$classId]['subjects'][] = [
-                    'subject_id' => $result['subject_id'],
-                    'subject_name' => $result['subject_name'],
-                    'subject_code' => $result['subject_code'],
-                    'subject_category' => $result['subject_category'],
-                    'subject_description' => $result['subject_description']
-                ];
+            // Apply class filter if specified
+            if (!empty($filters['class_id'])) {
+                $classes = array_filter($classes, function($class) use ($filters) {
+                    return $class['id'] == $filters['class_id'];
+                });
             }
             
-            // Get students for each class
-            foreach ($groupedResults as $classId => &$classData) {
+            $finalResults = [];
+            
+            foreach ($classes as $class) {
+                // Get subjects assigned to this teacher for this specific class
+                $subjectStmt = $this->pdo->prepare("
+                    SELECT 
+                        s.id as subject_id,
+                        s.name as subject_name,
+                        s.code as subject_code,
+                        s.category as subject_category,
+                        s.description as subject_description
+                    FROM teacher_assignments ta
+                    JOIN subjects s ON ta.subject_id = s.id
+                    WHERE ta.teacher_id = ? AND ta.class_id = ?
+                    ORDER BY s.name ASC
+                ");
+                $subjectStmt->execute([$teacherId, $class['id']]);
+                $subjects = $subjectStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Apply subject filter if specified
+                if (!empty($filters['subject_id'])) {
+                    $subjects = array_filter($subjects, function($subject) use ($filters) {
+                        return $subject['subject_id'] == $filters['subject_id'];
+                    });
+                }
+                
+                // Get students for this class
                 $studentStmt = $this->pdo->prepare("
                     SELECT 
                         s.id,
@@ -663,7 +639,7 @@ class TeacherModel extends BaseModel {
                     WHERE s.current_class_id = ?
                     ORDER BY s.first_name ASC, s.last_name ASC
                 ");
-                $studentStmt->execute([$classId]);
+                $studentStmt->execute([$class['id']]);
                 $students = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Apply casts to each student
@@ -671,12 +647,19 @@ class TeacherModel extends BaseModel {
                     $student = $this->applyCasts($student);
                 }
                 
-                $classData['students'] = $students;
-            }
-            
-            // Convert to indexed array and apply casts
-            $finalResults = [];
-            foreach ($groupedResults as $classData) {
+                // Build the class data structure
+                $classData = [
+                    'class_id' => $class['id'],
+                    'class_name' => $class['name'],
+                    'class_section' => $class['section'],
+                    'class_academic_year' => $class['academic_year'],
+                    'class_capacity' => $class['capacity'],
+                    'class_status' => $class['status'],
+                    'subjects' => $subjects,
+                    'students' => $students
+                ];
+                
+                // Apply casts to the class data
                 $classData = $this->applyCasts($classData);
                 $finalResults[] = $classData;
             }

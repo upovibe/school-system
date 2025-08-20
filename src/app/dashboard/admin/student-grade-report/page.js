@@ -18,12 +18,10 @@ class StudentGradeReportPage extends App {
         super();
         this.grades = null;
         this.loading = false;
-        this.filters = { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+        this.filters = { class_id: '', grading_period_id: '', student_id: '' };
         // Initialize reactive state for filters to avoid undefined access during first render
         this.set('filters', { ...this.filters });
         this.classes = [];
-        this.subjects = []; // Will be replaced with class-specific subjects
-        this.classSubjects = []; // Store subjects specific to selected class
         this.periods = [];
         this.students = [];
     }
@@ -41,7 +39,7 @@ class StudentGradeReportPage extends App {
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Summary of recorded grades across filters</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Complete academic performance report for individual students</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -120,31 +118,31 @@ class StudentGradeReportPage extends App {
         dialog.innerHTML = `
             <div slot="header" class="flex items-center">
                 <i class="fas fa-clipboard-check text-blue-500 mr-2"></i>
-                <span class="font-semibold">About Student Grades</span>
+                <span class="font-semibold">About Student Grade Report</span>
             </div>
             <div slot="content" class="space-y-4">
                 <div>
-                    <h4 class="font-semibold text-gray-900 mb-2">How grading works</h4>
-                    <p class="text-gray-700">Grades are recorded per student, per subject, and per grading period. Use the filters to narrow down to the exact class, subject, period, and student.</p>
+                    <h4 class="font-semibold text-gray-900 mb-2">How the grade report works</h4>
+                    <p class="text-gray-700">This report shows all subjects for a selected student in a specific class. Select a class, then a student, and view their complete academic performance across all subjects.</p>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Assignments Total</span>
-                        <span class="text-sm text-gray-600">Sum of continuous assessments (bounded by policy)</span>
+                        <span class="text-sm font-medium">Class Selection</span>
+                        <span class="text-sm text-gray-600">Choose the class to view students</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Exam Total</span>
-                        <span class="text-sm text-gray-600">Exam score (bounded by policy)</span>
+                        <span class="text-sm font-medium">Student Selection</span>
+                        <span class="text-sm text-gray-600">Select specific student to view their grades</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Final Percentage</span>
-                        <span class="text-sm text-gray-600">Computed from assignment and exam totals</span>
+                        <span class="text-sm font-medium">Grading Period</span>
+                        <span class="text-sm text-gray-600">Automatically set to first available period</span>
                     </div>
                 </div>
                 <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="text-sm text-blue-800">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Ensure the grading policy for the subject is set so maximum scores and validations apply correctly.
+                        All subjects assigned to the class will be displayed, whether graded or not. Ungraded subjects show "Not Graded" status.
                     </p>
                 </div>
             </div>
@@ -216,13 +214,11 @@ class StudentGradeReportPage extends App {
             
             if (name === 'class_id') {
                 this.loadStudentsByClass(dd.value);
-                // When class changes, load subjects for that class
-                this.loadClassSubjectsAndAutoSelect(dd.value);
             }
             
-            // Auto load when any filter changes if a primary filter (class or student) is set
-            const primarySet = (next.class_id && String(next.class_id).length > 0) || (next.student_id && String(next.student_id).length > 0);
-            if (primarySet) {
+            // Auto load when both class and student are selected
+            const bothSelected = (next.class_id && String(next.class_id).length > 0) && (next.student_id && String(next.student_id).length > 0);
+            if (bothSelected) {
                 this.loadGrades();
             }
         });
@@ -233,12 +229,10 @@ class StudentGradeReportPage extends App {
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
-                const defaults = { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+                const defaults = { class_id: '', grading_period_id: '', student_id: '' };
                 this.set('filters', defaults);
                 this.students = [];
                 this.set('grades', []);
-                this.updateTableData();
-                // Re-render to reset dropdowns
                 this.render();
             }
         });
@@ -257,11 +251,10 @@ class StudentGradeReportPage extends App {
                 api.withToken(token).get('/grading-periods'),
             ]);
             this.classes = classesResp.data.data || [];
-            this.subjects = []; // Don't load all subjects globally - only class-specific ones
             this.periods = periodsResp.data.data || [];
 
             // Default: preselect the last existing class id
-            const currentFilters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
+            const currentFilters = this.get('filters') || { class_id: '', grading_period_id: '', student_id: '' };
             if (!currentFilters.class_id && (this.classes || []).length > 0) {
                 const lastId = String(
                     (this.classes || [])
@@ -274,9 +267,14 @@ class StudentGradeReportPage extends App {
                     const next = { ...currentFilters, class_id: lastId };
                     this.set('filters', next);
                     await this.loadStudentsByClass(lastId);
-                    await this.loadClassSubjectsAndAutoSelect(lastId);
-                    this.loadGrades();
                 }
+            }
+
+            // Default: preselect the first existing grading period
+            if (!currentFilters.grading_period_id && (this.periods || []).length > 0) {
+                const firstPeriodId = String(this.periods[0].id);
+                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+                this.set('filters', next);
             }
         } catch (e) {
             Toast.show({ title: 'Error', message: e.response?.data?.message || 'Failed to load filters', variant: 'error', duration: 3000 });
@@ -288,61 +286,58 @@ class StudentGradeReportPage extends App {
     async loadStudentsByClass(classId) {
         try {
             const token = localStorage.getItem('token');
-            if (!token || !classId) { this.students = []; return; }
+            if (!token || !classId) { 
+                this.students = []; 
+                return; 
+            }
+            
             const resp = await api.withToken(token).get('/students/by-class', { class_id: classId });
             this.students = resp.data.data || [];
+            
             // If student filter was set but not in new list, clear it
             const flt = this.get('filters');
             if (flt.student_id && !(this.students || []).some(s => String(s.id) === String(flt.student_id))) {
                 this.set('filters', { ...flt, student_id: '' });
             }
-        } catch (_) {
+
+            // Update the student dropdown options directly
+            this.updateStudentDropdown();
+        } catch (error) {
+            console.error('❌ Error loading students:', error);
             this.students = [];
         }
     }
 
-    async loadClassSubjects(classId) {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token || !classId) return [];
+    updateStudentDropdown() {
+        // Find the student dropdown and update its options
+        const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+        if (studentDropdown) {
+            // Clear existing options
+            studentDropdown.innerHTML = '';
             
-            // Get subjects assigned to this specific class from class-subject system
-            const resp = await api.withToken(token).get('/class-subjects', { class_id: classId });
-            const classSubjects = resp.data.data || [];
+            // Add options for students in this class
+            this.students.forEach(student => {
+                const option = document.createElement('ui-option');
+                option.setAttribute('value', student.id);
+                option.textContent = `${student.first_name} ${student.last_name} (${student.student_id})`;
+                studentDropdown.appendChild(option);
+            });
             
-            // Extract subject IDs and names
-            const subjects = classSubjects.map(cs => ({
-                id: cs.subject_id,
-                name: cs.subject_name || cs.subject_code
-            }));
-            
-            return subjects;
-        } catch (error) {
-            console.error('❌ Error loading class subjects:', error);
-            return [];
-        }
-    }
-
-    async loadClassSubjectsAndAutoSelect(classId) {
-        try {
-            const classSubjects = await this.loadClassSubjects(classId);
-            
-            // Update and render only class-specific subjects
-            this.classSubjects = classSubjects;
-            this.subjects = classSubjects; // Update this.subjects for backward compatibility
-            
-            // Auto-select the first subject for the selected class (like teacher page)
-            if (classSubjects && classSubjects.length > 0) {
-                const firstSubjectId = String(classSubjects[0].id);
-                const currentFilters = this.get('filters');
-                this.set('filters', { ...currentFilters, subject_id: firstSubjectId });
-            } else {
-                // Clear subject selection if no subjects available
-                const currentFilters = this.get('filters');
-                this.set('filters', { ...currentFilters, subject_id: '' });
+            // Set the selected value based on current filters
+            const currentFilters = this.get('filters') || {};
+            if (currentFilters.student_id) {
+                studentDropdown.setAttribute('value', currentFilters.student_id);
             }
-        } catch (error) {
-            console.error('❌ Error in loadClassSubjectsAndAutoSelect:', error);
+            
+            // Try to trigger any internal refresh methods the component might have
+            if (studentDropdown.refresh) {
+                studentDropdown.refresh();
+            } else if (studentDropdown.updateOptions) {
+                studentDropdown.updateOptions();
+            }
+        } else {
+            // Fallback: force a re-render if dropdown not found
+            setTimeout(() => this.render(), 100);
         }
     }
 
@@ -355,26 +350,76 @@ class StudentGradeReportPage extends App {
                 return;
             }
 
-            const { class_id, subject_id, grading_period_id, student_id } = this.get('filters');
-            if (!class_id && !student_id) {
+            const { class_id, grading_period_id, student_id } = this.get('filters');
+            
+            // Require BOTH class and student to be selected before loading
+            if (!class_id || !student_id) {
                 this.set('grades', []);
-                this.updateTableData();
+                this.render();
                 this.set('loading', false);
-                Toast.show({ title: 'Filter Required', message: 'Select a class or a student to view grades', variant: 'info', duration: 2500 });
                 return;
             }
 
-            const params = {};
-            if (class_id) params.class_id = class_id;
-            if (student_id) params.student_id = student_id;
-            if (subject_id) params.subject_id = subject_id;
-            if (grading_period_id) params.grading_period_id = grading_period_id;
+            // Get the selected student and class info
+            const selectedStudent = this.students.find(s => String(s.id) === String(student_id));
+            const selectedClass = this.classes.find(c => String(c.id) === String(class_id));
+            const selectedPeriod = this.periods.find(p => String(p.id) === String(grading_period_id));
 
+            // Get existing grades for this student in this class
+            const params = { class_id, student_id };
+            if (grading_period_id) params.grading_period_id = grading_period_id;
+            
             const response = await api.withToken(token).get('/student-grades', params);
-            this.set('grades', response.data.data || []);
-            this.updateTableData();
+            const existingGrades = response?.data?.data || [];
+
+            // Get all subjects assigned to this class
+            const classSubjectsResp = await api.withToken(token).get('/class-subjects', { class_id });
+            const classSubjects = classSubjectsResp?.data?.data || [];
+
+            // Create a comprehensive grade report showing all subjects for this student
+            const gradeReport = classSubjects.map(cs => {
+                // Try to find existing grade for this subject
+                const existingGrade = existingGrades.find(g => 
+                    String(g.subject_id) === String(cs.subject_id)
+                );
+
+                if (existingGrade) {
+                    return {
+                        ...existingGrade,
+                        is_new: false
+                    };
+                }
+
+                // Create a placeholder row for subjects without grades
+                return {
+                    id: null,
+                    student_id: student_id,
+                    student_first_name: selectedStudent?.first_name || '',
+                    student_last_name: selectedStudent?.last_name || '',
+                    student_number: selectedStudent?.student_id || '',
+                    class_id: class_id,
+                    class_name: selectedClass?.name || '',
+                    class_section: selectedClass?.section || '',
+                    subject_id: cs.subject_id,
+                    subject_name: cs.subject_name || cs.subject_code || '',
+                    subject_code: cs.subject_code || '',
+                    grading_period_id: grading_period_id || '',
+                    grading_period_name: selectedPeriod?.name || '',
+                    assignment_total: null,
+                    exam_total: null,
+                    final_percentage: null,
+                    final_letter_grade: null,
+                    created_at: null,
+                    updated_at: null,
+                    is_new: true
+                };
+            });
+
+            this.set('grades', gradeReport);
+            this.render();
             this.set('loading', false);
         } catch (error) {
+            console.error('Error in loadGrades:', error);
             this.set('loading', false);
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load grades', variant: 'error', duration: 3000 });
         }
@@ -384,47 +429,18 @@ class StudentGradeReportPage extends App {
 
 
 
-    updateTableData() {
-        const grades = this.get('grades');
-        if (!grades) return;
-
-        const tableData = grades.map((g, index) => ({
-            id: g.id,
-            index: index + 1,
-            student: [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || '',
-            class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-            subject: g.subject_name || g.subject_code || '',
-            period: g.grading_period_name || '',
-            assign_total: this.formatNumber(g.assignment_total),
-            exam_total: this.formatNumber(g.exam_total),
-            final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
-        }));
-
-        const tableComponent = this.querySelector('ui-table');
-        if (tableComponent) {
-            tableComponent.setAttribute('data', JSON.stringify(tableData));
-        }
-    }
-
     renderFilters() {
         const classOptions = (this.classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' - '+c.section : ''}</ui-option>`).join('');
-        
-        // Use class-specific subjects if available, otherwise show message
-        const subjectOptions = (this.subjects && this.subjects.length > 0)
-            ? this.subjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
-            : '<ui-option value="" disabled>No subjects assigned to this class</ui-option>';
         
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
         const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
-        const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
-        const { class_id, subject_id, grading_period_id, student_id } = filters;
+        const filters = this.get('filters') || { class_id: '', grading_period_id: '', student_id: '' };
+        const { class_id, grading_period_id, student_id } = filters;
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Class</label>
                         <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full" value="${class_id || ''}">
@@ -432,21 +448,15 @@ class StudentGradeReportPage extends App {
                         </ui-search-dropdown>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Subject</label>
-                        <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full" value="${subject_id || ''}">
-                            ${subjectOptions}
+                        <label class="block text-xs text-gray-600 mb-1">Student</label>
+                        <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full" value="${student_id || ''}">
+                            ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
                         <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
                             ${periodOptions}
-                        </ui-search-dropdown>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-600 mb-1">Student</label>
-                        <ui-search-dropdown name="student_id" placeholder="All students (optional)" class="w-full" value="${student_id || ''}">
-                            ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                 </div>
@@ -468,17 +478,17 @@ class StudentGradeReportPage extends App {
 
 
         const tableData = grades ? grades.map((g, index) => ({
-            id: g.id,
+            id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
             student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-            subject: g.subject_name || '',
+            subject: g.subject_name || g.subject_code || '',
             period: g.grading_period_name || '',
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
+            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
         })) : [];
 
         const tableColumns = [
@@ -509,12 +519,12 @@ class StudentGradeReportPage extends App {
                 ` : `
                     <div class="mb-8">
                         <ui-table 
-                            title="Student Grades Database"
+                            title="Student Academic Performance Report"
                             data='${JSON.stringify(tableData)}'
                             columns='${JSON.stringify(tableColumns)}'
                             sortable
                             searchable
-                            search-placeholder="Search grades..."
+                            search-placeholder="Search subjects..."
                             pagination
                             page-size="50"
                             refresh

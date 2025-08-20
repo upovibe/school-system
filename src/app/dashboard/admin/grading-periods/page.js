@@ -4,6 +4,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/GradingPeriodAddModal.js';
 import '@/components/layout/adminLayout/GradingPeriodDeleteDialog.js';
+import '@/components/layout/adminLayout/GradingPeriodViewModal.js';
 import api from '@/services/api.js';
 
 /**

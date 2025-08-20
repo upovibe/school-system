@@ -903,7 +903,6 @@ class StudentGradesManagementPage extends App {
                             actions="view, delete"
                             refresh
                             print
-                            addable
                             bordered
                             striped
                             custom-actions='${JSON.stringify(this.getCustomActions())}'

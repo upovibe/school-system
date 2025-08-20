@@ -3,6 +3,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/GradingPeriodAddModal.js';
+import '@/components/layout/adminLayout/GradingPeriodDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -16,6 +17,8 @@ class GradingPeriodManagementPage extends App {
         this.gradingPeriods = null;
         this.loading = false;
         this.showAddModal = false;
+        this.showDeleteDialog = false;
+        this.selectedGradingPeriodToDelete = null;
     }
 
     // Summary counts for header
@@ -119,6 +122,9 @@ class GradingPeriodManagementPage extends App {
         // Listen for table add button clicks
         this.addEventListener('table-add', this.onAdd.bind(this));
         
+        // Listen for table delete button clicks
+        this.addEventListener('table-delete', this.onDelete.bind(this));
+        
         // Listen for success events to refresh data
         this.addEventListener('grading-period-saved', (event) => {
             // Add the new grading period to the existing data
@@ -133,6 +139,33 @@ class GradingPeriodManagementPage extends App {
                 this.set('showAddModal', false);
             } else {
                 this.loadData();
+            }
+        });
+        
+        // Listen for delete success events
+        this.addEventListener('grading-period-deleted', (event) => {
+            console.log('🗑️ Delete event received:', event);
+            console.log('🗑️ Event detail:', event.detail);
+            
+            // Remove the deleted grading period from the current data
+            const deletedGradingPeriod = event.detail.gradingPeriod;
+            console.log('🗑️ Deleted grading period:', deletedGradingPeriod);
+            
+            if (deletedGradingPeriod && deletedGradingPeriod.id) {
+                const currentGradingPeriods = this.get('gradingPeriods') || [];
+                console.log('🗑️ Current grading periods before delete:', currentGradingPeriods);
+                
+                const updatedGradingPeriods = currentGradingPeriods.filter(period => period.id != deletedGradingPeriod.id);
+                console.log('🗑️ Updated grading periods after delete:', updatedGradingPeriods);
+                
+                this.set('gradingPeriods', updatedGradingPeriods);
+                this.updateTableData();
+                // Force re-render to update header counts
+                this.render();
+                // Close the delete dialog
+                this.set('showDeleteDialog', false);
+            } else {
+                console.log('🗑️ No valid grading period data in event');
             }
         });
     }
@@ -189,6 +222,21 @@ class GradingPeriodManagementPage extends App {
 
     onAdd(event) {
         this.set('showAddModal', true);
+    }
+
+    onDelete(event) {
+        const detail = event.detail;
+        const deleteGradingPeriod = this.get('gradingPeriods').find(period => period.id === detail.row.id);
+        if (deleteGradingPeriod) {
+            this.set('selectedGradingPeriodToDelete', deleteGradingPeriod);
+            this.set('showDeleteDialog', true);
+            
+            // Set the data in the delete dialog
+            const deleteDialog = this.querySelector('grading-period-delete-dialog');
+            if (deleteDialog) {
+                deleteDialog.setGradingPeriodData(deleteGradingPeriod);
+            }
+        }
     }
 
     async loadData() {
@@ -257,6 +305,7 @@ class GradingPeriodManagementPage extends App {
         const gradingPeriods = this.get('gradingPeriods');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
+        const showDeleteDialog = this.get('showDeleteDialog');
         
         // Prepare table data and columns for grading periods
         const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
@@ -319,6 +368,9 @@ class GradingPeriodManagementPage extends App {
             
             <!-- Add Grading Period Modal -->
             <grading-period-add-modal ${showAddModal ? 'open' : ''}></grading-period-add-modal>
+            
+            <!-- Delete Grading Period Dialog -->
+            <grading-period-delete-dialog ${showDeleteDialog ? 'open' : ''}></grading-period-delete-dialog>
         `;
     }
 }

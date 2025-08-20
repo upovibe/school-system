@@ -2,7 +2,6 @@ import App from '@/core/App.js';
 import store from '@/core/store.js';
 import api from '@/services/api.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
-import authManager from '@/core/authManager.js';
 import '@/components/ui/Link.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/DropdownMenu.js';

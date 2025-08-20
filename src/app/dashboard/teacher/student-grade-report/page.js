@@ -19,11 +19,11 @@ class TeacherStudentGradeReportPage extends App {
         super();
         this.grades = null;
         this.loading = false;
-        this.filters = { subject_id: '', grading_period_id: '', student_id: '' };
+        this.filters = { class_id: '', grading_period_id: '', student_id: '' };
         // Initialize reactive state for filters to avoid undefined access during first render
         this.set('filters', { ...this.filters });
         this.teacherClass = null;
-        this.subjects = []; // Will be replaced with class-specific subjects
+        this.classes = []; // Will be replaced with teacher's assigned class
         this.periods = [];
         this.students = [];
     }
@@ -41,7 +41,7 @@ class TeacherStudentGradeReportPage extends App {
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Summary of recorded grades for your class</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Complete academic performance report for individual students in your class</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -124,27 +124,27 @@ class TeacherStudentGradeReportPage extends App {
             </div>
             <div slot="content" class="space-y-4">
                 <div>
-                    <h4 class="font-semibold text-gray-900 mb-2">How grading works</h4>
-                    <p class="text-gray-700">Grades are recorded per student, per subject, and per grading period for your assigned class. Use the filters to narrow down to specific subjects, periods, and students.</p>
+                    <h4 class="font-semibold text-gray-900 mb-2">How the grade report works</h4>
+                    <p class="text-gray-700">This report shows all subjects for a selected student in your assigned class. Your class assignment is automatically set and cannot be changed.</p>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Assignments Total</span>
-                        <span class="text-sm text-gray-600">Sum of continuous assessments (bounded by policy)</span>
+                        <span class="text-sm font-medium">Assigned Class</span>
+                        <span class="text-sm text-gray-600">Your teaching class (read-only)</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Exam Total</span>
-                        <span class="text-sm text-gray-600">Exam score (bounded by policy)</span>
+                        <span class="text-sm font-medium">Student Selection</span>
+                        <span class="text-sm text-gray-600">Select specific student to view their grades</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium">Final Percentage</span>
-                        <span class="text-sm text-gray-600">Computed from assignment and exam totals</span>
+                        <span class="text-sm font-medium">Grading Period</span>
+                        <span class="text-sm text-gray-600">Automatically set to first available period</span>
                     </div>
                 </div>
                 <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="text-sm text-blue-800">
                         <i class="fas fa-info-circle mr-1"></i>
-                        This report shows grades for your assigned class only. Ensure the grading policy for the subject is set so maximum scores and validations apply correctly.
+                        All subjects assigned to your class will be displayed, whether graded or not. Ungraded subjects show "Not Graded" status.
                     </p>
                 </div>
             </div>
@@ -210,9 +210,9 @@ class TeacherStudentGradeReportPage extends App {
             const next = { ...this.get('filters'), [name]: dd.value };
             this.set('filters', next);
             
-            // Auto load when any filter changes if both subject and period are selected
-            const primarySet = (next.subject_id && String(next.subject_id).length > 0) && (next.grading_period_id && String(next.grading_period_id).length > 0);
-            if (primarySet) {
+            // Auto load when both class and student are selected
+            const bothSelected = (next.class_id && String(next.class_id).length > 0) && (next.student_id && String(next.student_id).length > 0);
+            if (bothSelected) {
                 this.loadGrades();
             }
         });
@@ -223,7 +223,12 @@ class TeacherStudentGradeReportPage extends App {
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
-                const defaults = { subject_id: '', grading_period_id: '', student_id: '' };
+                const currentFilters = this.get('filters');
+                const defaults = { 
+                    class_id: currentFilters.class_id, // Keep the assigned class
+                    grading_period_id: '', 
+                    student_id: '' 
+                };
                 this.set('filters', defaults);
                 this.set('grades', []);
                 this.updateTableData();
@@ -252,9 +257,9 @@ class TeacherStudentGradeReportPage extends App {
             this.teacherClass = myClassResp.data.data; // contains class_id, students, etc.
             this.students = this.teacherClass.students || [];
 
-            // Subjects for this class (from teacher scoped endpoint)
-            const subjectsFromMyClass = Array.isArray(this.teacherClass.subjects) ? this.teacherClass.subjects : [];
-            this.subjects = subjectsFromMyClass;
+            // Classes for this teacher (from teacher scoped endpoint)
+            const classesFromMyClass = Array.isArray(this.teacherClass.classes) ? this.teacherClass.classes : [];
+            this.classes = classesFromMyClass;
 
             // Grading periods (teacher-friendly endpoint)
             try {
@@ -264,15 +269,27 @@ class TeacherStudentGradeReportPage extends App {
                 this.periods = []; 
             }
 
-            // Default subject: pick the first subject assigned to the class if none selected
-            const existingFilters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-            if (!existingFilters.subject_id && this.subjects && this.subjects.length > 0) {
-                this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
+            // Default class: pick the first class assigned to the teacher if none selected
+            const existingFilters = this.get('filters') || { class_id: '', grading_period_id: '', student_id: '' };
+            if (!existingFilters.class_id && this.classes && this.classes.length > 0) {
+                const firstClassId = String(this.classes[0].id);
+                this.set('filters', { ...existingFilters, class_id: firstClassId });
+                
+                // Automatically load students for the assigned class
+                await this.loadStudentsByClass(firstClassId);
             }
 
-            // Initial load if we have class and subject
-            if (this.teacherClass?.class_id && this.subjects && this.subjects.length > 0) {
-                await this.loadGrades();
+            // Default: preselect the first existing grading period
+            if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
+                const firstPeriodId = String(this.periods[0].id);
+                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+                this.set('filters', next);
+            }
+
+            // Initial load if we have class and period
+            if (this.classes && this.classes.length > 0) {
+                // Don't auto-load grades since we need student selection first
+                // Grades will load when a student is selected
             }
         } catch (e) {
             Toast.show({ title: 'Error', message: e.response?.data?.message || 'Failed to load data', variant: 'error', duration: 3000 });
@@ -290,28 +307,97 @@ class TeacherStudentGradeReportPage extends App {
                 return;
             }
 
-            const { subject_id, grading_period_id, student_id } = this.get('filters');
+            const { class_id, grading_period_id, student_id } = this.get('filters');
             
-            // Require both subject and grading period selection for teacher view
-            if (!subject_id || !grading_period_id) {
+            // Require BOTH class and student to be selected before loading
+            if (!class_id || !student_id) {
                 this.set('grades', []);
                 this.updateTableData();
                 this.set('loading', false);
-                Toast.show({ title: 'Filter Required', message: 'Select both subject and grading period to view grades', variant: 'info', duration: 2500 });
                 return;
             }
 
-            // Use teacher-specific endpoint for grades
-            const params = { subject_id, grading_period_id };
-            if (student_id) params.student_id = student_id;
+            // Get the selected student and class info
+            const selectedStudent = this.students.find(s => String(s.id) === String(student_id));
+            const selectedClass = this.classes.find(c => String(c.id) === String(class_id));
+            const selectedPeriod = this.periods.find(p => String(p.id) === String(grading_period_id));
 
+            // Get existing grades for this student in this class
+            const params = { class_id, student_id };
+            if (grading_period_id) params.grading_period_id = grading_period_id;
+            
             const response = await api.withToken(token).get('/teacher/student-grades', params);
-            this.set('grades', response.data.data || []);
+            const existingGrades = response?.data?.data || [];
+
+            // Get all subjects assigned to this class
+            const classSubjectsResp = await api.withToken(token).get('/teacher/class-subjects', { class_id });
+            const classSubjects = classSubjectsResp?.data?.data || [];
+
+            // Create a comprehensive grade report showing all subjects for this student
+            const gradeReport = classSubjects.map(cs => {
+                // Try to find existing grade for this subject
+                const existingGrade = existingGrades.find(g => 
+                    String(g.subject_id) === String(cs.subject_id)
+                );
+
+                if (existingGrade) {
+                    return {
+                        ...existingGrade,
+                        is_new: false
+                    };
+                }
+
+                // Create a placeholder row for subjects without grades
+                return {
+                    id: null,
+                    student_id: student_id,
+                    student_first_name: selectedStudent?.first_name || '',
+                    student_last_name: selectedStudent?.last_name || '',
+                    student_number: selectedStudent?.student_id || '',
+                    class_id: class_id,
+                    class_name: selectedClass?.name || '',
+                    class_section: selectedClass?.section || '',
+                    subject_id: cs.subject_id,
+                    subject_name: cs.subject_name || cs.subject_code || '',
+                    subject_code: cs.subject_code || '',
+                    grading_period_id: grading_period_id || '',
+                    grading_period_name: selectedPeriod?.name || '',
+                    assignment_total: null,
+                    exam_total: null,
+                    final_percentage: null,
+                    final_letter_grade: null,
+                    created_at: null,
+                    updated_at: null,
+                    is_new: true
+                };
+            });
+
+            this.set('grades', gradeReport);
             this.updateTableData();
             this.set('loading', false);
         } catch (error) {
             this.set('loading', false);
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load grades', variant: 'error', duration: 3000 });
+        }
+    }
+
+    async loadStudentsByClass(classId) {
+        try {
+            this.set('loading', true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ title: 'Authentication Error', message: 'Please log in to view data', variant: 'error', duration: 3000 });
+                return;
+            }
+
+            const params = { class_id: classId };
+            const response = await api.withToken(token).get('/teachers/students-by-class', { params });
+            this.set('students', response.data.data || []);
+            this.updateTableData(); // Re-render to update student dropdown
+        } catch (error) {
+            Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load students', variant: 'error', duration: 3000 });
+        } finally {
+            this.set('loading', false);
         }
     }
 
@@ -341,35 +427,42 @@ class TeacherStudentGradeReportPage extends App {
 
     renderFilters() {
         // Use class-specific subjects from teacher's assigned class
-        const subjectOptions = (this.subjects && this.subjects.length > 0)
-            ? this.subjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
-            : '<ui-option value="" disabled>No subjects assigned to your class</ui-option>';
+        const classOptions = (this.classes && this.classes.length > 0)
+            ? this.classes.map(c => `<ui-option value="${c.id}">${c.name}</ui-option>`).join('')
+            : '<ui-option value="" disabled>No classes assigned to you</ui-option>';
         
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
         const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
-        const filters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
-        const { subject_id, grading_period_id, student_id } = filters;
+        const filters = this.get('filters') || { class_id: '', grading_period_id: '', student_id: '' };
+        const { class_id, grading_period_id, student_id } = filters;
+        
+        // Get the selected class name for display
+        const selectedClass = this.classes.find(c => String(c.id) === String(class_id));
+        const classDisplayName = selectedClass ? `${selectedClass.name}${selectedClass.section ? ' - ' + selectedClass.section : ''}` : 'No class selected';
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Subject</label>
-                        <ui-search-dropdown name="subject_id" placeholder="Select subject" class="w-full" value="${subject_id || ''}">
-                            ${subjectOptions}
+                        <label class="block text-xs text-gray-600 mb-1">Assigned Class</label>
+                        <input 
+                            type="text" 
+                            value="${classDisplayName}" 
+                            readonly 
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700 cursor-not-allowed"
+                            placeholder="No class assigned">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Student</label>
+                        <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full" value="${student_id || ''}">
+                            ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
-                        <ui-search-dropdown name="grading_period_id" placeholder="Select period" class="w-full" value="${grading_period_id || ''}">
+                        <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
                             ${periodOptions}
-                        </ui-search-dropdown>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-600 mb-1">Student</label>
-                        <ui-search-dropdown name="student_id" placeholder="All students (optional)" class="w-full" value="${student_id || ''}">
-                            ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                 </div>
@@ -388,9 +481,45 @@ class TeacherStudentGradeReportPage extends App {
     render() {
         const grades = this.get('grades');
         const loading = this.get('loading');
+        const { class_id, student_id } = this.get('filters') || {};
+
+        // Show complete "No Teaching Assignments" message if no class is assigned
+        if (!this.classes || this.classes.length === 0) {
+            return `
+                <div class="space-y-6">
+                    <div class="bg-white shadow rounded-lg p-8 text-center">
+                        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-chalkboard-teacher text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Teaching Assignments</h3>
+                        <p class="text-gray-500 max-w-md mx-auto">
+                            You are not currently assigned to any classes or subjects. 
+                            Please contact the administration for teaching assignments.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show message if no student is selected
+        if (!student_id) {
+            return `
+                ${this.renderHeader()}
+                ${this.renderFilters()}
+                <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-user-graduate text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Select a Student</h3>
+                    <p class="text-gray-500 max-w-md mx-auto">
+                        Choose a student from your assigned class to view their complete academic performance report.
+                    </p>
+                </div>
+            `;
+        }
 
         const tableData = grades ? grades.map((g, index) => ({
-            id: g.id,
+            id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
             student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
@@ -399,8 +528,8 @@ class TeacherStudentGradeReportPage extends App {
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
+            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
         })) : [];
 
         const tableColumns = [
@@ -429,12 +558,12 @@ class TeacherStudentGradeReportPage extends App {
                 ` : `
                     <div class="mb-8">
                         <ui-table 
-                            title="My Class Student Grades"
+                            title="Student Academic Performance Report"
                             data='${JSON.stringify(tableData)}'
                             columns='${JSON.stringify(tableColumns)}'
                             sortable
                             searchable
-                            search-placeholder="Search grades..."
+                            search-placeholder="Search subjects..."
                             pagination
                             page-size="50"
                             refresh

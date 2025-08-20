@@ -25,17 +25,20 @@ class GradingPeriodManagementPage extends App {
         let active = 0;
         let inactive = 0;
         const yearSet = new Set();
+        
         periods.forEach((p) => {
             const isActive = Number(p.is_active) === 1 || String(p.is_active || p.status).toLowerCase() === 'active';
             if (isActive) active += 1; else inactive += 1;
             if (p.academic_year) yearSet.add(String(p.academic_year));
         });
+        
         return { total, active, inactive, years: yearSet.size };
     }
 
     // Gradient header consistent with other pages
     renderHeader() {
         const c = this.getHeaderCounts();
+        
         return `
             <div class="space-y-8 mb-4">
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
@@ -124,6 +127,8 @@ class GradingPeriodManagementPage extends App {
                 const currentGradingPeriods = this.get('gradingPeriods') || [];
                 this.set('gradingPeriods', [...currentGradingPeriods, newGradingPeriod]);
                 this.updateTableData();
+                // Force re-render to update header counts
+                this.render();
                 // Close the add modal
                 this.set('showAddModal', false);
             } else {
@@ -183,10 +188,7 @@ class GradingPeriodManagementPage extends App {
     }
 
     onAdd(event) {
-        console.log('➕ Add button clicked!');
-        console.log('Event:', event);
         this.set('showAddModal', true);
-        console.log('showAddModal set to:', this.get('showAddModal'));
     }
 
     async loadData() {
@@ -208,8 +210,8 @@ class GradingPeriodManagementPage extends App {
             // Load grading periods data
             const response = await api.withToken(token).get('/grading-periods');
             const rawPeriods = response?.data?.data || [];
-            // Data loaded
             
+            // Data loaded
             this.set('gradingPeriods', rawPeriods);
             this.set('loading', false);
             

@@ -21,6 +21,7 @@ import api from '@/services/api.js';
 class GradingPeriodAddModal extends HTMLElement {
     constructor() {
         super();
+        this.eventListenersAttached = false;
     }
 
     static get observedAttributes() {
@@ -29,21 +30,16 @@ class GradingPeriodAddModal extends HTMLElement {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
-            console.log('🔄 Modal opening...');
             this.render();
             // Load current academic year and ensure validation is called after render when modal opens
             setTimeout(() => {
-                console.log('📅 Loading academic year...');
                 this.loadCurrentAcademicYear();
                 this.validateForm();
             }, 100);
-        } else if (name === 'open' && newValue === null) {
-            console.log('❌ Modal closing...');
         }
     }
 
     connectedCallback() {
-        console.log('🔌 Modal connected');
         this.render();
         this.setupEventListeners();
         // Load current academic year when component is connected
@@ -58,13 +54,6 @@ class GradingPeriodAddModal extends HTMLElement {
                 this.saveGradingPeriod();
             } else if (action === 'cancel') {
                 this.close();
-            }
-        });
-
-        // Also listen for the custom save button click
-        this.addEventListener('click', (event) => {
-            if (event.target.id === 'save-period-btn') {
-                this.saveGradingPeriod();
             }
         });
         
@@ -101,6 +90,11 @@ class GradingPeriodAddModal extends HTMLElement {
 
     // Wire events for live validation
     addFormEventListeners() {
+        // Prevent duplicate event listeners
+        if (this.eventListenersAttached) {
+            return;
+        }
+        
         const nameInput = this.querySelector('ui-input[data-field="name"]');
         const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
         const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
@@ -124,6 +118,9 @@ class GradingPeriodAddModal extends HTMLElement {
 
         // Initial validation state
         this.validateForm();
+        
+        // Mark as attached
+        this.eventListenersAttached = true;
     }
 
     // Compute academic year on client (display-only) - same as ClassAddModal
@@ -146,7 +143,7 @@ class GradingPeriodAddModal extends HTMLElement {
                 yearInput.value = currentYear;
             }
         } catch (error) {
-            console.error('Error computing current academic year:', error);
+            // Silently handle error
         }
     }
 
@@ -164,6 +161,7 @@ class GradingPeriodAddModal extends HTMLElement {
 
     // Save the new grading period
     async saveGradingPeriod() {
+        console.log('🚀 saveGradingPeriod called at:', new Date().toISOString());
         try {
             // Get form data using the data-field attributes for reliable selection
             const nameInput = this.querySelector('ui-input[data-field="name"]');
@@ -193,6 +191,8 @@ class GradingPeriodAddModal extends HTMLElement {
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
+
+            console.log('📝 Sending data:', gradingPeriodData);
 
             // Validate required fields
             if (!gradingPeriodData.name) {
@@ -246,8 +246,10 @@ class GradingPeriodAddModal extends HTMLElement {
                 confirmButton.textContent = 'Creating...';
             }
 
+            console.log('🌐 Making API call to create grading period...');
             // Send the request
             const response = await api.withToken(token).post('/grading-periods', gradingPeriodData);
+            console.log('✅ API response received:', response.data);
 
             if (response.data.success) {
                 Toast.show({
@@ -288,7 +290,6 @@ class GradingPeriodAddModal extends HTMLElement {
                 });
             }
         } catch (error) {
-            console.error('Error creating grading period:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to create grading period. Please try again.',
@@ -321,7 +322,6 @@ class GradingPeriodAddModal extends HTMLElement {
     }
 
     render() {
-        console.log('🎨 Rendering modal, open attribute:', this.hasAttribute('open'));
         const computedYear = this.computeAcademicYear();
         this.innerHTML = `
             <ui-modal 
@@ -397,10 +397,7 @@ class GradingPeriodAddModal extends HTMLElement {
             </ui-modal>
         `;
         
-        // Re-setup event listeners and validate form after render
-        setTimeout(() => {
-            this.addFormEventListeners();
-        }, 0);
+        // Event listeners are already set up in connectedCallback
     }
 }
 

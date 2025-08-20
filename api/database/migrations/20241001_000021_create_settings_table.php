@@ -13,7 +13,7 @@ class Migration_20241001000021createsettingstable {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 setting_key VARCHAR(255) UNIQUE NOT NULL,
                 setting_value TEXT,
-                setting_type ENUM('text', 'number', 'boolean', 'color', 'file', 'textarea', 'select', 'image') DEFAULT 'text',
+                setting_type ENUM('text', 'number', 'boolean', 'color', 'file', 'textarea', 'select', 'image', 'date') DEFAULT 'text',
                 category VARCHAR(100) DEFAULT 'general',
                 description TEXT,
                 is_active BOOLEAN DEFAULT 1,

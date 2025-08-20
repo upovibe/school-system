@@ -53,6 +53,7 @@ Router::get('/settings/theme', 'SettingController@getThemeSettings');
 Router::get('/settings/contact', 'SettingController@getContactSettings');
 Router::get('/settings/social', 'SettingController@getSocialSettings');
 Router::get('/settings/map', 'SettingController@getMapSettings');
+Router::get('/settings/academic', 'SettingController@getAcademicSettings');
 Router::get('/settings/all', 'SettingController@getAllAsArray');
 Router::get('/settings/upload-stats', 'SettingController@getUploadStats');
 Router::get('/settings/key/{key}', 'SettingController@showByKey');
@@ -144,6 +145,7 @@ Router::get('/classes/with-student-counts', 'ClassController@getWithStudentCount
 Router::get('/classes/by-academic-year', 'ClassController@getByAcademicYear');
 Router::get('/classes/academic-years', 'ClassController@getAcademicYears');
 Router::get('/classes/sections', 'ClassController@getSections');
+Router::get('/classes/academic-year-switch-date', 'ClassController@getAcademicYearSwitchDate');
 Router::get('/classes/{id}', 'ClassController@show');
 Router::put('/classes/{id}', 'ClassController@update');
 Router::delete('/classes/{id}', 'ClassController@destroy');

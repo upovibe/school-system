@@ -482,6 +482,28 @@ class SettingController {
     }
 
     /**
+     * Get academic settings (public)
+     */
+    public function getAcademicSettings() {
+        try {
+            $settings = $this->settingModel->getAcademicSettings();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $settings,
+                'message' => 'Academic settings retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving academic settings: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get all settings as key-value array (public)
      */
     public function getAllAsArray() {

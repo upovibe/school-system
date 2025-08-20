@@ -99,7 +99,6 @@ class GradingPeriodDeleteDialog extends HTMLElement {
                 });
 
                 // Dispatch event with the deleted grading period data
-                console.log('🗑️ Dispatching delete event with data:', this.gradingPeriodData);
                 this.dispatchEvent(new CustomEvent('grading-period-deleted', {
                     detail: {
                         gradingPeriod: this.gradingPeriodData
@@ -107,7 +106,6 @@ class GradingPeriodDeleteDialog extends HTMLElement {
                     bubbles: true,
                     composed: true
                 }));
-                console.log('🗑️ Delete event dispatched');
 
                 this.close();
             } else {

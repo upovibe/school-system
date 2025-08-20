@@ -144,28 +144,18 @@ class GradingPeriodManagementPage extends App {
         
         // Listen for delete success events
         this.addEventListener('grading-period-deleted', (event) => {
-            console.log('🗑️ Delete event received:', event);
-            console.log('🗑️ Event detail:', event.detail);
-            
             // Remove the deleted grading period from the current data
             const deletedGradingPeriod = event.detail.gradingPeriod;
-            console.log('🗑️ Deleted grading period:', deletedGradingPeriod);
             
             if (deletedGradingPeriod && deletedGradingPeriod.id) {
                 const currentGradingPeriods = this.get('gradingPeriods') || [];
-                console.log('🗑️ Current grading periods before delete:', currentGradingPeriods);
-                
                 const updatedGradingPeriods = currentGradingPeriods.filter(period => period.id != deletedGradingPeriod.id);
-                console.log('🗑️ Updated grading periods after delete:', updatedGradingPeriods);
-                
                 this.set('gradingPeriods', updatedGradingPeriods);
                 this.updateTableData();
                 // Force re-render to update header counts
                 this.render();
                 // Close the delete dialog
                 this.set('showDeleteDialog', false);
-            } else {
-                console.log('🗑️ No valid grading period data in event');
             }
         });
     }

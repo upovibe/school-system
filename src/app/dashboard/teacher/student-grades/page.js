@@ -608,7 +608,6 @@ class TeacherStudentGradesPage extends App {
               pagination
               page-size="50"
               action
-              addable
               refresh
               print
               bordered

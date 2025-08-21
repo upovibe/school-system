@@ -4,6 +4,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/SearchDropdown.js';
+import '@/components/layout/teacherLayout/DataSkeleton.js';
 import api from '@/services/api.js';
 
 /**
@@ -17,7 +18,7 @@ class StudentGradesPage extends App {
         super();
         this.grades = [];
         this.loading = false;
-        this.filters = { subject_id: '', grading_period_id: '' };
+        this.filters = { grading_period_id: '' };
         this.subjects = [];
         this.periods = [];
     }
@@ -54,7 +55,7 @@ class StudentGradesPage extends App {
             if (action === 'apply-filters') {
                 this.loadGrades();
             } else if (action === 'clear-filters') {
-                this.set('filters', { subject_id: '', grading_period_id: '' });
+                this.set('filters', { grading_period_id: '' });
                 this.loadGrades();
             }
         });
@@ -78,10 +79,9 @@ class StudentGradesPage extends App {
                 <span class="font-semibold">About My Grades</span>
             </div>
             <div slot="content" class="space-y-4">
-                <p class="text-gray-700">View your subject grades by period. Use filters to narrow by subject and grading period.</p>
+                <p class="text-gray-700">View your grades across all subjects by period. Select a grading period to view your academic performance.</p>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <div class="flex justify-between"><span class="text-sm font-medium">Subject</span><span class="text-sm text-gray-600">Choose a subject</span></div>
-                    <div class="flex justify-between"><span class="text-sm font-medium">Grading Period</span><span class="text-sm text-gray-600">Term/semester</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Grading Period</span><span class="text-sm text-gray-600">Choose the term/semester</span></div>
                 </div>
             </div>
             <div slot="footer" class="flex justify-end">
@@ -96,6 +96,14 @@ class StudentGradesPage extends App {
             this.set('loading', true);
             await this.loadSubjects();
             await this.loadGradingPeriods();
+            
+            // Default: preselect the first available grading period
+            if (this.periods && this.periods.length > 0) {
+                const firstPeriodId = String(this.periods[0].id);
+                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+                this.set('filters', next);
+            }
+
             await this.loadGrades();
         } catch (error) {
             Toast.show({ 
@@ -149,12 +157,45 @@ class StudentGradesPage extends App {
 
             const filters = this.get('filters') || {};
             const params = {};
-            if (filters.subject_id) params.subject_id = filters.subject_id;
             if (filters.grading_period_id) params.grading_period_id = filters.grading_period_id;
 
+            // Fetch existing grades
             const response = await api.withToken(token).get('/student/my-grades', params);
-            this.set('grades', response.data?.data || []);
-            this.updateTableData();
+            const existingGrades = response.data?.data || [];
+
+            // Get selected period info
+            const selectedPeriod = (this.periods || []).find(p => String(p.id) === String(filters.grading_period_id));
+
+            // Merge with all subjects to show placeholders for not-yet-graded
+            const bySubject = new Map(existingGrades.map(g => [String(g.subject_id), { ...g, is_new: false }]));
+            const merged = (this.subjects || []).map(subject => {
+                const key = String(subject.subject_id);
+                if (bySubject.has(key)) return bySubject.get(key);
+                
+                // Create placeholder for subject without grades
+                return {
+                    id: null,
+                    subject_id: subject.subject_id,
+                    subject_name: subject.subject_name || '',
+                    subject_code: subject.subject_code || '',
+                    grading_period_id: filters.grading_period_id || '',
+                    grading_period_name: selectedPeriod?.name || '',
+                    class_name: subject.class_name || '',
+                    class_section: subject.class_section || '',
+                    assignment_total: null,
+                    exam_total: null,
+                    final_percentage: null,
+                    final_letter_grade: null,
+                    remarks: null,
+                    is_new: true,
+                    created_at: null,
+                    updated_at: null
+                };
+            });
+
+            this.set('grades', merged);
+            this.render();
+            this.set('loading', false);
         } catch (error) {
             this.set('loading', false);
             Toast.show({ 
@@ -163,32 +204,6 @@ class StudentGradesPage extends App {
                 variant: 'error', 
                 duration: 3000 
             });
-        } finally {
-            this.set('loading', false);
-        }
-    }
-
-    updateTableData() {
-        const grades = this.get('grades');
-        if (!grades) return;
-
-        const tableData = grades.map((g, index) => ({
-            id: g.id,
-            index: index + 1,
-            subject: g.subject_name || g.subject_code || '',
-            period: g.grading_period_name || '',
-            class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
-            assign_total: this.formatNumber(g.assignment_total),
-            exam_total: this.formatNumber(g.exam_total),
-            final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
-            remarks: g.remarks || '',
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
-        }));
-
-        const tableComponent = this.querySelector('ui-table');
-        if (tableComponent) {
-            tableComponent.setAttribute('data', JSON.stringify(tableData));
         }
     }
 
@@ -238,7 +253,7 @@ class StudentGradesPage extends App {
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Track your academic performance and achievements</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Track your academic performance across all subjects</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -304,21 +319,14 @@ class StudentGradesPage extends App {
     }
 
     renderFilters() {
-        const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.subject_id}">${s.subject_name}</ui-option>`).join('');
         const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name} (${p.academic_year})</ui-option>`).join('');
 
-        const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
-        const { subject_id, grading_period_id } = filters;
+        const filters = this.get('filters') || { grading_period_id: '' };
+        const { grading_period_id } = filters;
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300 my-10">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-gray-600 mb-1">Subject</label>
-                        <ui-search-dropdown name="subject_id" placeholder="All subjects" class="w-full" value="${subject_id || ''}">
-                            ${subjectOptions}
-                        </ui-search-dropdown>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
                     <div>
                         <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
                         <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
@@ -342,8 +350,13 @@ class StudentGradesPage extends App {
         const grades = this.get('grades');
         const loading = this.get('loading');
 
+        // Show skeleton loading during initial page load (check this FIRST)
+        if (loading) {
+            return `<data-skeleton></data-skeleton>`;
+        }
+
         const tableData = (grades || []).map((g, index) => ({
-            id: g.id,
+            id: g.id || `new_${g.subject_id}_${index}`,
             index: index + 1,
             subject: g.subject_name || g.subject_code || '',
             period: g.grading_period_name || '',
@@ -351,9 +364,9 @@ class StudentGradesPage extends App {
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
             final_pct: this.formatNumber(g.final_percentage),
-            final_grade: g.final_letter_grade,
+            final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
             remarks: g.remarks || '',
-            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : ''
+            updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
         }));
 
         const tableColumns = [
@@ -373,31 +386,23 @@ class StudentGradesPage extends App {
             ${this.renderHeader()}
             ${this.renderFilters()}
             <div class="bg-white rounded-lg shadow-lg p-4">
-                ${loading ? `
-                    <div class="space-y-4">
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                    </div>
-                ` : `
-                    <div class="mb-8">
-                        <ui-table 
-                            title="My Academic Grades"
-                            data='${JSON.stringify(tableData)}'
-                            columns='${JSON.stringify(tableColumns)}'
-                            sortable
-                            searchable
-                            search-placeholder="Search grades..."
-                            pagination
-                            page-size="50"
-                            refresh
-                            print
-                            bordered
-                            striped
-                            class="w-full">
-                        </ui-table>
-                    </div>
-                `}
+                <div class="mb-8">
+                    <ui-table 
+                        title="My Academic Grades"
+                        data='${JSON.stringify(tableData)}'
+                        columns='${JSON.stringify(tableColumns)}'
+                        sortable
+                        searchable
+                        search-placeholder="Search grades..."
+                        pagination
+                        page-size="50"
+                        refresh
+                        print
+                        bordered
+                        striped
+                        class="w-full">
+                    </ui-table>
+                </div>
             </div>
         `;
     }

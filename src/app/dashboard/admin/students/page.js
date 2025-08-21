@@ -209,14 +209,22 @@ class StudentManagementPage extends App {
 
         // Listen for student-promoted event to refresh data
         this.addEventListener('student-promoted', (event) => {
+            console.log('student-promoted event received in admin students page:', event);
+            console.log('Event detail:', event.detail);
+            
+            // Close the promote dialog first
+            this.set('showPromoteDialog', false);
+            this.set('promoteStudentData', null);
+            
             // Refresh the data to show updated class information
             this.loadData();
             
+            // Show success toast
             Toast.show({
                 title: 'Success',
                 message: event.detail.message || 'Student promotion completed',
                 variant: 'success',
-                duration: 3000
+                duration: 5000
             });
         });
     }
@@ -227,6 +235,8 @@ class StudentManagementPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-students-info') {
             this.showStudentsInfo();
+        } else if (action === 'test-promote-dialog') {
+            this.testPromoteDialog();
         }
     }
 
@@ -299,7 +309,10 @@ class StudentManagementPage extends App {
             const response = await api.withToken(token).get('/students');
             
             this.set('students', response.data.data);
-            this.updateTableData();
+            
+            // Apply current filters after loading new data
+            this.filterStudents();
+            
         } catch (error) {
             console.error('Error loading students:', error);
             Toast.show({
@@ -346,6 +359,7 @@ class StudentManagementPage extends App {
             );
         }
         
+        console.log('Filtering students:', { total: allStudents.length, filtered: filteredStudents.length, classId });
         this.updateTableData(filteredStudents);
     }
 
@@ -492,7 +506,12 @@ class StudentManagementPage extends App {
 
     updateTableData(dataToUpdate = null) {
         const students = dataToUpdate || this.get('students');
-        if (!students) return;
+        if (!students) {
+            console.log('No students data to update table with');
+            return;
+        }
+
+        console.log('Updating table with students:', students.length);
 
         // Prepare table data
         const tableData = students.map((student, index) => ({
@@ -515,7 +534,10 @@ class StudentManagementPage extends App {
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
         if (tableComponent) {
+            console.log('Table component found, updating data with:', tableData.length, 'rows');
             tableComponent.setAttribute('data', JSON.stringify(tableData));
+        } else {
+            console.log('Table component not found');
         }
     }
 

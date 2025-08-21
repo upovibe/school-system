@@ -44,13 +44,21 @@ class PromoteStudentDialog extends HTMLElement {
             this.close();
         });
 
-        // Listen for class selection change
+        // Listen for class selection change - use event delegation
         this.addEventListener('change', (e) => {
-            if (e.target.tagName === 'UI-SEARCH-DROPDOWN' && e.target.name === 'class_id') {
-                this.selectedClassId = e.target.value;
+            console.log('Change event received:', e);
+            console.log('Event target:', e.target);
+            console.log('Event detail:', e.detail);
+            
+            // Check if this is a change event from our dropdown
+            if (e.detail && e.detail.value !== undefined) {
+                this.selectedClassId = e.detail.value;
+                console.log('Selected class ID updated to:', this.selectedClassId);
                 this.validateForm();
             }
         });
+
+
     }
 
     open() {
@@ -117,6 +125,10 @@ class PromoteStudentDialog extends HTMLElement {
     // Handle promotion
     async handlePromote() {
         try {
+            console.log('Promotion attempt - Student:', this.studentData, 'Selected Class:', this.selectedClassId);
+            console.log('Student current class ID:', this.studentData.current_class_id);
+            console.log('New class ID:', this.selectedClassId);
+            
             if (!this.studentData || !this.selectedClassId) {
                 Toast.show({
                     title: 'Error',
@@ -144,13 +156,17 @@ class PromoteStudentDialog extends HTMLElement {
             }
 
             // Call the promotion API
-            const response = await api.withToken(token).post('/students/promote', {
-                student_id: this.studentData.id,
-                new_class_id: this.selectedClassId,
+            const requestData = {
+                student_id: parseInt(this.studentData.id),
+                new_class_id: parseInt(this.selectedClassId),
                 notes: `Student promoted from ${this.studentData.class_name || 'No Class'} to ${className}`
-            });
+            };
+            
+            console.log('Sending promotion request:', requestData);
+            
+            const response = await api.withToken(token).post('/students/promote', requestData);
 
-            if (response.data && response.data.success) {
+            if (response && response.data && response.data.success) {
                 // Show success message
                 Toast.show({
                     title: 'Success',
@@ -162,24 +178,43 @@ class PromoteStudentDialog extends HTMLElement {
                 // Close dialog
                 this.close();
                 
-                // Dispatch event to refresh the page
-                this.dispatchEvent(new CustomEvent('student-promoted', {
+                // Dispatch event to refresh the page FIRST
+                const promotionEvent = new CustomEvent('student-promoted', {
                     detail: { 
                         studentId: this.studentData.id,
-                        message: `Student promoted to ${className}`,
+                        message: `Student successfully promoted to ${className}`,
                         data: response.data.data
                     },
                     bubbles: true,
                     composed: true
-                }));
+                });
+                
+                console.log('Dispatching student-promoted event:', promotionEvent);
+                this.dispatchEvent(promotionEvent);
+                
+                // Close dialog after dispatching event
+                setTimeout(() => {
+                    this.close();
+                }, 100);
             } else {
-                throw new Error(response.data?.message || 'Failed to promote student');
+                const errorMsg = response?.data?.message || 'Failed to promote student';
+                throw new Error(errorMsg);
             }
             
         } catch (error) {
+            console.log('Full error object:', error);
+            console.log('Error response:', error.response);
+            
+            let errorMessage = 'Failed to promote student: ' + error.message;
+            
+            // If we have a response with error details, show those
+            if (error.response && error.response.data) {
+                errorMessage = error.response.data.message || errorMessage;
+            }
+            
             Toast.show({
                 title: 'Error',
-                message: 'Failed to promote student: ' + error.message,
+                message: errorMessage,
                 variant: 'error',
                 duration: 3000
             });
@@ -238,9 +273,11 @@ class PromoteStudentDialog extends HTMLElement {
                             Select New Class for Promotion
                         </label>
                         <ui-search-dropdown 
+                            id="promotion-class-dropdown"
                             name="class_id"
                             placeholder="Choose a class..."
-                            value="${this.selectedClassId}">
+                            value="${this.selectedClassId}"
+                            data-field="class_id">
                             ${this.classes.map(cls => `
                                 <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
                             `).join('')}
@@ -274,7 +311,7 @@ class PromoteStudentDialog extends HTMLElement {
         setTimeout(() => {
             const dropdown = this.querySelector('ui-search-dropdown');
             if (dropdown) {
-                // Try to trigger a slotchange event
+                // Try to trigger a slotchange event to ensure options are loaded
                 const slot = dropdown.shadowRoot?.querySelector('slot');
                 if (slot) {
                     slot.dispatchEvent(new Event('slotchange'));

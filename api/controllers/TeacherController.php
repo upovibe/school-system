@@ -2532,5 +2532,73 @@ class TeacherController {
                     }
                 }
 
+    /**
+     * Get grading policy for a subject (teacher only - restricted to their assigned class)
+     */
+    public function getGradingPolicyBySubject() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Ensure teacher is assigned to a class
+            if (empty($teacher['class_id'])) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
+            
+            $classId = (int)$teacher['class_id'];
+            $query = $_GET ?? [];
+            $subjectId = isset($query['subject_id']) ? (int)$query['subject_id'] : 0;
+            
+            if ($subjectId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'subject_id is required']);
+                return;
+            }
+            
+            // Verify the subject is actually taught in the teacher's assigned class
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubject = $classSubjectModel->findByUniqueKey($classId, $subjectId);
+            
+            if (!$classSubject) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: This subject is not taught in your assigned class']);
+                return;
+            }
+            
+            // Get the grading policy for the subject
+            require_once __DIR__ . '/../models/GradingPolicyModel.php';
+            $policyModel = new GradingPolicyModel($pdo);
+            $policy = $policyModel->getBySubjectId($subjectId);
+            
+            if (!$policy) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No active grading policy for this subject']);
+                return;
+            }
+            
+            // Return only relevant fields to minimize payload
+            $data = [
+                'id' => (int)$policy['id'],
+                'subject_id' => (int)$policy['subject_id'],
+                'assignment_max_score' => (int)$policy['assignment_max_score'],
+                'exam_max_score' => (int)$policy['exam_max_score'],
+                'grade_boundaries' => $policy['grade_boundaries']
+            ];
+            
+            http_response_code(200);
+            echo json_encode(['success' => true, 'data' => $data, 'message' => 'Policy retrieved']);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving policy: ' . $e->getMessage()]);
+        }
+    }
+
 }
 ?> 

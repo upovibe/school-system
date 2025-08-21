@@ -295,6 +295,7 @@ Router::put('/teacher/student-grades/{id}', 'TeacherController@updateStudentGrad
 Router::delete('/teacher/student-grades/{id}', 'TeacherController@deleteStudentGrade');
 Router::get('/teacher/student-grades', 'TeacherController@listStudentGrades');
 Router::get('/teacher/student-grades/{id}', 'TeacherController@showStudentGrade');
+Router::get('/teacher/grading-policy', 'TeacherController@getGradingPolicyBySubject');
 
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');

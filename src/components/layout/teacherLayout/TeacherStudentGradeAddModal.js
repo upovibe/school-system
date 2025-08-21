@@ -44,10 +44,15 @@ class TeacherStudentGradeAddModal extends HTMLElement {
     try {
       const token = localStorage.getItem('token');
       if (!token || !subjectId) return;
-      const resp = await api.withToken(token).get('/grading-policies/by-subject', { subject_id: subjectId });
+      
+      // Use the new teacher-specific endpoint
+      const resp = await api.withToken(token).get('/teacher/grading-policy', { subject_id: subjectId });
       this.policy = resp?.data?.data || null;
       this.applyMaxConstraints();
-    } catch (_) { this.policy = null; this.applyMaxConstraints(); }
+    } catch (_) { 
+      this.policy = null; 
+      this.applyMaxConstraints(); 
+    }
   }
 
   applyMaxConstraints() {

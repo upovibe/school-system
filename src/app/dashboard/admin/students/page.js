@@ -3,6 +3,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/layout/adminLayout/StudentDeleteDialog.js';
 import '@/components/layout/adminLayout/StudentAddDialog.js';
 import '@/components/layout/adminLayout/StudentUpdateDialog.js';
@@ -18,6 +19,7 @@ class StudentManagementPage extends App {
     constructor() {
         super();
         this.students = null;
+        this.classes = [];
         this.loading = false;
         this.showAddModal = false;
         this.showUpdateModal = false;
@@ -26,6 +28,7 @@ class StudentManagementPage extends App {
         this.updateStudentData = null;
         this.viewStudentData = null;
         this.deleteStudentData = null;
+        this.filters = { class_id: '' };
     }
 
     getHeaderCounts() {
@@ -119,6 +122,7 @@ class StudentManagementPage extends App {
         super.connectedCallback();
         document.title = 'Student Management | School System';
         this.loadData();
+        this.loadClasses();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Add event listeners for table events
@@ -138,6 +142,17 @@ class StudentManagementPage extends App {
             
             // Close the delete dialog
             this.set('showDeleteDialog', false);
+        });
+
+        // Listen for filter changes
+        this.addEventListener('filter-change', this.handleFilterChange.bind(this));
+
+        // Listen for clear filters action
+        this.addEventListener('click', (e) => {
+            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+            if (action === 'clear-filters') {
+                this.clearFilters();
+            }
         });
 
         // Listen for student-saved event to add new student to the list
@@ -268,6 +283,53 @@ class StudentManagementPage extends App {
         }
     }
 
+    async loadClasses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/classes');
+            
+            if (response.status === 200 && response.data.success) {
+                this.set('classes', response.data.data);
+            }
+        } catch (error) {
+            // Silent error handling
+        }
+    }
+
+    handleFilterChange(event) {
+        const { name, value } = event.detail;
+        this.filters[name] = value;
+        this.filterStudents();
+    }
+
+    filterStudents() {
+        const allStudents = this.get('students') || [];
+        const classId = this.filters.class_id;
+        
+        let filteredStudents = allStudents;
+        
+        if (classId && classId !== '') {
+            filteredStudents = allStudents.filter(student => 
+                student.current_class_id == classId
+            );
+        }
+        
+        this.updateTableData(filteredStudents);
+    }
+
+    clearFilters() {
+        this.filters.class_id = '';
+        this.filterStudents();
+        
+        // Reset the dropdown to "All Classes"
+        const dropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
+        if (dropdown) {
+            dropdown.value = '';
+        }
+    }
+
     // Action handlers
     onView(event) {
         const { detail } = event;
@@ -350,8 +412,8 @@ class StudentManagementPage extends App {
         this.set('showAddModal', true);
     }
 
-    updateTableData() {
-        const students = this.get('students');
+    updateTableData(dataToUpdate = null) {
+        const students = dataToUpdate || this.get('students');
         if (!students) return;
 
         // Prepare table data
@@ -395,8 +457,19 @@ class StudentManagementPage extends App {
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
         
+        // Get filtered students based on current filter
+        const allStudents = students || [];
+        const classId = this.filters.class_id;
+        let filteredStudents = allStudents;
+        
+        if (classId && classId !== '') {
+            filteredStudents = allStudents.filter(student => 
+                student.current_class_id == classId
+            );
+        }
+        
         // Prepare table data and columns for students
-        const tableData = students ? students.map((student, index) => ({
+        const tableData = (filteredStudents || []).map((student, index) => ({
             id: student.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             student_id: student.student_id || 'N/A',
@@ -409,7 +482,7 @@ class StudentManagementPage extends App {
             admission_date: student.admission_date ? new Date(student.admission_date).toLocaleDateString() : 'N/A',
             created: student.created_at,
             updated: student.updated_at
-        })) : [];
+        }));
 
         const tableColumns = [
             { key: 'index', label: 'No.', html: false },
@@ -426,6 +499,31 @@ class StudentManagementPage extends App {
         
         return `
             ${this.renderHeader()}
+            
+            <!-- Filter Section - SEPARATED from table container -->
+            <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300 my-10">
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Class</label>
+                        <ui-search-dropdown 
+                            name="class_id"
+                            placeholder="All Classes"
+                            class="w-full">
+                            <ui-option value="">All Classes</ui-option>
+                            ${this.get('classes') ? this.get('classes').map(cls => `
+                                <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                            `).join('') : ''}
+                        </ui-search-dropdown>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-3">
+                    <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+                        <i class="fas fa-times mr-1"></i> Clear Filters
+                    </ui-button>
+                </div>
+            </div>
+            
+            <!-- Table Container - SEPARATE from filter -->
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->

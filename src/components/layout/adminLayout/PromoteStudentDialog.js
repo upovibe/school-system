@@ -250,22 +250,21 @@ class PromoteStudentDialog extends HTMLElement {
                     </div>
 
                     <!-- Class Selection -->
-                    <div class="bg-white border border-gray-300 rounded-lg p-4 mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Select New Class for Promotion
-                        </label>
-                        <ui-search-dropdown 
-                            id="promotion-class-dropdown"
-                            name="class_id"
-                            placeholder="Choose a class..."
-                            value="${this.selectedClassId}"
-                            data-field="class_id">
-                            ${this.classes.map(cls => `
-                                <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
-                            `).join('')}
-                        </ui-search-dropdown>
-                        <p class="text-xs text-gray-500 mt-1">Select the class you want to promote this student to</p>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Select New Class for Promotion
+                    </label>
+                    <ui-search-dropdown 
+                        id="promotion-class-dropdown"
+                        name="class_id"
+                        placeholder="Choose a class..."
+                        value="${this.selectedClassId}"
+                        data-field="class_id"
+                        class="w-full mb-4">
+                        ${this.classes.map(cls => `
+                            <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                        `).join('')}
+                    </ui-search-dropdown>
+                    <p class="text-xs text-gray-500 mt-1 mb-4">Select the class you want to promote this student to</p>
 
                     <!-- Warning Section -->
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">

@@ -315,25 +315,25 @@ class TeacherStudentGradesPage extends App {
       const subjectsFromMyClass = Array.isArray(this.teacherClass.subjects) ? this.teacherClass.subjects : [];
       this.subjects = subjectsFromMyClass;
 
+      // Grading periods (teacher-friendly endpoint) - FETCH FIRST
+      try {
+        const periodsResp = await api.withToken(token).get('/teachers/grading-periods');
+        this.periods = periodsResp.data?.data || [];
+      } catch (e) { 
+        this.periods = []; 
+      }
+
       // Default subject: pick the first subject assigned to the class if none selected
       const existingFilters = this.get('filters') || { subject_id: '', grading_period_id: '', student_id: '' };
       if (!existingFilters.subject_id && this.subjects && this.subjects.length > 0) {
         this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
       }
 
-      // Default: preselect the first existing grading period
+      // Default: preselect the first existing grading period - NOW THIS WILL WORK
       if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
         const firstPeriodId = String(this.periods[0].id);
         const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
         this.set('filters', next);
-      }
-
-      // Grading periods (teacher-friendly endpoint)
-      try {
-        const periodsResp = await api.withToken(token).get('/teachers/grading-periods');
-        this.periods = periodsResp.data?.data || [];
-      } catch (e) { 
-        this.periods = []; 
       }
 
       // Initial load if we have class

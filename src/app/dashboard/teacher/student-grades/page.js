@@ -584,9 +584,9 @@ class TeacherStudentGradesPage extends App {
       { key: 'class', label: 'Class' },
       { key: 'subject', label: 'Subject' },
       { key: 'period', label: 'Period' },
-      { key: 'assign_total', label: 'Assign. Total' },
-      { key: 'exam_total', label: 'Exam Total' },
-      { key: 'final_pct', label: 'Final %' },
+      { key: 'assign_total', label: 'Assignment Score Total' },
+      { key: 'exam_total', label: 'Exam Score Total' },
+      { key: 'final_pct', label: 'Final Total Score' },
       { key: 'final_grade', label: 'Letter' },
       { key: 'updated', label: 'Updated' }
     ];

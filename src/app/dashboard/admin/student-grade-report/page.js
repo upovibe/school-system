@@ -493,14 +493,12 @@ class StudentGradeReportPage extends App {
 
         const tableColumns = [
             { key: 'index', label: 'No.' },
-            { key: 'student', label: 'Student' },
-            { key: 'class', label: 'Class' },
             { key: 'subject', label: 'Subject' },
             { key: 'period', label: 'Period' },
-            { key: 'assign_total', label: 'Assign. Total' },
-            { key: 'exam_total', label: 'Exam Total' },
-            { key: 'final_pct', label: 'Final %' },
-            { key: 'final_grade', label: 'Grade' },
+            { key: 'assign_total', label: 'Assignment Score Total' },
+            { key: 'exam_total', label: 'Exam Score Total' },
+            { key: 'final_pct', label: 'Final Total Score' },
+            { key: 'final_grade', label: 'Letter Grade' },
             { key: 'updated', label: 'Updated' }
         ];
 

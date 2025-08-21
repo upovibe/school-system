@@ -172,6 +172,17 @@ class SystemViewModal extends HTMLElement {
                     `;
                 }
             
+            case 'date':
+                return `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar text-blue-500"></i>
+                            <span class="text-sm text-gray-900 font-medium">${currentValue || 'No date set'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Format: MM-DD (e.g., 09-01)</p>
+                    </div>
+                `;
+            
             case 'textarea':
             case 'select':
                 return `

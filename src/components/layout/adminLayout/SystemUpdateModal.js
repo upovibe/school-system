@@ -209,6 +209,17 @@ class SystemUpdateModal extends HTMLElement {
                     </ui-textarea>
                 `;
             
+            case 'date':
+                return `
+                    <ui-input 
+                        name="setting_value"
+                        type="text" 
+                        placeholder="MM-DD (e.g., 09-01)"
+                        value="${currentValue}"
+                        class="w-full">
+                    </ui-input>
+                `;
+            
             default:
                 return `
                     <ui-input 
@@ -257,6 +268,10 @@ class SystemUpdateModal extends HTMLElement {
                     const colorInput = this.querySelector('input[name="setting_value"]');
                     valueInput = colorInput ? colorInput.value : '#000000';
                     break;
+                case 'date':
+                    const dateInput = this.querySelector('ui-input[name="setting_value"]');
+                    valueInput = dateInput ? dateInput.value : '';
+                    break;
                 default:
                     // For text and number types, use the settingValueInput directly
                     valueInput = settingValueInput ? settingValueInput.value : '';
@@ -264,9 +279,14 @@ class SystemUpdateModal extends HTMLElement {
             }
 
             // Fallback for setting value if not found
-            if (!valueInput && (settingType === 'text' || settingType === 'number')) {
-                // Try to get from the setting data directly
-                valueInput = this.settingData?.setting_value || '';
+            if (!valueInput) {
+                if (settingType === 'date') {
+                    // For date type, try to get from the setting data directly
+                    valueInput = this.settingData?.setting_value || '';
+                } else if (settingType === 'text' || settingType === 'number') {
+                    // Try to get from the setting data directly
+                    valueInput = this.settingData?.setting_value || '';
+                }
             }
 
             const settingData = {
@@ -277,6 +297,14 @@ class SystemUpdateModal extends HTMLElement {
                 description: descriptionTextarea ? descriptionTextarea.value : '',
                 is_active: statusSwitch ? statusSwitch.checked : true
             };
+
+            // Debug logging
+            console.log('Setting update debug:', {
+                settingType,
+                valueInput,
+                settingData,
+                originalValue: this.settingData?.setting_value
+            });
 
             // Validate required fields
             if (!settingData.setting_key) {

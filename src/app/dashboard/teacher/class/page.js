@@ -429,20 +429,22 @@ class TeacherClassPage extends App {
                         <ui-accordion>
                             <ui-accordion-item title="Class Students (${student_count || 0} Student${(student_count || 0) > 1 ? 's' : ''})">
                                 ${students && students.length > 0 ? `
-                                    <ui-table 
-                                        data='${JSON.stringify(tableData)}'
-                                        columns='${JSON.stringify(tableColumns)}'
-                                        title="Students in ${class_name}-${class_section}"
-                                        searchable
-                                        search-placeholder="Search students..."
-                                        striped
-                                        print
-                                        sortable
-                                        clickable
-                                        refresh
-                                        row-clickable="true"
-                                                                                 ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}>
-                                    </ui-table>
+                                                                         <ui-table 
+                                         data='${JSON.stringify(tableData)}'
+                                         columns='${JSON.stringify(tableColumns)}'
+                                         title="Students in ${class_name}-${class_section}"
+                                         searchable
+                                         search-placeholder="Search students..."
+                                         striped
+                                         print
+                                         sortable
+                                         clickable
+                                         refresh
+                                         actions="view"
+                                         row-clickable="true"
+                                         action
+                                         ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}>
+                                     </ui-table>
                                 ` : `
                                     <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
                                         <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">

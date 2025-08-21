@@ -8,6 +8,7 @@ import '@/components/layout/adminLayout/StudentDeleteDialog.js';
 import '@/components/layout/adminLayout/StudentAddDialog.js';
 import '@/components/layout/adminLayout/StudentUpdateDialog.js';
 import '@/components/layout/adminLayout/StudentViewDialog.js';
+import '@/components/layout/adminLayout/PromoteStudentDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -25,9 +26,11 @@ class StudentManagementPage extends App {
         this.showUpdateModal = false;
         this.showViewModal = false;
         this.showDeleteDialog = false;
+        this.showPromoteDialog = false;
         this.updateStudentData = null;
         this.viewStudentData = null;
         this.deleteStudentData = null;
+        this.promoteStudentData = null;
         this.filters = { class_id: '' };
     }
 
@@ -56,6 +59,9 @@ class StudentManagementPage extends App {
                                 <h1 class="text-2xl sm:text-3xl font-bold">Students</h1>
                                 <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-students-info" title="About Students">
                                     <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="test-promote-dialog" title="Test Promote Dialog">
+                                    <i class="fas fa-test-tube text-lg"></i>
                                 </button>
                             </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage student records and enrollment</p>
@@ -130,6 +136,7 @@ class StudentManagementPage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('student-deleted', (event) => {
@@ -374,6 +381,54 @@ class StudentManagementPage extends App {
         if (token) { loadAndOpen(); }
     }
 
+    // Get custom actions for the table
+    getCustomActions() {
+        return [
+            {
+                name: 'promote-student',
+                label: 'Promote',
+                icon: 'fas fa-arrow-up',
+                variant: 'primary',
+                size: 'sm',
+                showField: 'can_promote'
+            }
+        ];
+    }
+
+    // Handle custom action clicks
+    onCustomAction(event) {
+        const { detail } = event;
+        const { actionName, row } = detail;
+        
+        if (actionName === 'promote-student') {
+            this.showPromoteStudentDialog(row);
+        }
+    }
+
+    // Show promote student dialog
+    showPromoteStudentDialog(studentData) {
+        // Find the full student data from students array
+        const students = this.get('students') || [];
+        const fullStudentData = students.find(s => s.id == studentData.id);
+        
+        if (fullStudentData) {
+            // Close any open modals first
+            this.closeAllModals();
+            
+            // Set the student data and show the dialog
+            this.set('promoteStudentData', fullStudentData);
+            this.set('showPromoteDialog', true);
+            
+            // Ensure the dialog is properly initialized
+            setTimeout(() => {
+                const promoteDialog = this.querySelector('promote-student-dialog');
+                if (promoteDialog) {
+                    promoteDialog.setStudentData(fullStudentData);
+                }
+            }, 0);
+        }
+    }
+
     onEdit(event) {
         const { detail } = event;
         const existing = this.get('students').find(student => student.id === detail.row.id);
@@ -439,7 +494,9 @@ class StudentManagementPage extends App {
             status: student.status === 'active' ? 'Active' : 'Inactive',
             admission_date: student.admission_date ? new Date(student.admission_date).toLocaleDateString() : 'N/A',
             created: student.created_at,
-            updated: student.updated_at
+            updated: student.updated_at,
+            // Add metadata for custom actions
+            can_promote: student.status === 'active' // Only active students can be promoted
         }));
 
         // Find the table component and update its data
@@ -457,6 +514,8 @@ class StudentManagementPage extends App {
         this.set('updateStudentData', null);
         this.set('viewStudentData', null);
         this.set('deleteStudentData', null);
+        this.set('promoteStudentData', null);
+        this.set('showPromoteDialog', false);
     }
 
     render() {
@@ -466,6 +525,7 @@ class StudentManagementPage extends App {
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
+        const showPromoteDialog = this.get('showPromoteDialog');
         
         // Get filtered students based on current filter
         const allStudents = students || [];
@@ -491,7 +551,9 @@ class StudentManagementPage extends App {
             status: student.status === 'active' ? 'Active' : 'Inactive',
             admission_date: student.admission_date ? new Date(student.admission_date).toLocaleDateString() : 'N/A',
             created: student.created_at,
-            updated: student.updated_at
+            updated: student.updated_at,
+            // Add metadata for custom actions
+            can_promote: student.status === 'active' // Only active students can be promoted
         }));
 
         const tableColumns = [
@@ -560,6 +622,7 @@ class StudentManagementPage extends App {
                             print
                             bordered
                             striped
+                            custom-actions='${JSON.stringify(this.getCustomActions())}'
                             class="w-full">
                         </ui-table>
                     </div>
@@ -577,6 +640,9 @@ class StudentManagementPage extends App {
             
             <!-- Delete Student Dialog -->
             <student-delete-dialog ${showDeleteDialog ? 'open' : ''}></student-delete-dialog>
+            
+            <!-- Promote Student Dialog -->
+            <promote-student-dialog ${showPromoteDialog ? 'open' : ''}></promote-student-dialog>
         `;
     }
 }

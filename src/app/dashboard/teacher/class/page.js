@@ -8,6 +8,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Accordion.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
+import '@/components/layout/teacherLayout/DataSkeleton.js';
 
 /**
  * Teacher Class Page Component (/dashboard/teacher/class)
@@ -127,41 +128,7 @@ class TeacherClassPage extends App {
         const showStudentModal = this.get('showStudentModal');
 
         if (loading) {
-            return `
-                <div class="space-y-6">
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="animate-pulse">
-                            <div class="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white shadow rounded-lg p-6">
-                            <div class="animate-pulse">
-                                <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                <div class="space-y-3">
-                                    <div class="h-4 bg-gray-200 rounded"></div>
-                                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white shadow rounded-lg p-6">
-                            <div class="animate-pulse">
-                                <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                <div class="space-y-3">
-                                    <div class="h-4 bg-gray-200 rounded"></div>
-                                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return `<data-skeleton></data-skeleton>`;
         }
 
         if (error) {

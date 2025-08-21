@@ -10,6 +10,7 @@ import '@/components/layout/teacherLayout/TeacherStudentGradeAddModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeUpdateModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeViewModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentGradeDeleteDialog.js';
+import '@/components/layout/teacherLayout/DataSkeleton.js';
 import api from '@/services/api.js';
 
 /**
@@ -590,13 +591,7 @@ class TeacherStudentGradesPage extends App {
       
       <!-- Table Section -->
       <div class="bg-white rounded-lg shadow-lg p-4">
-        ${loading ? `
-          <div class="space-y-4">
-            <ui-skeleton class="h-24 w-full"></ui-skeleton>
-            <ui-skeleton class="h-24 w-full"></ui-skeleton>
-            <ui-skeleton class="h-24 w-full"></ui-skeleton>
-          </div>
-        ` : `
+        ${loading ? `<data-skeleton></data-skeleton>` : `
           <div class="mb-8">
             <ui-table 
               title="My Class Student Grades"

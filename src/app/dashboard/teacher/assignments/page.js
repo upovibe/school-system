@@ -13,6 +13,7 @@ import '@/components/ui/Dropdown.js';
 import '@/components/layout/teacherLayout/TeacherAssignmentViewDialog.js';
 import '@/components/layout/teacherLayout/TeacherEditAssignmentModal.js';
 import '@/components/layout/teacherLayout/TeacherStudentAssignmentDialog.js';
+import '@/components/layout/teacherLayout/DataSkeleton.js';
 
 /**
  * Teacher Assignments Page Component (/dashboard/teacher/assignments)
@@ -901,32 +902,7 @@ class TeacherAssignmentsPage extends App {
         const tabCounts = this.getTabCounts();
 
         if (loading) {
-            return `
-                <div class="space-y-6">
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="animate-pulse">
-                            <div class="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 gap-6">
-                        ${Array(3).fill(0).map(() => `
-                            <div class="bg-white shadow rounded-lg p-6">
-                                <div class="animate-pulse">
-                                    <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                                    <div class="space-y-3">
-                                        <div class="h-4 bg-gray-200 rounded"></div>
-                                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            return `<data-skeleton></data-skeleton>`;
         }
 
         if (error) {

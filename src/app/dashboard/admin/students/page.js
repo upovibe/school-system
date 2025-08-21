@@ -206,6 +206,19 @@ class StudentManagementPage extends App {
                 this.loadData();
             }
         });
+
+        // Listen for student-promoted event to refresh data
+        this.addEventListener('student-promoted', (event) => {
+            // Refresh the data to show updated class information
+            this.loadData();
+            
+            Toast.show({
+                title: 'Success',
+                message: event.detail.message || 'Student promotion completed',
+                variant: 'success',
+                duration: 3000
+            });
+        });
     }
 
     handleHeaderActions(event) {

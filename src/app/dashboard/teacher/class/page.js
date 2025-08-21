@@ -37,6 +37,19 @@ class TeacherClassPage extends App {
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
         this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Listen for student-promoted event to refresh data
+        this.addEventListener('student-promoted', (event) => {
+            // Refresh the class data to show updated student information
+            this.loadClassData();
+            
+            Toast.show({
+                title: 'Success',
+                message: event.detail.message || 'Student promotion completed',
+                variant: 'success',
+                duration: 3000
+            });
+        });
     }
 
     handleHeaderActions(event) {

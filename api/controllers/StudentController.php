@@ -1142,7 +1142,7 @@ class StudentController {
             $student = $_REQUEST['current_student'];
             
             // Get the assignment
-            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            $assignment = $this->classAssignmentModel->findById($assignmentId);
             
             if (!$assignment) {
                 http_response_code(404);
@@ -1286,7 +1286,7 @@ class StudentController {
             $student = $_REQUEST['current_student'];
             
             // Get the assignment
-            $assignment = $this->classAssignmentModel->getById($assignmentId);
+            $assignment = $this->classAssignmentModel->findById($assignmentId);
             
             if (!$assignment) {
                 http_response_code(404);
@@ -1429,7 +1429,7 @@ class StudentController {
             
             // Add assignment details to each submission
             foreach ($submissions as &$submission) {
-                $assignment = $this->classAssignmentModel->getById($submission['assignment_id']);
+                $assignment = $this->classAssignmentModel->findById($submission['assignment_id']);
                 $submission['assignment'] = $assignment;
             }
             
@@ -1464,7 +1464,7 @@ class StudentController {
             
             // Add assignment details to each submission
             foreach ($gradedSubmissions as &$submission) {
-                $assignment = $this->classAssignmentModel->getById($submission['assignment_id']);
+                $assignment = $this->classAssignmentModel->findById($submission['assignment_id']);
                 $submission['assignment'] = $assignment;
             }
             
@@ -1837,6 +1837,156 @@ class StudentController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error retrieving gender statistics: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Promote a student to a new class
+     * 
+     * @return void
+     */
+    public function promoteStudent() {
+        try {
+            global $pdo;
+            
+            // Check if user is authenticated and has admin role
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Get request data
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validate required fields
+            if (!isset($data['student_id']) || !isset($data['new_class_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'student_id and new_class_id are required'
+                ]);
+                return;
+            }
+            
+            $studentId = (int)$data['student_id'];
+            $newClassId = (int)$data['new_class_id'];
+            
+            // Validate IDs
+            if ($studentId <= 0 || $newClassId <= 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid student_id or new_class_id'
+                ]);
+                return;
+            }
+            
+            // Check if student exists and is active
+            $student = $this->studentModel->findById($studentId);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+            
+            if ($student['status'] !== 'active') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only active students can be promoted'
+                ]);
+                return;
+            }
+            
+            // Check if new class exists
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $newClass = $classModel->findById($newClassId);
+            if (!$newClass) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'New class not found'
+                ]);
+                return;
+            }
+            
+            // Check if student is already in the target class
+            if ($student['current_class_id'] == $newClassId) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student is already in the target class'
+                ]);
+                return;
+            }
+            
+            // Get current class info for logging
+            $currentClass = null;
+            if ($student['current_class_id']) {
+                $currentClass = $classModel->findById($student['current_class_id']);
+            }
+            
+            // Start transaction
+            $pdo->beginTransaction();
+            
+            try {
+                // Update student's class
+                $updateData = [
+                    'current_class_id' => $newClassId,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $success = $this->studentModel->update($studentId, $updateData);
+                
+                if (!$success) {
+                    throw new Exception('Failed to update student class');
+                }
+                
+                // Log the promotion
+                require_once __DIR__ . '/../models/StudentPromotionLogModel.php';
+                $promotionLogModel = new StudentPromotionLogModel($pdo);
+                
+                $logData = [
+                    'student_id' => $studentId,
+                    'from_class_id' => $student['current_class_id'],
+                    'to_class_id' => $newClassId,
+                    'promoted_by' => $_REQUEST['current_user']['id'] ?? null,
+                    'promotion_date' => date('Y-m-d H:i:s'),
+                    'notes' => $data['notes'] ?? 'Student promoted to next class level'
+                ];
+                
+                $promotionLogModel->create($logData);
+                
+                // Commit transaction
+                $pdo->commit();
+                
+                // Get updated student data
+                $updatedStudent = $this->studentModel->findById($studentId);
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Student promoted successfully',
+                    'data' => [
+                        'student' => $updatedStudent,
+                        'from_class' => $currentClass ? $currentClass['name'] . '-' . $currentClass['section'] : 'No Class',
+                        'to_class' => $newClass['name'] . '-' . $newClass['section'],
+                        'promotion_date' => date('Y-m-d H:i:s')
+                    ]
+                ]);
+                
+            } catch (Exception $e) {
+                // Rollback transaction
+                $pdo->rollBack();
+                throw $e;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to promote student: ' . $e->getMessage()
             ]);
         }
     }

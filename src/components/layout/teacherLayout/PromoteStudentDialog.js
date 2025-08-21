@@ -1,14 +1,18 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/SearchDropdown.js';
 
 /**
  * Promote Student Dialog Component (Teacher Version)
- * Shows student information and confirmation for promotion
+ * Shows student information and allows class selection for promotion
  */
 class PromoteStudentDialog extends HTMLElement {
     constructor() {
         super();
         this.studentData = null;
+        this.classes = [];
+        this.selectedClassId = '';
+        this.loading = false;
     }
 
     static get observedAttributes() {
@@ -18,6 +22,9 @@ class PromoteStudentDialog extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && oldValue !== newValue) {
             this.render();
+            if (this.hasAttribute('open')) {
+                this.loadClasses();
+            }
         }
     }
 
@@ -36,6 +43,14 @@ class PromoteStudentDialog extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+
+        // Listen for class selection change
+        this.addEventListener('change', (e) => {
+            if (e.target.tagName === 'UI-SEARCH-DROPDOWN' && e.target.dataset.field === 'class_id') {
+                this.selectedClassId = e.target.value;
+                this.validateForm();
+            }
+        });
     }
 
     open() {
@@ -44,6 +59,31 @@ class PromoteStudentDialog extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+        this.selectedClassId = '';
+        this.studentData = null;
+    }
+
+    // Load available classes for promotion
+    async loadClasses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('/api/classes', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.classes = result.data || [];
+                this.render();
+            }
+        } catch (error) {
+            console.error('Error loading classes:', error);
+        }
     }
 
     // Set student data for promotion
@@ -52,18 +92,99 @@ class PromoteStudentDialog extends HTMLElement {
         this.render();
     }
 
+    // Validate form before enabling promote button
+    validateForm() {
+        const promoteBtn = this.querySelector('#promote-btn');
+        if (promoteBtn) {
+            const isValid = !!this.selectedClassId && this.selectedClassId !== '';
+            if (isValid) {
+                promoteBtn.removeAttribute('disabled');
+            } else {
+                promoteBtn.setAttribute('disabled', '');
+            }
+        }
+    }
+
     // Handle promotion
-    handlePromote() {
-        // TODO: Implement promotion logic
-        Toast.show({
-            title: 'Info',
-            message: 'Promotion feature coming soon!',
-            variant: 'info',
-            duration: 3000
-        });
-        
-        // Close dialog after promotion
-        this.close();
+    async handlePromote() {
+        try {
+            if (!this.studentData || !this.selectedClassId) {
+                Toast.show({
+                    title: 'Error',
+                    message: 'Please select a class for promotion',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Get auth token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to promote students',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            this.loading = true;
+            this.render();
+
+            // Make API call to promote student
+            const response = await fetch('/api/students/promote', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    student_id: this.studentData.id,
+                    new_class_id: this.selectedClassId,
+                    notes: 'Student promoted via teacher interface'
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                Toast.show({
+                    title: 'Success',
+                    message: result.message || 'Student promoted successfully',
+                    variant: 'success',
+                    duration: 3000
+                });
+                
+                // Close dialog after successful promotion
+                this.close();
+                
+                // Dispatch event to refresh the page
+                this.dispatchEvent(new CustomEvent('student-promoted', {
+                    detail: { 
+                        studentId: this.studentData.id,
+                        message: result.message || 'Student promoted successfully',
+                        data: result.data
+                    },
+                    bubbles: true,
+                    composed: true
+                }));
+            } else {
+                throw new Error(result.message || 'Failed to promote student');
+            }
+            
+        } catch (error) {
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to promote student: ' + error.message,
+                variant: 'error',
+                duration: 3000
+            });
+        } finally {
+            this.loading = false;
+            this.render();
+        }
     }
 
     render() {

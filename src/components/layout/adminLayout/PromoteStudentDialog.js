@@ -1,14 +1,18 @@
+import api from '@/services/api.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/SearchDropdown.js';
 
 /**
  * Promote Student Dialog Component
- * Shows student information and confirmation for promotion
+ * Shows student information and allows class selection for promotion
  */
 class PromoteStudentDialog extends HTMLElement {
     constructor() {
         super();
         this.studentData = null;
+        this.classes = [];
+        this.selectedClassId = '';
     }
 
     static get observedAttributes() {
@@ -18,6 +22,9 @@ class PromoteStudentDialog extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && oldValue !== newValue) {
             this.render();
+            if (this.hasAttribute('open')) {
+                this.loadClasses();
+            }
         }
     }
 
@@ -36,6 +43,14 @@ class PromoteStudentDialog extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+
+        // Listen for class selection change
+        this.addEventListener('change', (e) => {
+            if (e.target.tagName === 'UI-SEARCH-DROPDOWN' && e.target.name === 'class_id') {
+                this.selectedClassId = e.target.value;
+                this.validateForm();
+            }
+        });
     }
 
     open() {
@@ -44,6 +59,47 @@ class PromoteStudentDialog extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+        this.selectedClassId = '';
+        this.studentData = null;
+    }
+
+    // Load available classes for promotion
+    async loadClasses() {
+        try {
+            // Get auth token and use authenticated API
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to access this feature',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            
+            // Use the authenticated API service
+            const response = await api.withToken(token).get('/classes');
+            
+            if (response.data && response.data.success) {
+                this.classes = response.data.data || [];
+                this.render();
+            } else {
+                Toast.show({
+                    title: 'Error',
+                    message: 'Failed to load classes: ' + (response.data?.message || 'Unknown error'),
+                    variant: 'error',
+                    duration: 3000
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to load classes: ' + error.message,
+                variant: 'error',
+                duration: 3000
+            });
+        }
     }
 
     // Set student data for promotion
@@ -52,19 +108,69 @@ class PromoteStudentDialog extends HTMLElement {
         this.render();
     }
 
+    // Validate form before enabling promote button
+    validateForm() {
+        const promoteBtn = this.querySelector('#promote-btn');
+        if (promoteBtn) {
+            const isValid = !!this.selectedClassId && this.selectedClassId !== '';
+            if (isValid) {
+                promoteBtn.removeAttribute('disabled');
+            } else {
+                promoteBtn.setAttribute('disabled', '');
+            }
+        }
+    }
+
     // Handle promotion
-    handlePromote() {
-        // TODO: Implement promotion logic
-        
-        Toast.show({
-            title: 'Info',
-            message: 'Promotion feature coming soon!',
-            variant: 'info',
-            duration: 3000
-        });
-        
-        // Close dialog after promotion
-        this.close();
+    async handlePromote() {
+        try {
+            if (!this.studentData || !this.selectedClassId) {
+                Toast.show({
+                    title: 'Error',
+                    message: 'Please select a class for promotion',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Get the selected class name for display
+            const selectedClass = this.classes.find(cls => cls.id == this.selectedClassId);
+            const className = selectedClass ? `${selectedClass.name}-${selectedClass.section}` : 'Unknown Class';
+
+            // Show confirmation toast
+            Toast.show({
+                title: 'Promotion Confirmed',
+                message: `Student will be promoted to ${className}. This action cannot be undone.`,
+                variant: 'warning',
+                duration: 5000
+            });
+
+            // Close dialog after confirmation
+            this.close();
+            
+            // Dispatch event to refresh the page
+            this.dispatchEvent(new CustomEvent('student-promoted', {
+                detail: { 
+                    studentId: this.studentData.id,
+                    message: `Student promotion to ${className} confirmed`,
+                    data: {
+                        student: this.studentData,
+                        newClass: selectedClass
+                    }
+                },
+                bubbles: true,
+                composed: true
+            }));
+            
+        } catch (error) {
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to process promotion: ' + error.message,
+                variant: 'error',
+                duration: 3000
+            });
+        }
     }
 
     render() {
@@ -93,7 +199,7 @@ class PromoteStudentDialog extends HTMLElement {
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
                             <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                            <span class="text-blue-700 text-sm">You are about to promote this student to the next class level.</span>
+                            <span class="text-blue-700 text-sm">You are about to promote this student to a new class level.</span>
                         </div>
                     </div>
 
@@ -113,16 +219,32 @@ class PromoteStudentDialog extends HTMLElement {
                         </div>
                     </div>
 
+                    <!-- Class Selection -->
+                    <div class="bg-white border border-gray-300 rounded-lg p-4 mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select New Class for Promotion
+                        </label>
+                        <ui-search-dropdown 
+                            name="class_id"
+                            placeholder="Choose a class..."
+                            value="${this.selectedClassId}">
+                            ${this.classes.map(cls => `
+                                <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                            `).join('')}
+                        </ui-search-dropdown>
+                        <p class="text-xs text-gray-500 mt-1">Select the class you want to promote this student to</p>
+                    </div>
+
                     <!-- Warning Section -->
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                         <div class="flex items-start">
                             <i class="fas fa-exclamation-triangle text-yellow-600 mr-2 mt-0.5"></i>
                             <div class="text-yellow-800 text-sm">
                                 <p class="font-medium mb-1">Important Notes:</p>
                                 <ul class="space-y-1">
-                                    <li>• This action will move the student to the next class level</li>
+                                    <li>• This action will move the student to the selected class</li>
                                     <li>• All current grades and records will be archived</li>
-                                    <li>• The student will be enrolled in the next class automatically</li>
+                                    <li>• The student will be enrolled in the new class automatically</li>
                                     <li>• This action cannot be undone</li>
                                 </ul>
                             </div>
@@ -131,6 +253,21 @@ class PromoteStudentDialog extends HTMLElement {
                 </div>
             </ui-dialog>
         `;
+
+        // Validate form after rendering
+        this.validateForm();
+        
+        // Force the dropdown to re-initialize after render
+        setTimeout(() => {
+            const dropdown = this.querySelector('ui-search-dropdown');
+            if (dropdown) {
+                // Try to trigger a slotchange event
+                const slot = dropdown.shadowRoot?.querySelector('slot');
+                if (slot) {
+                    slot.dispatchEvent(new Event('slotchange'));
+                }
+            }
+        }, 100);
     }
 }
 

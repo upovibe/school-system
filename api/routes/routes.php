@@ -221,6 +221,7 @@ Router::put('/students/profile', 'StudentController@updateProfile');
 Router::get('/students/{id}', 'StudentController@show');
 Router::put('/students/{id}', 'StudentController@update');
 Router::delete('/students/{id}', 'StudentController@destroy');
+Router::post('/students/promote', 'StudentController@promoteStudent');
 
 // Class Subject Management Routes (admin only for create/update/delete, public for view)
 Router::get('/class-subjects', 'ClassSubjectController@index');

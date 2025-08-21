@@ -242,18 +242,12 @@ class ClassUpdateModal extends HTMLElement {
             
             const isValid = !!name && !!section && sectionValid;
             
-            console.log('🔍 Validation Debug:', { name, section, sectionValid, isValid, updateBtn: !!updateBtn });
-            
             if (updateBtn) {
                 if (isValid) {
                     updateBtn.removeAttribute('disabled');
-                    console.log('✅ Button enabled');
                 } else {
                     updateBtn.setAttribute('disabled', '');
-                    console.log('❌ Button disabled');
                 }
-            } else {
-                console.log('⚠️ Update button not found!');
             }
             
             // Show/hide section error message

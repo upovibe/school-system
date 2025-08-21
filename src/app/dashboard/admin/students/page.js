@@ -216,6 +216,15 @@ class StudentManagementPage extends App {
             this.set('showPromoteDialog', false);
             this.set('promoteStudentData', null);
             
+            // Clear the class filter since the student moved to a different class
+            this.filters.class_id = '';
+            
+            // Reset the dropdown to "All Classes"
+            const dropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
+            if (dropdown) {
+                dropdown.value = '';
+            }
+            
             // Refresh the data to show updated class information
             this.loadData();
             

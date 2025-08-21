@@ -165,6 +165,11 @@ class PromoteStudentDialog extends HTMLElement {
             console.log('Sending promotion request:', requestData);
             
             const response = await api.withToken(token).post('/students/promote', requestData);
+            
+            console.log('API Response:', response);
+            console.log('Response data:', response?.data);
+            console.log('Response data.data:', response?.data?.data);
+            console.log('Student data being used:', this.studentData);
 
             if (response && response.data && response.data.success) {
                 // Show success message
@@ -175,15 +180,12 @@ class PromoteStudentDialog extends HTMLElement {
                     duration: 5000
                 });
 
-                // Close dialog
-                this.close();
-                
                 // Dispatch event to refresh the page FIRST
                 const promotionEvent = new CustomEvent('student-promoted', {
                     detail: { 
                         studentId: this.studentData.id,
                         message: `Student successfully promoted to ${className}`,
-                        data: response.data.data
+                        data: response.data.data || null
                     },
                     bubbles: true,
                     composed: true

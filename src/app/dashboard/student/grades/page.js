@@ -30,6 +30,13 @@ class StudentGradesPage extends App {
         return num.toFixed(2);
     }
 
+    formatPercentage(value) {
+        if (value === null || value === undefined || value === '') return '—';
+        const num = Number(value);
+        if (Number.isNaN(num)) return String(value);
+        return `${num.toFixed(2)}%`;
+    }
+
     connectedCallback() {
         super.connectedCallback();
         document.title = 'My Grades | School System';
@@ -363,7 +370,7 @@ class StudentGradesPage extends App {
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
-            final_pct: this.formatNumber(g.final_percentage),
+            final_pct: this.formatPercentage(g.final_percentage),
             final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
             remarks: g.remarks || '',
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
@@ -376,7 +383,7 @@ class StudentGradesPage extends App {
             { key: 'class', label: 'Class' },
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
-            { key: 'final_pct', label: 'Final Total Score' },
+            { key: 'final_pct', label: 'Final Total Score %' },
             { key: 'final_grade', label: 'Letter' },
             { key: 'remarks', label: 'Remarks' },
             { key: 'updated', label: 'Updated' }

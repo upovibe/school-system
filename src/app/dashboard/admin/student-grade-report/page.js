@@ -160,6 +160,13 @@ class StudentGradeReportPage extends App {
         return num.toFixed(2);
     }
 
+    formatPercentage(value) {
+        if (value === null || value === undefined || value === '') return '—';
+        const num = Number(value);
+        if (Number.isNaN(num)) return String(value);
+        return `${num.toFixed(2)}%`;
+    }
+
     // Compute grade counts for admin header summary
     getGradeCounts() {
         const grades = this.get('grades') || [];
@@ -486,7 +493,7 @@ class StudentGradeReportPage extends App {
             period: g.grading_period_name || '',
             assign_total: this.formatNumber(g.assignment_total),
             exam_total: this.formatNumber(g.exam_total),
-            final_pct: this.formatNumber(g.final_percentage),
+            final_pct: this.formatPercentage(g.final_percentage),
             final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : '')
         })) : [];
@@ -497,7 +504,7 @@ class StudentGradeReportPage extends App {
             { key: 'period', label: 'Period' },
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
-            { key: 'final_pct', label: 'Final Total Score' },
+            { key: 'final_pct', label: 'Final Total Score %' },
             { key: 'final_grade', label: 'Letter Grade' },
             { key: 'updated', label: 'Updated' }
         ];

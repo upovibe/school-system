@@ -11,6 +11,7 @@ class StudentGradeAddModal extends HTMLElement {
         this.prefill = { filters: {}, classes: [], subjects: [], periods: [] };
         this.students = [];
         this.allSubjects = [];
+        this.policyLoading = false;
     }
 
     static get observedAttributes() { return ['open']; }
@@ -59,14 +60,19 @@ class StudentGradeAddModal extends HTMLElement {
 
     async loadPolicyForSubject(subjectId) {
         try {
+            this.policyLoading = true;
+            this.applyMaxConstraints(); // Show skeleton loading
+            
             const token = localStorage.getItem('token');
             if (!token || !subjectId) return;
             const resp = await api.withToken(token).get('/grading-policies/by-subject', { subject_id: subjectId });
             const policy = resp?.data?.data;
             this.policy = policy || null;
-            this.applyMaxConstraints();
         } catch (e) { 
-            this.policy = null; this.applyMaxConstraints(); 
+            this.policy = null; 
+        } finally {
+            this.policyLoading = false;
+            this.applyMaxConstraints(); // Update with actual policy data
         }
     }
 
@@ -103,11 +109,34 @@ class StudentGradeAddModal extends HTMLElement {
                 if (examMax != null && v > examMax) examInput.value = String(examMax);
             });
         }
+        // Show skeleton loading or actual policy data
         if (assignLabel) {
-            assignLabel.textContent = `Assignment Total${assignMax != null ? ` (Max: ${assignMax})` : ' (No policy set)'}`;
+            if (this.policyLoading) {
+                assignLabel.innerHTML = `
+                    <span class="inline-flex items-center">
+                        Assignment Total
+                        <div class="ml-2 inline-block">
+                            <div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                    </span>
+                `;
+            } else {
+                assignLabel.textContent = `Assignment Total${assignMax != null ? ` (Max: ${assignMax})` : ' (No policy set)'}`;
+            }
         }
         if (examLabel) {
-            examLabel.textContent = `Exam Total${examMax != null ? ` (Max: ${examMax})` : ' (No policy set)'}`;
+            if (this.policyLoading) {
+                examLabel.innerHTML = `
+                    <span class="inline-flex items-center">
+                        Exam Total
+                        <div class="ml-2 inline-block">
+                            <div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                    </span>
+                `;
+            } else {
+                examLabel.textContent = `Exam Total${examMax != null ? ` (Max: ${examMax})` : ' (No policy set)'}`;
+            }
         }
     }
 

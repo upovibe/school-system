@@ -2600,5 +2600,182 @@ class TeacherController {
         }
     }
 
+    /**
+     * Get all available classes for promotion (teacher only)
+     */
+    public function getAvailableClassesForPromotion() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Ensure teacher is assigned to a class
+            if (empty($teacher['class_id'])) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
+            
+            // Get all active classes
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $classes = $classModel->findAll(['status' => 'active']);
+            
+            // Filter out the teacher's current class (can't promote to same class)
+            $availableClasses = array_filter($classes, function($class) use ($teacher) {
+                return $class['id'] != $teacher['class_id'];
+            });
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => array_values($availableClasses),
+                'message' => 'Available classes for promotion retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving available classes: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Promote a student to a new class (teacher only - restricted to their assigned class)
+     */
+    public function promoteStudent() {
+        try {
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Ensure teacher is assigned to a class
+            if (empty($teacher['class_id'])) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You are not assigned to any class as class teacher']);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!isset($data['student_id']) || !isset($data['new_class_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'student_id and new_class_id are required']);
+                return;
+            }
+            
+            $studentId = (int)$data['student_id'];
+            $newClassId = (int)$data['new_class_id'];
+            
+            if ($studentId <= 0 || $newClassId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid student_id or new_class_id']);
+                return;
+            }
+            
+            // Verify the student is currently in the teacher's assigned class
+            require_once __DIR__ . '/../models/StudentModel.php';
+            $studentModel = new StudentModel($pdo);
+            $student = $studentModel->findById($studentId);
+            
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Student not found']);
+                return;
+            }
+            
+            if ($student['current_class_id'] != $teacher['class_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Access denied: You can only promote students from your assigned class']);
+                return;
+            }
+            
+            if ($student['status'] !== 'active') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Only active students can be promoted']);
+                return;
+            }
+            
+            // Verify the new class exists
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $newClass = $classModel->findById($newClassId);
+            
+            if (!$newClass) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'New class not found']);
+                return;
+            }
+            
+            if ($student['current_class_id'] == $newClassId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Student is already in the target class']);
+                return;
+            }
+            
+            $currentClass = $classModel->findById($student['current_class_id']);
+            
+            // Use transaction for data integrity
+            $pdo->beginTransaction();
+            try {
+                // Update student's class
+                $updateData = [
+                    'current_class_id' => $newClassId,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $success = $studentModel->update($studentId, $updateData);
+                if (!$success) {
+                    throw new Exception('Failed to update student class');
+                }
+                
+                // Log the promotion
+                require_once __DIR__ . '/../models/StudentPromotionLogModel.php';
+                $promotionLogModel = new StudentPromotionLogModel($pdo);
+                
+                // Get the current teacher user ID from the token
+                $currentUserId = $this->getCurrentUserId();
+                
+                $logData = [
+                    'student_id' => $studentId,
+                    'from_class_id' => $student['current_class_id'],
+                    'to_class_id' => $newClassId,
+                    'promoted_by' => $currentUserId,
+                    'promotion_date' => date('Y-m-d H:i:s'),
+                    'notes' => $data['notes'] ?? 'Student promoted by class teacher'
+                ];
+                
+                $promotionLogModel->create($logData);
+                
+                $pdo->commit();
+                
+                // Get updated student data
+                $updatedStudent = $studentModel->findById($studentId);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Student promoted successfully',
+                    'data' => [
+                        'student' => $updatedStudent,
+                        'from_class' => $currentClass ? $currentClass['name'] . '-' . $currentClass['section'] : 'No Class',
+                        'to_class' => $newClass['name'] . '-' . $newClass['section'],
+                        'promotion_date' => date('Y-m-d H:i:s')
+                    ]
+                ]);
+                
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to promote student: ' . $e->getMessage()]);
+        }
+    }
+
 }
 ?> 

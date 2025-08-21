@@ -1948,11 +1948,14 @@ class StudentController {
                 require_once __DIR__ . '/../models/StudentPromotionLogModel.php';
                 $promotionLogModel = new StudentPromotionLogModel($pdo);
                 
+                // Get the current admin user ID from the token
+                $currentUserId = $this->getCurrentUserId();
+                
                 $logData = [
                     'student_id' => $studentId,
                     'from_class_id' => $student['current_class_id'],
                     'to_class_id' => $newClassId,
-                    'promoted_by' => $_REQUEST['current_user']['id'] ?? null,
+                    'promoted_by' => $currentUserId,
                     'promotion_date' => date('Y-m-d H:i:s'),
                     'notes' => $data['notes'] ?? 'Student promoted to next class level'
                 ];

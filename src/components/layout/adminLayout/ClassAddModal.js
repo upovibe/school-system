@@ -65,12 +65,27 @@ class ClassAddModal extends HTMLElement {
             const saveBtn = this.querySelector('#save-class-btn');
             const name = nameInput ? String(nameInput.value || '').trim() : '';
             const section = sectionInput ? String(sectionInput.value || '').trim() : '';
-            const isValid = !!name && !!section;
+            
+            // Check if section contains only letters (no numbers)
+            const sectionValid = /^[A-Za-z]+$/.test(section);
+            
+            const isValid = !!name && !!section && sectionValid;
             if (saveBtn) {
                 if (isValid) {
                     saveBtn.removeAttribute('disabled');
                 } else {
                     saveBtn.setAttribute('disabled', '');
+                }
+            }
+            
+            // Show/hide section error message
+            const sectionError = this.querySelector('#section-error');
+            if (sectionError) {
+                if (section && !sectionValid) {
+                    sectionError.textContent = 'Section must contain only letters (A-Z, a-z)';
+                    sectionError.classList.remove('hidden');
+                } else {
+                    sectionError.classList.add('hidden');
                 }
             }
         } catch (_) { /* noop */ }
@@ -220,9 +235,10 @@ class ClassAddModal extends HTMLElement {
                         <ui-input 
                             data-field="section"
                             type="text" 
-                            placeholder="Enter section (e.g., A, B, C)"
+                            placeholder="Enter section letter only (e.g., A, B, C)"
                             class="w-full">
                         </ui-input>
+                        <div id="section-error" class="hidden text-red-500 text-sm mt-1"></div>
                     </div>
                     
                     <div>

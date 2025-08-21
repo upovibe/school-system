@@ -29,6 +29,7 @@ class ClassUpdateModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+        this.addFormEventListeners();
     }
 
     setupEventListeners() {
@@ -41,6 +42,28 @@ class ClassUpdateModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+    }
+
+    // Wire events for live validation and update
+    addFormEventListeners() {
+        const nameInput = this.querySelector('ui-input[data-field="name"]');
+        const sectionInput = this.querySelector('ui-input[data-field="section"]');
+        const updateBtn = this.querySelector('#update-class-btn');
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => this.validateForm());
+            nameInput.addEventListener('change', () => this.validateForm());
+        }
+        if (sectionInput) {
+            sectionInput.addEventListener('input', () => this.validateForm());
+            sectionInput.addEventListener('change', () => this.validateForm());
+        }
+        if (updateBtn) {
+            updateBtn.addEventListener('click', () => this.updateClass());
+        }
+
+        // Initial validation state
+        this.validateForm();
     }
 
     // Compute academic year on client (display-only)
@@ -205,6 +228,40 @@ class ClassUpdateModal extends HTMLElement {
         }
     }
 
+    // Validate form and toggle Update button
+    validateForm() {
+        try {
+            const nameInput = this.querySelector('ui-input[data-field="name"]');
+            const sectionInput = this.querySelector('ui-input[data-field="section"]');
+            const updateBtn = this.querySelector('#update-class-btn');
+            const name = nameInput ? String(nameInput.value || '').trim() : '';
+            const section = sectionInput ? String(sectionInput.value || '').trim() : '';
+            
+            // Check if section contains only letters (no numbers)
+            const sectionValid = /^[A-Za-z]+$/.test(section);
+            
+            const isValid = !!name && !!section && sectionValid;
+            if (updateBtn) {
+                if (isValid) {
+                    updateBtn.removeAttribute('disabled');
+                } else {
+                    updateBtn.setAttribute('disabled', '');
+                }
+            }
+            
+            // Show/hide section error message
+            const sectionError = this.querySelector('#section-error');
+            if (sectionError) {
+                if (section && !sectionValid) {
+                    sectionError.textContent = 'Section must contain only letters (A-Z, a-z)';
+                    sectionError.classList.remove('hidden');
+                } else {
+                    sectionError.classList.add('hidden');
+                }
+            }
+        } catch (_) { /* noop */ }
+    }
+
     render() {
         this.innerHTML = `
             <ui-modal 
@@ -228,9 +285,10 @@ class ClassUpdateModal extends HTMLElement {
                         <ui-input 
                             data-field="section"
                             type="text" 
-                            placeholder="Enter section (e.g., A, B, C)"
+                            placeholder="Enter section letter only (e.g., A, B, C)"
                             class="w-full">
                         </ui-input>
+                        <div id="section-error" class="hidden text-red-500 text-sm mt-1"></div>
                     </div>
                     
                     <div>
@@ -270,9 +328,11 @@ class ClassUpdateModal extends HTMLElement {
                         <div>
                             <p class="font-medium">How this works</p>
                             <ul class="list-disc pl-5 mt-1 space-y-1">
-                                <li>Update <strong>Name</strong> and <strong>Section</strong> as needed; keep them concise for timetables and assignments.</li>
-                                <li><strong>Academic Year</strong> helps filter and report classes.</li>
-                                <li>Set <strong>Status</strong> to inactive to hide the class from new assignments (existing links remain until removed).</li>
+                                <li><strong>Class Name</strong>: short identifier for the class (e.g., P1, JHS1).</li>
+                                <li><strong>Section</strong>: letter only to distinguish parallel classes (e.g., A, B, C - no numbers allowed).</li>
+                                <li><strong>Academic Year</strong>: used for reporting and filtering.</li>
+                                <li><strong>Capacity</strong>: optional; defaults to 30.</li>
+                                <li><strong>Status</strong>: Active classes are available for assignments.</li>
                             </ul>
                         </div>
                     </div>

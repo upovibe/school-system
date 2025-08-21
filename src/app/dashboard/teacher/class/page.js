@@ -198,6 +198,7 @@ class TeacherClassPage extends App {
         const error = this.get('error');
         const classData = this.get('classData');
         const showStudentModal = this.get('showStudentModal');
+        const showPromoteDialog = this.get('showPromoteDialog');
 
         if (loading) {
             return `<data-skeleton></data-skeleton>`;
@@ -440,7 +441,7 @@ class TeacherClassPage extends App {
                                         clickable
                                         refresh
                                         row-clickable="true"
-                                        custom-actions='${JSON.stringify(this.getCustomActions())}'>
+                                                                                 ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}>
                                     </ui-table>
                                 ` : `
                                     <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">

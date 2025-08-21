@@ -10,6 +10,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 import '@/components/layout/teacherLayout/DataSkeleton.js';
 import '@/components/layout/teacherLayout/PromoteStudentDialog.js';
+import '@/components/ui/Toast.js';
 
 /**
  * Teacher Class Page Component (/dashboard/teacher/class)
@@ -40,6 +41,10 @@ class TeacherClassPage extends App {
         
         // Listen for student-promoted event to refresh data
         this.addEventListener('student-promoted', (event) => {
+            // Close the promote dialog
+            this.set('showPromoteDialog', false);
+            this.set('promoteStudentData', null);
+            
             // Refresh the class data to show updated student information
             this.loadClassData();
             
@@ -47,7 +52,7 @@ class TeacherClassPage extends App {
                 title: 'Success',
                 message: event.detail.message || 'Student promotion completed',
                 variant: 'success',
-                duration: 3000
+                duration: 5000
             });
         });
     }
@@ -440,7 +445,6 @@ class TeacherClassPage extends App {
                                          sortable
                                          clickable
                                          refresh
-                                         actions="view"
                                          row-clickable="true"
                                          action
                                          ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}>

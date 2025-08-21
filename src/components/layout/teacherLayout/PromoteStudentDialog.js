@@ -46,9 +46,8 @@ class PromoteStudentDialog extends HTMLElement {
 
         // Listen for class selection change
         this.addEventListener('change', (e) => {
-            if (e.target.tagName === 'UI-SEARCH-DROPDOWN' && e.target.dataset.field === 'class_id') {
-                this.selectedClassId = e.target.value;
-                this.validateForm();
+            if (e.target.tagName === 'UI-SEARCH-DROPDOWN') {
+                this.selectedClassId = e.detail.value;
             }
         });
     }
@@ -63,13 +62,13 @@ class PromoteStudentDialog extends HTMLElement {
         this.studentData = null;
     }
 
-    // Load available classes for promotion
+    // Load available classes for promotion (teacher route)
     async loadClasses() {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch('/api/classes', {
+            const response = await fetch('/api/teacher/classes/available-for-promotion', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -92,19 +91,6 @@ class PromoteStudentDialog extends HTMLElement {
         this.render();
     }
 
-    // Validate form before enabling promote button
-    validateForm() {
-        const promoteBtn = this.querySelector('#promote-btn');
-        if (promoteBtn) {
-            const isValid = !!this.selectedClassId && this.selectedClassId !== '';
-            if (isValid) {
-                promoteBtn.removeAttribute('disabled');
-            } else {
-                promoteBtn.setAttribute('disabled', '');
-            }
-        }
-    }
-
     // Handle promotion
     async handlePromote() {
         try {
@@ -117,6 +103,10 @@ class PromoteStudentDialog extends HTMLElement {
                 });
                 return;
             }
+
+            // Store student data before making the API call
+            const studentId = this.studentData.id;
+            const newClassId = this.selectedClassId;
 
             // Get auth token
             const token = localStorage.getItem('token');
@@ -133,16 +123,16 @@ class PromoteStudentDialog extends HTMLElement {
             this.loading = true;
             this.render();
 
-            // Make API call to promote student
-            const response = await fetch('/api/students/promote', {
+            // Make API call to promote student (teacher route)
+            const response = await fetch('/api/teacher/students/promote', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    student_id: this.studentData.id,
-                    new_class_id: this.selectedClassId,
+                    student_id: parseInt(studentId),
+                    new_class_id: parseInt(newClassId),
                     notes: 'Student promoted via teacher interface'
                 })
             });
@@ -157,19 +147,19 @@ class PromoteStudentDialog extends HTMLElement {
                     duration: 3000
                 });
                 
-                // Close dialog after successful promotion
-                this.close();
-                
-                // Dispatch event to refresh the page
+                // Dispatch event to refresh the page BEFORE closing dialog
                 this.dispatchEvent(new CustomEvent('student-promoted', {
                     detail: { 
-                        studentId: this.studentData.id,
+                        studentId: studentId,
                         message: result.message || 'Student promoted successfully',
                         data: result.data
                     },
                     bubbles: true,
                     composed: true
                 }));
+                
+                // Close dialog after dispatching event
+                this.close();
             } else {
                 throw new Error(result.message || 'Failed to promote student');
             }
@@ -231,6 +221,21 @@ class PromoteStudentDialog extends HTMLElement {
                             <span class="text-sm font-medium text-gray-700">Current Class:</span>
                             <span class="text-sm text-gray-900 font-semibold">${currentClass}</span>
                         </div>
+                    </div>
+
+                    <!-- Class Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select New Class</label>
+                        <ui-search-dropdown 
+                            name="class_id" 
+                            placeholder="Choose a class..." 
+                            value="${this.selectedClassId}" 
+                            data-field="class_id">
+                            ${this.classes.map(cls => `
+                                <ui-option value="${cls.id}">${cls.name}-${cls.section}</ui-option>
+                            `).join('')}
+                        </ui-search-dropdown>
+                        <p class="text-sm text-gray-500 mt-1">Select the class to promote the student to</p>
                     </div>
 
                     <!-- Warning Section -->

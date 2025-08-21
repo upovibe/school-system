@@ -292,6 +292,19 @@ class TeacherStudentGradeReportPage extends App {
                 const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
                 this.set('filters', next);
             }
+
+            // Default: preselect the first available student
+            if (!existingFilters.student_id && this.students && this.students.length > 0) {
+                const firstStudentId = String(this.students[0].id);
+                const next = { ...this.get('filters'), student_id: firstStudentId };
+                this.set('filters', next);
+            }
+
+            // If we have all required filters set, load grades automatically
+            const finalFilters = this.get('filters');
+            if (finalFilters.class_id && finalFilters.grading_period_id && finalFilters.student_id) {
+                await this.loadGrades();
+            }
         } catch (e) {
             Toast.show({ title: 'Error', message: e.response?.data?.message || 'Failed to load data', variant: 'error', duration: 3000 });
         } finally {

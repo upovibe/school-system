@@ -46,14 +46,9 @@ class PromoteStudentDialog extends HTMLElement {
 
         // Listen for class selection change - use event delegation
         this.addEventListener('change', (e) => {
-            console.log('Change event received:', e);
-            console.log('Event target:', e.target);
-            console.log('Event detail:', e.detail);
-            
             // Check if this is a change event from our dropdown
             if (e.detail && e.detail.value !== undefined) {
                 this.selectedClassId = e.detail.value;
-                console.log('Selected class ID updated to:', this.selectedClassId);
                 this.validateForm();
             }
         });
@@ -125,10 +120,6 @@ class PromoteStudentDialog extends HTMLElement {
     // Handle promotion
     async handlePromote() {
         try {
-            console.log('Promotion attempt - Student:', this.studentData, 'Selected Class:', this.selectedClassId);
-            console.log('Student current class ID:', this.studentData.current_class_id);
-            console.log('New class ID:', this.selectedClassId);
-            
             if (!this.studentData || !this.selectedClassId) {
                 Toast.show({
                     title: 'Error',
@@ -162,14 +153,7 @@ class PromoteStudentDialog extends HTMLElement {
                 notes: `Student promoted from ${this.studentData.class_name || 'No Class'} to ${className}`
             };
             
-            console.log('Sending promotion request:', requestData);
-            
             const response = await api.withToken(token).post('/students/promote', requestData);
-            
-            console.log('API Response:', response);
-            console.log('Response data:', response?.data);
-            console.log('Response data.data:', response?.data?.data);
-            console.log('Student data being used:', this.studentData);
 
             if (response && response.data && response.data.success) {
                 // Show success message
@@ -191,7 +175,6 @@ class PromoteStudentDialog extends HTMLElement {
                     composed: true
                 });
                 
-                console.log('Dispatching student-promoted event:', promotionEvent);
                 this.dispatchEvent(promotionEvent);
                 
                 // Close dialog after dispatching event
@@ -204,9 +187,6 @@ class PromoteStudentDialog extends HTMLElement {
             }
             
         } catch (error) {
-            console.log('Full error object:', error);
-            console.log('Error response:', error.response);
-            
             let errorMessage = 'Failed to promote student: ' + error.message;
             
             // If we have a response with error details, show those

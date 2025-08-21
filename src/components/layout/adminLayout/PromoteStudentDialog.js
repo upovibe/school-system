@@ -110,15 +110,8 @@ class PromoteStudentDialog extends HTMLElement {
 
     // Validate form before enabling promote button
     validateForm() {
-        const promoteBtn = this.querySelector('#promote-btn');
-        if (promoteBtn) {
-            const isValid = !!this.selectedClassId && this.selectedClassId !== '';
-            if (isValid) {
-                promoteBtn.removeAttribute('disabled');
-            } else {
-                promoteBtn.setAttribute('disabled', '');
-            }
-        }
+        // No need to validate button since we're using default dialog buttons
+        // The dialog will handle the confirm button state automatically
     }
 
     // Handle promotion
@@ -138,35 +131,55 @@ class PromoteStudentDialog extends HTMLElement {
             const selectedClass = this.classes.find(cls => cls.id == this.selectedClassId);
             const className = selectedClass ? `${selectedClass.name}-${selectedClass.section}` : 'Unknown Class';
 
-            // Show confirmation toast
-            Toast.show({
-                title: 'Promotion Confirmed',
-                message: `Student will be promoted to ${className}. This action cannot be undone.`,
-                variant: 'warning',
-                duration: 5000
+            // Get auth token for API call
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to access this feature',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Call the promotion API
+            const response = await api.withToken(token).post('/students/promote', {
+                student_id: this.studentData.id,
+                new_class_id: this.selectedClassId,
+                notes: `Student promoted from ${this.studentData.class_name || 'No Class'} to ${className}`
             });
 
-            // Close dialog after confirmation
-            this.close();
-            
-            // Dispatch event to refresh the page
-            this.dispatchEvent(new CustomEvent('student-promoted', {
-                detail: { 
-                    studentId: this.studentData.id,
-                    message: `Student promotion to ${className} confirmed`,
-                    data: {
-                        student: this.studentData,
-                        newClass: selectedClass
-                    }
-                },
-                bubbles: true,
-                composed: true
-            }));
+            if (response.data && response.data.success) {
+                // Show success message
+                Toast.show({
+                    title: 'Success',
+                    message: `Student successfully promoted to ${className}`,
+                    variant: 'success',
+                    duration: 5000
+                });
+
+                // Close dialog
+                this.close();
+                
+                // Dispatch event to refresh the page
+                this.dispatchEvent(new CustomEvent('student-promoted', {
+                    detail: { 
+                        studentId: this.studentData.id,
+                        message: `Student promoted to ${className}`,
+                        data: response.data.data
+                    },
+                    bubbles: true,
+                    composed: true
+                }));
+            } else {
+                throw new Error(response.data?.message || 'Failed to promote student');
+            }
             
         } catch (error) {
             Toast.show({
                 title: 'Error',
-                message: 'Failed to process promotion: ' + error.message,
+                message: 'Failed to promote student: ' + error.message,
                 variant: 'error',
                 duration: 3000
             });

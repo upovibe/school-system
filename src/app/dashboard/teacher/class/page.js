@@ -9,6 +9,7 @@ import '@/components/ui/Accordion.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/teacherLayout/TeacherStudentPersonalInformation.js';
 import '@/components/layout/teacherLayout/DataSkeleton.js';
+import '@/components/layout/teacherLayout/PromoteStudentDialog.js';
 
 /**
  * Teacher Class Page Component (/dashboard/teacher/class)
@@ -22,7 +23,9 @@ class TeacherClassPage extends App {
         this.loading = true;
         this.error = null;
         this.showStudentModal = false;
+        this.showPromoteDialog = false;
         this.selectedStudentData = null;
+        this.promoteStudentData = null;
     }
 
     async connectedCallback() {
@@ -32,6 +35,7 @@ class TeacherClassPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
+        this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
         this.addEventListener('click', this.handleHeaderActions.bind(this));
     }
 
@@ -119,6 +123,61 @@ class TeacherClassPage extends App {
                 }
             }, 0);
         }
+    }
+
+    // Get custom actions for the table
+    getCustomActions() {
+        return [
+            {
+                name: 'promote-student',
+                label: 'Promote',
+                icon: 'fas fa-arrow-up',
+                variant: 'primary',
+                size: 'sm',
+                showField: 'can_promote'
+            }
+        ];
+    }
+
+    // Handle custom action clicks
+    onCustomAction(event) {
+        const { detail } = event;
+        const { actionName, row } = detail;
+        
+        if (actionName === 'promote-student') {
+            this.showPromoteStudentDialog(row);
+        }
+    }
+
+    // Show promote student dialog
+    showPromoteStudentDialog(studentData) {
+        // Find the full student data from class data
+        const students = this.get('classData')?.students || [];
+        const fullStudentData = students.find(s => s.id == studentData.id);
+        
+        if (fullStudentData) {
+            // Close any open modals first
+            this.closeAllModals();
+            
+            // Set the student data and show the dialog
+            this.set('promoteStudentData', fullStudentData);
+            this.set('showPromoteDialog', true);
+            
+            // Ensure the dialog is properly initialized
+            setTimeout(() => {
+                const promoteDialog = this.querySelector('promote-student-dialog');
+                if (promoteDialog) {
+                    promoteDialog.setStudentData(fullStudentData);
+                }
+            }, 0);
+        }
+    }
+
+    closeAllModals() {
+        this.set('showStudentModal', false);
+        this.set('showPromoteDialog', false);
+        this.set('selectedStudentData', null);
+        this.set('promoteStudentData', null);
     }
 
     render() {
@@ -235,7 +294,9 @@ class TeacherClassPage extends App {
             phone: student.phone || 'No phone',
             parent_name: student.parent_name || 'Not provided',
             parent_phone: student.parent_phone || 'No phone',
-            status: student.status === 'active' ? 'Active' : 'Inactive'
+            status: student.status === 'active' ? 'Active' : 'Inactive',
+            // Add metadata for custom actions
+            can_promote: student.status === 'active' // Only active students can be promoted
         })) : [];
 
         const tableColumns = [
@@ -365,7 +426,8 @@ class TeacherClassPage extends App {
                                         sortable
                                         clickable
                                         refresh
-                                        row-clickable="true">
+                                        row-clickable="true"
+                                        custom-actions='${JSON.stringify(this.getCustomActions())}'>
                                     </ui-table>
                                 ` : `
                                     <div class="bg-gray-50 rounded-xl p-6 sm:p-8 text-center">
@@ -384,6 +446,9 @@ class TeacherClassPage extends App {
             
             <!-- Student Information Modal -->
             <teacher-student-personal-information ${showStudentModal ? 'open' : ''}></teacher-student-personal-information>
+            
+            <!-- Promote Student Dialog -->
+            <promote-student-dialog ${showPromoteDialog ? 'open' : ''}></promote-student-dialog>
         `;
     }
 }

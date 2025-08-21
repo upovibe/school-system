@@ -1,8 +1,8 @@
 import '@/components/ui/Dialog.js';
-import '@/components/ui/Button.js';
+import '@/components/ui/Toast.js';
 
 /**
- * Promote Student Dialog Component
+ * Promote Student Dialog Component (Teacher Version)
  * Shows student information and confirmation for promotion
  */
 class PromoteStudentDialog extends HTMLElement {
@@ -11,55 +11,85 @@ class PromoteStudentDialog extends HTMLElement {
         this.studentData = null;
     }
 
-    connectedCallback() {
-        this.render();
-        this.addEventListeners();
+    static get observedAttributes() {
+        return ['open'];
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && oldValue !== newValue) {
+            this.render();
+        }
+    }
+
+    connectedCallback() {
+        this.render();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Listen for confirm button click (Promote Student)
+        this.addEventListener('confirm', () => {
+            this.handlePromote();
+        });
+
+        // Listen for cancel button click
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+    }
+
+    open() {
+        this.setAttribute('open', '');
+    }
+
+    close() {
+        this.removeAttribute('open');
+    }
+
+    // Set student data for promotion
     setStudentData(student) {
         this.studentData = student;
         this.render();
     }
 
-    addEventListeners() {
-        this.addEventListener('click', (e) => {
-            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
-            if (action === 'promote') {
-                this.handlePromote();
-            } else if (action === 'cancel') {
-                this.close();
-            }
-        });
-    }
-
+    // Handle promotion
     handlePromote() {
         // TODO: Implement promotion logic
-        console.log('Promoting student:', this.studentData);
+        Toast.show({
+            title: 'Info',
+            message: 'Promotion feature coming soon!',
+            variant: 'info',
+            duration: 3000
+        });
+        
         // Close dialog after promotion
         this.close();
     }
 
-    close() {
-        this.remove();
-    }
-
     render() {
-        if (!this.studentData) return '';
+        if (!this.studentData) {
+            this.innerHTML = '';
+            return;
+        }
 
-        const { first_name, last_name, student_id } = this.studentData;
-        const studentName = `${first_name} ${last_name}`;
-        const currentClass = this.studentData.class_name || 'Unknown Class';
-
+        const { first_name, last_name, student_id, class_name } = this.studentData;
+        const studentName = `${first_name || ''} ${last_name || ''}`.trim() || 'Unknown Student';
+        const currentClass = class_name || 'No Class Assigned';
+        const studentId = student_id || 'N/A';
+        
         this.innerHTML = `
-            <ui-dialog open>
-                <div slot="header" class="flex items-center">
-                    <i class="fas fa-arrow-up text-green-500 mr-2"></i>
-                    <span class="font-semibold">Promote Student</span>
+            <ui-dialog 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                variant="success">
+                <div slot="title">
+                    <div class="flex items-center">
+                        <i class="fas fa-arrow-up text-green-500 mr-2"></i>
+                        <span>Promote Student</span>
+                    </div>
                 </div>
-                
-                <div slot="content" class="space-y-4">
+                <div slot="content">
                     <!-- Info Section -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
                             <i class="fas fa-info-circle text-blue-500 mr-2"></i>
                             <span class="text-blue-700 text-sm">You are about to promote this student to the next class level.</span>
@@ -67,14 +97,14 @@ class PromoteStudentDialog extends HTMLElement {
                     </div>
 
                     <!-- Student Details -->
-                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Student Name:</span>
                             <span class="text-sm text-gray-900 font-semibold">${studentName}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Student ID:</span>
-                            <span class="text-sm text-gray-900">${student_id}</span>
+                            <span class="text-sm text-gray-900">${studentId}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Current Class:</span>
@@ -97,16 +127,6 @@ class PromoteStudentDialog extends HTMLElement {
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button variant="secondary" data-action="cancel">
-                        Cancel
-                    </ui-button>
-                    <ui-button variant="primary" data-action="promote">
-                        <i class="fas fa-arrow-up mr-2"></i>
-                        Promote Student
-                    </ui-button>
                 </div>
             </ui-dialog>
         `;

@@ -252,14 +252,23 @@ class TeacherStudentGradeReportPage extends App {
             if (!myClassResp.data?.success || !myClassResp.data?.data) {
                 this.teacherClass = null;
                 this.students = [];
+                this.classes = [];
                 return;
             }
+            
             this.teacherClass = myClassResp.data.data; // contains class_id, students, etc.
             this.students = this.teacherClass.students || [];
 
-            // Classes for this teacher (from teacher scoped endpoint)
-            const classesFromMyClass = Array.isArray(this.teacherClass.classes) ? this.teacherClass.classes : [];
-            this.classes = classesFromMyClass;
+            // Classes for this teacher - use the same logic as student grades page
+            if (this.teacherClass.class_id) {
+                this.classes = [{
+                    id: this.teacherClass.class_id,
+                    name: this.teacherClass.class_name || 'Assigned Class',
+                    section: this.teacherClass.class_section || ''
+                }];
+            } else {
+                this.classes = [];
+            }
 
             // Grading periods (teacher-friendly endpoint)
             try {
@@ -274,9 +283,6 @@ class TeacherStudentGradeReportPage extends App {
             if (!existingFilters.class_id && this.classes && this.classes.length > 0) {
                 const firstClassId = String(this.classes[0].id);
                 this.set('filters', { ...existingFilters, class_id: firstClassId });
-                
-                // Automatically load students for the assigned class
-                await this.loadStudentsByClass(firstClassId);
             }
 
             // Default: preselect the first existing grading period
@@ -284,12 +290,6 @@ class TeacherStudentGradeReportPage extends App {
                 const firstPeriodId = String(this.periods[0].id);
                 const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
                 this.set('filters', next);
-            }
-
-            // Initial load if we have class and period
-            if (this.classes && this.classes.length > 0) {
-                // Don't auto-load grades since we need student selection first
-                // Grades will load when a student is selected
             }
         } catch (e) {
             Toast.show({ title: 'Error', message: e.response?.data?.message || 'Failed to load data', variant: 'error', duration: 3000 });
@@ -329,15 +329,14 @@ class TeacherStudentGradeReportPage extends App {
             const response = await api.withToken(token).get('/teacher/student-grades', params);
             const existingGrades = response?.data?.data || [];
 
-            // Get all subjects assigned to this class
-            const classSubjectsResp = await api.withToken(token).get('/teacher/class-subjects', { class_id });
-            const classSubjects = classSubjectsResp?.data?.data || [];
-
+            // Get subjects from teacher's class data (same as working student grades page)
+            const classSubjects = this.teacherClass.subjects || [];
+            
             // Create a comprehensive grade report showing all subjects for this student
             const gradeReport = classSubjects.map(cs => {
                 // Try to find existing grade for this subject
                 const existingGrade = existingGrades.find(g => 
-                    String(g.subject_id) === String(cs.subject_id)
+                    String(g.subject_id) === String(cs.id) // Changed from cs.subject_id to cs.id
                 );
 
                 if (existingGrade) {
@@ -357,9 +356,9 @@ class TeacherStudentGradeReportPage extends App {
                     class_id: class_id,
                     class_name: selectedClass?.name || '',
                     class_section: selectedClass?.section || '',
-                    subject_id: cs.subject_id,
-                    subject_name: cs.subject_name || cs.subject_code || '',
-                    subject_code: cs.subject_code || '',
+                    subject_id: cs.id, // Changed from cs.subject_id to cs.id
+                    subject_name: cs.name || '', // Changed from cs.subject_name to cs.name
+                    subject_code: cs.code || '', // Changed from cs.subject_code to cs.code
                     grading_period_id: grading_period_id || '',
                     grading_period_name: selectedPeriod?.name || '',
                     assignment_total: null,
@@ -390,12 +389,21 @@ class TeacherStudentGradeReportPage extends App {
                 return;
             }
 
-            const params = { class_id: classId };
-            const response = await api.withToken(token).get('/teachers/students-by-class', { params });
-            this.set('students', response.data.data || []);
+            // Use the correct API endpoint and params structure
+            const response = await api.withToken(token).get('/teachers/students-by-class', { 
+                class_id: classId 
+            });
+            
+            if (response.data?.success) {
+                this.set('students', response.data.data || []);
+            } else {
+                this.set('students', []);
+            }
+            
             this.updateTableData(); // Re-render to update student dropdown
         } catch (error) {
             Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load students', variant: 'error', duration: 3000 });
+            this.set('students', []);
         } finally {
             this.set('loading', false);
         }
@@ -445,23 +453,36 @@ class TeacherStudentGradeReportPage extends App {
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Assigned Class</label>
-                        <input 
+                        <label for="assigned-class" class="block text-xs text-gray-600 mb-1">Assigned Class</label>
+                        <ui-input 
+                            id="assigned-class"
+                            name="assigned_class"
                             type="text" 
                             value="${classDisplayName}" 
                             readonly 
-                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700 cursor-not-allowed"
+                            class="w-full"
                             placeholder="No class assigned">
+                        </ui-input>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Student</label>
-                        <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full" value="${student_id || ''}">
+                        <label for="student-select" class="block text-xs text-gray-600 mb-1">Student</label>
+                        <ui-search-dropdown 
+                            id="student-select"
+                            name="student_id" 
+                            placeholder="Select student" 
+                            class="w-full" 
+                            value="${student_id || ''}">
                             ${studentOptions}
                         </ui-search-dropdown>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
-                        <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
+                        <label for="period-select" class="block text-xs text-gray-600 mb-1">Grading Period</label>
+                        <ui-search-dropdown 
+                            id="period-select"
+                            name="grading_period_id" 
+                            placeholder="All periods" 
+                            class="w-full" 
+                            value="${grading_period_id || ''}">
                             ${periodOptions}
                         </ui-search-dropdown>
                     </div>
@@ -482,6 +503,60 @@ class TeacherStudentGradeReportPage extends App {
         const grades = this.get('grades');
         const loading = this.get('loading');
         const { class_id, student_id } = this.get('filters') || {};
+
+        // Show skeleton loading during initial page load (check this FIRST)
+        if (loading) {
+            return `
+                <div class="space-y-6">
+                    <!-- Header skeleton -->
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                        <div class="animate-pulse">
+                            <div class="h-8 bg-white bg-opacity-20 rounded w-1/3 mb-4"></div>
+                            <div class="h-4 bg-white bg-opacity-20 rounded w-1/2 mb-2"></div>
+                            <div class="h-4 bg-white bg-opacity-20 rounded w-2/3"></div>
+                        </div>
+                        
+                        <!-- Summary cards skeleton -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 mt-6">
+                            ${Array(4).fill(0).map(() => `
+                                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                    <div class="animate-pulse">
+                                        <div class="size-10 bg-white bg-opacity-20 rounded-lg mr-3 sm:mr-4 mb-3"></div>
+                                        <div class="h-6 bg-white bg-opacity-20 rounded w-1/2 mb-2"></div>
+                                        <div class="h-3 bg-white bg-opacity-20 rounded w-3/4"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Filters skeleton -->
+                    <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
+                        <div class="animate-pulse">
+                            <div class="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                ${Array(3).fill(0).map(() => `
+                                    <div class="h-10 bg-gray-200 rounded"></div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table skeleton -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <div class="animate-pulse">
+                            <div class="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+                            <div class="h-4 bg-gray-200 rounded w-96 mb-6"></div>
+                            <div class="space-y-4">
+                                ${Array(8).fill(0).map(() => `
+                                    <div class="h-16 bg-gray-200 rounded w-full"></div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
         // Show complete "No Teaching Assignments" message if no class is assigned
         if (!this.classes || this.classes.length === 0) {
@@ -549,36 +624,27 @@ class TeacherStudentGradeReportPage extends App {
             ${this.renderHeader()}
             ${this.renderFilters()}
             <div class="bg-white rounded-lg shadow-lg p-4">
-                ${loading ? `
-                    <div class="space-y-4">
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                    </div>
-                ` : `
-                    <div class="mb-8">
-                        <ui-table 
-                            title="Student Academic Performance Report"
-                            data='${JSON.stringify(tableData)}'
-                            columns='${JSON.stringify(tableColumns)}'
-                            sortable
-                            searchable
-                            search-placeholder="Search subjects..."
-                            pagination
-                            page-size="50"
-                            refresh
-                            print
-                            bordered
-                            striped
-                            class="w-full">
-                        </ui-table>
-                    </div>
-                `}
+                <div class="mb-8">
+                    <ui-table 
+                        title="Student Academic Performance Report"
+                        data='${JSON.stringify(tableData)}'
+                        columns='${JSON.stringify(tableColumns)}'
+                        sortable
+                        searchable
+                        search-placeholder="Search subjects..."
+                        pagination
+                        page-size="50"
+                        refresh
+                        print
+                        bordered
+                        striped
+                        class="w-full">
+                    </ui-table>
+                </div>
             </div>
         `;
-    }
-}
-
-customElements.define('app-teacher-student-grade-report-page', TeacherStudentGradeReportPage);
-export default TeacherStudentGradeReportPage;
-
+     }
+ }
+ 
+ customElements.define('app-teacher-student-grade-report-page', TeacherStudentGradeReportPage);
+ export default TeacherStudentGradeReportPage;

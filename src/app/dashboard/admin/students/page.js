@@ -147,6 +147,16 @@ class StudentManagementPage extends App {
         // Listen for filter changes
         this.addEventListener('filter-change', this.handleFilterChange.bind(this));
 
+        // Listen for dropdown changes directly
+        this.addEventListener('change', (e) => {
+            const dropdown = e.target.closest('ui-search-dropdown');
+            if (dropdown && dropdown.getAttribute('name') === 'class_id') {
+                const value = dropdown.value;
+                this.filters.class_id = value;
+                this.filterStudents();
+            }
+        });
+
         // Listen for clear filters action
         this.addEventListener('click', (e) => {
             const action = e.target.closest('[data-action]')?.getAttribute('data-action');

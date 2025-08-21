@@ -350,15 +350,9 @@ class DashboardLayout extends App {
                     items: [
                         { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/student/class' },
                         { label: 'My Assignment', icon: 'fas fa-tasks', href: '/dashboard/student/assignments' },
-                        { label: 'Grades', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
+                        { label: 'Grade-Report', icon: 'fas fa-chart-line', href: '/dashboard/student/grades' },
                     ]
                 },
-                {
-                    group: 'Reports',
-                    items: [
-                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
-                    ]
-                }
             ],
             parent: [
                 {
@@ -398,7 +392,7 @@ class DashboardLayout extends App {
                     ]
                 }
             ],
-                            cashier: [
+            cashier: [
                     {
                         group: 'Dashboard',
                         items: [

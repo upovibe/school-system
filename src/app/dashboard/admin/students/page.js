@@ -651,12 +651,12 @@ class StudentManagementPage extends App {
                             pagination
                             page-size="50"
                             action
-                            addable
+                            ${!loading ? 'addable' : ''}
                             refresh
                             print
                             bordered
                             striped
-                            custom-actions='${JSON.stringify(this.getCustomActions())}'
+                            ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}
                             class="w-full">
                         </ui-table>
                     </div>

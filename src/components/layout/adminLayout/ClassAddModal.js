@@ -283,7 +283,7 @@ class ClassAddModal extends HTMLElement {
                             <p class="font-medium">How this works</p>
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Class Name</strong>: short identifier for the class (e.g., P1, JHS1).</li>
-                                <li><strong>Section</strong>: letter/number to distinguish parallel classes (e.g., A, B).</li>
+                                <li><strong>Section</strong>: letter only to distinguish parallel classes (e.g., A, B, C - no numbers allowed).</li>
                                 <li><strong>Academic Year</strong>: used for reporting and filtering.</li>
                                 <li><strong>Capacity</strong>: optional; defaults to 30.</li>
                                 <li><strong>Status</strong>: Active classes are available for assignments.</li>

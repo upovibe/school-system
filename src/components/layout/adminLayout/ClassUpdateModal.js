@@ -241,12 +241,19 @@ class ClassUpdateModal extends HTMLElement {
             const sectionValid = /^[A-Za-z]+$/.test(section);
             
             const isValid = !!name && !!section && sectionValid;
+            
+            console.log('🔍 Validation Debug:', { name, section, sectionValid, isValid, updateBtn: !!updateBtn });
+            
             if (updateBtn) {
                 if (isValid) {
                     updateBtn.removeAttribute('disabled');
+                    console.log('✅ Button enabled');
                 } else {
                     updateBtn.setAttribute('disabled', '');
+                    console.log('❌ Button disabled');
                 }
+            } else {
+                console.log('⚠️ Update button not found!');
             }
             
             // Show/hide section error message
@@ -259,7 +266,9 @@ class ClassUpdateModal extends HTMLElement {
                     sectionError.classList.add('hidden');
                 }
             }
-        } catch (_) { /* noop */ }
+        } catch (error) { 
+            console.error('❌ Validation error:', error);
+        }
     }
 
     render() {
@@ -336,6 +345,11 @@ class ClassUpdateModal extends HTMLElement {
                             </ul>
                         </div>
                     </div>
+                </div>
+                
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="update-class-btn" color="primary" disabled>Update</ui-button>
                 </div>
             </ui-modal>
         `;

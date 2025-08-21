@@ -321,6 +321,13 @@ class TeacherStudentGradesPage extends App {
         this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
       }
 
+      // Default: preselect the first existing grading period
+      if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
+        const firstPeriodId = String(this.periods[0].id);
+        const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+        this.set('filters', next);
+      }
+
       // Grading periods (teacher-friendly endpoint)
       try {
         const periodsResp = await api.withToken(token).get('/teachers/grading-periods');
@@ -539,6 +546,11 @@ class TeacherStudentGradesPage extends App {
     const showViewModal = this.get('showViewModal');
     const showDeleteDialog = this.get('showDeleteDialog');
 
+    // Show skeleton loading during initial page load (check this FIRST)
+    if (loading) {
+      return `<data-skeleton></data-skeleton>`;
+    }
+
     const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
     const periodSelected = Boolean(filters.grading_period_id && String(filters.grading_period_id).length > 0);
     const tableData = (grades || []).map((g, index) => {
@@ -591,27 +603,25 @@ class TeacherStudentGradesPage extends App {
       
       <!-- Table Section -->
       <div class="bg-white rounded-lg shadow-lg p-4">
-        ${loading ? `<data-skeleton></data-skeleton>` : `
-          <div class="mb-8">
-            <ui-table 
-              title="My Class Student Grades"
-              data='${JSON.stringify(tableData)}'
-              columns='${JSON.stringify(tableColumns)}'
-              sortable
-              searchable
-              search-placeholder="Search grades..."
-              pagination
-              page-size="50"
-              action
-              refresh
-              print
-              bordered
-              striped
-              custom-actions='${JSON.stringify(this.getCustomActions())}'
-              class="w-full">
-            </ui-table>
-          </div>
-        `}
+        <div class="mb-8">
+          <ui-table 
+            title="My Class Student Grades"
+            data='${JSON.stringify(tableData)}'
+            columns='${JSON.stringify(tableColumns)}'
+            sortable
+            searchable
+            search-placeholder="Search grades..."
+            pagination
+            page-size="50"
+            action
+            refresh
+            print
+            bordered
+            striped
+            custom-actions='${JSON.stringify(this.getCustomActions())}'
+            class="w-full">
+          </ui-table>
+        </div>
       </div>
 
       <teacher-student-grade-add-modal ${showAddModal ? 'open' : ''}></teacher-student-grade-add-modal>

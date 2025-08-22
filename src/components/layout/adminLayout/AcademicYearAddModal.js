@@ -120,7 +120,7 @@ class AcademicYearAddModal extends HTMLElement {
         this.validateForm();
     }
 
-    // Save the new academic year
+    // Save the academic year
     async saveAcademicYear() {
         try {
             // Get form data using the data-field attributes for reliable selection
@@ -135,8 +135,8 @@ class AcademicYearAddModal extends HTMLElement {
             const displayName = displayNameInput ? String(displayNameInput.value || '').trim() : '';
             const startDate = startDateInput ? String(startDateInput.value || '').trim() : '';
             const endDate = endDateInput ? String(endDateInput.value || '').trim() : '';
-            const isActive = isActiveSwitch ? isActiveSwitch.checked : false;
-            const isCurrent = isCurrentSwitch ? isCurrentSwitch.checked : false;
+            const isActive = isActiveSwitch ? isActiveSwitch.hasAttribute('checked') : false;
+            const isCurrent = isCurrentSwitch ? isCurrentSwitch.hasAttribute('checked') : false;
 
             // Validate required fields
             if (!yearCode || !displayName || !startDate || !endDate) {
@@ -191,8 +191,9 @@ class AcademicYearAddModal extends HTMLElement {
             // Call API
             const token = localStorage.getItem('token');
             const response = await api.withToken(token).post('/academic-years', academicYearData);
-
-            if (response.data && response.data.success) {
+            
+            // Check if academic year was created successfully (following subjects pattern)
+            if (response.status === 201 || response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Academic year created successfully',
@@ -208,14 +209,9 @@ class AcademicYearAddModal extends HTMLElement {
                 // Close modal
                 this.close();
             } else {
-                Toast.show({
-                    title: 'Error',
-                    message: response.data?.message || 'Failed to create academic year',
-                    variant: 'error'
-                });
+                throw new Error(response.data?.message || 'Failed to create academic year');
             }
         } catch (error) {
-            console.error('Error saving academic year:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to create academic year. Please try again.',

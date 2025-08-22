@@ -191,8 +191,8 @@ class AcademicYearUpdateModal extends HTMLElement {
             const displayName = displayNameInput ? String(displayNameInput.value || '').trim() : '';
             const startDate = startDateInput ? String(startDateInput.value || '').trim() : '';
             const endDate = endDateInput ? String(endDateInput.value || '').trim() : '';
-            const isActive = isActiveSwitch ? isActiveSwitch.checked : false;
-            const isCurrent = isCurrentSwitch ? isCurrentSwitch.checked : false;
+            const isActive = isActiveSwitch ? isActiveSwitch.hasAttribute('checked') : false;
+            const isCurrent = isCurrentSwitch ? isCurrentSwitch.hasAttribute('checked') : false;
 
             // Validate required fields
             if (!yearCode || !displayName || !startDate || !endDate) {
@@ -247,8 +247,9 @@ class AcademicYearUpdateModal extends HTMLElement {
             // Call API
             const token = localStorage.getItem('token');
             const response = await api.withToken(token).put(`/academic-years/${this.academicYearData.id}`, updateData);
-
-            if (response.data && response.data.success) {
+            
+            // Check if academic year was updated successfully (following subjects pattern)
+            if (response.status === 200 || response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Academic year updated successfully',
@@ -264,14 +265,9 @@ class AcademicYearUpdateModal extends HTMLElement {
                 // Close modal
                 this.close();
             } else {
-                Toast.show({
-                    title: 'Error',
-                    message: response.data?.message || 'Failed to update academic year',
-                    variant: 'error'
-                });
+                throw new Error(response.data?.message || 'Failed to update academic year');
             }
         } catch (error) {
-            console.error('Error updating academic year:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to update academic year. Please try again.',
@@ -366,10 +362,9 @@ class AcademicYearUpdateModal extends HTMLElement {
                         </div>
                     </div>
                 </div>
-
                 <div slot="footer" class="flex items-center justify-end gap-2">
                     <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
-                    <ui-button id="update-academic-year-btn" color="primary" disabled>Update</ui-button>
+                    <ui-button id="update-academic-year-btn" color="primary" disabled>Update Academic Year</ui-button>
                 </div>
             </ui-modal>
         `;
@@ -377,9 +372,11 @@ class AcademicYearUpdateModal extends HTMLElement {
         // Attach form events and initialize validation
         this.addFormEventListeners();
         
-        // Populate form if we have data
+        // Populate form if we have data (after event listeners are attached)
         if (this.academicYearData) {
-            this.populateForm();
+            setTimeout(() => {
+                this.populateForm();
+            }, 50);
         }
     }
 }

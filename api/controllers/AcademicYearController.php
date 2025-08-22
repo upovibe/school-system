@@ -168,6 +168,10 @@ class AcademicYearController {
             $input['is_current'] = $input['is_current'] ?? false;
             $input['status'] = $input['status'] ?? 'active';
 
+            // Convert boolean values to integers for database
+            $input['is_active'] = $input['is_active'] ? 1 : 0;
+            $input['is_current'] = $input['is_current'] ? 1 : 0;
+
             // If setting as current, remove current flag from others
             if ($input['is_current']) {
                 $this->academicYearModel->setAsCurrent(null); // This will clear all current flags
@@ -255,6 +259,14 @@ class AcademicYearController {
                     'message' => 'Academic year not found'
                 ]);
                 return;
+            }
+
+            // Convert boolean values to integers for database
+            if (isset($input['is_active'])) {
+                $input['is_active'] = $input['is_active'] ? 1 : 0;
+            }
+            if (isset($input['is_current'])) {
+                $input['is_current'] = $input['is_current'] ? 1 : 0;
             }
 
             // If setting as current, remove current flag from others

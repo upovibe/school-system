@@ -102,8 +102,9 @@ class AcademicYearDeleteDialog extends HTMLElement {
             // Call API
             const token = localStorage.getItem('token');
             const response = await api.withToken(token).delete(`/academic-years/${this.academicYearData.id}`);
-
-            if (response.data && response.data.success) {
+            
+            // Check if academic year was deleted successfully (following subjects pattern)
+            if (response.status === 200 || response.data.success) {
                 Toast.show({
                     title: 'Success',
                     message: 'Academic year deleted successfully',
@@ -119,14 +120,9 @@ class AcademicYearDeleteDialog extends HTMLElement {
                 // Close dialog
                 this.close();
             } else {
-                Toast.show({
-                    title: 'Error',
-                    message: response.data?.message || 'Failed to delete academic year',
-                    variant: 'error'
-                });
+                throw new Error(response.data?.message || 'Failed to delete academic year');
             }
         } catch (error) {
-            console.error('Error deleting academic year:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to delete academic year. Please try again.',

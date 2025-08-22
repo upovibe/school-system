@@ -272,6 +272,8 @@ class DashboardLayout extends App {
                 {
                     group: 'Academic Management',
                     items: [
+                        { label: 'Academic Years', icon: 'fas fa-calendar-check', href: '/dashboard/admin/academic-years' },
+                        { label: 'Academic Records', icon: 'fas fa-archive', href: '/dashboard/admin/academic-year-records' },
                         { label: 'Grading Periods', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/grading-periods' },
                         { label: 'Subjects', icon: 'fas fa-book-open', href: '/dashboard/admin/subjects' },
                         { label: 'Grading Policies', icon: 'fas fa-balance-scale', href: '/dashboard/admin/grading-policies' },

@@ -18,6 +18,7 @@ class Seed {
         $this->seedNews();
         $this->seedGalleries();
         $this->seedTeams();
+        $this->seedAcademicYears();
         $this->seedSubjects();
         $this->seedTeachers();
         $this->seedStudents();
@@ -97,6 +98,15 @@ class Seed {
         require_once __DIR__ . '/team_seeder.php';
         $teamSeeder = new TeamSeeder($this->pdo);
         $teamSeeder->run();
+    }
+    
+    private function seedAcademicYears() {
+        echo "📅 Seeding academic years...\n";
+        
+        // Include the academic year seeder
+        require_once __DIR__ . '/academic_year_seeder.php';
+        $academicYearSeeder = new AcademicYearSeeder($this->pdo);
+        $academicYearSeeder->run();
     }
     
     private function seedSubjects() {

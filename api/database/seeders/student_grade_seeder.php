@@ -94,7 +94,11 @@ class StudentGradeSeeder
     }
     
     private function getGradingPeriods() {
-        $stmt = $this->pdo->query("SELECT id, name, academic_year FROM grading_periods");
+        $stmt = $this->pdo->query("
+            SELECT gp.id, gp.name, ay.year_code as academic_year 
+            FROM grading_periods gp 
+            JOIN academic_years ay ON gp.academic_year_id = ay.id
+        ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     

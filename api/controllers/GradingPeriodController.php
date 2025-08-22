@@ -3,7 +3,6 @@
 
 require_once __DIR__ . '/../models/GradingPeriodModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
-require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -25,18 +24,30 @@ class GradingPeriodController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $settingModel = new SettingModel($this->pdo);
-            $switchDate = $settingModel->getAcademicYearSwitchDate();
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'switch_date' => $switchDate,
-                    'current_academic_year' => $this->getCurrentAcademicYear()
-                ],
-                'message' => 'Academic year switch date retrieved successfully'
-            ]);
+            // Get the current academic year from the database
+            $sql = "SELECT start_date FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($currentYear) {
+                $switchDate = $currentYear['start_date'];
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => [
+                        'switch_date' => $switchDate,
+                        'current_academic_year' => $this->getCurrentAcademicYearDisplay()
+                    ],
+                    'message' => 'Academic year switch date retrieved successfully'
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Current academic year not found'
+                ]);
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -128,8 +139,8 @@ class GradingPeriodController {
                 return;
             }
 
-            // Always compute academic year on the server (ignore client input)
-            $data['academic_year'] = $this->getCurrentAcademicYear();
+            // Always compute academic year ID on the server (ignore client input)
+            $data['academic_year_id'] = $this->getCurrentAcademicYearId();
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -164,7 +175,7 @@ class GradingPeriodController {
             
             $periodData = [
                 'name' => $data['name'],
-                'academic_year' => $data['academic_year'],
+                'academic_year_id' => $data['academic_year_id'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
                 'description' => $data['description'] ?? '',
@@ -177,7 +188,7 @@ class GradingPeriodController {
             // Log the action
             $this->logAction('grading_period_created', "Created grading period: {$data['name']}", [
                 'period_id' => $periodId,
-                'academic_year' => $data['academic_year']
+                'academic_year_id' => $data['academic_year_id']
             ]);
             
             http_response_code(201);
@@ -229,7 +240,7 @@ class GradingPeriodController {
             }
 
             // Do not allow client to change academic year on update; keep original
-            $data['academic_year'] = $existingPeriod['academic_year'];
+            $data['academic_year_id'] = $existingPeriod['academic_year_id'];
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -264,7 +275,7 @@ class GradingPeriodController {
             
             $periodData = [
                 'name' => $data['name'],
-                'academic_year' => $data['academic_year'],
+                'academic_year_id' => $data['academic_year_id'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
                 'description' => $data['description'] ?? $existingPeriod['description'],
@@ -276,7 +287,7 @@ class GradingPeriodController {
             // Log the action
             $this->logAction('grading_period_updated', "Updated grading period: {$data['name']}", [
                 'period_id' => $id,
-                'academic_year' => $data['academic_year']
+                'academic_year_id' => $data['academic_year_id']
             ]);
             
             http_response_code(200);
@@ -319,7 +330,7 @@ class GradingPeriodController {
             // Log the action
             $this->logAction('grading_period_deleted', "Deleted grading period: {$period['name']}", [
                 'period_id' => $id,
-                'academic_year' => $period['academic_year']
+                'academic_year_id' => $period['academic_year_id']
             ]);
             
             http_response_code(200);
@@ -338,56 +349,65 @@ class GradingPeriodController {
     }
     
     /**
-     * Compute current academic year based on the configured switch date.
-     * Uses the 'academic_year_switch_date' setting to determine when the academic year changes.
+     * Get the current academic year display name for API responses.
+     * This is used to maintain backward compatibility in API responses.
      */
-    private function getCurrentAcademicYear() {
+    private function getCurrentAcademicYearDisplay() {
         try {
-            // Get the academic year switch date from settings
-            $settingModel = new SettingModel($this->pdo);
-            $switchDate = $settingModel->getAcademicYearSwitchDate();
-            
-            // Parse the switch date (format: MM-DD)
-            $switchParts = explode('-', $switchDate);
-            if (count($switchParts) !== 2) {
-                // Fallback to default September 1st if format is invalid
-                $switchMonth = 9;
-                $switchDay = 1;
+            $sql = "SELECT year_code FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($currentYear) {
+                return $currentYear['year_code'];
             } else {
-                $switchMonth = (int)$switchParts[0];
-                $switchDay = (int)$switchParts[1];
+                // Fallback: get the most recent active academic year
+                $sql = "SELECT year_code FROM academic_years WHERE is_active = 1 ORDER BY start_date DESC LIMIT 1";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute();
+                $activeYear = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($activeYear) {
+                    return $activeYear['year_code'];
+                } else {
+                    return 'No academic year found';
+                }
             }
-            
-            $now = new DateTime('now');
-            $currentYear = (int)$now->format('Y');
-            
-            // Create the switch date for current year
-            $switchDateThisYear = new DateTime("$currentYear-$switchMonth-$switchDay");
-            
-            // If today is on or after the switch date, start new academic year
-            // If today is before the switch date, we're still in the previous academic year
-            if ($now >= $switchDateThisYear) {
-                $start = $currentYear;
-                $end = $currentYear + 1;
-            } else {
-                $start = $currentYear - 1;
-                $end = $currentYear;
-            }
-            
-            return $start . '-' . $end;
         } catch (Exception $e) {
-            // Fallback to default September 1st logic if there's an error
-            $now = new DateTime('now');
-            $year = (int)$now->format('Y');
-            $month = (int)$now->format('n');
-            if ($month >= 9) {
-                $start = $year;
-                $end = $year + 1;
+            return 'Error getting academic year';
+        }
+    }
+
+    /**
+     * Get the current academic year ID from the database.
+     * This is used to ensure consistency when creating new grading periods.
+     */
+    private function getCurrentAcademicYearId() {
+        try {
+            // Get the current academic year from the database
+            $sql = "SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($currentYear) {
+                return $currentYear['id'];
             } else {
-                $start = $year - 1;
-                $end = $year;
+                // Fallback: get the most recent active academic year
+                $sql = "SELECT id FROM academic_years WHERE is_active = 1 ORDER BY start_date DESC LIMIT 1";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute();
+                $activeYear = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($activeYear) {
+                    return $activeYear['id'];
+                } else {
+                    throw new Exception('No academic year found in the system');
+                }
             }
-            return $start . '-' . $end;
+        } catch (Exception $e) {
+            throw new Exception('Error getting current academic year: ' . $e->getMessage());
         }
     }
 

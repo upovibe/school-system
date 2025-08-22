@@ -13,16 +13,17 @@ class Migration_20241001000031createclassestable {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(50) NOT NULL,
                 section VARCHAR(10) NOT NULL,
-                academic_year VARCHAR(20) NOT NULL,
+                academic_year_id INT NOT NULL,
                 capacity INT DEFAULT 30,
                 status ENUM('active', 'inactive') DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_class_section_year (name, section, academic_year),
+                UNIQUE KEY unique_class_section_year (name, section, academic_year_id),
                 INDEX idx_name (name),
-                INDEX idx_academic_year (academic_year),
+                INDEX idx_academic_year_id (academic_year_id),
                 INDEX idx_status (status),
-                INDEX idx_created_at (created_at)
+                INDEX idx_created_at (created_at),
+                FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT
             )
         ");
     }

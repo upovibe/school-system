@@ -15,10 +15,17 @@ class GradingPeriodSeeder
         // Get the first admin user or create a default one
         $adminUserId = $this->getAdminUserId();
         
+        // Get the current academic year ID (2024-2025)
+        $academicYearId = $this->getCurrentAcademicYearId();
+        if (!$academicYearId) {
+            echo "❌ Error: Could not find academic year 2024-2025. Please run academic_year_seeder first.\n";
+            return;
+        }
+        
         $periods = [
             [
                 'name' => 'First Term',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'start_date' => '2024-09-01',
                 'end_date' => '2024-12-15',
                 'is_active' => 1, // Use integer instead of boolean
@@ -27,7 +34,7 @@ class GradingPeriodSeeder
             ],
             [
                 'name' => 'Second Term',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'start_date' => '2025-01-15',
                 'end_date' => '2025-04-15',
                 'is_active' => 0, // Use integer instead of boolean
@@ -36,7 +43,7 @@ class GradingPeriodSeeder
             ],
             [
                 'name' => 'Third Term',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'start_date' => '2025-05-01',
                 'end_date' => '2025-07-31',
                 'is_active' => 0, // Use integer instead of boolean
@@ -88,16 +95,25 @@ class GradingPeriodSeeder
     }
     
     /**
+     * Get the ID of the current academic year (e.g., 2024-2025)
+     */
+    private function getCurrentAcademicYearId() {
+        $stmt = $this->pdo->prepare("SELECT id FROM academic_years WHERE year_code = ?");
+        $stmt->execute(['2024-2025']);
+        return $stmt->fetchColumn();
+    }
+    
+    /**
      * Seed individual grading period
      */
     private function seedGradingPeriod($periodData) {
         // Check if period already exists
-        $stmt = $this->pdo->prepare('SELECT id FROM grading_periods WHERE name = ? AND academic_year = ?');
-        $stmt->execute([$periodData['name'], $periodData['academic_year']]);
+        $stmt = $this->pdo->prepare('SELECT id FROM grading_periods WHERE name = ? AND academic_year_id = ?');
+        $stmt->execute([$periodData['name'], $periodData['academic_year_id']]);
         $existingPeriod = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($existingPeriod) {
-            echo "⚠️  Grading period {$periodData['name']} for {$periodData['academic_year']} already exists\n";
+            echo "⚠️  Grading period {$periodData['name']} for {$periodData['academic_year_id']} already exists\n";
             return;
         }
         
@@ -108,12 +124,12 @@ class GradingPeriodSeeder
         }
         
         // Insert period
-        $sql = "INSERT INTO grading_periods (name, academic_year, start_date, end_date, is_active, description, created_by) 
+        $sql = "INSERT INTO grading_periods (name, academic_year_id, start_date, end_date, is_active, description, created_by) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $periodData['name'],
-            $periodData['academic_year'],
+            $periodData['academic_year_id'],
             $periodData['start_date'],
             $periodData['end_date'],
             $periodData['is_active'],

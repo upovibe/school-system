@@ -43,9 +43,9 @@ class FinanceController {
                 $conditions[] = 'class_id = ?';
                 $params[] = $_GET['class_id'];
             }
-            if (isset($_GET['academic_year']) && $_GET['academic_year'] !== '') {
-                $conditions[] = 'academic_year = ?';
-                $params[] = $_GET['academic_year'];
+            if (isset($_GET['academic_year_id']) && $_GET['academic_year_id'] !== '') {
+                $conditions[] = 'academic_year_id = ?';
+                $params[] = $_GET['academic_year_id'];
             }
             if (isset($_GET['term']) && $_GET['term'] !== '') {
                 $conditions[] = 'term = ?';
@@ -65,7 +65,7 @@ class FinanceController {
                 $where = 'WHERE ' . implode(' AND ', $conditions);
             }
 
-            $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year DESC, term DESC, id DESC";
+            $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year_id DESC, term DESC, id DESC";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
             $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -430,7 +430,6 @@ class FinanceController {
             }
             // Try to find matching schedule id using type if present
             $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
-            $classIdStmt->execute([(int)$data['student_id']]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
                 $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['term'], $data['student_type'] ?? null);
@@ -542,7 +541,6 @@ class FinanceController {
                 }
             }
             $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
-            $classIdStmt->execute([$studentId]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
                 $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$term, $data['student_type'] ?? ($existing['student_type'] ?? null));

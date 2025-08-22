@@ -258,11 +258,6 @@ class AcademicYearUpdateModal extends HTMLElement {
 
                 // Get the updated data from the response
                 const updatedData = response.data.data || response.data;
-                console.log('=== API RESPONSE STRUCTURE ===');
-                console.log('Full response:', response);
-                console.log('response.data:', response.data);
-                console.log('response.data.data:', response.data.data);
-                console.log('Using updatedData:', updatedData);
 
                 // Create the updated academic year object from form data and existing data
                 const updatedAcademicYear = {
@@ -278,13 +273,10 @@ class AcademicYearUpdateModal extends HTMLElement {
                 };
 
                 // Dispatch event with the updated academic year data
-                console.log('=== DISPATCHING ACADEMIC YEAR UPDATED EVENT ===');
-                console.log('Event data:', updatedAcademicYear);
                 this.dispatchEvent(new CustomEvent('academic-year-updated', {
                     detail: { academicYear: updatedAcademicYear },
                     bubbles: true
                 }));
-                console.log('=== EVENT DISPATCHED ===');
 
                 // Don't call this.close() - let the parent page handle it (following delete modal pattern)
             } else {

@@ -202,11 +202,6 @@ class AcademicYearAddModal extends HTMLElement {
 
                 // Get the created data from the response
                 const createdData = response.data.data || response.data;
-                console.log('=== API RESPONSE STRUCTURE ===');
-                console.log('Full response:', response);
-                console.log('response.data:', response.data);
-                console.log('response.data.data:', response.data.data);
-                console.log('Using createdData:', createdData);
 
                 // Create the academic year object from form data and API response
                 const newAcademicYear = {
@@ -223,13 +218,10 @@ class AcademicYearAddModal extends HTMLElement {
                 };
 
                 // Dispatch event with the new academic year data
-                console.log('=== DISPATCHING ACADEMIC YEAR SAVED EVENT ===');
-                console.log('Event data:', newAcademicYear);
                 this.dispatchEvent(new CustomEvent('academic-year-saved', {
                     detail: { academicYear: newAcademicYear },
                     bubbles: true
                 }));
-                console.log('=== EVENT DISPATCHED ===');
 
                 // Don't call this.close() - let the parent page handle it (following delete modal pattern)
             } else {

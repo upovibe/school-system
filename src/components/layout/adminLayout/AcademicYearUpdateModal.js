@@ -232,8 +232,8 @@ class AcademicYearUpdateModal extends HTMLElement {
                 display_name: displayName,
                 start_date: startDate,
                 end_date: endDate,
-                is_active: isActive,
-                is_current: isCurrent,
+                is_active: isActive ? 1 : 0,
+                is_current: isCurrent ? 1 : 0,
                 status: 'active'
             };
 
@@ -256,13 +256,37 @@ class AcademicYearUpdateModal extends HTMLElement {
                     variant: 'success'
                 });
 
+                // Get the updated data from the response
+                const updatedData = response.data.data || response.data;
+                console.log('=== API RESPONSE STRUCTURE ===');
+                console.log('Full response:', response);
+                console.log('response.data:', response.data);
+                console.log('response.data.data:', response.data.data);
+                console.log('Using updatedData:', updatedData);
+
+                // Create the updated academic year object from form data and existing data
+                const updatedAcademicYear = {
+                    ...this.academicYearData, // Keep existing data
+                    year_code: yearCode,
+                    display_name: displayName,
+                    start_date: startDate,
+                    end_date: endDate,
+                    is_active: isActive ? 1 : 0,
+                    is_current: isCurrent ? 1 : 0,
+                    status: 'active',
+                    updated_at: new Date().toISOString()
+                };
+
                 // Dispatch event with the updated academic year data
+                console.log('=== DISPATCHING ACADEMIC YEAR UPDATED EVENT ===');
+                console.log('Event data:', updatedAcademicYear);
                 this.dispatchEvent(new CustomEvent('academic-year-updated', {
-                    detail: { academicYear: response.data.data },
+                    detail: { academicYear: updatedAcademicYear },
                     bubbles: true
                 }));
+                console.log('=== EVENT DISPATCHED ===');
 
-                // Don't call this.close() - let the parent page handle it
+                // Don't call this.close() - let the parent page handle it (following delete modal pattern)
             } else {
                 throw new Error(response.data?.message || 'Failed to update academic year');
             }

@@ -159,20 +159,31 @@ class AcademicYearManagementPage extends App {
         });
         
         this.addEventListener('academic-year-saved', (event) => {
+            console.log('=== ACADEMIC YEAR SAVED EVENT RECEIVED IN PARENT ===');
+            console.log('Event:', event);
+            console.log('Event detail:', event.detail);
+            
             // Add the new academic year to the existing data
             const newYear = event.detail.academicYear;
             if (newYear) {
                 const currentYears = this.get('academicYears') || [];
                 this.set('academicYears', [...currentYears, newYear]);
                 this.updateTableData();
+                console.log('=== CLOSING ADD MODAL ===');
+                console.log('Before setting showAddModal to false');
                 // Close the add modal
                 this.set('showAddModal', false);
+                console.log('After setting showAddModal to false');
             } else {
                 this.loadData();
             }
         });
         
         this.addEventListener('academic-year-updated', (event) => {
+            console.log('=== ACADEMIC YEAR UPDATED EVENT RECEIVED IN PARENT ===');
+            console.log('Event:', event);
+            console.log('Event detail:', event.detail);
+            
             // Update the existing academic year in the data
             const updatedYear = event.detail.academicYear;
             if (updatedYear) {
@@ -182,8 +193,11 @@ class AcademicYearManagementPage extends App {
                 );
                 this.set('academicYears', updatedYears);
                 this.updateTableData();
+                console.log('=== CLOSING UPDATE MODAL ===');
+                console.log('Before setting showUpdateModal to false');
                 // Close the update modal
                 this.set('showUpdateModal', false);
+                console.log('After setting showUpdateModal to false');
             } else {
                 this.loadData();
             }

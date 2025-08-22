@@ -200,13 +200,38 @@ class AcademicYearAddModal extends HTMLElement {
                     variant: 'success'
                 });
 
+                // Get the created data from the response
+                const createdData = response.data.data || response.data;
+                console.log('=== API RESPONSE STRUCTURE ===');
+                console.log('Full response:', response);
+                console.log('response.data:', response.data);
+                console.log('response.data.data:', response.data.data);
+                console.log('Using createdData:', createdData);
+
+                // Create the academic year object from form data and API response
+                const newAcademicYear = {
+                    id: createdData.id || response.data.id,
+                    year_code: yearCode,
+                    display_name: displayName,
+                    start_date: startDate,
+                    end_date: endDate,
+                    is_active: isActive ? 1 : 0,
+                    is_current: isCurrent ? 1 : 0,
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
                 // Dispatch event with the new academic year data
+                console.log('=== DISPATCHING ACADEMIC YEAR SAVED EVENT ===');
+                console.log('Event data:', newAcademicYear);
                 this.dispatchEvent(new CustomEvent('academic-year-saved', {
-                    detail: { academicYear: response.data.data },
+                    detail: { academicYear: newAcademicYear },
                     bubbles: true
                 }));
+                console.log('=== EVENT DISPATCHED ===');
 
-                // Don't call this.close() - let the parent page handle it
+                // Don't call this.close() - let the parent page handle it (following delete modal pattern)
             } else {
                 throw new Error(response.data?.message || 'Failed to create academic year');
             }

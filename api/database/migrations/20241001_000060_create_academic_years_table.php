@@ -20,7 +20,6 @@ class Migration_20241001000060createacademicyearstable {
             display_name VARCHAR(100) NOT NULL,
             start_date DATE NOT NULL,
             end_date DATE NOT NULL,
-            switch_date VARCHAR(5) NOT NULL,
             is_active BOOLEAN DEFAULT FALSE,
             is_current BOOLEAN DEFAULT FALSE,
             status ENUM('active', 'inactive', 'archived') DEFAULT 'active',

@@ -12,7 +12,6 @@ class AcademicYearModel extends BaseModel {
         'display_name',
         'start_date',
         'end_date',
-        'switch_date',
         'is_active',
         'is_current',
         'status',

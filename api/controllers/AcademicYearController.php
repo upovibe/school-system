@@ -141,7 +141,7 @@ class AcademicYearController {
             $input = json_decode(file_get_contents('php://input'), true);
             
             // Validate required fields
-            $required = ['year_code', 'display_name', 'start_date', 'end_date', 'switch_date'];
+            $required = ['year_code', 'display_name', 'start_date', 'end_date'];
             foreach ($required as $field) {
                 if (empty($input[$field])) {
                     http_response_code(400);

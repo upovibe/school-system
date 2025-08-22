@@ -58,7 +58,10 @@ class AcademicYearUpdateModal extends HTMLElement {
     // Set academic year data for editing
     setAcademicYearData(academicYear) {
         this.academicYearData = academicYear;
-        this.populateForm();
+        // Add a small delay to ensure DOM elements are ready
+        setTimeout(() => {
+            this.populateForm();
+        }, 100);
     }
 
     // Populate form with existing data
@@ -76,8 +79,23 @@ class AcademicYearUpdateModal extends HTMLElement {
         if (displayNameInput) displayNameInput.value = this.academicYearData.display_name || '';
         if (startDateInput) startDateInput.value = this.academicYearData.start_date || '';
         if (endDateInput) endDateInput.value = this.academicYearData.end_date || '';
-        if (isActiveSwitch) isActiveSwitch.checked = this.academicYearData.is_active || false;
-        if (isCurrentSwitch) isCurrentSwitch.checked = this.academicYearData.is_current || false;
+        
+        // Set switch states using setAttribute/removeAttribute
+        if (isActiveSwitch) {
+            if (this.academicYearData.is_active) {
+                isActiveSwitch.setAttribute('checked', '');
+            } else {
+                isActiveSwitch.removeAttribute('checked');
+            }
+        }
+        
+        if (isCurrentSwitch) {
+            if (this.academicYearData.is_current) {
+                isCurrentSwitch.setAttribute('checked', '');
+            } else {
+                isCurrentSwitch.removeAttribute('checked');
+            }
+        }
 
         // Validate form after populating
         this.validateForm();

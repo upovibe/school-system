@@ -334,8 +334,7 @@ class AcademicYearManagementPage extends App {
             display_name: year.display_name,
             start_date: year.start_date,
             end_date: year.end_date,
-            status: year.status === 'active' ? 'Active' : 
-                   year.status === 'archived' ? 'Archived' : 'Inactive',
+            status: year.is_active ? 'Active' : 'Inactive',
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
@@ -376,8 +375,7 @@ class AcademicYearManagementPage extends App {
             display_name: year.display_name,
             start_date: year.start_date,
             end_date: year.end_date,
-            status: year.status === 'active' ? 'Active' : 
-                   year.status === 'archived' ? 'Archived' : 'Inactive',
+            status: year.is_active ? 'Active' : 'Inactive',
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,

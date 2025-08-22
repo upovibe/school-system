@@ -237,6 +237,7 @@ Router::get('/class-subjects/{id}', 'ClassSubjectController@show');
 Router::put('/class-subjects/{id}', 'ClassSubjectController@update');
 Router::delete('/class-subjects/{id}', 'ClassSubjectController@destroy');
 Router::delete('/class-subjects/class/{classId}/subject/{subjectId}', 'ClassSubjectController@deleteByClassAndSubject');
+Router::delete('/class-subjects/class/{classId}', 'ClassSubjectController@deleteByClass');
 
 // Assignment Management Routes (admin only)
 Router::get('/assignments', 'AssignmentController@index');

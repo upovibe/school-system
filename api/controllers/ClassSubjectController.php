@@ -576,6 +576,77 @@ class ClassSubjectController {
     }
 
     /**
+     * Delete all subjects for a specific class (admin only)
+     */
+    public function deleteByClass($classId) {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Validate parameters
+            if (empty($classId) || !is_numeric($classId)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Valid class ID is required'
+                ]);
+                return;
+            }
+            
+            // Get all class subjects for this class for logging
+            $classSubjectsToDelete = $this->classSubjectModel->findByClass($classId);
+            
+            if (empty($classSubjectsToDelete)) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No class subjects found for the specified class'
+                ]);
+                return;
+            }
+            
+            // Delete all class subjects for this class
+            $deletedCount = $this->classSubjectModel->deleteByClass($classId);
+            
+            if ($deletedCount > 0) {
+                // Log the action
+                $this->logAction(
+                    'DELETE_CLASS_SUBJECTS_BY_CLASS',
+                    "Deleted all class subjects for class ID {$classId}",
+                    [
+                        'class_id' => $classId,
+                        'deleted_count' => $deletedCount,
+                        'deleted_class_subjects' => $classSubjectsToDelete
+                    ]
+                );
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Successfully deleted all subject assignments for class ID {$classId}",
+                    'data' => [
+                        'deleted_count' => $deletedCount,
+                        'class_id' => $classId
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to delete class subjects'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting class subjects: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get authentication token from headers
      */
     private function getAuthToken() {

@@ -216,6 +216,52 @@ class ClassSubjectModel extends BaseModel {
     }
 
     /**
+     * Find all class subjects for a specific class
+     */
+    public function findByClass($classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT cs.*, 
+                       c.name as class_name, c.section as class_section,
+                       s.name as subject_name, s.code as subject_code
+                FROM {$this->getTableName()} cs
+                LEFT JOIN classes c ON cs.class_id = c.id
+                LEFT JOIN subjects s ON cs.subject_id = s.id
+                WHERE cs.class_id = ?
+                ORDER BY s.name ASC
+            ");
+            $stmt->execute([$classId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching class subjects by class ID: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete all class subjects for a specific class
+     */
+    public function deleteByClass($classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM {$this->getTableName()} 
+                WHERE class_id = ?
+            ");
+            $stmt->execute([$classId]);
+            
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            throw new Exception('Error deleting class subjects by class: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get statistics
      */
     public function getStatistics() {

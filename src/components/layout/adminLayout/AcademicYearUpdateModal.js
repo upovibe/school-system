@@ -262,8 +262,7 @@ class AcademicYearUpdateModal extends HTMLElement {
                     bubbles: true
                 }));
 
-                // Close modal
-                this.close();
+                // Don't call this.close() - let the parent page handle it
             } else {
                 throw new Error(response.data?.message || 'Failed to update academic year');
             }

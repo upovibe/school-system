@@ -117,8 +117,7 @@ class AcademicYearDeleteDialog extends HTMLElement {
                     bubbles: true
                 }));
 
-                // Close dialog
-                this.close();
+                // Don't call this.close() - let the parent page handle it
             } else {
                 throw new Error(response.data?.message || 'Failed to delete academic year');
             }

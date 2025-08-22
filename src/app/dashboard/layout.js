@@ -434,6 +434,8 @@ class DashboardLayout extends App {
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
             'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
+            'academic-years': 'Academic Year Management',
+            'academic-year-records': 'Academic Year Records',
             'grading-periods': 'Grading Period Management',
             'grading-policies': 'Grading Policy Management',
             'student-grades': 'Student Grades Management',

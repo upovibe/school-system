@@ -34,6 +34,13 @@ class AcademicYearViewModal extends HTMLElement {
         });
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null) {
+            // Re-render when modal is opened to ensure content is displayed
+            this.render();
+        }
+    }
+
     open() {
         this.setAttribute('open', '');
     }
@@ -83,7 +90,7 @@ class AcademicYearViewModal extends HTMLElement {
 
     render() {
         if (!this.academicYearData) {
-            return `
+            this.innerHTML = `
                 <ui-modal 
                     title="View Academic Year"
                     size="lg"
@@ -99,11 +106,12 @@ class AcademicYearViewModal extends HTMLElement {
                     </div>
                 </ui-modal>
             `;
+            return;
         }
 
         const data = this.academicYearData;
         
-        return `
+        this.innerHTML = `
             <ui-modal 
                 title="Academic Year Details"
                 size="lg"
@@ -233,14 +241,6 @@ class AcademicYearViewModal extends HTMLElement {
                 </div>
             </ui-modal>
         `;
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && newValue !== null) {
-            this.open();
-        } else if (name === 'open' && newValue === null) {
-            this.close();
-        }
     }
 }
 

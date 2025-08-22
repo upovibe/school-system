@@ -24,6 +24,7 @@ class AcademicYearManagementPage extends App {
         this.showAddModal = false;
         this.showUpdateModal = false;
         this.showViewModal = false;
+        this.showDeleteDialog = false;
         this.updateAcademicYearData = null;
         this.viewAcademicYearData = null;
         this.deleteAcademicYearData = null;

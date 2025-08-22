@@ -40,6 +40,13 @@ class AcademicYearUpdateModal extends HTMLElement {
         });
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null) {
+            // Re-render when modal is opened to ensure content is displayed
+            this.render();
+        }
+    }
+
     open() {
         this.setAttribute('open', '');
     }
@@ -263,7 +270,7 @@ class AcademicYearUpdateModal extends HTMLElement {
     }
 
     render() {
-        return `
+        this.innerHTML = `
             <ui-modal 
                 title="Update Academic Year"
                 size="lg"
@@ -381,17 +388,13 @@ class AcademicYearUpdateModal extends HTMLElement {
                 </div>
             </ui-modal>
         `;
-    }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && newValue !== null) {
-            this.open();
-            // Add event listeners after modal is opened
-            setTimeout(() => {
-                this.addFormEventListeners();
-            }, 100);
-        } else if (name === 'open' && newValue === null) {
-            this.close();
+        // Attach form events and initialize validation
+        this.addFormEventListeners();
+        
+        // Populate form if we have data
+        if (this.academicYearData) {
+            this.populateForm();
         }
     }
 }

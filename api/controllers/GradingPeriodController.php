@@ -16,48 +16,6 @@ class GradingPeriodController {
     }
     
     /**
-     * Get current academic year switch date (admin only)
-     */
-    public function getAcademicYearSwitchDate() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            // Get the current academic year from the database
-            $sql = "SELECT start_date FROM academic_years WHERE is_current = 1 LIMIT 1";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
-            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($currentYear) {
-                $switchDate = $currentYear['start_date'];
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'data' => [
-                        'switch_date' => $switchDate,
-                        'current_academic_year' => $this->getCurrentAcademicYearDisplay()
-                    ],
-                    'message' => 'Academic year switch date retrieved successfully'
-                ]);
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Current academic year not found'
-                ]);
-            }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving academic year switch date: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Get all grading periods (admin only)
      */
     public function index() {

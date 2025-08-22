@@ -534,37 +534,6 @@ class ClassController {
     }
 
     /**
-     * Get current academic year switch date (admin only)
-     * Note: This method is deprecated as we now use the academic_years table directly
-     */
-    public function getAcademicYearSwitchDate() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            // Get current academic year info from the academic_years table
-            $currentYear = $this->getCurrentAcademicYearDisplay();
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'switch_date' => 'N/A - Using academic_years table',
-                    'current_academic_year' => $currentYear
-                ],
-                'message' => 'Academic year information retrieved successfully (switch dates are no longer used)'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving academic year information: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Log user action
      */
     private function logAction($action, $description = null, $metadata = null) {

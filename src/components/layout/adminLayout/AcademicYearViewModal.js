@@ -92,17 +92,15 @@ class AcademicYearViewModal extends HTMLElement {
         if (!this.academicYearData) {
             this.innerHTML = `
                 <ui-modal 
-                    title="View Academic Year"
-                    size="lg"
-                    ${this.hasAttribute('open') ? 'open' : ''}
-                >
-                    <div slot="content" class="text-center py-8">
+                    ${this.hasAttribute('open') ? 'open' : ''} 
+                    position="right" 
+                    close-button="true">
+                    <div slot="title">View Academic Year</div>
+                    <div class="text-center py-8">
                         <p class="text-gray-500">No academic year data to display</p>
                     </div>
                     <div slot="footer" class="flex justify-end">
-                        <ui-button variant="secondary" @click="${() => this.close()}">
-                            Close
-                        </ui-button>
+                        <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
                     </div>
                 </ui-modal>
             `;
@@ -113,11 +111,11 @@ class AcademicYearViewModal extends HTMLElement {
         
         this.innerHTML = `
             <ui-modal 
-                title="Academic Year Details"
-                size="lg"
-                ${this.hasAttribute('open') ? 'open' : ''}
-            >
-                <div slot="content" class="space-y-6">
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Academic Year Details</div>
+                <div class="space-y-6">
                     <!-- Basic Information -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
@@ -235,9 +233,7 @@ class AcademicYearViewModal extends HTMLElement {
                 </div>
 
                 <div slot="footer" class="flex justify-end">
-                    <ui-button variant="secondary" @click="${() => this.close()}">
-                        Close
-                    </ui-button>
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
                 </div>
             </ui-modal>
         `;

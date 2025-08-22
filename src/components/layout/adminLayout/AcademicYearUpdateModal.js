@@ -272,119 +272,86 @@ class AcademicYearUpdateModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <ui-modal 
-                title="Update Academic Year"
-                size="lg"
-                ${this.hasAttribute('open') ? 'open' : ''}
-            >
-                <div slot="content" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Year Code -->
-                        <div class="space-y-2">
-                            <label for="year_code" class="block text-sm font-medium text-gray-700">
-                                Year Code <span class="text-red-500">*</span>
-                            </label>
-                            <ui-input
-                                id="year_code"
-                                data-field="year_code"
-                                type="text"
-                                placeholder="e.g., 2024-2025"
-                                class="w-full"
-                                required
-                            ></ui-input>
-                            <p class="text-xs text-gray-500">Format: YYYY-YYYY (e.g., 2024-2025)</p>
-                        </div>
-
-                        <!-- Display Name -->
-                        <div class="space-y-2">
-                            <label for="display_name" class="block text-sm font-medium text-gray-700">
-                                Display Name <span class="text-red-500">*</span>
-                            </label>
-                            <ui-input
-                                id="display_name"
-                                data-field="display_name"
-                                type="text"
-                                placeholder="e.g., Academic Year 2024-2025"
-                                class="w-full"
-                                required
-                            ></ui-input>
-                        </div>
-
-                        <!-- Start Date -->
-                        <div class="space-y-2">
-                            <label for="start_date" class="block text-sm font-medium text-gray-700">
-                                Start Date <span class="text-red-500">*</span>
-                            </label>
-                            <ui-input
-                                id="start_date"
-                                data-field="start_date"
-                                type="date"
-                                class="w-full"
-                                required
-                            ></ui-input>
-                        </div>
-
-                        <!-- End Date -->
-                        <div class="space-y-2">
-                            <label for="end_date" class="block text-sm font-medium text-gray-700">
-                                End Date <span class="text-red-500">*</span>
-                            </label>
-                            <ui-input
-                                id="end_date"
-                                data-field="end_date"
-                                type="date"
-                                class="w-full"
-                                required
-                            ></ui-input>
-                        </div>
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Update Academic Year</div>
+                <form id="academic-year-update-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Year Code <span class="text-red-500">*</span></label>
+                        <ui-input
+                            data-field="year_code"
+                            type="text"
+                            placeholder="e.g., 2024-2025"
+                            class="w-full">
+                        </ui-input>
+                        <p class="text-xs text-gray-500 mt-1">Format: YYYY-YYYY (e.g., 2024-2025)</p>
                     </div>
 
-                    <!-- Status Switches -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Active Status</label>
-                            <ui-switch name="is_active"></ui-switch>
-                            <p class="text-xs text-gray-500">Can be used for current operations</p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Current Year</label>
-                            <ui-switch name="is_current"></ui-switch>
-                            <p class="text-xs text-gray-500">Mark as the current academic year</p>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Display Name <span class="text-red-500">*</span></label>
+                        <ui-input
+                            data-field="display_name"
+                            type="text"
+                            placeholder="e.g., Academic Year 2024-2025"
+                            class="w-full">
+                        </ui-input>
                     </div>
 
-                    <!-- Help Text -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-info-circle text-blue-400"></i>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-blue-800">Important Notes</h3>
-                                <div class="mt-2 text-sm text-blue-700">
-                                    <ul class="list-disc pl-5 space-y-1">
-                                        <li>Only one academic year can be marked as current</li>
-                                        <li>Active years can be used for classes, grading periods, and student records</li>
-                                        <li>Dates should represent the actual school calendar period</li>
-                                        <li>Changing dates may affect existing classes and records</li>
-                                    </ul>
-                                </div>
-                            </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date <span class="text-red-500">*</span></label>
+                        <ui-input
+                            data-field="start_date"
+                            type="date"
+                            class="w-full">
+                        </ui-input>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date <span class="text-red-500">*</span></label>
+                        <ui-input
+                            data-field="end_date"
+                            type="date"
+                            class="w-full">
+                        </ui-input>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Active Status</label>
+                        <ui-switch name="is_active" class="w-full">
+                            <span slot="label">Can be used for current operations</span>
+                        </ui-switch>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Current Year</label>
+                        <ui-switch name="is_current" class="w-full">
+                            <span slot="label">Mark as the current academic year</span>
+                        </ui-switch>
+                    </div>
+                </form>
+
+                <!-- How this works (bottom) -->
+                <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-medium">How this works</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Year Code</strong>: unique identifier in YYYY-YYYY format (e.g., 2024-2025)</li>
+                                <li><strong>Display Name</strong>: human-readable name for the academic year</li>
+                                <li><strong>Start/End Dates</strong>: actual school calendar period</li>
+                                <li><strong>Active Status</strong>: can be used for classes, grading periods, and records</li>
+                                <li><strong>Current Year</strong>: only one academic year can be marked as current</li>
+                                <li><strong>Warning</strong>: changing dates may affect existing classes and records</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button variant="secondary" @click="${() => this.close()}">
-                        Cancel
-                    </ui-button>
-                    <ui-button 
-                        id="update-academic-year-btn"
-                        variant="primary"
-                        disabled
-                    >
-                        Update Academic Year
-                    </ui-button>
+                <div slot="footer" class="flex items-center justify-end gap-2">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
+                    <ui-button id="update-academic-year-btn" color="primary" disabled>Update</ui-button>
                 </div>
             </ui-modal>
         `;

@@ -167,20 +167,18 @@ class AcademicYearDeleteDialog extends HTMLElement {
     render() {
         if (!this.academicYearData) {
             this.innerHTML = `
-                <ui-dialog 
-                    title="Delete Academic Year"
-                    size="md"
-                    ${this.hasAttribute('open') ? 'open' : ''}
-                >
-                    <div slot="content" class="text-center py-8">
+                <ui-modal 
+                    ${this.hasAttribute('open') ? 'open' : ''} 
+                    position="right" 
+                    close-button="true">
+                    <div slot="title">Delete Academic Year</div>
+                    <div class="text-center py-8">
                         <p class="text-gray-500">No academic year data to delete</p>
                     </div>
                     <div slot="footer" class="flex justify-end">
-                        <ui-button variant="secondary" @click="${() => this.close()}">
-                            Cancel
-                        </ui-button>
+                        <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
                     </div>
-                </ui-dialog>
+                </ui-modal>
             `;
             return;
         }
@@ -188,12 +186,12 @@ class AcademicYearDeleteDialog extends HTMLElement {
         const data = this.academicYearData;
         
         this.innerHTML = `
-            <ui-dialog 
-                title="Delete Academic Year"
-                size="md"
-                ${this.hasAttribute('open') ? 'open' : ''}
-            >
-                <div slot="content" class="space-y-6">
+            <ui-modal 
+                ${this.hasAttribute('open') ? 'open' : ''} 
+                position="right" 
+                close-button="true">
+                <div slot="title">Delete Academic Year</div>
+                <div class="space-y-6">
                     <!-- Warning Message -->
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                         <div class="flex">
@@ -269,18 +267,16 @@ class AcademicYearDeleteDialog extends HTMLElement {
                 </div>
 
                 <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button variant="secondary" @click="${() => this.close()}">
-                        Cancel
-                    </ui-button>
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
                     <ui-button 
                         id="delete-academic-year-btn"
-                        variant="danger"
+                        color="danger"
                         disabled
                     >
                         Delete Academic Year
                     </ui-button>
                 </div>
-            </ui-dialog>
+            </ui-modal>
         `;
 
         // Add event listeners

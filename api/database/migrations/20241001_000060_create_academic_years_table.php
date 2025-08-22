@@ -24,6 +24,7 @@ class Migration_20241001000060createacademicyearstable {
             is_active BOOLEAN DEFAULT FALSE,
             is_current BOOLEAN DEFAULT FALSE,
             status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
+            archive_date TIMESTAMP NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             

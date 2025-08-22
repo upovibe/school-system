@@ -150,6 +150,25 @@ Router::get('/classes/{id}', 'ClassController@show');
 Router::put('/classes/{id}', 'ClassController@update');
 Router::delete('/classes/{id}', 'ClassController@destroy');
 
+// Academic Year Management Routes (admin only)
+Router::get('/academic-years', 'AcademicYearController@index');
+Router::post('/academic-years', 'AcademicYearController@store');
+Router::get('/academic-years/current', 'AcademicYearController@getCurrent');
+Router::get('/academic-years/active', 'AcademicYearController@getActive');
+Router::get('/academic-years/selection', 'AcademicYearController@getForSelection');
+Router::get('/academic-years/{id}', 'AcademicYearController@show');
+Router::put('/academic-years/{id}', 'AcademicYearController@update');
+Router::delete('/academic-years/{id}', 'AcademicYearController@destroy');
+Router::post('/academic-years/{id}/archive', 'AcademicYearController@archive');
+
+// Academic Year Records Routes (admin only)
+Router::get('/academic-year-records', 'AcademicYearRecordController@index');
+Router::get('/academic-year-records/academic-year/{id}', 'AcademicYearRecordController@getByAcademicYear');
+Router::get('/academic-year-records/year-code/{yearCode}', 'AcademicYearRecordController@getByYearCode');
+Router::get('/academic-year-records/{id}', 'AcademicYearRecordController@show');
+Router::get('/academic-year-records/{id}/export', 'AcademicYearRecordController@export');
+Router::post('/academic-year-records/search', 'AcademicYearRecordController@search');
+
 // Teacher Management Routes (admin only)
 Router::get('/teachers', 'TeacherController@index');
 Router::post('/teachers', 'TeacherController@store');

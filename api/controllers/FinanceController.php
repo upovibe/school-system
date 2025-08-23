@@ -1089,10 +1089,28 @@ class FinanceController {
         try {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
-            $stmt = $this->pdo->prepare('SELECT * FROM fee_payments WHERE id = ? LIMIT 1');
+            
+            // Get payment with receipt information
+            $sql = "
+                SELECT 
+                    p.*,
+                    r.id as receipt_id,
+                    r.receipt_number
+                FROM fee_payments p
+                LEFT JOIN fee_receipts r ON p.id = r.payment_id
+                WHERE p.id = ?
+                LIMIT 1
+            ";
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([(int)$id]);
             $payment = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-            if (!$payment) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Payment not found']); return; }
+            
+            if (!$payment) { 
+                http_response_code(404); 
+                echo json_encode(['success' => false, 'message' => 'Payment not found']); 
+                return; 
+            }
+            
             http_response_code(200);
             echo json_encode(['success' => true, 'data' => $payment, 'message' => 'Payment retrieved successfully']);
         } catch (Exception $e) {

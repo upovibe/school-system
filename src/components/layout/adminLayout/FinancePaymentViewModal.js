@@ -22,6 +22,13 @@ class FinancePaymentViewModal extends HTMLElement {
       voidBtn._bound = true;
     }
 
+    // Print button in footer
+    const printBtn = this.querySelector('#print-btn');
+    if (printBtn && !printBtn._bound) {
+      printBtn.addEventListener('click', () => this.printReceipt());
+      printBtn._bound = true;
+    }
+
     // Void dialog handlers
     const voidDlg = this.querySelector('#void-dialog');
     if (voidDlg && !voidDlg._bound) {
@@ -60,6 +67,37 @@ class FinancePaymentViewModal extends HTMLElement {
       }
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to void payment', variant: 'error', duration: 3000 });
+    }
+  }
+
+  async printReceipt() {
+    try {
+      if (!this._payment?.receipt_id) {
+        Toast.show({ title: 'Error', message: 'No receipt found for this payment', variant: 'error', duration: 3000 });
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
+      
+      // Use the same API endpoint structure as receipt view modal
+      const url = `/api/finance/receipts/${this._payment.receipt_id}/print`;
+      
+      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'text/html' } });
+      
+      if (!resp.ok) throw new Error('Failed to print receipt');
+      const html = await resp.text();
+      
+      const w = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(() => { try { w.print(); } catch (_) {} }, 800);
+      }
+    } catch (error) {
+      console.error('Error in printReceipt:', error);
+      Toast.show({ title: 'Error', message: 'Failed to print receipt', variant: 'error', duration: 3000 });
     }
   }
 
@@ -143,6 +181,10 @@ class FinancePaymentViewModal extends HTMLElement {
         </div>
         <div slot="footer" class="flex items-center justify-end gap-2">
           <ui-button id="cancel-view" variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
+          ${this._payment?.receipt_id ? 
+            `<ui-button id="print-btn" color="primary"><i class="fas fa-print mr-1"></i>Print Receipt</ui-button>` :
+            `<ui-button disabled color="secondary"><i class="fas fa-exclamation-triangle mr-1"></i>No Receipt Available</ui-button>`
+          }
           ${!isVoided ? `<ui-button id=\"void-btn\" color=\"error\"><i class=\"fas fa-ban mr-1\"></i>Void</ui-button>` : ''}
         </div>
       </ui-dialog>

@@ -39,7 +39,7 @@ class GradingPeriodModel extends BaseModel {
                 gp.*,
                 u.name as creator_name,
                 u.email as creator_email,
-                ay.year_code,
+                ay.year_code AS academic_year,
                 ay.display_name as academic_year_name
             FROM grading_periods gp
             LEFT JOIN users u ON gp.created_by = u.id

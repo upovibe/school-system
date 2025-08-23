@@ -24,7 +24,7 @@ class GradingPeriodController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $periods = $this->gradingPeriodModel->findAll();
+            $periods = $this->gradingPeriodModel->getAllPeriodsWithCreator();
             
             http_response_code(200);
             echo json_encode([

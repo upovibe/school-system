@@ -11,9 +11,9 @@ class Migration_20241001000071createfeeinvoicestable {
         $sql = "CREATE TABLE IF NOT EXISTS fee_invoices (
             id INT AUTO_INCREMENT PRIMARY KEY,
             student_id INT NOT NULL,
-            academic_year VARCHAR(20) NOT NULL,
-            grading_period VARCHAR(20) NOT NULL,
-            student_type VARCHAR(20) NOT NULL DEFAULT 'Day',
+            academic_year VARCHAR(100) NOT NULL,
+            grading_period VARCHAR(100) NOT NULL,
+            student_type VARCHAR(100) NOT NULL DEFAULT 'Day',
             invoice_number VARCHAR(50) NOT NULL,
             status ENUM('draft','open','paid') NOT NULL DEFAULT 'open',
             issue_date DATE NOT NULL,

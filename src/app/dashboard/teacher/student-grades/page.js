@@ -515,6 +515,11 @@ class TeacherStudentGradesPage extends App {
   // removed updateTableData; table data is derived in render()
 
   renderFilters() {
+    // Don't render filters if teacher has no assigned class
+    if (!this.teacherClass || !this.teacherClass.class_id) {
+      return '';
+    }
+
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
     const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
 
@@ -556,6 +561,24 @@ class TeacherStudentGradesPage extends App {
     // Show skeleton loading during initial page load (check this FIRST)
     if (loading) {
       return `<data-skeleton></data-skeleton>`;
+    }
+
+    // Show complete "No Class Assignment" message if no class is assigned
+    if (!this.teacherClass || !this.teacherClass.class_id) {
+      return `
+        <div class="space-y-6">
+          <div class="bg-white shadow rounded-lg p-8 text-center">
+            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <i class="fas fa-chart-line text-3xl text-gray-400"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Class Assignment</h3>
+            <p class="text-gray-500 max-w-md mx-auto">
+              You are not currently assigned to any classes, so you cannot grade students. 
+              Please contact the administration to get assigned to a class first.
+            </p>
+          </div>
+        </div>
+      `;
     }
 
     const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };

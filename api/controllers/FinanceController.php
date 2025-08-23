@@ -65,10 +65,37 @@ class FinanceController {
                 $where = 'WHERE ' . implode(' AND ', $conditions);
             }
 
-            $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year_id DESC, term DESC, id DESC";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($params);
-            $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Use the enhanced model method to get schedules with class and academic year details
+            if (empty($conditions)) {
+                $schedules = $this->feeScheduleModel->getAllWithDetails();
+            } else {
+                // For filtered results, we'll need to get basic data first, then enhance it
+                $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year DESC, term DESC, id DESC";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute($params);
+                $basicSchedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Enhance with class and academic year details
+                $schedules = [];
+                foreach ($basicSchedules as $schedule) {
+                    $classSql = "SELECT c.name as class_name, c.section as class_section, c.academic_year_id, 
+                                        ay.year_code AS academic_year_code, ay.display_name as academic_year_display_name
+                                 FROM classes c 
+                                 LEFT JOIN academic_years ay ON c.academic_year_id = ay.id 
+                                 WHERE c.id = ?";
+                    $classStmt = $this->pdo->prepare($classSql);
+                    $classStmt->execute([$schedule['class_id']]);
+                    $classDetails = $classStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($classDetails) {
+                        $schedule['class_name'] = $classDetails['class_name'];
+                        $schedule['class_section'] = $classDetails['class_section'];
+                        $schedule['academic_year_code'] = $classDetails['academic_year_code'];
+                        $schedule['academic_year_display_name'] = $classDetails['academic_year_display_name'];
+                    }
+                    $schedules[] = $schedule;
+                }
+            }
 
             http_response_code(200);
             echo json_encode([
@@ -96,8 +123,8 @@ class FinanceController {
 
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-            // Validate required fields
-            $required = ['class_id', 'academic_year', 'term', 'student_type', 'total_fee'];
+            // Validate required fields (academic_year is auto-populated from class)
+            $required = ['class_id', 'term', 'student_type', 'total_fee'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -109,9 +136,33 @@ class FinanceController {
                 }
             }
 
+            // Automatically populate academic_year from the selected class
+            $classAcademicYear = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
+            if (!$classAcademicYear) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid class selected or class has no academic year'
+                ]);
+                return;
+            }
+            
+            // Use the year_code as the academic_year value
+            $data['academic_year'] = $classAcademicYear['year_code'];
+
             // Defaults
             if (!isset($data['student_type']) || $data['student_type'] === '') {
                 $data['student_type'] = 'Day';
+            }
+
+            // Validate that the academic year matches the class's academic year
+            if (!$this->feeScheduleModel->validateAcademicYear($data['class_id'], $data['academic_year'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'The academic year must match the class\'s academic year'
+                ]);
+                return;
             }
 
             // Enforce uniqueness: class_id + academic_year + term + student_type
@@ -204,6 +255,22 @@ class FinanceController {
 
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
+            // If class is being changed, automatically update academic_year to match the new class
+            if (isset($data['class_id']) && $data['class_id'] !== $existing['class_id']) {
+                $classAcademicYear = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
+                if (!$classAcademicYear) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid class selected or class has no academic year'
+                    ]);
+                    return;
+                }
+                
+                // Automatically update academic_year to match the new class
+                $data['academic_year'] = $classAcademicYear['year_code'];
+            }
+
             // If composite keys are changing, enforce uniqueness
             $newClassId = $data['class_id'] ?? $existing['class_id'];
             $newYear = $data['academic_year'] ?? $existing['academic_year'];
@@ -243,6 +310,31 @@ class FinanceController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error updating fee schedule: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get classes with academic year information for fee schedule creation (admin only)
+     */
+    public function getClassesForSchedule() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $classes = $this->feeScheduleModel->getClassesWithAcademicYear();
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $classes,
+                'message' => 'Classes retrieved successfully for fee schedule creation'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving classes: ' . $e->getMessage()
             ]);
         }
     }

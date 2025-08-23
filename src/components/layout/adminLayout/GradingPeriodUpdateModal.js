@@ -303,9 +303,9 @@ class GradingPeriodUpdateModal extends HTMLElement {
                                     // If multiple academic years, show as dropdown
                                     `<ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
                                         ${academicYears.map(ay => `
-                                            <ui-option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
+                                            <option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
                                                 ${ay.year_code}${ay.display_name ? ` (${ay.display_name})` : ''}
-                                            </ui-option>
+                                            </option>
                                         `).join('')}
                                     </ui-dropdown>`;
                             })()}`

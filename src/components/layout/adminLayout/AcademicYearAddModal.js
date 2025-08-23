@@ -254,9 +254,18 @@ class AcademicYearAddModal extends HTMLElement {
                 throw new Error(response.data?.message || 'Failed to create academic year');
             }
         } catch (error) {
+            // Extract the actual error message from the API response
+            let errorMessage = 'Failed to create academic year. Please try again.';
+            
+            if (error.response && error.response.data && error.response.data.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             Toast.show({
                 title: 'Error',
-                message: 'Failed to create academic year. Please try again.',
+                message: errorMessage,
                 variant: 'error'
             });
         } finally {

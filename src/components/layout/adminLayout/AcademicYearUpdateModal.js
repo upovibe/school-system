@@ -38,6 +38,11 @@ class AcademicYearUpdateModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+        
+        // Listen for confirm button click (modal's default action)
+        this.addEventListener('confirm', () => {
+            this.updateAcademicYear();
+        });
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -118,7 +123,6 @@ class AcademicYearUpdateModal extends HTMLElement {
             const displayNameInput = this.querySelector('ui-input[data-field="display_name"]');
             const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
             const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
-            const saveBtn = this.querySelector('#update-academic-year-btn');
             
             const yearCode = yearCodeInput ? String(yearCodeInput.value || '').trim() : '';
             const displayName = displayNameInput ? String(displayNameInput.value || '').trim() : '';
@@ -130,14 +134,6 @@ class AcademicYearUpdateModal extends HTMLElement {
             const isYearCodeValid = yearCodePattern.test(yearCode);
             
             const isValid = !!yearCode && !!displayName && !!startDate && !!endDate && isYearCodeValid;
-            
-            if (saveBtn) {
-                if (isValid) {
-                    saveBtn.removeAttribute('disabled');
-                } else {
-                    saveBtn.setAttribute('disabled', '');
-                }
-            }
             
             // Show validation message for year code
             if (yearCodeInput) {
@@ -195,9 +191,6 @@ class AcademicYearUpdateModal extends HTMLElement {
         }
         if (isCurrentSwitch) {
             isCurrentSwitch.addEventListener('change', () => this.validateForm());
-        }
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.updateAcademicYear());
         }
 
         // Initial validation state
@@ -274,12 +267,7 @@ class AcademicYearUpdateModal extends HTMLElement {
                 status: 'active'
             };
 
-            // Show loading state
-            const saveBtn = this.querySelector('#update-academic-year-btn');
-            if (saveBtn) {
-                saveBtn.setAttribute('loading', '');
-                saveBtn.textContent = 'Updating...';
-            }
+            // Show loading state - modal will handle button states automatically
 
             // Call API
             const token = localStorage.getItem('token');
@@ -325,13 +313,6 @@ class AcademicYearUpdateModal extends HTMLElement {
                 message: 'Failed to update academic year. Please try again.',
                 variant: 'error'
             });
-        } finally {
-            // Reset button state
-            const saveBtn = this.querySelector('#update-academic-year-btn');
-            if (saveBtn) {
-                saveBtn.removeAttribute('loading');
-                saveBtn.textContent = 'Update Academic Year';
-            }
         }
     }
 
@@ -415,10 +396,7 @@ class AcademicYearUpdateModal extends HTMLElement {
                         </div>
                     </div>
                 </div>
-                <div slot="footer" class="flex items-center justify-end gap-2">
-                    <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
-                    <ui-button id="update-academic-year-btn" color="primary" disabled>Update Academic Year</ui-button>
-                </div>
+                
             </ui-modal>
         `;
 

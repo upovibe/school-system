@@ -49,6 +49,19 @@ class AcademicYearManagementPage extends App {
         return { total, active, inactive, current, archived };
     }
 
+    // Format date to M/D/YYYY format
+    formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        
+        const month = date.getMonth() + 1; // getMonth() returns 0-11
+        const day = date.getDate();
+        const year = date.getFullYear();
+        
+        return `${month}/${day}/${year}`;
+    }
+
     renderHeader() {
         const c = this.getHeaderCounts();
         return `
@@ -341,7 +354,7 @@ class AcademicYearManagementPage extends App {
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
-            updated: year.updated_at
+            updated: year.updated_at ? this.formatDate(year.updated_at) : ''
         }));
 
         // Find the table component and update its data
@@ -382,7 +395,7 @@ class AcademicYearManagementPage extends App {
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
-            updated: year.updated_at
+            updated: year.updated_at ? this.formatDate(year.updated_at) : ''
         })) : [];
 
         const tableColumns = [

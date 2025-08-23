@@ -97,8 +97,25 @@ class GradingPeriodController {
                 return;
             }
 
-            // Always compute academic year ID on the server (ignore client input)
-            $data['academic_year_id'] = $this->getCurrentAcademicYearId();
+            // Academic year ID is required
+            if (empty($data['academic_year_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Academic year is required'
+                ]);
+                return;
+            }
+            
+            // Validate that the academic year exists and is active
+            if (!$this->isValidAcademicYear($data['academic_year_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid academic year selected'
+                ]);
+                return;
+            }
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -197,8 +214,25 @@ class GradingPeriodController {
                 return;
             }
 
-            // Do not allow client to change academic year on update; keep original
-            $data['academic_year_id'] = $existingPeriod['academic_year_id'];
+            // Academic year ID is required for updates
+            if (empty($data['academic_year_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Academic year is required'
+                ]);
+                return;
+            }
+            
+            // Validate that the new academic year exists and is active
+            if (!$this->isValidAcademicYear($data['academic_year_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid academic year selected'
+                ]);
+                return;
+            }
 
             if (empty($data['start_date'])) {
                 http_response_code(400);
@@ -306,11 +340,26 @@ class GradingPeriodController {
         }
     }
     
-    /**
-     * Get the current academic year display name for API responses.
-     * This is used to maintain backward compatibility in API responses.
-     */
-    private function getCurrentAcademicYearDisplay() {
+    	/**
+	 * Validate if an academic year ID exists and is active
+	 */
+	private function isValidAcademicYear($academicYearId) {
+		try {
+			$sql = "SELECT id FROM academic_years WHERE id = ? AND (is_active = 1 OR is_current = 1) LIMIT 1";
+			$stmt = $this->pdo->prepare($sql);
+			$stmt->execute([$academicYearId]);
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result !== false;
+		} catch (Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get the current academic year display name for API responses.
+	 * This is used to maintain backward compatibility in API responses.
+	 */
+	private function getCurrentAcademicYearDisplay() {
         try {
             $sql = "SELECT year_code FROM academic_years WHERE is_current = 1 LIMIT 1";
             $stmt = $this->pdo->prepare($sql);

@@ -136,27 +136,24 @@ class FinanceController {
                 }
             }
 
-            // Automatically populate academic_year from the selected class
-            $classAcademicYear = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
-            if (!$classAcademicYear) {
+            // Validate that academic_year is provided
+            if (!isset($data['academic_year']) || $data['academic_year'] === '') {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Invalid class selected or class has no academic year'
+                    'message' => 'Academic year is required'
                 ]);
                 return;
             }
-            
-            // Use the year_code as the academic_year value
-            $data['academic_year'] = $classAcademicYear['year_code'];
 
             // Defaults
             if (!isset($data['student_type']) || $data['student_type'] === '') {
                 $data['student_type'] = 'Day';
             }
 
-            // Validate that the academic year matches the class's academic year
-            if (!$this->feeScheduleModel->validateAcademicYear($data['class_id'], $data['academic_year'])) {
+            // Validate that the academic year format is correct (should contain year_code)
+            $yearCode = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
+            if (!$yearCode || !str_contains($data['academic_year'], $yearCode['year_code'])) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,

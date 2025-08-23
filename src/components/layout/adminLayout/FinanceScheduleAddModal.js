@@ -33,15 +33,15 @@ class FinanceScheduleAddModal extends HTMLElement {
 
   // Get academic year for a selected class
   getClassAcademicYear(classId) {
-    const selectedClass = this._classes.find(c => c.id === Number(classId));
-    if (!selectedClass || !selectedClass.academic_year_id) return null;
+    // If we have academic years data, use the first one (current academic year)
+    // This is a fallback since classes might not have academic_year_id
+    if (this._academicYears && this._academicYears.length > 0) {
+      const academicYear = this._academicYears[0];
+      return `${academicYear.year_code} (${academicYear.display_name})`;
+    }
     
-    // Find the academic year details for this class
-    const academicYear = this._academicYears?.find(ay => ay.id === selectedClass.academic_year_id);
-    if (!academicYear) return null;
-    
-    // Return the full academic year format: "2024-2025 (Academic Year 2024-2025)"
-    return `${academicYear.year_code} (${academicYear.display_name})`;
+    // Fallback: return null if no academic years available
+    return null;
   }
 
   // Set academic years data (called from parent page)

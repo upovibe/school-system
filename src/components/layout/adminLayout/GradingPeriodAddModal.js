@@ -127,7 +127,6 @@ class GradingPeriodAddModal extends HTMLElement {
             const academicYearsAttr = this.getAttribute('academic-years');
             return academicYearsAttr ? JSON.parse(academicYearsAttr) : [];
         } catch (error) {
-            console.error('Error parsing academic years:', error);
             return [];
         }
     }
@@ -195,7 +194,7 @@ class GradingPeriodAddModal extends HTMLElement {
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 
-            console.log('📝 Sending data:', gradingPeriodData);
+
 
             // Validate required fields
             if (!gradingPeriodData.name) {
@@ -249,10 +248,8 @@ class GradingPeriodAddModal extends HTMLElement {
                 confirmButton.textContent = 'Creating...';
             }
 
-            console.log('🌐 Making API call to create grading period...');
             // Send the request
             const response = await api.withToken(token).post('/grading-periods', gradingPeriodData);
-            console.log('✅ API response received:', response.data);
 
             if (response.data.success) {
                 Toast.show({

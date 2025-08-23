@@ -331,7 +331,6 @@ class GradingPeriodManagementPage extends App {
             this.set('loading', false);
             
         } catch (error) {
-            console.error('❌ Error loading data:', error);
             this.set('loading', false);
             
             Toast.show({

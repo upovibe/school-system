@@ -59,7 +59,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
             const academicYearsAttr = this.getAttribute('academic-years');
             return academicYearsAttr ? JSON.parse(academicYearsAttr) : [];
         } catch (error) {
-            console.error('Error parsing academic years:', error);
             return [];
         }
     }
@@ -247,8 +246,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error updating grading period:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update grading period. Please try again.',

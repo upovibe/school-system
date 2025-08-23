@@ -210,10 +210,10 @@ class TeacherClassesSubjectsPage extends App {
                         <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                             <i class="fas fa-chalkboard-teacher text-3xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Teaching Assignments</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Classes & Subjects</h3>
                         <p class="text-gray-500 max-w-md mx-auto">
-                            You are not currently assigned to any classes or subjects. 
-                            Please contact the administration for teaching assignments.
+                            You don't have any classes or subjects assigned to you yet. 
+                            This usually means you need to be assigned to a class first.
                         </p>
                     </div>
                 </div>

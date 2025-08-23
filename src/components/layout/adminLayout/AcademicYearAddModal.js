@@ -219,7 +219,7 @@ class AcademicYearAddModal extends HTMLElement {
             const token = localStorage.getItem('token');
             const response = await api.withToken(token).post('/academic-years', academicYearData);
             
-            // Check if academic year was created successfully (following subjects pattern)
+            // Check if academic year was created successfully
             if (response.status === 201 || response.data.success) {
                 Toast.show({
                     title: 'Success',
@@ -252,12 +252,28 @@ class AcademicYearAddModal extends HTMLElement {
 
                 // Don't call this.close() - let the parent page handle it (following delete modal pattern)
             } else {
-                throw new Error(response.data?.message || 'Failed to create academic year');
+                // Handle API error responses (like validation errors)
+                const errorMessage = response.data?.message || 'Failed to create academic year';
+                Toast.show({
+                    title: 'Error',
+                    message: errorMessage,
+                    variant: 'error'
+                });
+                return; // Don't proceed with success flow
             }
         } catch (error) {
+            // Extract the actual error message from the API response
+            let errorMessage = 'Failed to create academic year. Please try again.';
+            
+            if (error.response && error.response.data && error.response.data.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             Toast.show({
                 title: 'Error',
-                message: 'Failed to create academic year. Please try again.',
+                message: errorMessage,
                 variant: 'error'
             });
         } finally {

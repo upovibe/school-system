@@ -659,66 +659,7 @@ class CashierController {
         }
     }
 
-    /**
-     * Print payment details (cashier only)
-     * Note: When a payment is made, what gets printed IS the receipt
-     */
-    public function printPayment($id) {
-        try {
-            global $pdo;
-            RoleMiddleware::requireCashier($pdo);
 
-            // Get payment data with related information
-            $sql = "
-                SELECT 
-                    p.id, p.amount, p.method, p.reference, p.paid_on, p.status, p.notes, p.created_at,
-                    p.voided_at, p.void_reason,
-                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year, i.due_date,
-                    s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
-                    u.name as voided_by_name
-                FROM fee_payments p
-                LEFT JOIN fee_invoices i ON p.invoice_id = i.id
-                LEFT JOIN students s ON p.student_id = s.id
-                LEFT JOIN users u ON p.voided_by = u.id
-                WHERE p.id = ?
-                LIMIT 1
-            ";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([(int)$id]);
-            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$payment) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'message' => 'Payment not found']);
-                return;
-            }
-
-            // Convert payment data to receipt format and use the receipt template
-            $receiptData = [
-                'receipt_number' => 'PAY-' . $payment['id'], // Generate a receipt number for the payment
-                'student_number' => $payment['student_number'],
-                'invoice_number' => $payment['invoice_number'],
-                'grading_period' => $payment['grading_period'],
-                'academic_year' => $payment['academic_year'],
-                'method' => $payment['method'],
-                'reference' => $payment['reference'],
-                'amount' => $payment['amount'],
-                'balance' => $payment['balance'],
-                'paid_on' => $payment['paid_on'],
-                'created_at' => $payment['created_at'],
-                'notes' => $payment['notes'],
-                'payment_status' => $payment['status'],
-                'voided_at' => $payment['voided_at'],
-                'void_reason' => $payment['void_reason'],
-                'voided_by_name' => $payment['voided_by_name']
-            ];
-
-            // Render using the receipt template
-            $this->renderReceiptHTML($receiptData);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error printing payment: ' . $e->getMessage()]);
-        }
-    }
 
     private function getSchoolSettings() {
         try {

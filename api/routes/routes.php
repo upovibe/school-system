@@ -376,7 +376,7 @@ Router::post('/cashier/payments', 'CashierController@storePayment');
 Router::get('/cashier/payments/{id}', 'CashierController@showPayment');
 Router::delete('/cashier/payments/{id}', 'CashierController@destroyPayment');
 Router::put('/cashier/payments/{id}/void', 'CashierController@voidPayment');
-Router::get('/cashier/payments/{id}/print', 'CashierController@printPayment');
+
 
 // Cashier - Receipts (cashier only)
 Router::get('/cashier/receipts', 'CashierController@indexReceipts');

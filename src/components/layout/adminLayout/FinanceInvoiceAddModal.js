@@ -57,7 +57,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
      this.addEventListener('change', (e) => {
        const gradingPeriodDropdown = e.target.closest('ui-search-dropdown[name="grading_period"]');
        if (gradingPeriodDropdown) {
-         console.log('🔄 Grading period dropdown change detected:', e.target.value);
          // When grading period changes, update the amount
          this.updateAmountForSelectedGradingPeriod();
          // Also trigger form validation to enable/disable save button
@@ -136,17 +135,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
        // Get grading period value from either input or dropdown
        const gradingPeriodValue = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
 
-       console.log('🔍 Save invoice - captured values:', {
-         student_id: studentDropdown?.value,
-         academic_year: yearInput?.value,
-         grading_period: gradingPeriodValue,
-         amount_due: amountDueInput?.value,
-         hasInput: !!gradingPeriodInput,
-         hasDropdown: !!gradingPeriodDropdown,
-         inputValue: gradingPeriodInput?.value,
-         dropdownValue: gradingPeriodDropdown?.value
-       });
-
        const payload = {
          student_id: studentDropdown ? Number(studentDropdown.value) : null,
          academic_year: yearInput?.value || '',
@@ -216,31 +204,21 @@ class FinanceInvoiceAddModal extends HTMLElement {
        // Get grading period value from either input or dropdown
        const gradingPeriodValue = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
        
-       const allFilled = !!String(studentDropdown?.value || '').trim() &&
-         !!String(yearInput?.value || '').trim() &&
-         !!String(gradingPeriodValue || '').trim() &&
-         Number(amountDueInput?.value || 0) > 0;
-       
-       console.log('🔍 Form validation:', {
-         student: studentDropdown?.value,
-         year: yearInput?.value,
-         gradingPeriod: gradingPeriodValue,
-         amount: amountDueInput?.value,
-         allFilled
-       });
-       
-       if (saveBtn) {
-         if (allFilled) {
-           saveBtn.removeAttribute('disabled');
-           console.log('✅ Save button enabled');
-         } else {
-           saveBtn.setAttribute('disabled', '');
-           console.log('❌ Save button disabled');
-         }
-       }
-     } catch (error) { 
-       console.error('❌ Error in form validation:', error);
-     }
+               const allFilled = !!String(studentDropdown?.value || '').trim() &&
+          !!String(yearInput?.value || '').trim() &&
+          !!String(gradingPeriodValue || '').trim() &&
+          Number(amountDueInput?.value || 0) > 0;
+        
+        if (saveBtn) {
+          if (allFilled) {
+            saveBtn.removeAttribute('disabled');
+          } else {
+            saveBtn.setAttribute('disabled', '');
+          }
+        }
+      } catch (error) { 
+        // Silent error handling
+      }
    }
 
   addFormEventListeners() {
@@ -273,34 +251,21 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
       const studentTypeInput = this.querySelector('ui-input[data-field="student_type"]');
 
-      const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
-      if (!studentId) return;
-
-      console.log('🔍 Auto-filling amount due for student ID:', studentId);
+             const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
+       if (!studentId) return;
 
              // Get student details - try both the individual student endpoint and the students list
        const token = localStorage.getItem('token');
        if (!token) return;
 
        // First try to get from the students list we already have
-       console.log('🔍 Students list:', this._students);
        let student = this._students.find(s => s.id === studentId);
        
        // Always fetch from API to get the full student details including current_class_id
-       console.log('🔍 Fetching full student details from API...');
        const studentResp = await api.withToken(token).get(`/students/${studentId}`);
-       console.log('🔍 Student API response:', studentResp);
        student = studentResp?.data?.data;
        
-       if (!student) return;
-
-             console.log('📚 Student details:', { 
-         name: student.name, 
-         class_id: student.class_id, 
-         student_type: student.student_type,
-         full_response: student
-       });
-       console.log('📚 Student object keys:', Object.keys(student));
+              if (!student) return;
 
       // Auto-fill class and student type
       if (classInput && student.class_name) {
@@ -312,15 +277,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
              // Get class ID for fee schedule lookup - try different possible field names
        const classId = student.class_id || student.current_class_id || student.classId;
-       console.log('🔍 Looking for class ID in student object:', {
-         class_id: student.class_id,
-         current_class_id: student.current_class_id,
-         classId: student.classId,
-         found_class_id: classId
-       });
        
        if (!classId) {
-         console.log('⚠️ No class ID found for student - student may not be enrolled in any class');
          // Show a message to the user that the student needs to be enrolled in a class
          const infoEl = this.querySelector('#current-class-info');
          if (infoEl) {
@@ -336,17 +294,13 @@ class FinanceInvoiceAddModal extends HTMLElement {
       if (yearInput?.value) {
         qs.append('academic_year', yearInput.value);
       }
-      if (gradingPeriodInput?.value) {
-        qs.append('grading_period', gradingPeriodInput.value);
-      }
-
-      console.log('🔍 Fetching amount due with params:', qs.toString());
+             if (gradingPeriodInput?.value) {
+         qs.append('grading_period', gradingPeriodInput.value);
+       }
 
       const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
       const amountDue = amtResp?.data?.data?.amount_due;
       const schedule = amtResp?.data?.data?.schedule || {};
-
-      console.log('💰 Amount due response:', { amountDue, schedule });
 
       if (amountDue != null) {
         amountDueInput.value = String(amountDue);
@@ -364,51 +318,36 @@ class FinanceInvoiceAddModal extends HTMLElement {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          console.log('🔍 Checking for multiple fee schedules for class:', classId);
-          
           const schedulesResp = await api.withToken(token).get(`/finance/schedules/by-class?class_id=${classId}${student.student_type ? `&student_type=${student.student_type}` : ''}`).catch(() => null);
           const schedules = schedulesResp?.data?.data?.schedules || [];
           
-          console.log('📋 Found fee schedules:', schedules.length, schedules);
-          console.log('📋 Schedules data:', schedules);
-          
           if (schedules.length > 1) {
-            console.log('🔄 Multiple schedules found - converting to dropdown');
             // Multiple schedules - convert to dropdown
             this.convertGradingPeriodToDropdown(schedules);
           } else if (schedules.length === 1) {
-            console.log('📝 Single schedule found - keeping as readonly input');
             // Single schedule - keep as readonly input
             this.convertGradingPeriodToInput(schedules[0]);
-          } else {
-            console.log('⚠️ No fee schedules found for class');
           }
         }
       } catch (error) {
-        console.error('❌ Error checking fee schedules:', error);
+        // Silent error handling
       }
 
     } catch (error) {
-      console.error('❌ Error auto-filling amount due:', error);
+      // Silent error handling
     }
   }
 
   convertGradingPeriodToDropdown(schedules) {
-    console.log('🔄 Converting grading period to dropdown with schedules:', schedules);
-    
     // Find the current grading period container (could be input or dropdown)
     const gradingPeriodContainer = this.querySelector('[data-field="grading_period"]');
     
     if (!gradingPeriodContainer) {
-      console.log('⚠️ No grading period container found');
       return;
     }
     
-    console.log('📦 Current grading period container:', gradingPeriodContainer.tagName, gradingPeriodContainer);
-    
     // If it's already a dropdown, just update the options
     if (gradingPeriodContainer.tagName === 'UI-SEARCH-DROPDOWN') {
-      console.log('🔄 Updating existing dropdown options');
       const options = schedules.map(schedule => 
         `<ui-option value="${schedule.grading_period}">${schedule.grading_period}</ui-option>`
       ).join('');
@@ -417,7 +356,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
     }
     
     // Convert input to dropdown
-    console.log('🔄 Converting input to dropdown');
     const dropdown = document.createElement('ui-search-dropdown');
     dropdown.setAttribute('name', 'grading_period');
     dropdown.setAttribute('placeholder', 'Select grading period');
@@ -430,16 +368,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
     ).join('');
     dropdown.innerHTML = options;
     
-         console.log('🔄 Replacing input with dropdown');
-     // Replace input with dropdown
-     gradingPeriodContainer.parentElement.replaceChild(dropdown, gradingPeriodContainer);
-     
-     // Don't try to set the value immediately - let the dropdown initialize naturally
-     console.log('🔄 Dropdown created, letting it initialize naturally');
-     
-     // Re-attach event listeners
-     this.setupEventListeners();
-     console.log('✅ Dropdown conversion complete');
+    // Replace input with dropdown
+    gradingPeriodContainer.parentElement.replaceChild(dropdown, gradingPeriodContainer);
+    
+    // Re-attach event listeners
+    this.setupEventListeners();
   }
 
   convertGradingPeriodToInput(schedule) {
@@ -449,21 +382,16 @@ class FinanceInvoiceAddModal extends HTMLElement {
     const gradingPeriodContainer = this.querySelector('[data-field="grading_period"]');
     
     if (!gradingPeriodContainer) {
-      console.log('⚠️ No grading period container found');
       return;
     }
     
-    console.log('📦 Current grading period container:', gradingPeriodContainer.tagName, gradingPeriodContainer);
-    
     // If it's already an input, just update the value
     if (gradingPeriodContainer.tagName === 'UI-INPUT') {
-      console.log('📝 Updating existing input value');
       gradingPeriodContainer.value = schedule.grading_period || '';
       return;
     }
     
     // Convert dropdown back to input
-    console.log('📝 Converting dropdown back to input');
     const input = document.createElement('ui-input');
     input.setAttribute('data-field', 'grading_period');
     input.setAttribute('type', 'text');
@@ -472,13 +400,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
     input.setAttribute('readonly', '');
     input.value = schedule.grading_period || '';
     
-    console.log('📝 Replacing dropdown with input');
     // Replace dropdown with input
     gradingPeriodContainer.parentElement.replaceChild(input, gradingPeriodContainer);
     
     // Re-attach event listeners
     this.setupEventListeners();
-    console.log('✅ Input conversion complete');
   }
 
   async updateAmountForSelectedGradingPeriod() {
@@ -493,16 +419,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const academicYear = yearInput?.value || '';
       const gradingPeriod = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
       
-      console.log('🔄 Updating amount for selected grading period:', { 
-        studentId, 
-        academicYear, 
-        gradingPeriod,
-        hasInput: !!gradingPeriodInput,
-        hasDropdown: !!gradingPeriodDropdown
-      });
-      
       if (!studentId || !academicYear || !gradingPeriod) {
-        console.log('⚠️ Missing required data for amount update');
         return;
       }
 
@@ -516,26 +433,21 @@ class FinanceInvoiceAddModal extends HTMLElement {
         grading_period: gradingPeriod
       });
       
-      console.log('🔍 Fetching amount due with params:', qs.toString());
-      
       const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
       const amountDue = amtResp?.data?.data?.amount_due;
       const schedule = amtResp?.data?.data?.schedule || {};
       
-      console.log('💰 Amount due response:', { amountDue, schedule });
-      
-             if (amountDue != null) {
-         amountDueInput.value = String(amountDue);
-         console.log('✅ Updated amount due to:', amountDue);
-         // Update academic year if not set
-         if (!yearInput.value && schedule.academic_year) {
-           yearInput.value = schedule.academic_year;
-         }
-         // Trigger form validation after updating values
-         setTimeout(() => this.validateForm(), 50);
-       }
+      if (amountDue != null) {
+        amountDueInput.value = String(amountDue);
+        // Update academic year if not set
+        if (!yearInput.value && schedule.academic_year) {
+          yearInput.value = schedule.academic_year;
+        }
+        // Trigger form validation after updating values
+        setTimeout(() => this.validateForm(), 50);
+      }
     } catch (error) {
-      console.error('❌ Error updating amount for grading period:', error);
+      // Silent error handling
     }
   }
 

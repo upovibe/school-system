@@ -294,6 +294,7 @@ class AcademicYearManagementPage extends App {
         const { detail } = event;
         const editYear = this.get('academicYears').find(year => year.id === detail.row.id);
         if (editYear) {
+            // console.log('onEdit called with:', editYear);
             // Close any open modals first
             this.closeAllModals();
             this.set('updateAcademicYearData', editYear);
@@ -302,11 +303,12 @@ class AcademicYearManagementPage extends App {
             setTimeout(() => {
                 const updateModal = this.querySelector('academic-year-update-modal');
                 if (updateModal) {
+                    // console.log('Found update modal, setting data...');
                     updateModal.setAcademicYearData(editYear);
                 } else {
-                    console.error('Update modal not found');
+                    // console.error('Update modal not found');
                 }
-            }, 100);
+            }, 0);
         }
     }
 

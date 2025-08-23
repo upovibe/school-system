@@ -426,7 +426,7 @@ class FinanceController {
 // Invoices Section
     /**
      * List fee invoices with optional filters (admin only)
-     * Filters: student_id, academic_year, term, status
+     * Filters: student_id, academic_year, grading_period, status
      */
     public function indexInvoices() {
         try {
@@ -444,9 +444,9 @@ class FinanceController {
                 $conditions[] = 'academic_year = ?';
                 $params[] = $_GET['academic_year'];
             }
-            if (!empty($_GET['term'])) {
-                $conditions[] = 'term = ?';
-                $params[] = $_GET['term'];
+            if (!empty($_GET['grading_period'])) {
+                $conditions[] = 'grading_period = ?';
+                $params[] = $_GET['grading_period'];
             }
             if (!empty($_GET['status'])) {
                 $conditions[] = 'status = ?';
@@ -480,7 +480,7 @@ class FinanceController {
 
     /**
      * Create a fee invoice (admin only)
-     * Required: student_id, academic_year, term, amount_due
+     * Required: student_id, academic_year, grading_period, amount_due
      * Optional: invoice_number (auto-generated if missing), issue_date, due_date, notes
      */
     public function storeInvoice() {
@@ -491,7 +491,7 @@ class FinanceController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
             // Required fields
-            $required = ['student_id', 'academic_year', 'term', 'amount_due'];
+            $required = ['student_id', 'academic_year', 'grading_period', 'amount_due'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -505,7 +505,7 @@ class FinanceController {
 
             // Derive student_type and schedule_id; If amount_due is empty or 0, derive from schedule
             if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
-                $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['term']);
+                $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['grading_period']);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
                 }
@@ -519,9 +519,10 @@ class FinanceController {
             }
             // Try to find matching schedule id using type if present
             $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $classIdStmt->execute([$data['student_id']]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
-                $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['term'], $data['student_type'] ?? null);
+                $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['grading_period'], $data['student_type'] ?? null);
                 if ($schedule) {
                     $data['schedule_id'] = $schedule['id'];
                     if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
@@ -622,17 +623,18 @@ class FinanceController {
             // Derive student_type/schedule_id and amount_due if omitted
             $studentId = isset($data['student_id']) ? (int)$data['student_id'] : (int)$existing['student_id'];
             $year = $data['academic_year'] ?? $existing['academic_year'];
-            $term = $data['term'] ?? $existing['term'];
+            $gradingPeriod = $data['grading_period'] ?? $existing['grading_period'];
             if (!isset($data['amount_due']) || (float)$data['amount_due'] <= 0) {
-                $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$term);
+                $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$gradingPeriod);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
                 }
             }
             $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $classIdStmt->execute([$studentId]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
-                $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$term, $data['student_type'] ?? ($existing['student_type'] ?? null));
+                $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$gradingPeriod, $data['student_type'] ?? ($existing['student_type'] ?? null));
                 if ($schedule) {
                     $data['schedule_id'] = $schedule['id'];
                     if (!isset($data['student_type']) && isset($existing['student_type'])) {
@@ -724,7 +726,7 @@ class FinanceController {
         }
     }
 
-    private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $term): ?float {
+    private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $gradingPeriod): ?float {
         try {
             // Find student's current class
             $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
@@ -747,19 +749,19 @@ class FinanceController {
             }
             $yearCandidates = array_values(array_unique($yearCandidates));
 
-            $termCandidates = [];
-            $termLower = strtolower(trim($term));
-            $termCandidates[] = $termLower;
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            $gradingPeriodCandidates[] = $gradingPeriodLower;
             // If numeric like '1', add 'term1'
-            if (preg_match('/^\s*(\d+)\s*$/', $termLower, $tm)) {
-                $termCandidates[] = 'term' . $tm[1];
+            if (preg_match('/^\s*(\d+)\s*$/', $gradingPeriodLower, $tm)) {
+                $gradingPeriodCandidates[] = 'term' . $tm[1];
             }
             // Also remove spaces variant
-            $termCandidates[] = str_replace(' ', '', $termLower);
-            $termCandidates = array_values(array_unique($termCandidates));
+            $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
+            $gradingPeriodCandidates = array_values(array_unique($gradingPeriodCandidates));
 
             foreach ($yearCandidates as $y) {
-                foreach ($termCandidates as $t) {
+                foreach ($gradingPeriodCandidates as $t) {
                     $schedule = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                     if ($schedule && isset($schedule['total_fee'])) {
                         return (float)$schedule['total_fee'];
@@ -769,10 +771,10 @@ class FinanceController {
 
             // Fallback: choose the most recent schedule for the class matching the student's type (if known)
             if ($studentType) {
-                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                 $stmt2->execute([$classId, $studentType]);
             } else {
-                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                 $stmt2->execute([$classId]);
             }
             $fallback = $stmt2->fetch(PDO::FETCH_ASSOC);
@@ -796,7 +798,7 @@ class FinanceController {
 
             $studentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
             $year = isset($_GET['academic_year']) ? (string)$_GET['academic_year'] : '';
-            $term = isset($_GET['term']) ? (string)$_GET['term'] : '';
+            $gradingPeriod = isset($_GET['grading_period']) ? (string)$_GET['grading_period'] : '';
             if ($studentId <= 0) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'student_id is required']);
@@ -824,14 +826,14 @@ class FinanceController {
                 }
             }
 
-            $termCandidates = [];
-            $termLower = strtolower(trim($term));
-            if ($termLower !== '') {
-                $termCandidates[] = $termLower;
-                if (preg_match('/^\\s*(\\d+)\\s*$/', $termLower, $tm)) {
-                    $termCandidates[] = 'term' . $tm[1];
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            if ($gradingPeriodLower !== '') {
+                $gradingPeriodCandidates[] = $gradingPeriodLower;
+                if (preg_match('/^\\s*(\\d+)\\s*$/', $gradingPeriodLower, $tm)) {
+                    $gradingPeriodCandidates[] = 'term' . $tm[1];
                 }
-                $termCandidates[] = str_replace(' ', '', $termLower);
+                $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
             }
 
             // Resolve student's type to match typed schedules; allow override via as_type
@@ -842,9 +844,9 @@ class FinanceController {
             if ($overrideType) { $studentType = $overrideType; }
 
             $chosen = null;
-            if (!empty($yearCandidates) && !empty($termCandidates)) {
+            if (!empty($yearCandidates) && !empty($gradingPeriodCandidates)) {
                 foreach ($yearCandidates as $y) {
-                    foreach ($termCandidates as $t) {
+                    foreach ($gradingPeriodCandidates as $t) {
                         $s = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                         if ($s) { $chosen = $s; break 2; }
                     }
@@ -854,10 +856,10 @@ class FinanceController {
             if (!$chosen) {
                 // Fallback pick most recent/active for the class matching the student's type if present
                 if ($studentType) {
-                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                     $stmt2->execute([$classId, $studentType]);
                 } else {
-                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                     $stmt2->execute([$classId]);
                 }
                 $chosen = $stmt2->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -877,7 +879,7 @@ class FinanceController {
                     'schedule' => [
                         'class_id' => (int)$chosen['class_id'],
                         'academic_year' => $chosen['academic_year'] ?? null,
-                        'term' => $chosen['term'] ?? null,
+                        'grading_period' => $chosen['grading_period'] ?? null,
                         'total_fee' => $chosen['total_fee'] ?? null,
                         'is_active' => isset($chosen['is_active']) ? (int)$chosen['is_active'] : null,
                         'student_type' => $chosen['student_type'] ?? null,
@@ -1190,7 +1192,7 @@ class FinanceController {
                 SELECT 
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status,
-                    i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year,
+                    i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year,
                     s.first_name, s.last_name,
                     u.name as voided_by_name
                 FROM fee_receipts r
@@ -1232,7 +1234,7 @@ class FinanceController {
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
                     p.voided_at, p.void_reason,
-                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year, i.due_date,
                     s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
                     u.name as voided_by_name, u.first_name as voided_by_first, u.last_name as voided_by_last
                 FROM fee_receipts r
@@ -1281,7 +1283,7 @@ class FinanceController {
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
                     p.voided_at, p.void_reason,
-                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year, i.due_date,
                     s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
                     u.name as voided_by_name
                 FROM fee_receipts r
@@ -1477,8 +1479,8 @@ class FinanceController {
                             <div class="value">' . htmlspecialchars($receipt['invoice_number'] ?: 'N/A') . '</div>
                         </div>
                         <div class="field">
-                            <div class="label">Term & Academic Year</div>
-                            <div class="value">' . htmlspecialchars($receipt['term'] . ' ' . $receipt['academic_year']) . '</div>
+                            <div class="label">Grading Period & Academic Year</div>
+                            <div class="value">' . htmlspecialchars($receipt['grading_period'] . ' ' . $receipt['academic_year']) . '</div>
                         </div>
                         <div class="field">
                             <div class="label">Payment Method</div>

@@ -33,7 +33,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
     const rebindAuto = () => {
       const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const trigger = () => this.autoFillAmountDueDebounced();
       if (studentDd && !studentDd._autoBound) {
         studentDd.addEventListener('change', () => { trigger(); });
@@ -45,10 +45,10 @@ class FinanceInvoiceAddModal extends HTMLElement {
         yearInput.addEventListener('change', () => { trigger(); });
         yearInput._autoBound = true;
       }
-      if (termInput && !termInput._autoBound) {
-        termInput.addEventListener('input', () => { trigger(); });
-        termInput.addEventListener('change', () => { trigger(); });
-        termInput._autoBound = true;
+      if (gradingPeriodInput && !gradingPeriodInput._autoBound) {
+        gradingPeriodInput.addEventListener('input', () => { trigger(); });
+        gradingPeriodInput.addEventListener('change', () => { trigger(); });
+        gradingPeriodInput._autoBound = true;
       }
     };
     setTimeout(rebindAuto, 0);
@@ -112,7 +112,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
     try {
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
       const amountPaidInput = this.querySelector('ui-input[data-field="amount_paid"]');
       const issueDateInput = this.querySelector('ui-input[data-field="issue_date"]');
@@ -123,7 +123,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       const payload = {
         student_id: studentDropdown ? Number(studentDropdown.value) : null,
         academic_year: yearInput?.value || '',
-        term: termInput?.value || '',
+        grading_period: gradingPeriodInput?.value || '',
         amount_due: amountDueInput?.value ? Number(amountDueInput.value) : 0,
         amount_paid: amountPaidInput?.value ? Number(amountPaidInput.value) : 0,
         issue_date: issueDateInput?.value || undefined,
@@ -134,20 +134,20 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
       if (!payload.student_id) return Toast.show({ title: 'Validation', message: 'Select a student', variant: 'error', duration: 3000 });
       if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
-      if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
+      if (!payload.grading_period) return Toast.show({ title: 'Validation', message: 'Enter grading period', variant: 'error', duration: 3000 });
       if (!payload.amount_due || isNaN(payload.amount_due)) return Toast.show({ title: 'Validation', message: 'Enter amount due', variant: 'error', duration: 3000 });
 
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
 
-      // Frontend duplicate check: one invoice per student/year/term
+      // Frontend duplicate check: one invoice per student/year/grading_period
       try {
-        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, term: payload.term }).toString();
+        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, grading_period: payload.grading_period }).toString();
         const dupResp = await api.withToken(token).get(`/finance/invoices?${q}`);
         const list = dupResp?.data?.data || [];
         if (Array.isArray(list) && list.length > 0) {
           this._saving = false;
-          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and term', variant: 'warning', duration: 3500 });
+          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and grading period', variant: 'warning', duration: 3500 });
         }
       } catch (_) { /* ignore – backend unique index still protects */ }
 
@@ -181,12 +181,12 @@ class FinanceInvoiceAddModal extends HTMLElement {
     try {
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
       const saveBtn = this.querySelector('#save-invoice-btn');
       const allFilled = !!String(studentDropdown?.value || '').trim() &&
         !!String(yearInput?.value || '').trim() &&
-        !!String(termInput?.value || '').trim() &&
+        !!String(gradingPeriodInput?.value || '').trim() &&
         Number(amountDueInput?.value || 0) > 0;
       if (saveBtn) {
         if (allFilled) saveBtn.removeAttribute('disabled');
@@ -198,11 +198,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
   addFormEventListeners() {
     const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
     const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
     const saveBtn = this.querySelector('#save-invoice-btn');
     if (studentDropdown) studentDropdown.addEventListener('change', () => this.validateForm());
-    [yearInput, termInput, amountDueInput].forEach(el => {
+    [yearInput, gradingPeriodInput, amountDueInput].forEach(el => {
       if (!el) return;
       el.addEventListener('input', () => this.validateForm());
       el.addEventListener('change', () => this.validateForm());
@@ -226,12 +226,12 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
       const typeBadge = this.querySelector('#current-student-type');
       const overrideType = typeBadge?.dataset?.type || '';
       const academicYear = yearInput?.value || '';
-      const term = termInput?.value || '';
+      const gradingPeriod = gradingPeriodInput?.value || '';
       if (!studentId) { return; }
 
       let classId = null;
@@ -269,7 +269,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       if (!token) { return; }
       const qs = new URLSearchParams({ student_id: String(studentId) });
       if (academicYear) qs.append('academic_year', academicYear);
-      if (term) qs.append('term', term);
+      if (gradingPeriod) qs.append('grading_period', gradingPeriod);
       // no manual override; backend derives by student type
 
       const missBefore = this.querySelector('#schedule-missing');
@@ -282,13 +282,13 @@ class FinanceInvoiceAddModal extends HTMLElement {
         if (amountDue != null) {
           amountDueInput.value = String(amountDue);
           if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
-          if (termInput && !termInput.value) termInput.value = schedule.term || '';
+          if (gradingPeriodInput && !gradingPeriodInput.value) gradingPeriodInput.value = schedule.grading_period || '';
         }
       } catch (err) {
         if (err?.response?.status === 404) {
           amountDueInput.value = '';
           if (yearInput) yearInput.value = '';
-          if (termInput) termInput.value = '';
+          if (gradingPeriodInput) gradingPeriodInput.value = '';
           const typeBadge = this.querySelector('#current-student-type');
           const parent = typeBadge?.parentElement || this.querySelector('#current-class-info');
           const typeText = (typeBadge?.dataset?.type || 'type');
@@ -325,8 +325,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
+              <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full"></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,7 +364,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li><strong>Student</strong>: select who the invoice is for.</li>
-                <li><strong>Academic Year & Term</strong>: align to the billing period.</li>
+                <li><strong>Academic Year & Grading Period</strong>: align to the billing period.</li>
                 <li><strong>Amount Due/Paid</strong>: balance and status compute automatically.</li>
               </ul>
             </div>

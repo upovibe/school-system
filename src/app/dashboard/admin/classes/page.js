@@ -19,6 +19,7 @@
             constructor() {
                 super();
                 this.classes = null;
+                this.academicYears = null;
                 this.loading = false;
                 this.showAddModal = false;
                 this.showUpdateModal = false;
@@ -211,7 +212,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Academic Year</span>
-                                <span class="text-sm text-gray-600">Auto-computed each year; no input required</span>
+                                <span class="text-sm text-gray-600">Select from available academic years</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Capacity</span>
@@ -225,7 +226,7 @@
                         <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <p class="text-sm text-blue-800">
                         <i class="fas fa-info-circle mr-1"></i>
-                        The academic year is auto-computed and shown read-only; you don't need to enter it.
+                        You can now select the academic year when creating or updating classes. If none is selected, the current academic year will be used automatically.
                             </p>
                         </div>
                     </div>
@@ -255,9 +256,14 @@
                     // Load classes data
                     const classesResponse = await api.withToken(token).get('/classes');
                     const rawClasses = classesResponse?.data?.data || [];
-                    // Data loaded
                     
+                    // Load academic years data
+                    const academicYearsResponse = await api.withToken(token).get('/academic-years/active');
+                    const rawAcademicYears = academicYearsResponse?.data?.data || [];
+                    
+                    // Data loaded
                     this.set('classes', rawClasses);
+                    this.set('academicYears', rawAcademicYears);
                     this.set('loading', false);
                     
                 } catch (error) {
@@ -434,7 +440,10 @@
                     </div>
                     
                     <!-- Add Class Modal -->
-                    <class-add-modal ${showAddModal ? 'open' : ''}></class-add-modal>
+                    <class-add-modal 
+                        ${showAddModal ? 'open' : ''} 
+                        academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+                    </class-add-modal>
                     
                     <!-- Update Class Modal -->
                     <class-update-modal ${showUpdateModal ? 'open' : ''}></class-update-modal>

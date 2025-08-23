@@ -392,6 +392,15 @@ class FinanceSchedulesPage extends App {
       this.set('classes', []);
     }
 
+    // Load academic years for the modal; ignore failure
+    try {
+      const academicYearsResp = await api.withToken(token).get('/academic-years/current');
+      const currentYear = academicYearsResp?.data?.data;
+      this.academicYears = currentYear ? [currentYear] : []; // Convert single object to array
+    } catch (_) {
+      this.academicYears = [];
+    }
+
     this.set('loading', false);
     // Trigger render to show the loaded data
     this.render();
@@ -420,6 +429,7 @@ class FinanceSchedulesPage extends App {
         const modal = this.querySelector('finance-schedule-update-modal');
         if (modal) {
           modal.setClasses(this.classes);
+          modal.setAcademicYears(this.academicYears || []);
           modal.setScheduleData(editItem);
         }
       }, 0);
@@ -446,6 +456,7 @@ class FinanceSchedulesPage extends App {
       const modal = this.querySelector('finance-schedule-add-modal');
       if (modal) {
         modal.setClasses(this.classes);
+        modal.setAcademicYears(this.academicYears || []);
       }
     }, 0);
   }

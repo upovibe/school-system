@@ -30,6 +30,24 @@ class FinanceScheduleAddModal extends HTMLElement {
     this.setupEventListeners();
   }
 
+  // Get academic year for a selected class
+  getClassAcademicYear(classId) {
+    const selectedClass = this._classes.find(c => c.id === Number(classId));
+    if (!selectedClass || !selectedClass.academic_year_id) return null;
+    
+    // Find the academic year details for this class
+    const academicYear = this._academicYears?.find(ay => ay.id === selectedClass.academic_year_id);
+    if (!academicYear) return null;
+    
+    // Return the full academic year format: "2024-2025 (Academic Year 2024-2025)"
+    return `${academicYear.year_code} (${academicYear.display_name})`;
+  }
+
+  // Set academic years data (called from parent page)
+  setAcademicYears(academicYears) {
+    this._academicYears = Array.isArray(academicYears) ? academicYears : [];
+  }
+
   setupEventListeners() {
     if (this._listenersAttached) return;
     this._onCancel = () => this.close();
@@ -63,7 +81,7 @@ class FinanceScheduleAddModal extends HTMLElement {
       };
 
       if (!payload.class_id) return Toast.show({ title: 'Validation', message: 'Select a class', variant: 'error', duration: 3000 });
-      if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
+      if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Academic year is required', variant: 'error', duration: 3000 });
       if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
       if (!payload.student_type) return Toast.show({ title: 'Validation', message: 'Select student type', variant: 'error', duration: 3000 });
       if (!payload.total_fee || isNaN(payload.total_fee)) return Toast.show({ title: 'Validation', message: 'Enter total fee', variant: 'error', duration: 3000 });
@@ -121,12 +139,29 @@ class FinanceScheduleAddModal extends HTMLElement {
     const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
     const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
     const saveBtn = this.querySelector('#save-schedule-btn');
-    [yearInput, termInput, totalFeeInput].forEach(el => {
+    
+    // Handle class selection to auto-populate academic year
+    if (classDropdown) {
+      classDropdown.addEventListener('change', () => {
+        const selectedClassId = classDropdown.value;
+        if (selectedClassId) {
+          const academicYear = this.getClassAcademicYear(selectedClassId);
+          if (yearInput && academicYear) {
+            yearInput.value = academicYear;
+          }
+        } else {
+          // Clear academic year if no class selected
+          if (yearInput) yearInput.value = '';
+        }
+        this.validateForm();
+      });
+    }
+    
+    [termInput, totalFeeInput].forEach(el => {
       if (!el) return;
       el.addEventListener('input', () => this.validateForm());
       el.addEventListener('change', () => this.validateForm());
     });
-    if (classDropdown) classDropdown.addEventListener('change', () => this.validateForm());
     if (studentTypeDd) studentTypeDd.addEventListener('change', () => this.validateForm());
     if (saveBtn) saveBtn.addEventListener('click', () => this.saveSchedule());
     this.validateForm();
@@ -148,7 +183,7 @@ class FinanceScheduleAddModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="Auto-populated from class" class="w-full" readonly></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
@@ -183,7 +218,8 @@ class FinanceScheduleAddModal extends HTMLElement {
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li><strong>Class</strong>: choose the class this schedule applies to.</li>
-                <li><strong>Academic Year & Term</strong>: uniquely identify a schedule per class.</li>
+                <li><strong>Academic Year</strong>: automatically set from the selected class (read-only).</li>
+                <li><strong>Term</strong>: choose the term for this schedule (Term 1, Term 2, or Term 3).</li>
                 <li><strong>Total Fee</strong>: enter the total payable amount for the period.</li>
                 <li><strong>Active</strong>: only one active schedule per class/year/term is typical.</li>
               </ul>

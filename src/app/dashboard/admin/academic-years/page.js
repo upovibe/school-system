@@ -285,12 +285,15 @@ class AcademicYearManagementPage extends App {
             this.closeAllModals();
             this.set('updateAcademicYearData', editYear);
             this.set('showUpdateModal', true);
+            // Wait for the modal to be rendered and then set the data
             setTimeout(() => {
                 const updateModal = this.querySelector('academic-year-update-modal');
                 if (updateModal) {
                     updateModal.setAcademicYearData(editYear);
+                } else {
+                    console.error('Update modal not found');
                 }
-            }, 0);
+            }, 100);
         }
     }
 

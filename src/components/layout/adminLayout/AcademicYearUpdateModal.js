@@ -44,6 +44,12 @@ class AcademicYearUpdateModal extends HTMLElement {
         if (name === 'open' && newValue !== null) {
             // Re-render when modal is opened to ensure content is displayed
             this.render();
+            // If we have academic year data, populate the form after rendering
+            if (this.academicYearData) {
+                setTimeout(() => {
+                    this.populateForm();
+                }, 50);
+            }
         }
     }
 
@@ -57,15 +63,19 @@ class AcademicYearUpdateModal extends HTMLElement {
 
     // Set academic year data for editing
     setAcademicYearData(academicYear) {
+        console.log('setAcademicYearData called with:', academicYear);
         this.academicYearData = academicYear;
-        // Add a small delay to ensure DOM elements are ready
-        setTimeout(() => {
-            this.populateForm();
-        }, 100);
+        // If modal is already open, populate form immediately
+        if (this.hasAttribute('open')) {
+            setTimeout(() => {
+                this.populateForm();
+            }, 50);
+        }
     }
 
     // Populate form with existing data
     populateForm() {
+        console.log('populateForm called, academicYearData:', this.academicYearData);
         if (!this.academicYearData) return;
 
         const yearCodeInput = this.querySelector('ui-input[data-field="year_code"]');
@@ -170,6 +180,7 @@ class AcademicYearUpdateModal extends HTMLElement {
     // Update the academic year
     async updateAcademicYear() {
         try {
+            console.log('updateAcademicYear called, academicYearData:', this.academicYearData);
             if (!this.academicYearData || !this.academicYearData.id) {
                 Toast.show({
                     title: 'Error',

@@ -23,13 +23,13 @@ class Seed {
         $this->seedTeachers();
         $this->seedStudents();
         $this->seedClasses();
-        $this->seedFeeSchedules();
         $this->seedClassSubjects();
         $this->seedTeacherAssignments();
         $this->seedClassAssignments();
         $this->seedStudentAssignments();
         $this->assignStudentsToClasses();
         $this->seedGradingSystem();
+        $this->seedFeeSchedules();
         echo "\n✅ Database seeding completed!\n";
     }
     

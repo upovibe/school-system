@@ -6,7 +6,7 @@ class FeeSchedule extends BaseModel {
     protected static $table = 'fee_schedules';
 
     protected static $fillable = [
-        'class_id', 'academic_year', 'term', 'student_type', 'total_fee', 'notes', 'is_active'
+        'class_id', 'academic_year', 'grading_period', 'student_type', 'total_fee', 'notes', 'is_active'
     ];
 
     protected static $casts = [
@@ -31,7 +31,7 @@ class FeeSchedule extends BaseModel {
             FROM fee_schedules fs
             LEFT JOIN classes c ON fs.class_id = c.id
             LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
-            ORDER BY ay.start_date DESC, fs.term ASC, fs.id DESC
+            ORDER BY ay.start_date DESC, fs.grading_period ASC, fs.id DESC
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
@@ -54,7 +54,7 @@ class FeeSchedule extends BaseModel {
             LEFT JOIN classes c ON fs.class_id = c.id
             LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
             WHERE fs.academic_year = ?
-            ORDER BY fs.term ASC, fs.id DESC
+            ORDER BY fs.grading_period ASC, fs.id DESC
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$academicYear]);

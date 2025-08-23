@@ -28,7 +28,7 @@ class FinanceSchedulesPage extends App {
     this.updateScheduleData = null;
     this.viewScheduleData = null;
     this.deleteScheduleData = null;
-    this.filters = { class_id: '', academic_year: '', term: '', student_type: '' };
+    this.filters = { class_id: '', academic_year: '', grading_period: '', student_type: '' };
   }
 
   // Header counts

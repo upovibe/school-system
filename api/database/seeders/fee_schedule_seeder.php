@@ -34,19 +34,33 @@ class FeeScheduleSeeder
             return;
         }
         
+        // Just create 2 fee schedules for demonstration
         $inserted = 0;
-        foreach ($classes as $class) {
-            $inserted += $this->seedClassFeeSchedules($class, $academicYearId);
+        
+        // Create 1 fee schedule for the first class
+        if (!empty($classes)) {
+            $firstClass = $classes[0];
+            $inserted += $this->seedClassFeeSchedules($firstClass, $academicYearId, 1); // Only create 1
+        }
+        
+        // Create 1 fee schedule for the second class (if exists)
+        if (count($classes) > 1) {
+            $secondClass = $classes[1];
+            $inserted += $this->seedClassFeeSchedules($secondClass, $academicYearId, 1); // Only create 1
         }
         
         echo "📊 Total fee schedules seeded: {$inserted}\n";
     }
     
-    private function seedClassFeeSchedules($class, $academicYearId) {
+    private function seedClassFeeSchedules($class, $academicYearId, $limit = null) {
         $inserted = 0;
         
-        // Define terms for the academic year
-        $terms = ['Term 1', 'Term 2', 'Term 3'];
+        // Get grading periods from the database
+        $gradingPeriods = $this->getGradingPeriods();
+        if (empty($gradingPeriods)) {
+            echo "⚠️  No grading periods found. Please run grading_period_seeder first.\n";
+            return 0;
+        }
         
         // Define student types
         $studentTypes = ['Day', 'Boarding'];
@@ -54,14 +68,19 @@ class FeeScheduleSeeder
         // Base fees for different class levels (in Ghana Cedis)
         $baseFees = $this->getBaseFees($class['name']);
         
-        foreach ($terms as $term) {
+        foreach ($gradingPeriods as $gradingPeriod) {
             foreach ($studentTypes as $studentType) {
+                // Check if we've reached the limit
+                if ($limit !== null && $inserted >= $limit) {
+                    break 2; // Break out of both loops
+                }
+                
                 // Calculate fee based on class level and student type
-                $totalFee = $this->calculateFee($baseFees, $studentType, $term);
+                $totalFee = $this->calculateFee($baseFees, $studentType, $gradingPeriod['name']);
                 
                 // Check if fee schedule already exists
-                if (!$this->feeScheduleExists($class['id'], $term, $studentType)) {
-                    $this->insertFeeSchedule($class['id'], $term, $studentType, $totalFee);
+                if (!$this->feeScheduleExists($class['id'], $gradingPeriod['name'], $studentType)) {
+                    $this->insertFeeSchedule($class['id'], $gradingPeriod['name'], $studentType, $totalFee);
                     $inserted++;
                 }
             }
@@ -90,7 +109,7 @@ class FeeScheduleSeeder
         return $fees[$className] ?? 800; // Default fee if class not found
     }
     
-    private function calculateFee($baseFee, $studentType, $term) {
+    private function calculateFee($baseFee, $studentType, $gradingPeriod) {
         $fee = $baseFee;
         
         // Add boarding premium
@@ -98,23 +117,26 @@ class FeeScheduleSeeder
             $fee += 200; // Additional 200 GHS for boarding students
         }
         
-        // Term-specific adjustments
-        switch ($term) {
-            case 'Term 1':
+        // Grading period-specific adjustments
+        switch ($gradingPeriod) {
+            case 'First Term':
                 $fee += 50; // Additional 50 GHS for first term (books, uniforms, etc.)
                 break;
-            case 'Term 2':
+            case 'Second Term':
                 // Base fee for second term
                 break;
-            case 'Term 3':
+            case 'Third Term':
                 $fee += 30; // Additional 30 GHS for third term (exam fees, etc.)
+                break;
+            default:
+                // For any other grading periods, use base fee
                 break;
         }
         
         return $fee;
     }
     
-    private function insertFeeSchedule($classId, $term, $studentType, $totalFee) {
+    private function insertFeeSchedule($classId, $gradingPeriod, $studentType, $totalFee) {
         // Get the academic year string from the class
         $academicYear = $this->getClassAcademicYear($classId);
         if (!$academicYear) {
@@ -123,14 +145,14 @@ class FeeScheduleSeeder
         }
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO fee_schedules (class_id, academic_year, term, student_type, total_fee, is_active, created_at, updated_at) 
+            INSERT INTO fee_schedules (class_id, academic_year, grading_period, student_type, total_fee, is_active, created_at, updated_at) 
             VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())
         ');
         
         $stmt->execute([
             $classId,
             $academicYear,
-            $term,
+            $gradingPeriod,
             $studentType,
             $totalFee
         ]);
@@ -138,12 +160,12 @@ class FeeScheduleSeeder
         return true;
     }
     
-    private function feeScheduleExists($classId, $term, $studentType) {
+    private function feeScheduleExists($classId, $gradingPeriod, $studentType) {
         $stmt = $this->pdo->prepare('
             SELECT id FROM fee_schedules 
-            WHERE class_id = ? AND term = ? AND student_type = ?
+            WHERE class_id = ? AND grading_period = ? AND student_type = ?
         ');
-        $stmt->execute([$classId, $term, $studentType]);
+        $stmt->execute([$classId, $gradingPeriod, $studentType]);
         return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
     }
     
@@ -163,21 +185,30 @@ class FeeScheduleSeeder
         $stmt->execute(['2024-2025']);
         return $stmt->fetchColumn();
     }
+
+    /**
+     * Get all grading periods from the database
+     */
+    private function getGradingPeriods() {
+        $stmt = $this->pdo->prepare('SELECT id, name FROM grading_periods WHERE is_active = 1 ORDER BY id ASC');
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     
     private function getClassAcademicYear($classId) {
         $stmt = $this->pdo->prepare('
             SELECT ay.year_code, ay.display_name
-            FROM classes c 
-            LEFT JOIN academic_years ay ON c.academic_year_id = ay.id 
+            FROM classes c
+            LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
             WHERE c.id = ?
         ');
         $stmt->execute([$classId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$result) {
             return false;
         }
-        
+
         // Return the full academic year format: "2024-2025 (Academic Year 2024-2025)"
         return $result['year_code'] . ' (' . $result['display_name'] . ')';
     }

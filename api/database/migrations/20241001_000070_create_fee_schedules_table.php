@@ -12,16 +12,17 @@ class Migration_20241001000070createfeeschedulestable {
             id INT AUTO_INCREMENT PRIMARY KEY,
             class_id INT NOT NULL,
             academic_year VARCHAR(50) NOT NULL,
-            term VARCHAR(20) NOT NULL,
+            grading_period VARCHAR(50) NOT NULL,
             student_type VARCHAR(20) NOT NULL DEFAULT 'Day',
             total_fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
             notes TEXT NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_class_year_term_type (class_id, academic_year, term, student_type),
+            UNIQUE KEY uniq_class_year_grading_period_type (class_id, academic_year, grading_period, student_type),
             INDEX idx_class (class_id),
             INDEX idx_academic_year (academic_year),
+            INDEX idx_grading_period (grading_period),
             CONSTRAINT fk_fee_schedules_class FOREIGN KEY (class_id) REFERENCES classes(id) ON UPDATE CASCADE ON DELETE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 

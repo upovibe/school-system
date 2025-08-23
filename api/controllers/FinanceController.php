@@ -114,7 +114,7 @@ class FinanceController {
 
     /**
      * Create a fee schedule (admin only)
-      * Required: class_id, academic_year, term, student_type, total_fee
+      * Required: class_id, academic_year, grading_period, student_type, total_fee
      */
     public function storeSchedule() {
         try {
@@ -124,7 +124,7 @@ class FinanceController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
             // Validate required fields (academic_year is auto-populated from class)
-            $required = ['class_id', 'term', 'student_type', 'total_fee'];
+            $required = ['class_id', 'grading_period', 'student_type', 'total_fee'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -165,13 +165,13 @@ class FinanceController {
                 return;
             }
 
-            // Enforce uniqueness: class_id + academic_year + term + student_type
-            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['term'], $data['student_type']);
+            // Enforce uniqueness: class_id + academic_year + grading_period + student_type
+            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['grading_period'], $data['student_type']);
             if ($existing) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'A schedule already exists for this class, academic year, term and student type'
+                    'message' => 'A schedule already exists for this class, academic year, grading period and student type'
                 ]);
                 return;
             }
@@ -386,15 +386,15 @@ class FinanceController {
     }
 
     // --- Helpers ---
-    private function findScheduleByComposite($classId, $academicYear, $term, $studentType = null) {
+    private function findScheduleByComposite($classId, $academicYear, $gradingPeriod, $studentType = null) {
         if ($studentType !== null) {
-            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? AND student_type = ? LIMIT 1';
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND grading_period = ? AND student_type = ? LIMIT 1';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$classId, $academicYear, $term, $studentType]);
+            $stmt->execute([$classId, $academicYear, $gradingPeriod, $studentType]);
         } else {
-            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? LIMIT 1';
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND grading_period = ? LIMIT 1';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$classId, $academicYear, $term]);
+            $stmt->execute([$classId, $academicYear, $gradingPeriod]);
         }
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }

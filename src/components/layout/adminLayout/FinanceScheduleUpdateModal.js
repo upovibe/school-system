@@ -21,13 +21,11 @@ class FinanceScheduleUpdateModal extends HTMLElement {
   }
 
   setScheduleData(schedule) {
-    console.log('FinanceScheduleUpdateModal.setScheduleData called with:', schedule);
     this._schedule = schedule || null;
     this.fillForm();
   }
 
   setClasses(classes) {
-    console.log('FinanceScheduleUpdateModal.setClasses called with:', classes);
     this._classes = Array.isArray(classes) ? classes : [];
     this.render();
     this.setupEventListeners();
@@ -36,28 +34,20 @@ class FinanceScheduleUpdateModal extends HTMLElement {
 
   // Get academic year for a selected class
   getClassAcademicYear(classId) {
-    console.log('FinanceScheduleUpdateModal.getClassAcademicYear called with classId:', classId);
-    console.log('FinanceScheduleUpdateModal._academicYears:', this._academicYears);
-    
     // If we have academic years data, use the first one (current academic year)
     // This is a fallback since classes might not have academic_year_id
     if (this._academicYears && this._academicYears.length > 0) {
       const academicYear = this._academicYears[0];
-      const result = `${academicYear.year_code} (${academicYear.display_name})`;
-      console.log('FinanceScheduleUpdateModal returning academic year:', result);
-      return result;
+      return `${academicYear.year_code} (${academicYear.display_name})`;
     }
     
     // Fallback: return null if no academic years available
-    console.log('FinanceScheduleUpdateModal no academic years available, returning null');
     return null;
   }
 
   // Set academic years data (called from parent page)
   setAcademicYears(academicYears) {
-    console.log('FinanceScheduleUpdateModal.setAcademicYears called with:', academicYears);
     this._academicYears = Array.isArray(academicYears) ? academicYears : [];
-    console.log('FinanceScheduleUpdateModal._academicYears set to:', this._academicYears);
   }
 
   fillForm() {

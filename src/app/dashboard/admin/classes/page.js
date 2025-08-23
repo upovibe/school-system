@@ -483,8 +483,11 @@
                         academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
                     </class-add-modal>
                     
-                    <!-- Update Class Modal -->
-                    <class-update-modal ${showUpdateModal ? 'open' : ''}></class-update-modal>
+                                <!-- Update Class Modal -->
+            <class-update-modal 
+                ${showUpdateModal ? 'open' : ''} 
+                academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+            </class-update-modal>
                     
                     <!-- View Class Modal -->
                     <class-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></class-view-modal>

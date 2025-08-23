@@ -163,7 +163,6 @@ class FinanceScheduleUpdateModal extends HTMLElement {
 
       const resp = await api.withToken(token).put(`/finance/schedules/${this._schedule.id}`, payload);
       if (resp.status === 200 || resp.data?.success) {
-        Toast.show({ title: 'Success', message: 'Schedule updated', variant: 'success', duration: 2500 });
         this.close();
         const updated = { ...this._schedule, ...payload, updated_at: new Date().toISOString().slice(0,19).replace('T',' ') };
         this.dispatchEvent(new CustomEvent('schedule-updated', { detail: { schedule: updated }, bubbles: true, composed: true }));

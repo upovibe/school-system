@@ -280,6 +280,7 @@ class FinanceSchedulesPage extends App {
         this.set('schedules', current.map((s) => (s.id === updated.id ? updated : s)));
         this.render();
         this.set('showUpdateModal', false);
+        Toast.show({ title: 'Success', message: 'Schedule updated successfully', variant: 'success', duration: 2500 });
       } else {
         this.loadData();
       }

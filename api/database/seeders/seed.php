@@ -23,6 +23,7 @@ class Seed {
         $this->seedTeachers();
         $this->seedStudents();
         $this->seedClasses();
+        $this->seedFeeSchedules();
         $this->seedClassSubjects();
         $this->seedTeacherAssignments();
         $this->seedClassAssignments();
@@ -143,6 +144,15 @@ class Seed {
         require_once __DIR__ . '/class_seeder.php';
         $classSeeder = new ClassSeeder($this->pdo);
         $classSeeder->run();
+    }
+    
+    private function seedFeeSchedules() {
+        echo "💰 Seeding fee schedules...\n";
+        
+        // Include the fee schedule seeder
+        require_once __DIR__ . '/fee_schedule_seeder.php';
+        $feeScheduleSeeder = new FeeScheduleSeeder($this->pdo);
+        $feeScheduleSeeder->run();
     }
     
     private function seedClassSubjects() {

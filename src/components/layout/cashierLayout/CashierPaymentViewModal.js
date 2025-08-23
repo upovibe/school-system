@@ -27,9 +27,22 @@ class CashierPaymentViewModal extends HTMLElement {
   async printReceipt() {
     try {
       if (!this._payment?.id) return;
-      window.open(`/api/cashier/receipts/${this._payment.id}/print`, '_blank');
+      const token = localStorage.getItem('token');
+      if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
+      
+      const url = `/api/cashier/payments/${this._payment.id}/print`;
+      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'text/html' } });
+      if (!resp.ok) throw new Error('Failed');
+      const html = await resp.text();
+      const w = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(() => { try { w.print(); } catch (_) {} }, 800);
+      }
     } catch (error) {
-      Toast.show({ title: 'Error', message: 'Failed to open receipt', variant: 'error', duration: 3000 });
+      Toast.show({ title: 'Error', message: 'Failed to print payment', variant: 'error', duration: 3000 });
     }
   }
 

@@ -26,6 +26,8 @@ class CashierPaymentAddModal extends HTMLElement {
 
   setup() {
     this.addEventListener('cancel', () => this.close());
+    this.addEventListener('confirm', () => this.save());
+    
     // Set current date as default and minimum for paid_on field
     setTimeout(() => {
       const dateInput = this.querySelector('ui-input[data-field="paid_on"]');
@@ -112,41 +114,7 @@ class CashierPaymentAddModal extends HTMLElement {
     }
   }
 
-  // Validate required fields and toggle Save button
-  validateForm() {
-    try {
-      const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
-      const amountInput = this.querySelector('ui-input[data-field="amount"]');
-      const paidOn = this.querySelector('ui-input[data-field="paid_on"]');
-      const methodDd = this.querySelector('ui-search-dropdown[name="method"]');
-      const saveBtn = this.querySelector('#save-payment-btn');
-      const allFilled = !!String(invoiceDd?.value || '').trim() &&
-        Number(amountInput?.value || 0) > 0 &&
-        !!String(paidOn?.value || '').trim() &&
-        !!String(methodDd?.value || '').trim();
-      if (saveBtn) {
-        if (allFilled) saveBtn.removeAttribute('disabled');
-        else saveBtn.setAttribute('disabled', '');
-      }
-    } catch (_) { /* noop */ }
-  }
 
-  addFormEventListeners() {
-    const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
-    const amountInput = this.querySelector('ui-input[data-field="amount"]');
-    const paidOn = this.querySelector('ui-input[data-field="paid_on"]');
-    const methodDd = this.querySelector('ui-search-dropdown[name="method"]');
-    const saveBtn = this.querySelector('#save-payment-btn');
-    if (invoiceDd) invoiceDd.addEventListener('change', () => this.validateForm());
-    if (methodDd) methodDd.addEventListener('change', () => this.validateForm());
-    [amountInput, paidOn].forEach(el => {
-      if (!el) return;
-      el.addEventListener('input', () => this.validateForm());
-      el.addEventListener('change', () => this.validateForm());
-    });
-    if (saveBtn) saveBtn.addEventListener('click', () => this.save());
-    this.validateForm();
-  }
 
   render() {
     const openInvoices = (this._invoices || []).filter(i => String(i.status).toLowerCase() !== 'paid' && Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0);
@@ -206,15 +174,10 @@ class CashierPaymentAddModal extends HTMLElement {
             </div>
           </div>
         </div>
-        <div slot="footer" class="flex items-center justify-end gap-2">
-          <ui-button variant="outline" color="secondary" dialog-action="cancel">Cancel</ui-button>
-          <ui-button id="save-payment-btn" color="primary" disabled>Save</ui-button>
-        </div>
+
       </ui-dialog>
-    `;
-    // Attach validation and save wiring
-    this.addFormEventListeners();
-  }
+          `;
+    }
 }
 
 customElements.define('cashier-payment-add-modal', CashierPaymentAddModal);

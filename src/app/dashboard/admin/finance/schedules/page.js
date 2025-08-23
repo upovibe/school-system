@@ -44,8 +44,8 @@ class FinanceSchedulesPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
     }
-    if (filters.term && filters.term !== '') {
-      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    if (filters.grading_period && filters.grading_period !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.grading_period) === String(filters.grading_period));
     }
     if (filters.student_type && filters.student_type !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
@@ -78,7 +78,7 @@ class FinanceSchedulesPage extends App {
                   <i class="fas fa-question-circle text-lg"></i>
                 </button>
               </div>
-              <p class="text-emerald-100 text-base sm:text-lg">Manage class fee schedules by year and term</p>
+              <p class="text-emerald-100 text-base sm:text-lg">Manage class fee schedules by year and grading period</p>
             </div>
             <div class="mt-4 sm:mt-0 text-right">
               <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
@@ -142,15 +142,15 @@ class FinanceSchedulesPage extends App {
     // Get unique academic years and terms from schedules data - filter out null/empty values
     const schedules = this.get('schedules') || [];
     const academicYears = [...new Set(schedules.map(s => s.academic_year).filter(year => year && year !== null && year !== ''))].sort().reverse();
-    const terms = [...new Set(schedules.map(s => s.term).filter(term => term && term !== null && term !== ''))].sort();
+    const gradingPeriods = [...new Set(schedules.map(s => s.grading_period).filter(gp => gp && gp !== null && gp !== ''))].sort();
     const studentTypes = [...new Set(schedules.map(s => s.student_type).filter(type => type && type !== null && type !== ''))].sort();
     
     const academicYearOptions = academicYears.map(year => `<ui-option value="${year}">${year}</ui-option>`).join('');
-    const termOptions = terms.map(term => `<ui-option value="${term}">${term}</ui-option>`).join('');
+    const gradingPeriodOptions = gradingPeriods.map(gp => `<ui-option value="${gp}">${gp}</ui-option>`).join('');
     const studentTypeOptions = studentTypes.map(type => `<ui-option value="${type}">${type}</ui-option>`).join('');
 
-    const filters = this.get('filters') || { class_id: '', academic_year: '', term: '', student_type: '' };
-    const { class_id, academic_year, term, student_type } = filters;
+    const filters = this.get('filters') || { class_id: '', academic_year: '', grading_period: '', student_type: '' };
+    const { class_id, academic_year, grading_period, student_type } = filters;
     
     return `
       <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
@@ -168,9 +168,9 @@ class FinanceSchedulesPage extends App {
             </ui-search-dropdown>
           </div>
           <div>
-            <label class="block text-xs text-gray-600 mb-1">Term</label>
-            <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
-              ${termOptions}
+            <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
+            <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full" value="${grading_period || ''}">
+              ${gradingPeriodOptions}
             </ui-search-dropdown>
           </div>
           <div>
@@ -230,7 +230,7 @@ class FinanceSchedulesPage extends App {
       if (clearBtn) {
         e.preventDefault();
         this.closeAllModals();
-        const defaults = { class_id: '', academic_year: '', term: '', student_type: '' };
+        const defaults = { class_id: '', academic_year: '', grading_period: '', student_type: '' };
         this.set('filters', defaults);
         // Reset table to show all data
         this.render();
@@ -258,9 +258,9 @@ class FinanceSchedulesPage extends App {
         const existingList = this.get('schedules') || [];
         const dup = existingList.find(s => String(s.class_id) === String(newSched.class_id)
           && String(s.academic_year) === String(newSched.academic_year)
-          && String(s.term) === String(newSched.term));
+          && String(s.grading_period) === String(newSched.grading_period));
         if (dup) {
-          Toast.show({ title: 'Info', message: 'Schedule already exists for this class/year/term', variant: 'warning', duration: 2500 });
+          Toast.show({ title: 'Info', message: 'Schedule already exists for this class/year/grading period', variant: 'warning', duration: 2500 });
           this.set('showAddModal', false);
           return;
         }
@@ -306,7 +306,7 @@ class FinanceSchedulesPage extends App {
       <div slot="content" class="space-y-4">
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
-          <p class="text-gray-700">Per-class billing schedules by academic year and term. Used to auto-fill invoice amounts.</p>
+          <p class="text-gray-700">Per-class billing schedules by academic year and grading period. Used to auto-fill invoice amounts.</p>
         </div>
         <div class="bg-gray-50 rounded-lg p-4 space-y-3">
           <div class="flex justify-between">
@@ -314,7 +314,7 @@ class FinanceSchedulesPage extends App {
             <span class="text-sm text-gray-600">Class and section the schedule applies to</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-sm font-medium">Academic Year & Term</span>
+            <span class="text-sm font-medium">Academic Year & Grading Period</span>
             <span class="text-sm text-gray-600">Billing period context</span>
           </div>
           <div class="flex justify-between">
@@ -342,8 +342,8 @@ class FinanceSchedulesPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       filteredCount = schedules.filter(s => String(s.academic_year) === String(filters.academic_year)).length;
     }
-    if (filters.term && filters.term !== '') {
-      filteredCount = schedules.filter(s => String(s.term) === String(filters.term)).length;
+    if (filters.grading_period && filters.grading_period !== '') {
+      filteredCount = schedules.filter(s => String(s.grading_period) === String(filters.grading_period)).length;
     }
     if (filters.student_type && filters.student_type !== '') {
       filteredCount = schedules.filter(s => String(s.student_type) === String(filters.student_type)).length;
@@ -401,6 +401,14 @@ class FinanceSchedulesPage extends App {
       this.academicYears = [];
     }
 
+    // Load grading periods for the modal; ignore failure
+    try {
+      const gradingPeriodsResp = await api.withToken(token).get('/grading-periods');
+      this.gradingPeriods = (gradingPeriodsResp?.data?.data) || [];
+    } catch (_) {
+      this.gradingPeriods = [];
+    }
+
     this.set('loading', false);
     // Trigger render to show the loaded data
     this.render();
@@ -430,6 +438,7 @@ class FinanceSchedulesPage extends App {
         if (modal) {
           modal.setClasses(this.classes);
           modal.setAcademicYears(this.academicYears || []);
+          modal.setGradingPeriods(this.gradingPeriods || []);
           modal.setScheduleData(editItem);
         }
       }, 0);
@@ -457,6 +466,7 @@ class FinanceSchedulesPage extends App {
       if (modal) {
         modal.setClasses(this.classes);
         modal.setAcademicYears(this.academicYears || []);
+        modal.setGradingPeriods(this.gradingPeriods || []);
       }
     }, 0);
   }
@@ -496,8 +506,8 @@ class FinanceSchedulesPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
     }
-    if (filters.term && filters.term !== '') {
-      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    if (filters.grading_period && filters.grading_period !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.grading_period) === String(filters.grading_period));
     }
     if (filters.student_type && filters.student_type !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
@@ -508,7 +518,7 @@ class FinanceSchedulesPage extends App {
       index: i + 1,
       class: this.classDisplay(s.class_id),
       academic_year: s.academic_year,
-      term: s.term,
+      grading_period: s.grading_period,
       student_type: s.student_type || 'Day',
       total_fee: Number(s.total_fee).toFixed(2),
       status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
@@ -519,7 +529,7 @@ class FinanceSchedulesPage extends App {
       { key: 'index', label: 'No.' },
       { key: 'class', label: 'Class' },
       { key: 'academic_year', label: 'Academic Year' },
-      { key: 'term', label: 'Term' },
+      { key: 'grading_period', label: 'Grading Period' },
       { key: 'student_type', label: 'Type' },
       { key: 'total_fee', label: 'Total Fee' },
       { key: 'status', label: 'Status' },

@@ -11,6 +11,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     this._schedule = null;
     this._classes = [];
     this._academicYears = [];
+    this._gradingPeriods = [];
   }
 
   static get observedAttributes() { return ['open']; }
@@ -50,6 +51,14 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     this._academicYears = Array.isArray(academicYears) ? academicYears : [];
   }
 
+  // Set grading periods data (called from parent page)
+  setGradingPeriods(gradingPeriods) {
+    this._gradingPeriods = Array.isArray(gradingPeriods) ? gradingPeriods : [];
+    this.render();
+    this.setupEventListeners();
+    this.fillForm();
+  }
+
   fillForm() {
     const s = this._schedule;
     if (!s) return;
@@ -74,7 +83,8 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     if (yearInput && !yearInput.value) {
       yearInput.value = s.academic_year || '';
     }
-    if (termInput) termInput.value = s.term || '';
+    const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+    if (gradingPeriodDropdown && s.grading_period) gradingPeriodDropdown.value = String(s.grading_period);
     if (totalFeeInput) totalFeeInput.value = s.total_fee;
     if (studentTypeDd && s.student_type) studentTypeDd.value = String(s.student_type);
     if (notesInput) notesInput.value = s.notes || '';
@@ -128,7 +138,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       if (!this._schedule) return;
       const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
       const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
       const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
@@ -137,7 +147,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       const payload = {
         class_id: classDropdown?.value ? Number(classDropdown.value) : undefined,
         academic_year: yearInput?.value || '',
-        term: termInput?.value || '',
+        grading_period: gradingPeriodDropdown?.value || '',
         student_type: studentTypeDd?.value || undefined,
         total_fee: totalFeeInput?.value ? Number(totalFeeInput.value) : 0,
         notes: notesInput?.value || undefined,
@@ -145,7 +155,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       };
 
       if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
-      if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
+      if (!payload.grading_period) return Toast.show({ title: 'Validation', message: 'Enter grading period', variant: 'error', duration: 3000 });
       if (!payload.total_fee || isNaN(payload.total_fee)) return Toast.show({ title: 'Validation', message: 'Enter total fee', variant: 'error', duration: 3000 });
 
       const token = localStorage.getItem('token');
@@ -184,8 +194,12 @@ class FinanceScheduleUpdateModal extends HTMLElement {
               <ui-input data-field="academic_year" type="text" placeholder="Auto-populated from class" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
+              <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full">
+                ${(this._gradingPeriods || []).map(gp => `
+                  <ui-option value="${gp.name}">${gp.name}</ui-option>
+                `).join('')}
+              </ui-search-dropdown>
             </div>
           </div>
           <div>
@@ -218,7 +232,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
               <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li><strong>Class</strong>: changing the class will automatically update the academic year.</li>
                 <li><strong>Academic Year</strong>: automatically set from the selected class (read-only).</li>
-                <li><strong>Term</strong>: choose the term for this schedule (Term 1, Term 2, or Term 3).</li>
+                <li><strong>Grading Period</strong>: choose the grading period for this schedule (First Term, Second Term, or Third Term).</li>
                 <li><strong>Active</strong>: controls whether this schedule is used by default.</li>
               </ul>
             </div>

@@ -5,7 +5,7 @@
  * This table stores academic year definitions and manages which year is current
  */
 
-class Migration_20241001000060createacademicyearstable {
+class Migration_20241001000015createacademicyearstable {
     private $pdo;
 
     public function __construct($pdo) {

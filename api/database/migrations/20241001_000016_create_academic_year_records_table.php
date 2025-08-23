@@ -6,7 +6,7 @@
  * Includes classes, students, teachers, subjects, grades, fees, etc.
  */
 
-class Migration_20241001000064createacademicyearrecordstable {
+class Migration_20241001000016createacademicyearrecordstable {
     private $pdo;
 
     public function __construct($pdo) {

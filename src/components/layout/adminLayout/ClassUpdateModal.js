@@ -165,7 +165,7 @@ class ClassUpdateModal extends HTMLElement {
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
-            console.log('Class update data being sent:', classData); // Debug log
+
 
             // Validate required fields
             if (!classData.name) {

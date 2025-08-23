@@ -202,12 +202,18 @@ class ClassAddModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Get the current academic year display name
+                const currentAcademicYear = this.getAcademicYears()[0];
+                const academicYearDisplay = currentAcademicYear ? 
+                    `${currentAcademicYear.year_code}${currentAcademicYear.display_name ? ` (${currentAcademicYear.display_name})` : ''}` : 
+                    'Unknown';
+
                 // Construct the new class data from response
                 const newClass = {
                     id: response.data.data.id,
                     name: classData.name,
                     section: classData.section,
-                    academic_year: classData.academic_year,
+                    academic_year: academicYearDisplay,
                     capacity: classData.capacity,
                     status: classData.status,
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),

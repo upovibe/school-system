@@ -342,18 +342,36 @@
                 if (!classes) return;
 
                 // Prepare table data
-                const tableData = classes.map((classItem, index) => ({
-                    id: classItem.id, // Keep ID for internal use
-                    index: index + 1, // Add index number for display
-                    name: classItem.name,
-                    section: classItem.section,
-                    academic_year: classItem.academic_year,
-                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
-                    capacity: classItem.capacity,
-                    status: classItem.status === 'active' ? 'Active' : 'Inactive',
-                    created: classItem.created_at,
-                    updated: classItem.updated_at
-                }));
+                const tableData = classes.map((classItem, index) => {
+                    // Format academic year to show full display name
+                    let academicYearDisplay = 'Unknown';
+                    if (classItem.academic_year && classItem.academic_year_display_name) {
+                        // Use the formatted display name from API
+                        academicYearDisplay = `${classItem.academic_year} (${classItem.academic_year_display_name})`;
+                    } else if (classItem.academic_year) {
+                        // Fallback to just the year code
+                        academicYearDisplay = classItem.academic_year;
+                    } else if (classItem.academic_year_id) {
+                        // If we only have ID, try to find the academic year from loaded data
+                        const academicYear = this.get('academicYears')?.find(ay => ay.id === classItem.academic_year_id);
+                        if (academicYear) {
+                            academicYearDisplay = `${academicYear.year_code}${academicYear.display_name ? ` (${academicYear.display_name})` : ''}`;
+                        }
+                    }
+                    
+                    return {
+                        id: classItem.id, // Keep ID for internal use
+                        index: index + 1, // Add index number for display
+                        name: classItem.name,
+                        section: classItem.section,
+                        academic_year: academicYearDisplay,
+                        class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
+                        capacity: classItem.capacity,
+                        status: classItem.status === 'active' ? 'Active' : 'Inactive',
+                        created: classItem.created_at,
+                        updated: classItem.updated_at
+                    };
+                });
                 // Table data prepared
 
                 // Find the table component and update its data
@@ -382,18 +400,36 @@
                 const showDeleteDialog = this.get('showDeleteDialog');
                 
                 // Prepare table data and columns for classes
-                const tableData = classes ? classes.map((classItem, index) => ({
-                    id: classItem.id, // Keep ID for internal use
-                    index: index + 1, // Add index number for display
-                    name: classItem.name,
-                    section: classItem.section,
-                    academic_year: classItem.academic_year,
-                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
-                    capacity: classItem.capacity,
-                    status: classItem.status === 'active' ? 'Active' : 'Inactive',
-                    created: classItem.created_at,
-                    updated: classItem.updated_at
-                })) : [];
+                const tableData = classes ? classes.map((classItem, index) => {
+                    // Format academic year to show full display name
+                    let academicYearDisplay = 'Unknown';
+                    if (classItem.academic_year && classItem.academic_year_display_name) {
+                        // Use the formatted display name from API
+                        academicYearDisplay = `${classItem.academic_year} (${classItem.academic_year_display_name})`;
+                    } else if (classItem.academic_year) {
+                        // Fallback to just the year code
+                        academicYearDisplay = classItem.academic_year;
+                    } else if (classItem.academic_year_id) {
+                        // If we only have ID, try to find the academic year from loaded data
+                        const academicYear = this.get('academicYears')?.find(ay => ay.id === classItem.academic_year_id);
+                        if (academicYear) {
+                            academicYearDisplay = `${academicYear.year_code}${academicYear.display_name ? ` (${academicYear.display_name})` : ''}`;
+                        }
+                    }
+                    
+                    return {
+                        id: classItem.id, // Keep ID for internal use
+                        index: index + 1, // Add index number for display
+                        name: classItem.name,
+                        section: classItem.section,
+                        academic_year: academicYearDisplay,
+                        class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
+                        capacity: classItem.capacity,
+                        status: classItem.status === 'active' ? 'Active' : 'Inactive',
+                        created: classItem.created_at,
+                        updated: classItem.updated_at
+                    };
+                }) : [];
 
                 const tableColumns = [
                     { key: 'index', label: 'No.', html: false },

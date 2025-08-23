@@ -172,34 +172,17 @@ class AcademicYearManagementPage extends App {
         });
         
         this.addEventListener('academic-year-saved', (event) => {
-            // Add the new academic year to the existing data
-            const newYear = event.detail.academicYear;
-            if (newYear) {
-                const currentYears = this.get('academicYears') || [];
-                this.set('academicYears', [...currentYears, newYear]);
-                this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
-            } else {
-                this.loadData();
-            }
+            // Always reload data from database to ensure we have the actual data
+            this.loadData();
+            // Close the add modal
+            this.set('showAddModal', false);
         });
         
         this.addEventListener('academic-year-updated', (event) => {
-            // Update the existing academic year in the data
-            const updatedYear = event.detail.academicYear;
-            if (updatedYear) {
-                const currentYears = this.get('academicYears') || [];
-                const updatedYears = currentYears.map(year => 
-                    year.id === updatedYear.id ? updatedYear : year
-                );
-                this.set('academicYears', updatedYears);
-                this.updateTableData();
-                // Close the update modal
-                this.set('showUpdateModal', false);
-            } else {
-                this.loadData();
-            }
+            // Always reload data from database to ensure we have the actual data
+            this.loadData();
+            // Close the update modal
+            this.set('showUpdateModal', false);
         });
     }
 

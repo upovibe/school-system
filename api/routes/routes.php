@@ -326,6 +326,9 @@ Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects'
 // Finance - Fee Schedules (admin only)
 Router::get('/finance/schedules', 'FinanceController@indexSchedules');
 Router::post('/finance/schedules', 'FinanceController@storeSchedule');
+// Finance - Helpers (must come BEFORE {id} routes to avoid conflicts)
+Router::get('/finance/amount-due', 'FinanceController@getAmountDue');
+Router::get('/finance/schedules/by-class', 'FinanceController@getSchedulesByClass');
 Router::get('/finance/schedules/{id}', 'FinanceController@showSchedule');
 Router::put('/finance/schedules/{id}', 'FinanceController@updateSchedule');
 Router::delete('/finance/schedules/{id}', 'FinanceController@destroySchedule');
@@ -336,8 +339,6 @@ Router::post('/finance/invoices', 'FinanceController@storeInvoice');
 Router::get('/finance/invoices/{id}', 'FinanceController@showInvoice');
 Router::put('/finance/invoices/{id}', 'FinanceController@updateInvoice');
 Router::delete('/finance/invoices/{id}', 'FinanceController@destroyInvoice');
-// Finance - Helpers
-Router::get('/finance/amount-due', 'FinanceController@getAmountDue');
 
 // Finance - Payments (admin only)
 Router::get('/finance/payments', 'FinanceController@indexPayments');

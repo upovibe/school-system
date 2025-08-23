@@ -893,6 +893,63 @@ class FinanceController {
         }
     }
 
+    /**
+     * Get all fee schedules for a specific class (for invoice creation)
+     * This allows users to see all available grading periods and amounts
+     */
+    public function getSchedulesByClass() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
+            $studentType = isset($_GET['student_type']) ? (string)$_GET['student_type'] : null;
+            
+            if ($classId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'class_id is required']);
+                return;
+            }
+
+            // Build the query based on whether student_type is specified
+            if ($studentType) {
+                $sql = "SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, grading_period ASC, id DESC";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$classId, $studentType]);
+            } else {
+                $sql = "SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, grading_period ASC, id DESC";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$classId]);
+            }
+
+            $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Group schedules by academic year for better organization
+            $groupedSchedules = [];
+            foreach ($schedules as $schedule) {
+                $year = $schedule['academic_year'];
+                if (!isset($groupedSchedules[$year])) {
+                    $groupedSchedules[$year] = [];
+                }
+                $groupedSchedules[$year][] = $schedule;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'schedules' => $schedules,
+                    'grouped_by_year' => $groupedSchedules,
+                    'total_count' => count($schedules)
+                ],
+                'message' => 'Fee schedules retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving fee schedules: ' . $e->getMessage()]);
+        }
+    }
+
     // Payments Section
     /**
      * List payments with optional filters: invoice_id, student_id, method, date range

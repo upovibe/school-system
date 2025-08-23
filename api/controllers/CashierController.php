@@ -661,6 +661,7 @@ class CashierController {
 
     /**
      * Print payment details (cashier only)
+     * Note: When a payment is made, what gets printed IS the receipt
      */
     public function printPayment($id) {
         try {
@@ -691,8 +692,28 @@ class CashierController {
                 return;
             }
 
-            // Render HTML
-            $this->renderPaymentHTML($payment);
+            // Convert payment data to receipt format and use the receipt template
+            $receiptData = [
+                'receipt_number' => 'PAY-' . $payment['id'], // Generate a receipt number for the payment
+                'student_number' => $payment['student_number'],
+                'invoice_number' => $payment['invoice_number'],
+                'grading_period' => $payment['grading_period'],
+                'academic_year' => $payment['academic_year'],
+                'method' => $payment['method'],
+                'reference' => $payment['reference'],
+                'amount' => $payment['amount'],
+                'balance' => $payment['balance'],
+                'paid_on' => $payment['paid_on'],
+                'created_at' => $payment['created_at'],
+                'notes' => $payment['notes'],
+                'payment_status' => $payment['status'],
+                'voided_at' => $payment['voided_at'],
+                'void_reason' => $payment['void_reason'],
+                'voided_by_name' => $payment['voided_by_name']
+            ];
+
+            // Render using the receipt template
+            $this->renderReceiptHTML($receiptData);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error printing payment: ' . $e->getMessage()]);
@@ -726,59 +747,18 @@ class CashierController {
         $isVoided = ($receipt['payment_status'] ?? '') === 'voided';
         $studentName = trim(($receipt['first_name'] ?? '') . ' ' . ($receipt['last_name'] ?? ''));
         $schoolSettings = $this->getSchoolSettings();
+        
         header('Content-Type: text/html; charset=utf-8');
-        echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            . '<title>Receipt ' . htmlspecialchars($receipt['receipt_number']) . '</title>'
-            . '<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5}.receipt{max-width:800px;margin:0 auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1)}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:20px;margin-bottom:30px}.school-logo{max-width:120px;max-height:80px;margin-bottom:15px}.school-name{font-size:24px;font-weight:700;color:#333;margin-bottom:5px}.school-tagline{font-size:14px;color:#666;margin-bottom:10px;font-style:italic}.receipt-title{font-size:18px;color:#666}.receipt-number{font-size:16px;color:#333;font-weight:700}.voided-banner{background:#ff4444;color:#fff;text-align:center;padding:10px;margin:20px 0;border-radius:5px;font-weight:700}.section{margin:20px 0}.section-title{font-size:16px;font-weight:700;color:#333;margin-bottom:15px;border-bottom:1px solid #ddd;padding-bottom:5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{margin-bottom:15px}.label{font-size:12px;color:#666;margin-bottom:5px}.value{font-size:14px;color:#333;font-weight:500}.amount{font-size:18px;font-weight:700;color:#2c5aa0}.footer{margin-top:40px;text-align:center;font-size:12px;color:#666}.school-contact{border-top:1px solid #ddd;padding-top:20px}.school-contact p{margin:5px 0}@media print{body{background:#fff}.receipt{box-shadow:none}}</style></head><body>';
-        echo '<div class="receipt"><div class="header">';
-        if (!empty($schoolSettings['application_logo'])) {
-            $logoUrl = 'http://localhost:8000/' . $schoolSettings['application_logo'];
-            echo '<img src="' . htmlspecialchars($logoUrl) . '" alt="School Logo" class="school-logo">';
-        }
-        echo '<div class="school-name">' . htmlspecialchars($schoolSettings['application_name'] ?? 'SCHOOL SYSTEM') . '</div>';
-        if (!empty($schoolSettings['application_tagline'])) {
-            echo '<div class="school-tagline">' . htmlspecialchars($schoolSettings['application_tagline']) . '</div>';
-        }
-        echo '<div class="receipt-title">OFFICIAL RECEIPT</div><div class="receipt-number">' . htmlspecialchars($receipt['receipt_number']) . '</div></div>';
-        if ($isVoided) {
-            echo '<div class="voided-banner">⚠️ THIS RECEIPT IS VOIDED</div>';
-        }
-        echo '<div class="section"><div class="section-title">Student Information</div><div class="grid">'
-            . '<div class="field"><div class="label">Student Name</div><div class="value">' . htmlspecialchars($studentName) . '</div></div>'
-            . '<div class="field"><div class="label">Student ID</div><div class="value">' . htmlspecialchars($receipt['student_number'] ?? 'N/A') . '</div></div>'
-            . '</div></div>';
-        echo '<div class="section"><div class="section-title">Payment Details</div><div class="grid">'
-            . '<div class="field"><div class="label">Invoice Number</div><div class="value">' . htmlspecialchars($receipt['invoice_number'] ?? 'N/A') . '</div></div>'
-                            . '<div class="field"><div class="label">Grading Period & Academic Year</div><div class="value">' . htmlspecialchars(($receipt['grading_period'] ?? '') . ' ' . ($receipt['academic_year'] ?? '')) . '</div></div>'
-            . '<div class="field"><div class="label">Payment Method</div><div class="value">' . htmlspecialchars($receipt['method'] ?? 'N/A') . '</div></div>'
-            . '<div class="field"><div class="label">Reference</div><div class="value">' . htmlspecialchars($receipt['reference'] ?? 'N/A') . '</div></div>'
-            . '<div class="field"><div class="label">Amount Paid</div><div class="value amount">₵' . number_format((float)($receipt['amount'] ?? 0), 2) . '</div></div>'
-            . '<div class="field"><div class="label">Balance After Payment</div><div class="value">₵' . number_format((float)($receipt['balance'] ?? 0), 2) . '</div></div>'
-            . '<div class="field"><div class="label">Payment Date</div><div class="value">' . htmlspecialchars(date('d M Y', strtotime($receipt['paid_on']))) . '</div></div>'
-            . '<div class="field"><div class="label">Receipt Generated</div><div class="value">' . htmlspecialchars(date('d M Y H:i', strtotime($receipt['created_at']))) . '</div></div>'
-            . '</div></div>';
-        if ($isVoided) {
-            echo '<div class="section"><div class="section-title">Void Information</div><div class="grid">'
-                . '<div class="field"><div class="label">Voided On</div><div class="value">' . htmlspecialchars(date('d M Y H:i', strtotime($receipt['voided_at']))) . '</div></div>'
-                . '<div class="field"><div class="label">Voided By</div><div class="value">' . htmlspecialchars($receipt['voided_by_name'] ?? 'N/A') . '</div></div>'
-                . '<div class="field" style="grid-column:1 / -1;"><div class="label">Reason</div><div class="value">' . htmlspecialchars($receipt['void_reason'] ?? 'N/A') . '</div></div>'
-                . '</div></div>';
-        }
-        if (!empty($receipt['notes'])) {
-            echo '<div class="section"><div class="section-title">Notes</div><div class="value">' . htmlspecialchars($receipt['notes']) . '</div></div>';
-        }
-        echo '<div class="footer"><div class="school-contact">'
-            . '<p><strong>' . htmlspecialchars($schoolSettings['application_name'] ?? 'School System') . '</strong></p>';
-        if (!empty($schoolSettings['contact_address'])) { echo '<p>' . htmlspecialchars($schoolSettings['contact_address']) . '</p>'; }
-        if (!empty($schoolSettings['contact_phone'])) { echo '<p>Phone: ' . htmlspecialchars($schoolSettings['contact_address']) . '</p>'; }
-        if (!empty($schoolSettings['contact_email'])) { echo '<p>Email: ' . htmlspecialchars($schoolSettings['contact_email']) . '</p>'; }
-        if (!empty($schoolSettings['contact_website'])) { echo '<p>Website: ' . htmlspecialchars($schoolSettings['contact_website']) . '</p>'; }
-        echo '<p>Generated on ' . date('d M Y H:i:s') . '</p></div></div></div></body></html>';
+        
+        // Include the PHP template directly - variables are already in scope
+        include __DIR__ . '/../email/templates/receipt.php';
     }
 
     /**
      * Render payment HTML for printing
+     * DEPRECATED: Now using receipt template for both receipts and payments
      */
+    /*
     private function renderPaymentHTML($payment) {
         $isVoided = ($payment['status'] ?? '') === 'voided';
         $studentName = trim(($payment['first_name'] ?? '') . ' ' . ($payment['last_name'] ?? ''));
@@ -832,6 +812,7 @@ class CashierController {
         if (!empty($schoolSettings['contact_website'])) { echo '<p>Website: ' . htmlspecialchars($schoolSettings['contact_website']) . '</p>'; }
         echo '<p>Generated on ' . date('d M Y H:i:s') . '</p></div></div></div></body></html>';
     }
+    */
 
     public function regenerateReceipt($id) {
         try {

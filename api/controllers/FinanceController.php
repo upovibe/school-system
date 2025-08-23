@@ -1452,6 +1452,7 @@ class FinanceController {
     /**
      * Render receipt as HTML (can be enhanced to generate PDF)
      */
+    /*
     private function renderReceiptHTML($receipt) {
         $isVoided = $receipt['payment_status'] === 'voided';
         $studentName = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
@@ -1622,6 +1623,21 @@ class FinanceController {
             </div>
         </body>
         </html>';
+    }
+    */
+
+    private function renderReceiptHTML($receipt) {
+        $isVoided = $receipt['payment_status'] === 'voided';
+        $studentName = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
+        
+        // Fetch school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Set content type for HTML
+        header('Content-Type: text/html; charset=utf-8');
+        
+        // Include the shared PHP template - variables are already in scope
+        include __DIR__ . '/../email/templates/receipt.php';
     }
 
     /**

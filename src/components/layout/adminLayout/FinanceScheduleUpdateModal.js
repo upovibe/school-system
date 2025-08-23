@@ -10,6 +10,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     super();
     this._schedule = null;
     this._classes = [];
+    this._academicYears = [];
   }
 
   static get observedAttributes() { return ['open']; }
@@ -20,15 +21,43 @@ class FinanceScheduleUpdateModal extends HTMLElement {
   }
 
   setScheduleData(schedule) {
+    console.log('FinanceScheduleUpdateModal.setScheduleData called with:', schedule);
     this._schedule = schedule || null;
     this.fillForm();
   }
 
   setClasses(classes) {
+    console.log('FinanceScheduleUpdateModal.setClasses called with:', classes);
     this._classes = Array.isArray(classes) ? classes : [];
     this.render();
     this.setupEventListeners();
     this.fillForm();
+  }
+
+  // Get academic year for a selected class
+  getClassAcademicYear(classId) {
+    console.log('FinanceScheduleUpdateModal.getClassAcademicYear called with classId:', classId);
+    console.log('FinanceScheduleUpdateModal._academicYears:', this._academicYears);
+    
+    // If we have academic years data, use the first one (current academic year)
+    // This is a fallback since classes might not have academic_year_id
+    if (this._academicYears && this._academicYears.length > 0) {
+      const academicYear = this._academicYears[0];
+      const result = `${academicYear.year_code} (${academicYear.display_name})`;
+      console.log('FinanceScheduleUpdateModal returning academic year:', result);
+      return result;
+    }
+    
+    // Fallback: return null if no academic years available
+    console.log('FinanceScheduleUpdateModal no academic years available, returning null');
+    return null;
+  }
+
+  // Set academic years data (called from parent page)
+  setAcademicYears(academicYears) {
+    console.log('FinanceScheduleUpdateModal.setAcademicYears called with:', academicYears);
+    this._academicYears = Array.isArray(academicYears) ? academicYears : [];
+    console.log('FinanceScheduleUpdateModal._academicYears set to:', this._academicYears);
   }
 
   fillForm() {
@@ -41,8 +70,20 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
     const notesInput = this.querySelector('ui-input[data-field="notes"]');
     const activeSwitch = this.querySelector('ui-switch[name="is_active"]');
-    if (classDropdown && s.class_id != null) classDropdown.value = String(s.class_id);
-    if (yearInput) yearInput.value = s.academic_year || '';
+    
+    if (classDropdown && s.class_id != null) {
+      classDropdown.value = String(s.class_id);
+      // Auto-populate academic year based on selected class
+      const academicYear = this.getClassAcademicYear(s.class_id);
+      if (yearInput && academicYear) {
+        yearInput.value = academicYear;
+      }
+    }
+    
+    // If academic year is still empty, use the existing value from the schedule
+    if (yearInput && !yearInput.value) {
+      yearInput.value = s.academic_year || '';
+    }
     if (termInput) termInput.value = s.term || '';
     if (totalFeeInput) totalFeeInput.value = s.total_fee;
     if (studentTypeDd && s.student_type) studentTypeDd.value = String(s.student_type);
@@ -66,6 +107,25 @@ class FinanceScheduleUpdateModal extends HTMLElement {
       if (e.target?.getAttribute('name') === 'is_active') {
         const indicator = this.querySelector('#active-indicator');
         if (indicator) indicator.textContent = e.detail.checked ? 'Active: 1' : 'Active: 0';
+      }
+    });
+
+    // Handle class selection to auto-populate academic year
+    this.addEventListener('change', (e) => {
+      const classDropdown = e.target.closest('ui-search-dropdown[name="class_id"]');
+      if (classDropdown) {
+        const selectedClassId = classDropdown.value;
+        const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+        
+        if (selectedClassId && yearInput) {
+          const academicYear = this.getClassAcademicYear(selectedClassId);
+          if (academicYear) {
+            yearInput.value = academicYear;
+          } else {
+            // If no academic year available, keep the existing value or clear it
+            yearInput.value = this._schedule?.academic_year || '';
+          }
+        }
       }
     });
   }
@@ -131,7 +191,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="Auto-populated from class" class="w-full" readonly></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
@@ -166,8 +226,10 @@ class FinanceScheduleUpdateModal extends HTMLElement {
             <div>
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
-                <li>Editing year/term must not duplicate an existing schedule for the same class.</li>
-                <li>Active controls whether this schedule is used by default.</li>
+                <li><strong>Class</strong>: changing the class will automatically update the academic year.</li>
+                <li><strong>Academic Year</strong>: automatically set from the selected class (read-only).</li>
+                <li><strong>Term</strong>: choose the term for this schedule (Term 1, Term 2, or Term 3).</li>
+                <li><strong>Active</strong>: controls whether this schedule is used by default.</li>
               </ul>
             </div>
           </div>

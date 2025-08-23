@@ -68,13 +68,32 @@ class AcademicYearAddModal extends HTMLElement {
             const startDate = startDateInput ? String(startDateInput.value || '').trim() : '';
             const endDate = endDateInput ? String(endDateInput.value || '').trim() : '';
             
-            const isValid = !!yearCode && !!displayName && !!startDate && !!endDate;
+            // Validate year code format (YYYY-YYYY or YYYY/YYYY)
+            const yearCodePattern = /^\d{4}[-/]\d{4}$/;
+            const isYearCodeValid = yearCodePattern.test(yearCode);
+            
+            const isValid = !!yearCode && !!displayName && !!startDate && !!endDate && isYearCodeValid;
             
             if (saveBtn) {
                 if (isValid) {
                     saveBtn.removeAttribute('disabled');
                 } else {
                     saveBtn.setAttribute('disabled', '');
+                }
+            }
+            
+            // Show validation message for year code
+            if (yearCodeInput) {
+                const existingMessage = yearCodeInput.parentNode.querySelector('.validation-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+                
+                if (yearCode && !isYearCodeValid) {
+                    const message = document.createElement('p');
+                    message.className = 'validation-message text-xs text-red-500 mt-1';
+                    message.textContent = 'Year code must be in format: YYYY-YYYY or YYYY/YYYY';
+                    yearCodeInput.parentNode.appendChild(message);
                 }
             }
         } catch (_) { /* noop */ }
@@ -91,7 +110,15 @@ class AcademicYearAddModal extends HTMLElement {
         const saveBtn = this.querySelector('#save-academic-year-btn');
 
         if (yearCodeInput) {
-            yearCodeInput.addEventListener('input', () => this.validateForm());
+            // Add input validation to only allow numbers, hyphens, and forward slashes
+            yearCodeInput.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const filteredValue = value.replace(/[^0-9\-/]/g, '');
+                if (value !== filteredValue) {
+                    e.target.value = filteredValue;
+                }
+                this.validateForm();
+            });
             yearCodeInput.addEventListener('change', () => this.validateForm());
         }
         if (displayNameInput) {
@@ -251,16 +278,17 @@ class AcademicYearAddModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Add New Academic Year</div>
                 <form id="academic-year-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Year Code <span class="text-red-500">*</span></label>
-                        <ui-input
-                            data-field="year_code"
-                            type="text"
-                            placeholder="e.g., 2024-2025"
-                            class="w-full">
-                        </ui-input>
-                        <p class="text-xs text-gray-500 mt-1">Format: YYYY-YYYY (e.g., 2024-2025)</p>
-                    </div>
+                                         <div>
+                         <label class="block text-sm font-medium text-gray-700 mb-1">Year Code <span class="text-red-500">*</span></label>
+                         <ui-input
+                             data-field="year_code"
+                             type="text"
+                             placeholder="e.g., 2024-2025"
+                             class="w-full"
+                             maxlength="9">
+                         </ui-input>
+                         <p class="text-xs text-gray-500 mt-1">Format: YYYY-YYYY or YYYY/YYYY (e.g., 2024-2025, 2024/2025)</p>
+                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Display Name <span class="text-red-500">*</span></label>

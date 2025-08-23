@@ -134,13 +134,25 @@ class ClassAddModal extends HTMLElement {
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const sectionInput = this.querySelector('ui-input[data-field="section"]');
             const academicYearDropdown = this.querySelector('ui-dropdown[data-field="academic_year_id"]');
+            const academicYearInput = this.querySelector('ui-input[data-field="academic_year_id"]');
             const capacityInput = this.querySelector('ui-input[data-field="capacity"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
+
+            // Get academic year ID - handle both dropdown and readonly input cases
+            let academicYearId;
+            if (academicYearDropdown) {
+                academicYearId = parseInt(academicYearDropdown.value);
+            } else if (academicYearInput) {
+                // For readonly input, use the current academic year ID
+                academicYearId = this.getCurrentAcademicYearId();
+            } else {
+                academicYearId = this.getCurrentAcademicYearId();
+            }
 
             const classData = {
                 name: nameInput ? nameInput.value : '',
                 section: sectionInput ? sectionInput.value : '',
-                academic_year_id: academicYearDropdown ? parseInt(academicYearDropdown.value) : this.getCurrentAcademicYearId(),
+                academic_year_id: academicYearId,
                 capacity: capacityInput ? parseInt(capacityInput.value) || 30 : 30,
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
@@ -258,13 +270,24 @@ class ClassAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
-                            ${academicYears.map(ay => `
-                                <ui-option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
-                                    ${ay.year_code} ${ay.display_name ? `(${ay.display_name})` : ''}
-                                </ui-option>
-                            `).join('')}
-                        </ui-dropdown>
+                        ${academicYears.length === 1 ? 
+                            // If only one academic year (current), show as read-only
+                            `<ui-input 
+                                data-field="academic_year_id"
+                                type="text" 
+                                value="${academicYears[0].year_code} ${academicYears[0].display_name ? `(${academicYears[0].display_name})` : ''}"
+                                readonly
+                                class="w-full bg-gray-50">
+                            </ui-input>` :
+                            // If multiple academic years, show as dropdown
+                            `<ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
+                                ${academicYears.map(ay => `
+                                    <ui-option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
+                                        ${ay.year_code} ${ay.display_name ? `(${ay.display_name})` : ''}
+                                    </ui-option>
+                                `).join('')}
+                            </ui-dropdown>`
+                        }
                     </div>
                     
                     <div>
@@ -298,7 +321,7 @@ class ClassAddModal extends HTMLElement {
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Class Name</strong>: short identifier for the class (e.g., P1, JHS1).</li>
                                 <li><strong>Section</strong>: letter only to distinguish parallel classes (e.g., A, B, C - no numbers allowed).</li>
-                                <li><strong>Academic Year</strong>: select from available academic years for reporting and filtering.</li>
+                                <li><strong>Academic Year</strong>: automatically set to the current academic year for consistency.</li>
                                 <li><strong>Capacity</strong>: optional; defaults to 30.</li>
                                 <li><strong>Status</strong>: Active classes are available for assignments.</li>
                             </ul>

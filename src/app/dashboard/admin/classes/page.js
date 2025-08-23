@@ -257,9 +257,11 @@
                     const classesResponse = await api.withToken(token).get('/classes');
                     const rawClasses = classesResponse?.data?.data || [];
                     
-                    // Load academic years data
-                    const academicYearsResponse = await api.withToken(token).get('/academic-years/active');
-                    const rawAcademicYears = academicYearsResponse?.data?.data || [];
+                    // Load only current academic year data
+                    const academicYearsResponse = await api.withToken(token).get('/academic-years/current');
+                    const currentYear = academicYearsResponse?.data?.data;
+                    // Convert single object to array for consistency with dropdown
+                    const rawAcademicYears = currentYear ? [currentYear] : [];
                     
                     // Data loaded
                     this.set('classes', rawClasses);

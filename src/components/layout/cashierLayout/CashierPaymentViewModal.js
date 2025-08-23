@@ -9,9 +9,6 @@ class CashierPaymentViewModal extends HTMLElement {
   static get observedAttributes() { return ['open']; }
   connectedCallback() { this.render(); this.setup(); }
   setPaymentData(payment) { 
-    console.log('Setting payment data:', payment);
-    console.log('Payment receipt_id:', payment?.receipt_id);
-    console.log('Payment receipt_number:', payment?.receipt_number);
     this._payment = payment || null; 
     this.render(); 
     this.setup(); 
@@ -33,11 +30,8 @@ class CashierPaymentViewModal extends HTMLElement {
 
   async printReceipt() {
     try {
-      console.log('Payment data for printing:', this._payment);
-      console.log('Receipt ID:', this._payment?.receipt_id);
       
       if (!this._payment?.receipt_id) {
-        console.log('No receipt_id found in payment data');
         Toast.show({ title: 'Error', message: 'No receipt found for this payment', variant: 'error', duration: 3000 });
         return;
       }
@@ -47,15 +41,11 @@ class CashierPaymentViewModal extends HTMLElement {
       
       // Use the same API endpoint structure as receipt view modal
       const url = `/api/cashier/receipts/${this._payment.receipt_id}/print`;
-      console.log('Calling API endpoint:', url);
       
       const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'text/html' } });
-      console.log('API response status:', resp.status);
-      console.log('API response ok:', resp.ok);
       
       if (!resp.ok) throw new Error('Failed to print receipt');
       const html = await resp.text();
-      console.log('HTML content length:', html.length);
       
       const w = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (w) {

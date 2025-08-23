@@ -242,7 +242,6 @@ class CashierPaymentsPage extends App {
       const response = await api.withToken(token).get(`/cashier/payments/${item.id}`);
       if (response?.data?.success) {
         const fullPaymentData = response.data.data;
-        console.log('Full payment data from API:', fullPaymentData);
         
         setTimeout(() => {
           const modal = this.querySelector('cashier-payment-view-modal');

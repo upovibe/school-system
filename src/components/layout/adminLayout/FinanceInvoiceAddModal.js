@@ -376,8 +376,6 @@ class FinanceInvoiceAddModal extends HTMLElement {
   }
 
   convertGradingPeriodToInput(schedule) {
-    console.log('📝 Converting grading period to input with schedule:', schedule);
-    
     // Find the current grading period container (could be input or dropdown)
     const gradingPeriodContainer = this.querySelector('[data-field="grading_period"]');
     

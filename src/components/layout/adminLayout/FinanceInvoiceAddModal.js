@@ -322,11 +322,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full" readonly></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
-              <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full"></ui-input>
+              <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full" readonly></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -472,7 +472,10 @@ class GradingPeriodManagementPage extends App {
             <grading-period-view-modal ${showViewModal ? 'open' : ''}></grading-period-view-modal>
 
             <!-- Update Grading Period Modal -->
-            <grading-period-update-modal ${showUpdateModal ? 'open' : ''}></grading-period-update-modal>
+            <grading-period-update-modal 
+                ${showUpdateModal ? 'open' : ''} 
+                academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+            </grading-period-update-modal>
         `;
     }
 }

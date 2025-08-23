@@ -563,18 +563,18 @@ class TeacherStudentGradesPage extends App {
       return `<data-skeleton></data-skeleton>`;
     }
 
-    // Show complete "No Class Assignment" message if no class is assigned
+    // Show complete "No Students to Grade" message if no class is assigned
     if (!this.teacherClass || !this.teacherClass.class_id) {
       return `
         <div class="space-y-6">
           <div class="bg-white shadow rounded-lg p-8 text-center">
             <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <i class="fas fa-chart-line text-3xl text-gray-400"></i>
+              <i class="fas fa-user-graduate text-3xl text-gray-400"></i>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Class Assignment</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Students to Grade</h3>
             <p class="text-gray-500 max-w-md mx-auto">
-              You are not currently assigned to any classes, so you cannot grade students. 
-              Please contact the administration to get assigned to a class first.
+              You don't have any students assigned to you for grading. 
+              This usually means you need to be assigned to a class first.
             </p>
           </div>
         </div>

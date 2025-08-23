@@ -71,8 +71,8 @@ class FinanceController {
             } else {
                 // For filtered results, we'll need to get basic data first, then enhance it
                 $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year DESC, term DESC, id DESC";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute($params);
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
                 $basicSchedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Enhance with class and academic year details

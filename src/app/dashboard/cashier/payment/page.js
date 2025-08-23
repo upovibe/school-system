@@ -226,22 +226,49 @@ class CashierPaymentsPage extends App {
     } catch (_) { return value; }
   }
 
-  onView(event) {
+  async onView(event) {
     const item = (this.get('payments') || []).find((p) => String(p.id) === String(event.detail.row.id));
     if (!item) return;
+    
     this.closeAllModals();
     this.set('viewPaymentData', item);
     this.set('showViewModal', true);
-    setTimeout(() => {
-      const modal = this.querySelector('cashier-payment-view-modal');
-      if (modal) {
-        modal.setPaymentData({
-          ...item,
-          invoiceDisplay: this.invoiceDisplay(item.invoice_id),
-          studentDisplay: this.studentDisplay(item.student_id),
-        });
+    
+    // Fetch full payment data including receipt information
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await api.withToken(token).get(`/cashier/payments/${item.id}`);
+      if (response?.data?.success) {
+        const fullPaymentData = response.data.data;
+        console.log('Full payment data from API:', fullPaymentData);
+        
+        setTimeout(() => {
+          const modal = this.querySelector('cashier-payment-view-modal');
+          if (modal) {
+            modal.setPaymentData({
+              ...fullPaymentData,
+              invoiceDisplay: this.invoiceDisplay(fullPaymentData.invoice_id),
+              studentDisplay: this.studentDisplay(fullPaymentData.student_id),
+            });
+          }
+        }, 0);
       }
-    }, 0);
+    } catch (error) {
+      console.error('Error fetching full payment data:', error);
+      // Fallback to basic data if API call fails
+      setTimeout(() => {
+        const modal = this.querySelector('cashier-payment-view-modal');
+        if (modal) {
+          modal.setPaymentData({
+            ...item,
+            invoiceDisplay: this.invoiceDisplay(item.invoice_id),
+            studentDisplay: this.studentDisplay(item.student_id),
+          });
+        }
+      }, 0);
+    }
   }
 
   onDelete(event) {

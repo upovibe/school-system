@@ -341,9 +341,6 @@ class AcademicYearManagementPage extends App {
                 this.set('archiveAcademicYearData', yearData);
                 this.set('showArchiveDialog', true);
                 
-                // Force a re-render to ensure the dialog is in the DOM
-                this.render();
-                
                 setTimeout(() => {
                     const archiveDialog = this.querySelector('academic-year-archive-dialog');
                     if (archiveDialog) {
@@ -351,7 +348,7 @@ class AcademicYearManagementPage extends App {
                     } else {
                         console.error('Archive dialog not found');
                     }
-                }, 100);
+                }, 0);
             }
         }
     }

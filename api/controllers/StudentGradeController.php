@@ -11,6 +11,7 @@ require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../models/SubjectModel.php';
 require_once __DIR__ . '/../models/GradingPeriodModel.php';
 require_once __DIR__ . '/../models/AcademicYearModel.php';
+require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -489,6 +490,9 @@ class StudentGradeController {
             }
         }
         
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
         // Prepare data for the template
         $templateData = [
             'class' => $class,
@@ -502,7 +506,8 @@ class StudentGradeController {
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
             'generatedDate' => date('F j, Y'),
             'generatedTime' => date('g:i A'),
-            'totalStudents' => count($students)
+            'totalStudents' => count($students),
+            'schoolSettings' => $schoolSettings
         ];
 
         // Start output buffering to capture the template output
@@ -547,6 +552,9 @@ class StudentGradeController {
             }
         }
         
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
         // Prepare data for the template
         $templateData = [
             'student' => $student,
@@ -555,7 +563,8 @@ class StudentGradeController {
             'academicYear' => $academicYear,
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
             'generatedDate' => date('F j, Y'),
-            'generatedTime' => date('g:i A')
+            'generatedTime' => date('g:i A'),
+            'schoolSettings' => $schoolSettings
         ];
 
         // Start output buffering to capture the template output
@@ -579,6 +588,41 @@ class StudentGradeController {
             return $period['name'] ?? 'Unknown Period';
         } catch (Exception $e) {
             return 'Unknown Period';
+        }
+    }
+
+    /**
+     * Get school settings for report generation
+     */
+    private function getSchoolSettings() {
+        try {
+            // Load config for app_url
+            $config = require __DIR__ . '/../config/app_config.php';
+            
+            // Try to get settings from database first
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            // Return settings with fallbacks
+            return [
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_logo' => $settings['application_logo'] ?? null,
+                'app_url' => $config['app_url'] ?? 'http://localhost:8000',
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'contact_address' => $settings['contact_address'] ?? 'School Address',
+                'contact_phone' => $settings['contact_phone'] ?? 'Phone Number',
+                'contact_email' => $settings['contact_email'] ?? 'info@school.com',
+                'contact_website' => $settings['contact_website'] ?? 'https://school.com'
+            ];
+        } catch (Exception $e) {
+            // Fallback to config only
+            $config = require __DIR__ . '/../config/app_config.php';
+            return [
+                'application_name' => 'School Management System',
+                'application_logo' => null,
+                'app_url' => $config['app_url'] ?? 'http://localhost:8000',
+                'application_tagline' => 'Excellence in Education'
+            ];
         }
     }
 

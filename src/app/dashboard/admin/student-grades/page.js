@@ -752,7 +752,7 @@ class StudentGradesManagementPage extends App {
         
         if (act === 'add-grade') {
             // Find the grade data for this student
-            const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id);
+            const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id_meta);
             if (gradeData) {
                 this.closeAllModals();
                 this.set('showAddModal', true);
@@ -778,7 +778,7 @@ class StudentGradesManagementPage extends App {
         }
 
         if (act === 'edit-grade') {
-            const existing = this.get('grades')?.find(g => g.student_id === row.student_id && !g.is_new);
+            const existing = this.get('grades')?.find(g => g.student_id === row.student_id_meta && !g.is_new);
             if (existing) {
                 this.closeAllModals();
                 this.set('updateGradeData', existing);
@@ -854,7 +854,8 @@ class StudentGradesManagementPage extends App {
             return ({
             id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
-            student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
+            student_id: g.student_number || '',
+            student_name: [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || 'Unknown Student',
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
             subject: g.subject_name || '',
             period: g.grading_period_name || '',
@@ -864,7 +865,7 @@ class StudentGradesManagementPage extends App {
             final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
             // Add metadata for custom actions
-            student_id: g.student_id,
+            student_id_meta: g.student_id,
             is_new: g.is_new,
             has_grades: hasGrades,
             can_add: canAdd,
@@ -873,14 +874,15 @@ class StudentGradesManagementPage extends App {
 
         const tableColumns = [
             { key: 'index', label: 'No.' },
-            { key: 'student', label: 'Student' },
+            { key: 'student_id', label: 'Student ID' },
+            { key: 'student_name', label: 'Student Name' },
             { key: 'class', label: 'Class' },
             { key: 'subject', label: 'Subject' },
             { key: 'period', label: 'Period' },
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
             { key: 'final_pct', label: 'Final Total Score %' },
-            { key: 'final_grade', label: 'Letter Grade' },
+            { key: 'final_grade', label: 'Grade' },
             { key: 'updated', label: 'Updated' }
         ];
 

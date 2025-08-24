@@ -596,18 +596,26 @@ class StudentGradeController {
      */
     private function getSchoolSettings() {
         try {
-            // Load config for app_url
+            // Load config for URLs
             $config = require __DIR__ . '/../config/app_config.php';
             
             // Try to get settings from database first
             $settingModel = new SettingModel($this->pdo);
             $settings = $settingModel->getAllAsArray();
             
+            // Construct full logo URL if logo exists
+            // Use api_url since logo is an API resource
+            $logoUrl = null;
+            if (!empty($settings['application_logo'])) {
+                $logoUrl = $config['api_url'] . '/' . $settings['application_logo'];
+            }
+            
             // Return settings with fallbacks
             return [
                 'application_name' => $settings['application_name'] ?? 'School Management System',
-                'application_logo' => $settings['application_logo'] ?? null,
-                'app_url' => $config['app_url'] ?? 'http://localhost:8000',
+                'application_logo' => $logoUrl,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
                 'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
                 'contact_address' => $settings['contact_address'] ?? 'School Address',
                 'contact_phone' => $settings['contact_phone'] ?? 'Phone Number',
@@ -620,7 +628,8 @@ class StudentGradeController {
             return [
                 'application_name' => 'School Management System',
                 'application_logo' => null,
-                'app_url' => $config['app_url'] ?? 'http://localhost:8000',
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
                 'application_tagline' => 'Excellence in Education'
             ];
         }

@@ -56,10 +56,21 @@
             object-fit: contain;
         }
 
+        .school-info {
+            text-align: center;
+        }
+
         .school-name {
             font-size: 24px;
             font-weight: bold;
             margin: 0;
+        }
+
+        .school-tagline {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            font-style: italic;
         }
 
         .report-title {
@@ -181,9 +192,12 @@
         <div class="report-header">
             <div class="header-top">
                 <?php if (!empty($schoolSettings['application_logo'])): ?>
-                    <img src="<?= htmlspecialchars($schoolSettings['app_url'] ?? '') ?>/<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
+                    <img src="<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
                 <?php endif; ?>
-                <div class="school-name"><?= htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') ?></div>
+                <div class="school-info">
+                    <div class="school-name"><?= htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') ?></div>
+                    <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline'] ?? 'Excellence in Education') ?></div>
+                </div>
             </div>
             <div class="report-title">Class Grade Report</div>
             <div class="report-subtitle">Academic Performance Overview</div>

@@ -9,6 +9,7 @@ import '@/components/layout/adminLayout/AcademicYearAddModal.js';
 import '@/components/layout/adminLayout/AcademicYearUpdateModal.js';
 import '@/components/layout/adminLayout/AcademicYearViewModal.js';
 import '@/components/layout/adminLayout/AcademicYearDeleteDialog.js';
+import '@/components/layout/adminLayout/AcademicYearArchiveDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -25,9 +26,11 @@ class AcademicYearManagementPage extends App {
         this.showUpdateModal = false;
         this.showViewModal = false;
         this.showDeleteDialog = false;
+        this.showArchiveDialog = false;
         this.updateAcademicYearData = null;
         this.viewAcademicYearData = null;
         this.deleteAcademicYearData = null;
+        this.archiveAcademicYearData = null;
     }
 
     // Summary for header
@@ -157,6 +160,7 @@ class AcademicYearManagementPage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('academic-year-deleted', (event) => {
@@ -183,6 +187,13 @@ class AcademicYearManagementPage extends App {
             this.loadData();
             // Close the update modal
             this.set('showUpdateModal', false);
+        });
+        
+        this.addEventListener('academic-year-archived', (event) => {
+            // Always reload data from database to ensure we have the actual data
+            this.loadData();
+            // Close the archive dialog
+            this.set('showArchiveDialog', false);
         });
     }
 
@@ -318,6 +329,46 @@ class AcademicYearManagementPage extends App {
         this.set('showAddModal', true);
     }
 
+    onCustomAction(event) {
+        const { actionName, action, row } = event.detail;
+        const act = actionName || action;
+        
+        if (act === 'archive-year') {
+            // Find the academic year data for this row
+            const yearData = this.get('academicYears')?.find(y => y.id === row.id);
+            if (yearData) {
+                this.closeAllModals();
+                this.set('archiveAcademicYearData', yearData);
+                this.set('showArchiveDialog', true);
+                
+                // Force a re-render to ensure the dialog is in the DOM
+                this.render();
+                
+                setTimeout(() => {
+                    const archiveDialog = this.querySelector('academic-year-archive-dialog');
+                    if (archiveDialog) {
+                        archiveDialog.setDataAndOpen(yearData);
+                    } else {
+                        console.error('Archive dialog not found');
+                    }
+                }, 100);
+            }
+        }
+    }
+
+    getCustomActions() {
+        return [
+            {
+                name: 'archive-year',
+                label: 'Archive',
+                icon: 'fas fa-archive',
+                variant: 'warning',
+                size: 'sm',
+                showField: 'can_archive'
+            }
+        ];
+    }
+
     onRefresh(event) {
         this.loadData();
     }
@@ -355,9 +406,11 @@ class AcademicYearManagementPage extends App {
         this.set('showUpdateModal', false);
         this.set('showViewModal', false);
         this.set('showDeleteDialog', false);
+        this.set('showArchiveDialog', false);
         this.set('updateAcademicYearData', null);
         this.set('viewAcademicYearData', null);
         this.set('deleteAcademicYearData', null);
+        this.set('archiveAcademicYearData', null);
     }
 
     render() {
@@ -367,6 +420,7 @@ class AcademicYearManagementPage extends App {
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
+        const showArchiveDialog = this.get('showArchiveDialog');
         
         // Prepare table data and columns for academic years
         const tableData = academicYears ? academicYears.map((year, index) => ({
@@ -380,7 +434,9 @@ class AcademicYearManagementPage extends App {
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
-            updated: year.updated_at ? this.formatDate(year.updated_at) : ''
+            updated: year.updated_at ? this.formatDate(year.updated_at) : '',
+            // Add metadata for custom actions
+            can_archive: year.status !== 'archived' && !year.is_current // Can archive if not archived and not current
         })) : [];
 
         const tableColumns = [
@@ -423,6 +479,7 @@ class AcademicYearManagementPage extends App {
                             print
                             bordered
                             striped
+                            custom-actions='${JSON.stringify(this.getCustomActions())}'
                             class="w-full">
                         </ui-table>
                     </div>
@@ -440,6 +497,9 @@ class AcademicYearManagementPage extends App {
             
             <!-- Delete Academic Year Dialog -->
             <academic-year-delete-dialog ${showDeleteDialog ? 'open' : ''}></academic-year-delete-dialog>
+            
+            <!-- Archive Academic Year Dialog -->
+            <academic-year-archive-dialog ${showArchiveDialog ? 'open' : ''}></academic-year-archive-dialog>
         `;
     }
 }

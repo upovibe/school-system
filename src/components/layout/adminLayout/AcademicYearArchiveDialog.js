@@ -70,7 +70,7 @@ class AcademicYearArchiveDialog extends HTMLElement {
 
             // Call API
             const token = localStorage.getItem('token');
-            const response = await api.withToken(token).post(`/academic-years/${this.academicYearData.id}/archive`);
+            const response = await api.withToken(token).post(`/academic-years/${this.academicYearData.id}/archive`, {});
             
             // Check if academic year was archived successfully
             if (response.status === 200 || response.data.success) {
@@ -94,9 +94,10 @@ class AcademicYearArchiveDialog extends HTMLElement {
                 throw new Error(response.data?.message || 'Failed to archive academic year');
             }
         } catch (error) {
+            console.error('Archive error:', error);
             Toast.show({
                 title: 'Error',
-                message: 'Failed to archive academic year. Please try again.',
+                message: `Failed to archive academic year: ${error.message}`,
                 variant: 'error'
             });
         }

@@ -280,7 +280,7 @@
                             // Find grade for this student
                             $studentGrade = null;
                             foreach ($grades as $grade) {
-                                if ($grade['student_number'] === $student['id']) {
+                                if ($grade['student_id'] == $student['id']) {
                                     $studentGrade = $grade;
                                     break;
                                 }

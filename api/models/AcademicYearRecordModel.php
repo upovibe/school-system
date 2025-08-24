@@ -280,5 +280,30 @@ class AcademicYearRecordModel extends BaseModel {
             throw new Exception('Error fetching records by year code: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get all records with user information
+     */
+    public function findAllWithUserInfo() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT ar.*, 
+                       u.name as archived_by_name
+                FROM {$this->getTableName()} ar
+                LEFT JOIN users u ON ar.archived_by = u.id
+                ORDER BY ar.archive_date DESC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching records with user info: ' . $e->getMessage());
+        }
+    }
 }
 ?>

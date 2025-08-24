@@ -23,7 +23,7 @@ class AcademicYearRecordController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
 
-            $archivedRecords = $this->academicYearRecordModel->findAll();
+            $archivedRecords = $this->academicYearRecordModel->findAllWithUserInfo();
             
             http_response_code(200);
             echo json_encode([

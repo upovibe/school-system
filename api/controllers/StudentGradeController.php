@@ -467,12 +467,22 @@ class StudentGradeController {
             }
         }
         
+        // Get academic year from grading period if specified, otherwise from class
         if ($periodId) {
             $periodModel = new GradingPeriodModel($this->pdo);
             $period = $periodModel->findById($periodId);
             if ($period && isset($period['academic_year_id'])) {
                 $academicYearModel = new AcademicYearModel($this->pdo);
                 $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        } else {
+            // If no specific period, get academic year from class
+            if (isset($class['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($class['academic_year_id']);
                 if ($academicYearData) {
                     $academicYear = $academicYearData['year_code'];
                 }
@@ -514,7 +524,7 @@ class StudentGradeController {
             throw new Exception('Student grade report template not found');
         }
 
-        // Get academic year
+        // Get academic year from grading period if specified, otherwise from student's class
         $academicYear = 'N/A';
         if ($periodId) {
             $periodModel = new GradingPeriodModel($this->pdo);
@@ -522,6 +532,15 @@ class StudentGradeController {
             if ($period && isset($period['academic_year_id'])) {
                 $academicYearModel = new AcademicYearModel($this->pdo);
                 $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        } else {
+            // If no specific period, get academic year from student's class
+            if (isset($student['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($student['academic_year_id']);
                 if ($academicYearData) {
                     $academicYear = $academicYearData['year_code'];
                 }

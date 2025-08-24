@@ -626,7 +626,19 @@ class StudentGradeController {
      * Get grading period name by ID
      */
     private function getGradingPeriodName($periodId) {
-        if (!$periodId) return 'All Periods';
+        if (!$periodId) {
+            // Get the first available grading period as default
+            try {
+                $periodModel = new GradingPeriodModel($this->pdo);
+                $periods = $periodModel->findAll();
+                if (!empty($periods)) {
+                    return $periods[0]['name'] ?? 'First Term';
+                }
+            } catch (Exception $e) {
+                // ignore
+            }
+            return 'First Term';
+        }
         
         try {
             $periodModel = new GradingPeriodModel($this->pdo);

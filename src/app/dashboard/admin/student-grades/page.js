@@ -369,7 +369,7 @@ class StudentGradesManagementPage extends App {
             this.subjects = subjectsResp.data.data || [];
             this.periods = periodsResp.data.data || [];
 
-            // Default: preselect the last existing class id
+            // Default: preselect the last existing class id and first grading period
             const currentFilters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
             if (!currentFilters.class_id && (this.classes || []).length > 0) {
                 const lastId = String(
@@ -380,7 +380,13 @@ class StudentGradesManagementPage extends App {
                         .slice(-1)[0]
                 );
                 if (lastId) {
-                    const next = { ...currentFilters, class_id: lastId, subject_id: '' };
+                    // Auto-select first grading period if available
+                    let firstPeriodId = '';
+                    if (this.periods && this.periods.length > 0) {
+                        firstPeriodId = String(this.periods[0].id);
+                    }
+                    
+                    const next = { ...currentFilters, class_id: lastId, subject_id: '', grading_period_id: firstPeriodId };
                     this.set('filters', next);
                     await this.loadStudentsByClass(lastId);
                     await this.loadClassSubjectsAndAutoSelect(lastId);

@@ -167,6 +167,10 @@
                     <div class="info-value"><?php echo htmlspecialchars($gradingPeriodName); ?></div>
                 </div>
                 <div class="info-item">
+                    <div class="info-label">Academic Year</div>
+                    <div class="info-value"><?php echo htmlspecialchars($academicYear ?? 'N/A'); ?></div>
+                </div>
+                <div class="info-item">
                     <div class="info-label">Generated Date</div>
                     <div class="info-value"><?php echo $generatedDate; ?></div>
                 </div>
@@ -198,7 +202,6 @@
                             <th>Exam Total</th>
                             <th>Final %</th>
                             <th>Grade</th>
-                            <th>Updated</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -211,7 +214,6 @@
                                 <td class="grade-cell"><?php echo $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—'; ?></td>
                                 <td class="grade-cell"><?php echo $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—'; ?></td>
                                 <td class="grade-cell"><?php echo htmlspecialchars($grade['final_letter_grade'] ?? 'N/A'); ?></td>
-                                <td><?php echo $grade['updated_at'] ? date('m/d/Y', strtotime($grade['updated_at'])) : 'N/A'; ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

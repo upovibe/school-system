@@ -10,6 +10,7 @@ require_once __DIR__ . '/../models/ClassModel.php';
 require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../models/SubjectModel.php';
 require_once __DIR__ . '/../models/GradingPeriodModel.php';
+require_once __DIR__ . '/../models/AcademicYearModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -454,6 +455,30 @@ class StudentGradeController {
             throw new Exception('Class grade report template not found');
         }
 
+        // Get subject name and academic year
+        $subjectName = 'All Subjects';
+        $academicYear = 'N/A';
+        
+        if (!empty($subjectIds)) {
+            $subjectModel = new SubjectModel($this->pdo);
+            $subject = $subjectModel->findById($subjectIds[0]);
+            if ($subject) {
+                $subjectName = $subject['name'];
+            }
+        }
+        
+        if ($periodId) {
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period && isset($period['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        }
+        
         // Prepare data for the template
         $templateData = [
             'class' => $class,
@@ -462,6 +487,8 @@ class StudentGradeController {
             'teacherName' => $teacherName,
             'subjectIds' => $subjectIds,
             'periodId' => $periodId,
+            'subjectName' => $subjectName,
+            'academicYear' => $academicYear,
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
             'generatedDate' => date('F j, Y'),
             'generatedTime' => date('g:i A'),
@@ -487,11 +514,26 @@ class StudentGradeController {
             throw new Exception('Student grade report template not found');
         }
 
+        // Get academic year
+        $academicYear = 'N/A';
+        if ($periodId) {
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period && isset($period['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        }
+        
         // Prepare data for the template
         $templateData = [
             'student' => $student,
             'grades' => $grades,
             'periodId' => $periodId,
+            'academicYear' => $academicYear,
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
             'generatedDate' => date('F j, Y'),
             'generatedTime' => date('g:i A')

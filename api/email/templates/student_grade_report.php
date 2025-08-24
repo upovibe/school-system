@@ -78,6 +78,11 @@
             font-weight: bold;
             margin-right: 10px;
             text-align: left;
+            display: inline-block;
+        }
+        
+        .info-right .info-label {
+            text-align: left;
         }
         
         .info-value {

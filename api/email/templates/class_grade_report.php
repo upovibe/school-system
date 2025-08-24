@@ -68,12 +68,18 @@
         }
         
         .info-right {
+            flex: 0 0 auto;
             text-align: left;
         }
         
         .info-label {
             font-weight: bold;
             margin-right: 10px;
+            text-align: left;
+            display: inline-block;
+        }
+        
+        .info-right .info-label {
             text-align: left;
         }
         

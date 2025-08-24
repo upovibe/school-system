@@ -1,6 +1,6 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Button.js';
-import api from '@/services/api.js';
+import '@/components/ui/Toast.js';
 
 /**
  * Record View Dialog Component
@@ -11,92 +11,27 @@ class RecordViewDialog extends HTMLElement {
     constructor() {
         super();
         this.recordData = null;
-        this.exportData = null;
         this.loading = false;
     }
 
     connectedCallback() {
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Listen for close events from the dialog
+        this.addEventListener('close', () => {
+            this.close();
+        });
+        
+        this.addEventListener('cancel', () => {
+            this.close();
+        });
+    }
+
+    setRecordData(recordData) {
+        this.recordData = recordData;
         this.render();
-        this.addEventListener('click', this.handleActions.bind(this));
-    }
-
-    setRecordData(record) {
-        this.recordData = record;
-        this.render();
-    }
-
-    async handleActions(event) {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
-        
-        const action = button.getAttribute('data-action');
-        
-        switch (action) {
-            case 'export-record':
-                await this.exportRecord();
-                break;
-            case 'close-dialog':
-                this.close();
-                break;
-        }
-    }
-
-    async exportRecord() {
-        if (!this.recordData) return;
-        
-        try {
-            this.setLoading(true);
-            
-            const token = localStorage.getItem('token');
-            if (!token) {
-                this.showToast('Authentication Error', 'Please log in to export records', 'error');
-                return;
-            }
-
-            const response = await api.withToken(token).get(`/academic-year-records/${this.recordData.id}/export`);
-            this.exportData = response.data.data;
-            
-            // Create and download the export file
-            this.downloadExport();
-            
-        } catch (error) {
-            console.error('❌ Error exporting record:', error);
-            this.showToast('Export Error', error.response?.data?.message || 'Failed to export record', 'error');
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    downloadExport() {
-        if (!this.exportData) return;
-        
-        // Create JSON file content
-        const content = JSON.stringify(this.exportData, null, 2);
-        const blob = new Blob([content], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        // Create download link
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `academic-year-record-${this.exportData.archive_info?.year_code || this.recordData.year_code}-${this.recordData.id}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        this.showToast('Export Successful', 'Record data exported successfully', 'success');
-    }
-
-    setLoading(loading) {
-        this.loading = loading;
-        this.render();
-    }
-
-    showToast(title, message, variant = 'info') {
-        // Dispatch custom event for toast notification
-        this.dispatchEvent(new CustomEvent('show-toast', {
-            detail: { title, message, variant }
-        }));
     }
 
     open() {
@@ -107,124 +42,195 @@ class RecordViewDialog extends HTMLElement {
         this.removeAttribute('open');
     }
 
+    formatRecordData(data) {
+        if (!data) return {};
+        
+        try {
+            // If record_data is a string, parse it
+            if (typeof data === 'string') {
+                return JSON.parse(data);
+            }
+            // If it's already an object, return as is
+            return data;
+        } catch (e) {
+            console.error('Error parsing record data:', e);
+            return {};
+        }
+    }
+
+    formatCount(data) {
+        if (!data) return 0;
+        if (Array.isArray(data)) return data.length;
+        return 0;
+    }
+
     render() {
         if (!this.recordData) {
-            this.innerHTML = `
-                <ui-dialog open>
-                    <div slot="header" class="flex items-center">
-                        <i class="fas fa-archive text-green-500 mr-2"></i>
-                        <span class="font-semibold">Record Details</span>
-                    </div>
-                    <div slot="content" class="text-center py-8">
-                        <p class="text-gray-500">No record data available</p>
-                    </div>
-                    <div slot="footer" class="flex justify-end">
-                        <ui-button color="primary" data-action="close-dialog">Close</ui-button>
-                    </div>
-                </ui-dialog>
-            `;
+            this.innerHTML = '';
             return;
         }
 
-        const record = this.recordData;
-        const archiveDate = new Date(record.archive_date).toLocaleString();
+        const recordData = this.formatRecordData(this.recordData.record_data);
         
         this.innerHTML = `
-            <ui-dialog open>
-                <div slot="header" class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-archive text-green-500 mr-2"></i>
-                        <span class="font-semibold">Academic Year Record Details</span>
-                    </div>
-                    <button class="text-gray-400 hover:text-gray-600" data-action="close-dialog">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} variant="info" size="large">
+                <div slot="header" class="flex items-center">
+                    <i class="fas fa-archive text-blue-500 mr-2"></i>
+                    <span class="font-semibold">Academic Year Record Details</span>
                 </div>
                 
                 <div slot="content" class="space-y-6">
-                    <!-- Archive Information -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Archive Information</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Year Code</label>
-                                <p class="text-lg font-semibold text-gray-800">${record.year_code}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Record Type</label>
-                                <p class="text-lg font-semibold text-gray-800">${record.record_type}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Total Records</label>
-                                <p class="text-lg font-semibold text-gray-800">${record.total_records}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Archive Date</label>
-                                <p class="text-lg font-semibold text-gray-800">${archiveDate}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Archived By</label>
-                                <p class="text-lg font-semibold text-gray-800">${record.archived_by_name || 'System'}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600">Status</label>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Archived
-                                </span>
-                            </div>
+                    <!-- Basic Record Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Year Code:</label>
+                            <p class="text-lg font-semibold text-gray-900">${this.recordData.year_code}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Record Type:</label>
+                            <p class="text-lg font-semibold text-gray-900">${this.recordData.record_type}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Total Records:</label>
+                            <p class="text-lg font-semibold text-gray-900">${this.recordData.total_records}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Archive Date:</label>
+                            <p class="text-lg font-semibold text-gray-900">${new Date(this.recordData.archive_date).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Archived By:</label>
+                            <p class="text-lg font-semibold text-gray-900">${this.recordData.archived_by_name || 'System'}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-600">Notes:</label>
+                            <p class="text-lg font-semibold text-gray-900">${this.recordData.notes || '—'}</p>
                         </div>
                     </div>
-
-                    <!-- Notes -->
-                    ${record.notes ? `
-                        <div class="bg-blue-50 rounded-lg p-4">
-                            <h3 class="text-lg font-semibold text-blue-800 mb-2">Notes</h3>
-                            <p class="text-blue-700">${record.notes}</p>
-                        </div>
-                    ` : ''}
 
                     <!-- Data Summary -->
-                    <div class="bg-green-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-green-800 mb-3">Archived Data Summary</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                            <div class="bg-white rounded-lg p-3">
-                                <div class="text-2xl font-bold text-green-600">${record.total_records}</div>
-                                <div class="text-sm text-green-600">Total Records</div>
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Data Summary</h3>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-3 bg-blue-50 rounded-lg">
+                                <div class="text-2xl font-bold text-blue-600">${this.formatCount(recordData.classes)}</div>
+                                <div class="text-sm text-gray-600">Classes</div>
                             </div>
-                            <div class="bg-white rounded-lg p-3">
-                                <div class="text-2xl font-bold text-blue-600">${record.record_type === 'complete_year_snapshot' ? 'Complete' : 'Partial'}</div>
-                                <div class="text-sm text-blue-600">Archive Type</div>
+                            <div class="text-center p-3 bg-green-50 rounded-lg">
+                                <div class="text-2xl font-bold text-green-600">${this.formatCount(recordData.students)}</div>
+                                <div class="text-sm text-gray-600">Students</div>
                             </div>
-                            <div class="bg-white rounded-lg p-3">
-                                <div class="text-2xl font-bold text-purple-600">${record.year_code}</div>
-                                <div class="text-sm text-purple-600">Academic Year</div>
+                            <div class="text-center p-3 bg-purple-50 rounded-lg">
+                                <div class="text-2xl font-bold text-purple-600">${this.formatCount(recordData.teachers)}</div>
+                                <div class="text-sm text-gray-600">Teachers</div>
                             </div>
-                            <div class="bg-white rounded-lg p-3">
-                                <div class="text-2xl font-bold text-orange-600">${record.id}</div>
-                                <div class="text-sm text-orange-600">Record ID</div>
+                            <div class="text-center p-3 bg-orange-50 rounded-lg">
+                                <div class="text-2xl font-bold text-orange-600">${this.formatCount(recordData.subjects)}</div>
+                                <div class="text-sm text-gray-600">Subjects</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Export Section -->
-                    <div class="bg-yellow-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-yellow-800 mb-3">Export Options</h3>
-                        <p class="text-yellow-700 mb-3">Download this archived record for offline analysis or backup purposes.</p>
-                        <div class="flex gap-3">
-                            <ui-button 
-                                data-action="export-record" 
-                                color="primary" 
-                                ${this.loading ? 'disabled' : ''}
-                                class="flex items-center gap-2">
-                                <i class="fas fa-download"></i>
-                                ${this.loading ? 'Exporting...' : 'Export Record Data'}
-                            </ui-button>
-                        </div>
+                    <!-- Detailed Data Sections -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Detailed Information</h3>
+                        
+                        <!-- Classes Section -->
+                        ${recordData.classes && recordData.classes.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Classes (${recordData.classes.length})</h4>
+                                <div class="space-y-2 max-h-40 overflow-y-auto">
+                                    ${recordData.classes.map(cls => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="font-medium">${cls.name} ${cls.section ? `(${cls.section})` : ''}</span>
+                                            <span class="text-sm text-gray-600">${cls.student_count || 0} students</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Students Section -->
+                        ${recordData.students && recordData.students.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Students (${recordData.students.length})</h4>
+                                <div class="space-y-2 max-h-40 overflow-y-auto">
+                                    ${recordData.students.map(student => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="font-medium">${student.student_id} - ${student.first_name} ${student.last_name}</span>
+                                            <span class="text-sm text-gray-600">${student.class_name || 'Unknown Class'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Teachers Section -->
+                        ${recordData.teachers && recordData.teachers.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Teachers (${recordData.teachers.length})</h4>
+                                <div class="space-y-2 max-h-40 overflow-y-auto">
+                                    ${recordData.teachers.map(teacher => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="font-medium">${teacher.first_name} ${teacher.last_name}</span>
+                                            <span class="text-sm text-gray-600">${teacher.email || 'No email'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Subjects Section -->
+                        ${recordData.subjects && recordData.subjects.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Subjects (${recordData.subjects.length})</h4>
+                                <div class="space-y-2 max-h-40 overflow-y-auto">
+                                    ${recordData.subjects.map(subject => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="font-medium">${subject.name}</span>
+                                            <span class="text-sm text-gray-600">${subject.code || 'No code'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Grades Section -->
+                        ${recordData.grades && recordData.grades.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Grades (${recordData.grades.length})</h4>
+                                <div class="text-sm text-gray-600">Grade records archived for historical reference</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Fees Section -->
+                        ${recordData.fees && recordData.fees.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Fees (${recordData.fees.length})</h4>
+                                <div class="text-sm text-gray-600">Fee schedule records archived for historical reference</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Grading Periods Section -->
+                        ${recordData.grading_periods && recordData.grading_periods.length > 0 ? `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">Grading Periods (${recordData.grading_periods.length})</h4>
+                                <div class="space-y-2 max-h-40 overflow-y-auto">
+                                    ${recordData.grading_periods.map(period => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="font-medium">${period.name}</span>
+                                            <span class="text-sm text-gray-600">${period.start_date} - ${period.end_date}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
                 
-                <div slot="footer" class="flex justify-end gap-3">
-                    <ui-button color="secondary" data-action="close-dialog">Close</ui-button>
+                <div slot="footer" class="flex justify-end">
+                    <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Close</ui-button>
                 </div>
             </ui-dialog>
         `;

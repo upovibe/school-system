@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/layout/adminLayout/RecordViewDialog.js';
 import api from '@/services/api.js';
 
 /**

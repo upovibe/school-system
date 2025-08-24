@@ -344,6 +344,11 @@ class StudentGradesManagementPage extends App {
                 // Re-render to reset dropdowns
                 this.render();
             }
+            const printBtn = e.target.closest('[data-action="print-class-report"]');
+            if (printBtn) {
+                e.preventDefault();
+                this.printClassReport();
+            }
         });
     }
 
@@ -364,7 +369,7 @@ class StudentGradesManagementPage extends App {
             this.subjects = subjectsResp.data.data || [];
             this.periods = periodsResp.data.data || [];
 
-            // Default: preselect the last existing class id
+            // Default: preselect the last existing class id and first grading period
             const currentFilters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
             if (!currentFilters.class_id && (this.classes || []).length > 0) {
                 const lastId = String(
@@ -375,7 +380,13 @@ class StudentGradesManagementPage extends App {
                         .slice(-1)[0]
                 );
                 if (lastId) {
-                    const next = { ...currentFilters, class_id: lastId, subject_id: '' };
+                    // Auto-select first grading period if available
+                    let firstPeriodId = '';
+                    if (this.periods && this.periods.length > 0) {
+                        firstPeriodId = String(this.periods[0].id);
+                    }
+                    
+                    const next = { ...currentFilters, class_id: lastId, subject_id: '', grading_period_id: firstPeriodId };
                     this.set('filters', next);
                     await this.loadStudentsByClass(lastId);
                     await this.loadClassSubjectsAndAutoSelect(lastId);
@@ -752,7 +763,7 @@ class StudentGradesManagementPage extends App {
         
         if (act === 'add-grade') {
             // Find the grade data for this student
-            const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id);
+            const gradeData = this.get('grades')?.find(g => g.student_id === row.student_id_meta);
             if (gradeData) {
                 this.closeAllModals();
                 this.set('showAddModal', true);
@@ -778,7 +789,7 @@ class StudentGradesManagementPage extends App {
         }
 
         if (act === 'edit-grade') {
-            const existing = this.get('grades')?.find(g => g.student_id === row.student_id && !g.is_new);
+            const existing = this.get('grades')?.find(g => g.student_id === row.student_id_meta && !g.is_new);
             if (existing) {
                 this.closeAllModals();
                 this.set('updateGradeData', existing);
@@ -825,12 +836,17 @@ class StudentGradesManagementPage extends App {
                         </ui-search-dropdown>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-3">
-                    <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
-                        <i class="fas fa-filter mr-1"></i> Apply Filters
-                    </ui-button>
-                    <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
-                        <i class="fas fa-times mr-1"></i> Clear Filters
+                <div class="flex justify-between gap-2 mt-3 w-full">                    
+                    <div class="flex gap-2">
+                        <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
+                            <i class="fas fa-filter mr-1"></i> Apply Filters
+                        </ui-button>
+                        <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+                            <i class="fas fa-times mr-1"></i> Clear Filters
+                        </ui-button>
+                    </div>
+                    <ui-button type="button" data-action="print-class-report" variant="success" size="sm" ${(!class_id || !subject_id) ? 'disabled' : ''}>
+                        <i class="fas fa-print mr-1"></i> Print Class Report
                     </ui-button>
                 </div>
             </div>
@@ -854,7 +870,8 @@ class StudentGradesManagementPage extends App {
             return ({
             id: g.id || `new_${g.student_id}_${index}`,
             index: index + 1,
-            student: ([g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || g.student_number || ''),
+            student_id: g.student_number || '',
+            student_name: [g.student_first_name, g.student_last_name].filter(Boolean).join(' ') || 'Unknown Student',
             class: g.class_name ? `${g.class_name}${g.class_section ? ' ('+g.class_section+')' : ''}` : '',
             subject: g.subject_name || '',
             period: g.grading_period_name || '',
@@ -864,7 +881,7 @@ class StudentGradesManagementPage extends App {
             final_grade: g.final_letter_grade || (g.is_new ? 'Not Graded' : ''),
             updated: g.updated_at ? new Date(g.updated_at).toLocaleDateString() : (g.is_new ? 'Pending' : ''),
             // Add metadata for custom actions
-            student_id: g.student_id,
+            student_id_meta: g.student_id,
             is_new: g.is_new,
             has_grades: hasGrades,
             can_add: canAdd,
@@ -873,14 +890,15 @@ class StudentGradesManagementPage extends App {
 
         const tableColumns = [
             { key: 'index', label: 'No.' },
-            { key: 'student', label: 'Student' },
+            { key: 'student_id', label: 'Student ID' },
+            { key: 'student_name', label: 'Student Name' },
             { key: 'class', label: 'Class' },
             { key: 'subject', label: 'Subject' },
             { key: 'period', label: 'Period' },
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
             { key: 'final_pct', label: 'Final Total Score %' },
-            { key: 'final_grade', label: 'Letter Grade' },
+            { key: 'final_grade', label: 'Grade' },
             { key: 'updated', label: 'Updated' }
         ];
 
@@ -934,6 +952,78 @@ class StudentGradesManagementPage extends App {
         this.set('updateGradeData', null);
         this.set('viewGradeData', null);
         this.set('deleteGradeData', null);
+    }
+
+    async printClassReport() {
+        try {
+            const filters = this.get('filters') || {};
+            const { class_id, subject_id, grading_period_id } = filters;
+            
+            if (!class_id || !subject_id) {
+                Toast.show({ 
+                    title: 'Print Error', 
+                    message: 'Please select both class and subject before printing', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ 
+                    title: 'Authentication Error', 
+                    message: 'Please log in to print reports', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            // Build the print URL with current filters
+            const params = new URLSearchParams({
+                class_id: class_id,
+                subject_ids: subject_id,
+                grading_period_id: grading_period_id || ''
+            });
+
+            const printUrl = `/api/student-grades/print/class-report?${params.toString()}`;
+            
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(`Print failed with status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error printing class report:', error);
+            Toast.show({ 
+                title: 'Print Error', 
+                message: 'Failed to generate print report', 
+                variant: 'error', 
+                duration: 3000 
+            });
+        }
     }
 }
 

@@ -44,7 +44,7 @@ class StudentGradeModel extends BaseModel {
                 c.name as class_name,
                 c.section as class_section,
                 gp.name as grading_period_name,
-                gp.academic_year,
+                ay.year_code as academic_year,
                 gp.start_date as period_start,
                 gp.end_date as period_end,
                 st.first_name as student_first_name,
@@ -58,6 +58,7 @@ class StudentGradeModel extends BaseModel {
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN academic_years ay ON gp.academic_year_id = ay.id
             LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN users u1 ON sg.created_by = u1.id
             LEFT JOIN users u2 ON sg.updated_by = u2.id
@@ -104,7 +105,7 @@ class StudentGradeModel extends BaseModel {
                 c.name as class_name,
                 c.section as class_section,
                 gp.name as grading_period_name,
-                gp.academic_year,
+                ay.year_code as academic_year,
                 gp.start_date as period_start,
                 gp.end_date as period_end,
                 st.first_name as student_first_name,
@@ -118,6 +119,7 @@ class StudentGradeModel extends BaseModel {
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN academic_years ay ON gp.academic_year_id = ay.id
             LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN users u1 ON sg.created_by = u1.id
             LEFT JOIN users u2 ON sg.updated_by = u2.id
@@ -132,8 +134,14 @@ class StudentGradeModel extends BaseModel {
         }
         
         if (!empty($filters['subject_id'])) {
-            $sql .= " AND sg.subject_id = ?";
-            $params[] = $filters['subject_id'];
+            if (is_array($filters['subject_id'])) {
+                $placeholders = str_repeat('?,', count($filters['subject_id']) - 1) . '?';
+                $sql .= " AND sg.subject_id IN ($placeholders)";
+                $params = array_merge($params, $filters['subject_id']);
+            } else {
+                $sql .= " AND sg.subject_id = ?";
+                $params[] = $filters['subject_id'];
+            }
         }
         
         $sql .= " ORDER BY st.first_name ASC, st.last_name ASC, s.name ASC";
@@ -155,7 +163,7 @@ class StudentGradeModel extends BaseModel {
                 c.name as class_name,
                 c.section as class_section,
                 gp.name as grading_period_name,
-                gp.academic_year,
+                ay.year_code as academic_year,
                 gp.start_date as period_start,
                 gp.end_date as period_end,
                 st.first_name as student_first_name,
@@ -169,6 +177,7 @@ class StudentGradeModel extends BaseModel {
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN academic_years ay ON gp.academic_year_id = ay.id
             LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN users u1 ON sg.created_by = u1.id
             LEFT JOIN users u2 ON sg.updated_by = u2.id
@@ -183,8 +192,14 @@ class StudentGradeModel extends BaseModel {
         }
         
         if (!empty($filters['subject_id'])) {
-            $whereConditions[] = "sg.subject_id = ?";
-            $params[] = $filters['subject_id'];
+            if (is_array($filters['subject_id'])) {
+                $placeholders = str_repeat('?,', count($filters['subject_id']) - 1) . '?';
+                $whereConditions[] = "sg.subject_id IN ($placeholders)";
+                $params = array_merge($params, $filters['subject_id']);
+            } else {
+                $whereConditions[] = "sg.subject_id = ?";
+                $params[] = $filters['subject_id'];
+            }
         }
         
         if (!empty($filters['class_id'])) {
@@ -215,7 +230,7 @@ class StudentGradeModel extends BaseModel {
                 c.name as class_name,
                 c.section as class_section,
                 gp.name as grading_period_name,
-                gp.academic_year,
+                ay.year_code as academic_year,
                 st.first_name as student_first_name,
                 st.last_name as student_last_name,
                 st.student_id as student_number,
@@ -227,6 +242,7 @@ class StudentGradeModel extends BaseModel {
             LEFT JOIN subjects s ON sg.subject_id = s.id
             LEFT JOIN classes c ON sg.class_id = c.id
             LEFT JOIN grading_periods gp ON sg.grading_period_id = gp.id
+            LEFT JOIN academic_years ay ON gp.academic_year_id = ay.id
             LEFT JOIN students st ON sg.student_id = st.id
             LEFT JOIN users u1 ON sg.created_by = u1.id
             LEFT JOIN users u2 ON sg.updated_by = u2.id

@@ -263,24 +263,51 @@ class FinancePaymentsPage extends App {
     } catch (_) { return value; }
   }
 
-  onView(event) {
+  async onView(event) {
     const item = (this.get('payments') || []).find((p) => String(p.id) === String(event.detail.row.id));
     if (item) {
       this.closeAllModals();
       this.set('viewPaymentData', item);
       this.set('showViewModal', true);
-      setTimeout(() => {
-        const modal = this.querySelector('finance-payment-view-modal');
-        if (modal) {
-          const voidedByDisplay = item.voided_by ? this.userDisplay(item.voided_by) : null;
-          modal.setPaymentData({ 
-            ...item, 
-            invoiceDisplay: this.invoiceDisplay(item.invoice_id), 
-            studentDisplay: this.studentDisplay(item.student_id),
-            voidedByDisplay
-          });
+      
+      // Fetch full payment data including receipt information
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await api.withToken(token).get(`/finance/payments/${item.id}`);
+        if (response?.data?.success) {
+          const fullPaymentData = response.data.data;
+          
+          setTimeout(() => {
+            const modal = this.querySelector('finance-payment-view-modal');
+            if (modal) {
+              const voidedByDisplay = fullPaymentData.voided_by ? this.userDisplay(fullPaymentData.voided_by) : null;
+              modal.setPaymentData({ 
+                ...fullPaymentData, 
+                invoiceDisplay: this.invoiceDisplay(fullPaymentData.invoice_id), 
+                studentDisplay: this.studentDisplay(fullPaymentData.student_id),
+                voidedByDisplay
+              });
+            }
+          }, 0);
         }
-      }, 0);
+      } catch (error) {
+        console.error('Error fetching full payment data:', error);
+        // Fallback to basic data if API call fails
+        setTimeout(() => {
+          const modal = this.querySelector('finance-payment-view-modal');
+          if (modal) {
+            const voidedByDisplay = item.voided_by ? this.userDisplay(item.voided_by) : null;
+            modal.setPaymentData({ 
+              ...item, 
+              invoiceDisplay: this.invoiceDisplay(item.invoice_id), 
+              studentDisplay: this.studentDisplay(item.student_id),
+              voidedByDisplay
+            });
+          }
+        }, 0);
+      }
     }
   }
 

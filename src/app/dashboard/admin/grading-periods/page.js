@@ -17,6 +17,7 @@ class GradingPeriodManagementPage extends App {
     constructor() {
         super();
         this.gradingPeriods = null;
+        this.academicYears = null;
         this.loading = false;
         this.showAddModal = false;
         this.showDeleteDialog = false;
@@ -214,10 +215,10 @@ class GradingPeriodManagementPage extends App {
                         <span class="text-sm font-medium">Name</span>
                         <span class="text-sm text-gray-600">e.g., Term 1, Semester 2, Quarter 3</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">Academic Year</span>
-                        <span class="text-sm text-gray-600">Matches the class academic year</span>
-                    </div>
+                                         <div class="flex justify-between">
+                         <span class="text-sm font-medium">Academic Year</span>
+                         <span class="text-sm text-gray-600">Automatically set to current academic year for consistency</span>
+                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Start/End Dates</span>
                         <span class="text-sm text-gray-600">Used to constrain grade entry windows</span>
@@ -318,12 +319,18 @@ class GradingPeriodManagementPage extends App {
             const response = await api.withToken(token).get('/grading-periods');
             const rawPeriods = response?.data?.data || [];
             
+            // Load only current academic year data
+            const academicYearsResponse = await api.withToken(token).get('/academic-years/current');
+            const currentYear = academicYearsResponse?.data?.data;
+            // Convert single object to array for consistency with dropdown
+            const rawAcademicYears = currentYear ? [currentYear] : [];
+            
             // Data loaded
             this.set('gradingPeriods', rawPeriods);
+            this.set('academicYears', rawAcademicYears);
             this.set('loading', false);
             
         } catch (error) {
-            console.error('❌ Error loading data:', error);
             this.set('loading', false);
             
             Toast.show({
@@ -340,18 +347,30 @@ class GradingPeriodManagementPage extends App {
         if (!gradingPeriods) return;
 
         // Prepare table data for grading periods
-        const tableData = gradingPeriods.map((period, index) => ({
-            id: period.id,
-            index: index + 1,
-            name: period.name,
-            academic_year: period.academic_year,
-            start_date: new Date(period.start_date).toLocaleDateString(),
-            end_date: new Date(period.end_date).toLocaleDateString(),
-            is_active: period.is_active ? 'Active' : 'Inactive',
-            description: period.description || 'No description',
-            created: new Date(period.created_at).toLocaleDateString(),
-            updated: new Date(period.updated_at).toLocaleDateString()
-        }));
+        const tableData = gradingPeriods.map((period, index) => {
+            // Format academic year to show full display name
+            let academicYearDisplay = 'Unknown';
+            if (period.academic_year && period.academic_year_display_name) {
+                // Use the formatted display name from API
+                academicYearDisplay = `${period.academic_year} (${period.academic_year_display_name})`;
+            } else if (period.academic_year) {
+                // Fallback to just the year code
+                academicYearDisplay = period.academic_year;
+            }
+            
+            return {
+                id: period.id,
+                index: index + 1,
+                name: period.name,
+                academic_year: academicYearDisplay,
+                start_date: new Date(period.start_date).toLocaleDateString(),
+                end_date: new Date(period.end_date).toLocaleDateString(),
+                is_active: period.is_active ? 'Active' : 'Inactive',
+                description: period.description || 'No description',
+                created: new Date(period.created_at).toLocaleDateString(),
+                updated: new Date(period.updated_at).toLocaleDateString()
+            };
+        });
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
@@ -369,18 +388,30 @@ class GradingPeriodManagementPage extends App {
         const showUpdateModal = this.get('showUpdateModal');
         
         // Prepare table data and columns for grading periods
-        const tableData = gradingPeriods ? gradingPeriods.map((period, index) => ({
-            id: period.id,
-            index: index + 1,
-            name: period.name,
-            academic_year: period.academic_year,
-            start_date: new Date(period.start_date).toLocaleDateString(),
-            end_date: new Date(period.end_date).toLocaleDateString(),
-            is_active: period.is_active ? 'Active' : 'Inactive',
-            description: period.description || 'No description',
-            created: new Date(period.created_at).toLocaleDateString(),
-            updated: new Date(period.updated_at).toLocaleDateString()
-        })) : [];
+        const tableData = gradingPeriods ? gradingPeriods.map((period, index) => {
+            // Format academic year to show full display name
+            let academicYearDisplay = 'Unknown';
+            if (period.academic_year && period.academic_year_display_name) {
+                // Use the formatted display name from API
+                academicYearDisplay = `${period.academic_year} (${period.academic_year_display_name})`;
+            } else if (period.academic_year) {
+                // Fallback to just the year code
+                academicYearDisplay = period.academic_year;
+            }
+            
+            return {
+                id: period.id,
+                index: index + 1,
+                name: period.name,
+                academic_year: academicYearDisplay,
+                start_date: new Date(period.start_date).toLocaleDateString(),
+                end_date: new Date(period.end_date).toLocaleDateString(),
+                is_active: period.is_active ? 'Active' : 'Inactive',
+                description: period.description || 'No description',
+                created: new Date(period.created_at).toLocaleDateString(),
+                updated: new Date(period.updated_at).toLocaleDateString()
+            };
+        }) : [];
 
         const tableColumns = [
             { key: 'index', label: 'No.', html: false },
@@ -428,7 +459,10 @@ class GradingPeriodManagementPage extends App {
             </div>
             
             <!-- Add Grading Period Modal -->
-            <grading-period-add-modal ${showAddModal ? 'open' : ''}></grading-period-add-modal>
+            <grading-period-add-modal 
+                ${showAddModal ? 'open' : ''} 
+                academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+            </grading-period-add-modal>
             
             <!-- Delete Grading Period Dialog -->
             <grading-period-delete-dialog ${showDeleteDialog ? 'open' : ''}></grading-period-delete-dialog>
@@ -437,7 +471,10 @@ class GradingPeriodManagementPage extends App {
             <grading-period-view-modal ${showViewModal ? 'open' : ''}></grading-period-view-modal>
 
             <!-- Update Grading Period Modal -->
-            <grading-period-update-modal ${showUpdateModal ? 'open' : ''}></grading-period-update-modal>
+            <grading-period-update-modal 
+                ${showUpdateModal ? 'open' : ''} 
+                academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+            </grading-period-update-modal>
         `;
     }
 }

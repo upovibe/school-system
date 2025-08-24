@@ -2,6 +2,7 @@ import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -23,7 +24,7 @@ class ClassUpdateModal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open'];
+        return ['open', 'academic-years'];
     }
 
     connectedCallback() {
@@ -66,15 +67,22 @@ class ClassUpdateModal extends HTMLElement {
         this.validateForm();
     }
 
-    // Compute academic year on client (display-only)
-    computeAcademicYear() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1; // 1-12
-        if (month >= 9) {
-            return `${year}-${year + 1}`;
+    // Get academic years data from attribute
+    getAcademicYears() {
+        try {
+            const academicYearsAttr = this.getAttribute('academic-years');
+            return academicYearsAttr ? JSON.parse(academicYearsAttr) : [];
+        } catch (error) {
+            console.error('Error parsing academic years:', error);
+            return [];
         }
-        return `${year - 1}-${year}`;
+    }
+
+    // Get current academic year ID from loaded data
+    getCurrentAcademicYearId() {
+        const academicYears = this.getAcademicYears();
+        const currentYear = academicYears.find(ay => ay.is_current === 1);
+        return currentYear ? currentYear.id : null;
     }
 
     open() {
@@ -104,8 +112,8 @@ class ClassUpdateModal extends HTMLElement {
         if (nameInput) nameInput.value = this.classData.name || '';
         if (sectionInput) sectionInput.value = this.classData.section || '';
         if (academicYearInput) {
-            academicYearInput.value = this.classData.academic_year || this.computeAcademicYear();
-            academicYearInput.setAttribute('readonly', '');
+            // For update modal, we'll populate this after the render when we know the field type
+            // The actual population will happen in the render method
         }
         if (capacityInput) capacityInput.value = this.classData.capacity || 30;
         if (statusSwitch) {
@@ -133,19 +141,31 @@ class ClassUpdateModal extends HTMLElement {
             // Get form data using the data-field attributes for reliable selection
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const sectionInput = this.querySelector('ui-input[data-field="section"]');
-            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
+            const academicYearDropdown = this.querySelector('ui-dropdown[data-field="academic_year_id"]');
             const capacityInput = this.querySelector('ui-input[data-field="capacity"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
+
+            // Get academic year ID - handle both readonly input and dropdown cases
+            let academicYearId = this.classData.academic_year_id; // Keep existing if no change
+            if (academicYearDropdown) {
+                academicYearId = parseInt(academicYearDropdown.value);
+            } else {
+                // If no dropdown (readonly case), get from current academic years
+                const academicYears = this.getAcademicYears();
+                if (academicYears.length === 1) {
+                    academicYearId = academicYears[0].id;
+                }
+            }
 
             const classData = {
                 name: nameInput ? nameInput.value : '',
                 section: sectionInput ? sectionInput.value : '',
-                academic_year: academicYearInput ? (academicYearInput.value || this.computeAcademicYear()) : this.computeAcademicYear(),
+                academic_year_id: academicYearId,
                 capacity: capacityInput ? parseInt(capacityInput.value) || 30 : 30,
                 status: statusSwitch ? (statusSwitch.checked ? 'active' : 'inactive') : 'active'
             };
 
-            console.log('Class update data being sent:', classData); // Debug log
+
 
             // Validate required fields
             if (!classData.name) {
@@ -194,12 +214,19 @@ class ClassUpdateModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Get the current academic year display name
+                const currentAcademicYear = this.getAcademicYears()[0];
+                const academicYearDisplay = currentAcademicYear ? 
+                    `${currentAcademicYear.year_code}${currentAcademicYear.display_name ? ` (${currentAcademicYear.display_name})` : ''}` : 
+                    'Unknown';
+
                 // Construct the updated class data
                 const updatedClass = {
                     ...this.classData,
                     name: classData.name,
                     section: classData.section,
-                    academic_year: classData.academic_year,
+                    academic_year: academicYearDisplay,
+                    academic_year_id: classData.academic_year_id,
                     capacity: classData.capacity,
                     status: classData.status,
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -296,12 +323,38 @@ class ClassUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-input 
-                            data-field="academic_year"
-                            type="text" 
-                            placeholder="Enter academic year (e.g., 2024-2025)"
-                            class="w-full">
-                        </ui-input>
+                        ${this.classData && this.classData.academic_year_id ? 
+                            // If we have existing academic year data, show as readonly input
+                            `<ui-input 
+                                data-field="academic_year_id"
+                                type="text" 
+                                value="${this.classData.academic_year || 'Unknown'}"
+                                readonly
+                                class="w-full">
+                            </ui-input>` :
+                            // If no existing data, show dropdown with current academic years
+                            `${(() => {
+                                const academicYears = this.getAcademicYears();
+                                const currentYearId = this.getCurrentAcademicYearId();
+                                return academicYears.length === 1 ? 
+                                    // If only one academic year (current), show as readonly input
+                                    `<ui-input 
+                                        data-field="academic_year_id"
+                                        type="text" 
+                                        value="${academicYears[0].year_code}${academicYears[0].display_name ? ` (${academicYears[0].display_name})` : ''}"
+                                        readonly
+                                        class="w-full">
+                                    </ui-input>` :
+                                    // If multiple academic years, show as dropdown
+                                    `<ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
+                                        ${academicYears.map(ay => `
+                                            <ui-option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
+                                                ${ay.year_code}${ay.display_name ? ` (${ay.display_name})` : ''}
+                                            </ui-option>
+                                        `).join('')}
+                                    </ui-dropdown>`;
+                            })()}`
+                        }
                     </div>
                     
                     <div>
@@ -333,7 +386,7 @@ class ClassUpdateModal extends HTMLElement {
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Class Name</strong>: short identifier for the class (e.g., P1, JHS1).</li>
                                 <li><strong>Section</strong>: letter only to distinguish parallel classes (e.g., A, B, C - no numbers allowed).</li>
-                                <li><strong>Academic Year</strong>: used for reporting and filtering.</li>
+                                <li><strong>Academic Year</strong>: automatically set to the current academic year for consistency.</li>
                                 <li><strong>Capacity</strong>: optional; defaults to 30.</li>
                                 <li><strong>Status</strong>: Active classes are available for assignments.</li>
                             </ul>

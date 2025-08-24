@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/FeeInvoice.php';
 require_once __DIR__ . '/../models/FeePayment.php';
 require_once __DIR__ . '/../models/FeeReceipt.php';
 require_once __DIR__ . '/../models/StudentModel.php';
+require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -43,9 +44,9 @@ class FinanceController {
                 $conditions[] = 'class_id = ?';
                 $params[] = $_GET['class_id'];
             }
-            if (isset($_GET['academic_year']) && $_GET['academic_year'] !== '') {
-                $conditions[] = 'academic_year = ?';
-                $params[] = $_GET['academic_year'];
+            if (isset($_GET['academic_year_id']) && $_GET['academic_year_id'] !== '') {
+                $conditions[] = 'academic_year_id = ?';
+                $params[] = $_GET['academic_year_id'];
             }
             if (isset($_GET['term']) && $_GET['term'] !== '') {
                 $conditions[] = 'term = ?';
@@ -65,10 +66,37 @@ class FinanceController {
                 $where = 'WHERE ' . implode(' AND ', $conditions);
             }
 
-            $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year DESC, term DESC, id DESC";
+            // Use the enhanced model method to get schedules with class and academic year details
+            if (empty($conditions)) {
+                $schedules = $this->feeScheduleModel->getAllWithDetails();
+            } else {
+                // For filtered results, we'll need to get basic data first, then enhance it
+                $sql = "SELECT * FROM fee_schedules $where ORDER BY academic_year DESC, term DESC, id DESC";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
-            $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $basicSchedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Enhance with class and academic year details
+                $schedules = [];
+                foreach ($basicSchedules as $schedule) {
+                    $classSql = "SELECT c.name as class_name, c.section as class_section, c.academic_year_id, 
+                                        ay.year_code AS academic_year_code, ay.display_name as academic_year_display_name
+                                 FROM classes c 
+                                 LEFT JOIN academic_years ay ON c.academic_year_id = ay.id 
+                                 WHERE c.id = ?";
+                    $classStmt = $this->pdo->prepare($classSql);
+                    $classStmt->execute([$schedule['class_id']]);
+                    $classDetails = $classStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($classDetails) {
+                        $schedule['class_name'] = $classDetails['class_name'];
+                        $schedule['class_section'] = $classDetails['class_section'];
+                        $schedule['academic_year_code'] = $classDetails['academic_year_code'];
+                        $schedule['academic_year_display_name'] = $classDetails['academic_year_display_name'];
+                    }
+                    $schedules[] = $schedule;
+                }
+            }
 
             http_response_code(200);
             echo json_encode([
@@ -87,7 +115,7 @@ class FinanceController {
 
     /**
      * Create a fee schedule (admin only)
-      * Required: class_id, academic_year, term, student_type, total_fee
+      * Required: class_id, academic_year, grading_period, student_type, total_fee
      */
     public function storeSchedule() {
         try {
@@ -96,8 +124,8 @@ class FinanceController {
 
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-            // Validate required fields
-            $required = ['class_id', 'academic_year', 'term', 'student_type', 'total_fee'];
+            // Validate required fields (academic_year is auto-populated from class)
+            $required = ['class_id', 'grading_period', 'student_type', 'total_fee'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -109,18 +137,39 @@ class FinanceController {
                 }
             }
 
+            // Validate that academic_year is provided
+            if (!isset($data['academic_year']) || $data['academic_year'] === '') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Academic year is required'
+                ]);
+                return;
+            }
+
             // Defaults
             if (!isset($data['student_type']) || $data['student_type'] === '') {
                 $data['student_type'] = 'Day';
             }
 
-            // Enforce uniqueness: class_id + academic_year + term + student_type
-            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['term'], $data['student_type']);
+            // Validate that the academic year format is correct (should contain year_code)
+            $yearCode = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
+            if (!$yearCode || !str_contains($data['academic_year'], $yearCode['year_code'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'The academic year must match the class\'s academic year'
+                ]);
+                return;
+            }
+
+            // Enforce uniqueness: class_id + academic_year + grading_period + student_type
+            $existing = $this->findScheduleByComposite($data['class_id'], $data['academic_year'], $data['grading_period'], $data['student_type']);
             if ($existing) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'A schedule already exists for this class, academic year, term and student type'
+                    'message' => 'A schedule already exists for this class, academic year, grading period and student type'
                 ]);
                 return;
             }
@@ -204,6 +253,22 @@ class FinanceController {
 
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
+            // If class is being changed, automatically update academic_year to match the new class
+            if (isset($data['class_id']) && $data['class_id'] !== $existing['class_id']) {
+                $classAcademicYear = $this->feeScheduleModel->getClassAcademicYear($data['class_id']);
+                if (!$classAcademicYear) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid class selected or class has no academic year'
+                    ]);
+                    return;
+                }
+                
+                // Automatically update academic_year to match the new class
+                $data['academic_year'] = $classAcademicYear['year_code'];
+            }
+
             // If composite keys are changing, enforce uniqueness
             $newClassId = $data['class_id'] ?? $existing['class_id'];
             $newYear = $data['academic_year'] ?? $existing['academic_year'];
@@ -243,6 +308,31 @@ class FinanceController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error updating fee schedule: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get classes with academic year information for fee schedule creation (admin only)
+     */
+    public function getClassesForSchedule() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $classes = $this->feeScheduleModel->getClassesWithAcademicYear();
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $classes,
+                'message' => 'Classes retrieved successfully for fee schedule creation'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving classes: ' . $e->getMessage()
             ]);
         }
     }
@@ -294,15 +384,15 @@ class FinanceController {
     }
 
     // --- Helpers ---
-    private function findScheduleByComposite($classId, $academicYear, $term, $studentType = null) {
+    private function findScheduleByComposite($classId, $academicYear, $gradingPeriod, $studentType = null) {
         if ($studentType !== null) {
-            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? AND student_type = ? LIMIT 1';
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND grading_period = ? AND student_type = ? LIMIT 1';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$classId, $academicYear, $term, $studentType]);
+            $stmt->execute([$classId, $academicYear, $gradingPeriod, $studentType]);
         } else {
-            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND term = ? LIMIT 1';
+            $sql = 'SELECT * FROM fee_schedules WHERE class_id = ? AND academic_year = ? AND grading_period = ? LIMIT 1';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$classId, $academicYear, $term]);
+            $stmt->execute([$classId, $academicYear, $gradingPeriod]);
         }
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -337,7 +427,7 @@ class FinanceController {
 // Invoices Section
     /**
      * List fee invoices with optional filters (admin only)
-     * Filters: student_id, academic_year, term, status
+     * Filters: student_id, academic_year, grading_period, status
      */
     public function indexInvoices() {
         try {
@@ -355,9 +445,9 @@ class FinanceController {
                 $conditions[] = 'academic_year = ?';
                 $params[] = $_GET['academic_year'];
             }
-            if (!empty($_GET['term'])) {
-                $conditions[] = 'term = ?';
-                $params[] = $_GET['term'];
+            if (!empty($_GET['grading_period'])) {
+                $conditions[] = 'grading_period = ?';
+                $params[] = $_GET['grading_period'];
             }
             if (!empty($_GET['status'])) {
                 $conditions[] = 'status = ?';
@@ -391,7 +481,7 @@ class FinanceController {
 
     /**
      * Create a fee invoice (admin only)
-     * Required: student_id, academic_year, term, amount_due
+     * Required: student_id, academic_year, grading_period, amount_due
      * Optional: invoice_number (auto-generated if missing), issue_date, due_date, notes
      */
     public function storeInvoice() {
@@ -402,7 +492,7 @@ class FinanceController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
             // Required fields
-            $required = ['student_id', 'academic_year', 'term', 'amount_due'];
+            $required = ['student_id', 'academic_year', 'grading_period', 'amount_due'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
                     http_response_code(400);
@@ -416,7 +506,7 @@ class FinanceController {
 
             // Derive student_type and schedule_id; If amount_due is empty or 0, derive from schedule
             if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
-                $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['term']);
+                $derived = $this->deriveAmountDueFromSchedule((int)$data['student_id'], (string)$data['academic_year'], (string)$data['grading_period']);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
                 }
@@ -430,10 +520,10 @@ class FinanceController {
             }
             // Try to find matching schedule id using type if present
             $classIdStmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
-            $classIdStmt->execute([(int)$data['student_id']]);
+            $classIdStmt->execute([$data['student_id']]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
-                $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['term'], $data['student_type'] ?? null);
+                $schedule = $this->findScheduleByComposite($classId, (string)$data['academic_year'], (string)$data['grading_period'], $data['student_type'] ?? null);
                 if ($schedule) {
                     $data['schedule_id'] = $schedule['id'];
                     if (empty($data['amount_due']) || (float)$data['amount_due'] <= 0) {
@@ -534,9 +624,9 @@ class FinanceController {
             // Derive student_type/schedule_id and amount_due if omitted
             $studentId = isset($data['student_id']) ? (int)$data['student_id'] : (int)$existing['student_id'];
             $year = $data['academic_year'] ?? $existing['academic_year'];
-            $term = $data['term'] ?? $existing['term'];
+            $gradingPeriod = $data['grading_period'] ?? $existing['grading_period'];
             if (!isset($data['amount_due']) || (float)$data['amount_due'] <= 0) {
-                $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$term);
+                $derived = $this->deriveAmountDueFromSchedule($studentId, (string)$year, (string)$gradingPeriod);
                 if ($derived !== null) {
                     $data['amount_due'] = $derived;
                 }
@@ -545,7 +635,7 @@ class FinanceController {
             $classIdStmt->execute([$studentId]);
             $classId = $classIdStmt->fetchColumn();
             if ($classId) {
-                $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$term, $data['student_type'] ?? ($existing['student_type'] ?? null));
+                $schedule = $this->findScheduleByComposite($classId, (string)$year, (string)$gradingPeriod, $data['student_type'] ?? ($existing['student_type'] ?? null));
                 if ($schedule) {
                     $data['schedule_id'] = $schedule['id'];
                     if (!isset($data['student_type']) && isset($existing['student_type'])) {
@@ -637,7 +727,7 @@ class FinanceController {
         }
     }
 
-    private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $term): ?float {
+    private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $gradingPeriod): ?float {
         try {
             // Find student's current class
             $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
@@ -660,19 +750,19 @@ class FinanceController {
             }
             $yearCandidates = array_values(array_unique($yearCandidates));
 
-            $termCandidates = [];
-            $termLower = strtolower(trim($term));
-            $termCandidates[] = $termLower;
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            $gradingPeriodCandidates[] = $gradingPeriodLower;
             // If numeric like '1', add 'term1'
-            if (preg_match('/^\s*(\d+)\s*$/', $termLower, $tm)) {
-                $termCandidates[] = 'term' . $tm[1];
+            if (preg_match('/^\s*(\d+)\s*$/', $gradingPeriodLower, $tm)) {
+                $gradingPeriodCandidates[] = 'term' . $tm[1];
             }
             // Also remove spaces variant
-            $termCandidates[] = str_replace(' ', '', $termLower);
-            $termCandidates = array_values(array_unique($termCandidates));
+            $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
+            $gradingPeriodCandidates = array_values(array_unique($gradingPeriodCandidates));
 
             foreach ($yearCandidates as $y) {
-                foreach ($termCandidates as $t) {
+                foreach ($gradingPeriodCandidates as $t) {
                     $schedule = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                     if ($schedule && isset($schedule['total_fee'])) {
                         return (float)$schedule['total_fee'];
@@ -682,10 +772,10 @@ class FinanceController {
 
             // Fallback: choose the most recent schedule for the class matching the student's type (if known)
             if ($studentType) {
-                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                 $stmt2->execute([$classId, $studentType]);
             } else {
-                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, term DESC, id DESC LIMIT 1');
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                 $stmt2->execute([$classId]);
             }
             $fallback = $stmt2->fetch(PDO::FETCH_ASSOC);
@@ -709,7 +799,7 @@ class FinanceController {
 
             $studentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
             $year = isset($_GET['academic_year']) ? (string)$_GET['academic_year'] : '';
-            $term = isset($_GET['term']) ? (string)$_GET['term'] : '';
+            $gradingPeriod = isset($_GET['grading_period']) ? (string)$_GET['grading_period'] : '';
             if ($studentId <= 0) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'student_id is required']);
@@ -737,14 +827,14 @@ class FinanceController {
                 }
             }
 
-            $termCandidates = [];
-            $termLower = strtolower(trim($term));
-            if ($termLower !== '') {
-                $termCandidates[] = $termLower;
-                if (preg_match('/^\\s*(\\d+)\\s*$/', $termLower, $tm)) {
-                    $termCandidates[] = 'term' . $tm[1];
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            if ($gradingPeriodLower !== '') {
+                $gradingPeriodCandidates[] = $gradingPeriodLower;
+                if (preg_match('/^\\s*(\\d+)\\s*$/', $gradingPeriodLower, $tm)) {
+                    $gradingPeriodCandidates[] = 'term' . $tm[1];
                 }
-                $termCandidates[] = str_replace(' ', '', $termLower);
+                $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
             }
 
             // Resolve student's type to match typed schedules; allow override via as_type
@@ -755,9 +845,9 @@ class FinanceController {
             if ($overrideType) { $studentType = $overrideType; }
 
             $chosen = null;
-            if (!empty($yearCandidates) && !empty($termCandidates)) {
+            if (!empty($yearCandidates) && !empty($gradingPeriodCandidates)) {
                 foreach ($yearCandidates as $y) {
-                    foreach ($termCandidates as $t) {
+                    foreach ($gradingPeriodCandidates as $t) {
                         $s = $this->findScheduleByComposite($classId, $y, $t, $studentType);
                         if ($s) { $chosen = $s; break 2; }
                     }
@@ -767,10 +857,10 @@ class FinanceController {
             if (!$chosen) {
                 // Fallback pick most recent/active for the class matching the student's type if present
                 if ($studentType) {
-                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                     $stmt2->execute([$classId, $studentType]);
                 } else {
-                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, term DESC, id DESC LIMIT 1');
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
                     $stmt2->execute([$classId]);
                 }
                 $chosen = $stmt2->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -790,7 +880,7 @@ class FinanceController {
                     'schedule' => [
                         'class_id' => (int)$chosen['class_id'],
                         'academic_year' => $chosen['academic_year'] ?? null,
-                        'term' => $chosen['term'] ?? null,
+                        'grading_period' => $chosen['grading_period'] ?? null,
                         'total_fee' => $chosen['total_fee'] ?? null,
                         'is_active' => isset($chosen['is_active']) ? (int)$chosen['is_active'] : null,
                         'student_type' => $chosen['student_type'] ?? null,
@@ -801,6 +891,63 @@ class FinanceController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error computing amount due: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get all fee schedules for a specific class (for invoice creation)
+     * This allows users to see all available grading periods and amounts
+     */
+    public function getSchedulesByClass() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+
+            $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
+            $studentType = isset($_GET['student_type']) ? (string)$_GET['student_type'] : null;
+            
+            if ($classId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'class_id is required']);
+                return;
+            }
+
+            // Build the query based on whether student_type is specified
+            if ($studentType) {
+                $sql = "SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, grading_period ASC, id DESC";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$classId, $studentType]);
+            } else {
+                $sql = "SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, grading_period ASC, id DESC";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$classId]);
+            }
+
+            $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Group schedules by academic year for better organization
+            $groupedSchedules = [];
+            foreach ($schedules as $schedule) {
+                $year = $schedule['academic_year'];
+                if (!isset($groupedSchedules[$year])) {
+                    $groupedSchedules[$year] = [];
+                }
+                $groupedSchedules[$year][] = $schedule;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'schedules' => $schedules,
+                    'grouped_by_year' => $groupedSchedules,
+                    'total_count' => count($schedules)
+                ],
+                'message' => 'Fee schedules retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error retrieving fee schedules: ' . $e->getMessage()]);
         }
     }
 
@@ -943,10 +1090,28 @@ class FinanceController {
         try {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
-            $stmt = $this->pdo->prepare('SELECT * FROM fee_payments WHERE id = ? LIMIT 1');
+            
+            // Get payment with receipt information
+            $sql = "
+                SELECT 
+                    p.*,
+                    r.id as receipt_id,
+                    r.receipt_number
+                FROM fee_payments p
+                LEFT JOIN fee_receipts r ON p.id = r.payment_id
+                WHERE p.id = ?
+                LIMIT 1
+            ";
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([(int)$id]);
             $payment = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-            if (!$payment) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Payment not found']); return; }
+            
+            if (!$payment) { 
+                http_response_code(404); 
+                echo json_encode(['success' => false, 'message' => 'Payment not found']); 
+                return; 
+            }
+            
             http_response_code(200);
             echo json_encode(['success' => true, 'data' => $payment, 'message' => 'Payment retrieved successfully']);
         } catch (Exception $e) {
@@ -1103,7 +1268,7 @@ class FinanceController {
                 SELECT 
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status,
-                    i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year,
+                    i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year,
                     s.first_name, s.last_name,
                     u.name as voided_by_name
                 FROM fee_receipts r
@@ -1145,7 +1310,7 @@ class FinanceController {
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
                     p.voided_at, p.void_reason,
-                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year, i.due_date,
                     s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
                     u.name as voided_by_name, u.first_name as voided_by_first, u.last_name as voided_by_last
                 FROM fee_receipts r
@@ -1194,7 +1359,7 @@ class FinanceController {
                     r.id, r.receipt_number, r.printed_on, r.created_at,
                     p.id as payment_id, p.amount, p.method, p.reference, p.paid_on, p.status as payment_status, p.notes,
                     p.voided_at, p.void_reason,
-                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.term, i.academic_year, i.due_date,
+                    i.id as invoice_id, i.invoice_number, i.amount_due, i.balance, i.grading_period, i.academic_year, i.due_date,
                     s.id as student_id, s.first_name, s.last_name, s.student_id as student_number,
                     u.name as voided_by_name
                 FROM fee_receipts r
@@ -1274,38 +1439,50 @@ class FinanceController {
      */
     private function getSchoolSettings() {
         try {
-            $stmt = $this->pdo->prepare("
-                SELECT setting_key, setting_value 
-                FROM settings 
-                WHERE category IN ('general', 'contact') 
-                AND is_active = 1
-            ");
-            $stmt->execute();
-            $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Load config for URLs
+            $config = require __DIR__ . '/../config/app_config.php';
             
-            $result = [];
-            foreach ($settings as $setting) {
-                $result[$setting['setting_key']] = $setting['setting_value'];
+            // Try to get settings from database first
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            // Construct full logo URL if logo exists
+            // Use api_url since logo is an API resource
+            $logoUrl = null;
+            if (!empty($settings['application_logo'])) {
+                // If the logo path doesn't start with 'api/', add it
+                $logoPath = $settings['application_logo'];
+                if (strpos($logoPath, 'api/') !== 0) {
+                    $logoPath = 'api/' . $logoPath;
+                }
+                $logoUrl = $config['app_url'] . '/' . $logoPath;
             }
             
-            return $result;
-        } catch (Exception $e) {
-            // Return default values if settings can't be fetched
+            // Return settings with fallbacks
             return [
-                'application_name' => 'School Name',
-                'application_logo' => '',
-                'application_tagline' => 'Excellence in Education',
-                'contact_address' => 'School Address',
-                'contact_phone' => 'Phone Number',
-                'contact_email' => 'info@school.com',
-                'contact_website' => 'https://school.com'
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_logo' => $logoUrl,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'contact_address' => $settings['contact_address'] ?? 'School Address',
+                'contact_phone' => $settings['contact_phone'] ?? 'Phone Number',
+                'contact_email' => $settings['contact_email'] ?? 'info@school.com',
+                'contact_website' => $settings['contact_website'] ?? 'https://school.com'
+            ];
+        } catch (Exception $e) {
+            // Fallback to config only
+            $config = require __DIR__ . '/../config/app_config.php';
+            return [
+                'application_name' => 'School Management System',
+                'application_logo' => null,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => 'Excellence in Education'
             ];
         }
     }
 
-    /**
-     * Render receipt as HTML (can be enhanced to generate PDF)
-     */
     private function renderReceiptHTML($receipt) {
         $isVoided = $receipt['payment_status'] === 'voided';
         $studentName = trim($receipt['first_name'] . ' ' . $receipt['last_name']);
@@ -1316,166 +1493,8 @@ class FinanceController {
         // Set content type for HTML
         header('Content-Type: text/html; charset=utf-8');
         
-        echo '<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Receipt ' . htmlspecialchars($receipt['receipt_number']) . '</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                .receipt { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                .school-logo { max-width: 120px; max-height: 80px; margin-bottom: 15px; }
-                .school-name { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; }
-                .school-tagline { font-size: 14px; color: #666; margin-bottom: 10px; font-style: italic; }
-                .receipt-title { font-size: 18px; color: #666; }
-                .receipt-number { font-size: 16px; color: #333; font-weight: bold; }
-                .voided-banner { background: #ff4444; color: white; text-align: center; padding: 10px; margin: 20px 0; border-radius: 5px; font-weight: bold; }
-                .section { margin: 20px 0; }
-                .section-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                .field { margin-bottom: 15px; }
-                .label { font-size: 12px; color: #666; margin-bottom: 5px; }
-                .value { font-size: 14px; color: #333; font-weight: 500; }
-                .amount { font-size: 18px; font-weight: bold; color: #2c5aa0; }
-                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
-                .school-contact { border-top: 1px solid #ddd; padding-top: 20px; }
-                .school-contact p { margin: 5px 0; }
-                @media print { body { background: white; } .receipt { box-shadow: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="receipt">
-                <div class="header">';
-        
-        // Add school logo if available
-        if (!empty($schoolSettings['application_logo'])) {
-            $logoUrl = 'http://localhost:8000/' . $schoolSettings['application_logo'];
-            echo '<img src="' . htmlspecialchars($logoUrl) . '" alt="School Logo" class="school-logo">';
-        }
-        
-        echo '<div class="school-name">' . htmlspecialchars($schoolSettings['application_name'] ?? 'SCHOOL SYSTEM') . '</div>';
-        if (!empty($schoolSettings['application_tagline'])) {
-            echo '<div class="school-tagline">' . htmlspecialchars($schoolSettings['application_tagline']) . '</div>';
-        }
-        echo '<div class="receipt-title">OFFICIAL RECEIPT</div>
-                    <div class="receipt-number">' . htmlspecialchars($receipt['receipt_number']) . '</div>
-                </div>';
-
-        if ($isVoided) {
-            echo '<div class="voided-banner">⚠️ THIS RECEIPT IS VOIDED</div>';
-        }
-
-        echo '
-                <div class="section">
-                    <div class="section-title">Student Information</div>
-                    <div class="grid">
-                        <div class="field">
-                            <div class="label">Student Name</div>
-                            <div class="value">' . htmlspecialchars($studentName) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Student ID</div>
-                            <div class="value">' . htmlspecialchars($receipt['student_number'] ?: 'N/A') . '</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">Payment Details</div>
-                    <div class="grid">
-                        <div class="field">
-                            <div class="label">Invoice Number</div>
-                            <div class="value">' . htmlspecialchars($receipt['invoice_number'] ?: 'N/A') . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Term & Academic Year</div>
-                            <div class="value">' . htmlspecialchars($receipt['term'] . ' ' . $receipt['academic_year']) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Payment Method</div>
-                            <div class="value">' . htmlspecialchars($receipt['method'] ?: 'N/A') . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Reference</div>
-                            <div class="value">' . htmlspecialchars($receipt['reference'] ?: 'N/A') . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Amount Paid</div>
-                            <div class="value amount">₵' . number_format($receipt['amount'], 2) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Balance After Payment</div>
-                            <div class="value">₵' . number_format($receipt['balance'], 2) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Payment Date</div>
-                            <div class="value">' . date('d M Y', strtotime($receipt['paid_on'])) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Receipt Generated</div>
-                            <div class="value">' . date('d M Y H:i', strtotime($receipt['created_at'])) . '</div>
-                        </div>
-                    </div>
-                </div>';
-
-        if ($isVoided) {
-            echo '
-                <div class="section">
-                    <div class="section-title">Void Information</div>
-                    <div class="grid">
-                        <div class="field">
-                            <div class="label">Voided On</div>
-                            <div class="value">' . date('d M Y H:i', strtotime($receipt['voided_at'])) . '</div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Voided By</div>
-                            <div class="value">' . htmlspecialchars($receipt['voided_by_display'] ?: 'N/A') . '</div>
-                        </div>
-                        <div class="field" style="grid-column: 1 / -1;">
-                            <div class="label">Reason</div>
-                            <div class="value">' . htmlspecialchars($receipt['void_reason'] ?: 'N/A') . '</div>
-                        </div>
-                    </div>
-                </div>';
-        }
-
-        if ($receipt['notes']) {
-            echo '
-                <div class="section">
-                    <div class="section-title">Notes</div>
-                    <div class="value">' . htmlspecialchars($receipt['notes']) . '</div>
-                </div>';
-        }
-
-        echo '
-                <div class="footer">
-                    <div class="school-contact">
-                        <p><strong>' . htmlspecialchars($schoolSettings['application_name'] ?? 'School System') . '</strong></p>';
-        
-        if (!empty($schoolSettings['contact_address'])) {
-            echo '<p>' . htmlspecialchars($schoolSettings['contact_address']) . '</p>';
-        }
-        
-        if (!empty($schoolSettings['contact_phone'])) {
-            echo '<p>Phone: ' . htmlspecialchars($schoolSettings['contact_phone']) . '</p>';
-        }
-        
-        if (!empty($schoolSettings['contact_email'])) {
-            echo '<p>Email: ' . htmlspecialchars($schoolSettings['contact_email']) . '</p>';
-        }
-        
-        if (!empty($schoolSettings['contact_website'])) {
-            echo '<p>Website: ' . htmlspecialchars($schoolSettings['contact_website']) . '</p>';
-        }
-        
-        echo '<p>Generated on ' . date('d M Y H:i:s') . '</p>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>';
+        // Include the shared PHP template - variables are already in scope
+        include __DIR__ . '/../email/templates/receipt.php';
     }
 
     /**

@@ -10,6 +10,7 @@ class FinanceScheduleAddModal extends HTMLElement {
   constructor() {
     super();
     this._classes = [];
+    this._gradingPeriods = [];
     this._listenersAttached = false;
     this._saving = false;
   }
@@ -30,6 +31,31 @@ class FinanceScheduleAddModal extends HTMLElement {
     this.setupEventListeners();
   }
 
+  // Get academic year for a selected class
+  getClassAcademicYear(classId) {
+    // If we have academic years data, use the first one (current academic year)
+    // This is a fallback since classes might not have academic_year_id
+    if (this._academicYears && this._academicYears.length > 0) {
+      const academicYear = this._academicYears[0];
+      return `${academicYear.year_code} (${academicYear.display_name})`;
+    }
+    
+    // Fallback: return null if no academic years available
+    return null;
+  }
+
+  // Set academic years data (called from parent page)
+  setAcademicYears(academicYears) {
+    this._academicYears = Array.isArray(academicYears) ? academicYears : [];
+  }
+
+  // Set grading periods data (called from parent page)
+  setGradingPeriods(gradingPeriods) {
+    this._gradingPeriods = Array.isArray(gradingPeriods) ? gradingPeriods : [];
+    this.render();
+    this.setupEventListeners();
+  }
+
   setupEventListeners() {
     if (this._listenersAttached) return;
     this._onCancel = () => this.close();
@@ -46,7 +72,7 @@ class FinanceScheduleAddModal extends HTMLElement {
     try {
       const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
       const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
       const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
@@ -55,7 +81,7 @@ class FinanceScheduleAddModal extends HTMLElement {
       const payload = {
         class_id: classDropdown ? Number(classDropdown.value) : null,
         academic_year: yearInput?.value || '',
-        term: termInput?.value || '',
+        grading_period: gradingPeriodDropdown?.value || '',
         student_type: studentTypeDd?.value || 'Day',
         total_fee: totalFeeInput?.value ? Number(totalFeeInput.value) : 0,
         notes: notesInput?.value || undefined,
@@ -63,8 +89,8 @@ class FinanceScheduleAddModal extends HTMLElement {
       };
 
       if (!payload.class_id) return Toast.show({ title: 'Validation', message: 'Select a class', variant: 'error', duration: 3000 });
-      if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
-      if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
+      if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Academic year is required', variant: 'error', duration: 3000 });
+      if (!payload.grading_period) return Toast.show({ title: 'Validation', message: 'Enter grading period', variant: 'error', duration: 3000 });
       if (!payload.student_type) return Toast.show({ title: 'Validation', message: 'Select student type', variant: 'error', duration: 3000 });
       if (!payload.total_fee || isNaN(payload.total_fee)) return Toast.show({ title: 'Validation', message: 'Enter total fee', variant: 'error', duration: 3000 });
 
@@ -97,13 +123,13 @@ class FinanceScheduleAddModal extends HTMLElement {
     try {
       const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
       const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
       const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
       const saveBtn = this.querySelector('#save-schedule-btn');
       const allFilled = !!String(classDropdown?.value || '').trim() &&
         !!String(yearInput?.value || '').trim() &&
-        !!String(termInput?.value || '').trim() &&
+        !!String(gradingPeriodDropdown?.value || '').trim() &&
         !!String(studentTypeDd?.value || '').trim() &&
         Number(totalFeeInput?.value || 0) > 0;
       if (saveBtn) {
@@ -117,16 +143,38 @@ class FinanceScheduleAddModal extends HTMLElement {
   addFormEventListeners() {
     const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
     const totalFeeInput = this.querySelector('ui-input[data-field="total_fee"]');
     const studentTypeDd = this.querySelector('ui-search-dropdown[name="student_type"]');
     const saveBtn = this.querySelector('#save-schedule-btn');
-    [yearInput, termInput, totalFeeInput].forEach(el => {
+    
+    // Handle class selection to auto-populate academic year
+    if (classDropdown) {
+      classDropdown.addEventListener('change', () => {
+        const selectedClassId = classDropdown.value;
+        if (selectedClassId) {
+          const academicYear = this.getClassAcademicYear(selectedClassId);
+          if (yearInput && academicYear) {
+            yearInput.value = academicYear;
+          }
+        } else {
+          // Clear academic year if no class selected
+          if (yearInput) yearInput.value = '';
+        }
+        this.validateForm();
+      });
+    }
+    
+    [totalFeeInput].forEach(el => {
       if (!el) return;
       el.addEventListener('input', () => this.validateForm());
       el.addEventListener('change', () => this.validateForm());
     });
-    if (classDropdown) classDropdown.addEventListener('change', () => this.validateForm());
+    
+    // Handle grading period dropdown change
+    if (gradingPeriodDropdown) {
+      gradingPeriodDropdown.addEventListener('change', () => this.validateForm());
+    }
     if (studentTypeDd) studentTypeDd.addEventListener('change', () => this.validateForm());
     if (saveBtn) saveBtn.addEventListener('click', () => this.saveSchedule());
     this.validateForm();
@@ -148,11 +196,15 @@ class FinanceScheduleAddModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="Auto-populated from class" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
+              <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full">
+                ${(this._gradingPeriods || []).map(gp => `
+                  <ui-option value="${gp.name}">${gp.name}</ui-option>
+                `).join('')}
+              </ui-search-dropdown>
             </div>
           </div>
           <div>
@@ -183,9 +235,10 @@ class FinanceScheduleAddModal extends HTMLElement {
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li><strong>Class</strong>: choose the class this schedule applies to.</li>
-                <li><strong>Academic Year & Term</strong>: uniquely identify a schedule per class.</li>
+                <li><strong>Academic Year</strong>: automatically set from the selected class (read-only).</li>
+                <li><strong>Grading Period</strong>: choose the grading period for this schedule (First Term, Second Term, or Third Term).</li>
                 <li><strong>Total Fee</strong>: enter the total payable amount for the period.</li>
-                <li><strong>Active</strong>: only one active schedule per class/year/term is typical.</li>
+                <li><strong>Active</strong>: only one active schedule per class/year/grading period is typical.</li>
               </ul>
             </div>
           </div>

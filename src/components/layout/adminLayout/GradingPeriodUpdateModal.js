@@ -3,6 +3,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Textarea.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -24,7 +25,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open'];
+        return ['open', 'academic-years'];
     }
 
     connectedCallback() {
@@ -52,6 +53,23 @@ class GradingPeriodUpdateModal extends HTMLElement {
         this.removeAttribute('open', '');
     }
 
+    // Get academic years data from attribute
+    getAcademicYears() {
+        try {
+            const academicYearsAttr = this.getAttribute('academic-years');
+            return academicYearsAttr ? JSON.parse(academicYearsAttr) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    // Get current academic year ID from loaded data
+    getCurrentAcademicYearId() {
+        const academicYears = this.getAcademicYears();
+        const currentYear = academicYears.find(ay => ay.is_current === 1);
+        return currentYear ? currentYear.id : null;
+    }
+
     // Set grading period data for editing
     setGradingPeriodData(gradingPeriodItem) {
         this.gradingPeriodData = gradingPeriodItem;
@@ -73,8 +91,8 @@ class GradingPeriodUpdateModal extends HTMLElement {
         if (startDateInput) startDateInput.value = this.gradingPeriodData.start_date || '';
         if (endDateInput) endDateInput.value = this.gradingPeriodData.end_date || '';
         if (academicYearInput) {
-            academicYearInput.value = this.gradingPeriodData.academic_year || '';
-            academicYearInput.setAttribute('readonly', '');
+            // For update modal, we'll populate this after the render when we know the field type
+            // The actual population will happen in the render method
         }
         if (descriptionTextarea) descriptionTextarea.setValue(this.gradingPeriodData.description || '');
         if (statusSwitch) {
@@ -106,8 +124,22 @@ class GradingPeriodUpdateModal extends HTMLElement {
             const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
+            // Get academic year ID - handle both readonly input and dropdown cases
+            let academicYearId = this.gradingPeriodData.academic_year_id; // Keep existing if no change
+            const academicYearDropdown = this.querySelector('ui-dropdown[data-field="academic_year_id"]');
+            if (academicYearDropdown) {
+                academicYearId = parseInt(academicYearDropdown.value);
+            } else {
+                // If no dropdown (readonly case), get from current academic years
+                const academicYears = this.getAcademicYears();
+                if (academicYears.length === 1) {
+                    academicYearId = academicYears[0].id;
+                }
+            }
+
             const gradingPeriodData = {
                 name: nameInput ? nameInput.value : '',
+                academic_year_id: academicYearId,
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
@@ -183,10 +215,18 @@ class GradingPeriodUpdateModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Get the current academic year display name
+                const currentAcademicYear = this.getAcademicYears()[0];
+                const academicYearDisplay = currentAcademicYear ? 
+                    `${currentAcademicYear.year_code}${currentAcademicYear.display_name ? ` (${currentAcademicYear.display_name})` : ''}` : 
+                    'Unknown';
+
                 // Construct the updated grading period data
                 const updatedGradingPeriod = {
                     ...this.gradingPeriodData,
                     name: gradingPeriodData.name,
+                    academic_year: academicYearDisplay,
+                    academic_year_id: gradingPeriodData.academic_year_id,
                     start_date: gradingPeriodData.start_date,
                     end_date: gradingPeriodData.end_date,
                     description: gradingPeriodData.description,
@@ -206,8 +246,6 @@ class GradingPeriodUpdateModal extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error updating grading period:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update grading period. Please try again.',
@@ -237,13 +275,38 @@ class GradingPeriodUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-input 
-                            data-field="academic_year"
-                            type="text" 
-                            placeholder="Academic year (read-only)"
-                            readonly
-                            class="w-full">
-                        </ui-input>
+                        ${this.gradingPeriodData && this.gradingPeriodData.academic_year_id ? 
+                            // If we have existing academic year data, show as readonly input
+                            `<ui-input 
+                                data-field="academic_year_id"
+                                type="text" 
+                                value="${this.gradingPeriodData.academic_year || 'Unknown'}"
+                                readonly
+                                class="w-full">
+                            </ui-input>` :
+                            // If no existing data, show dropdown with current academic years
+                            `${(() => {
+                                const academicYears = this.getAcademicYears();
+                                const currentYearId = this.getCurrentAcademicYearId();
+                                return academicYears.length === 1 ? 
+                                    // If only one academic year (current), show as readonly input
+                                    `<ui-input 
+                                        data-field="academic_year_id"
+                                        type="text" 
+                                        value="${academicYears[0].year_code}${academicYears[0].display_name ? ` (${academicYears[0].display_name})` : ''}"
+                                        readonly
+                                        class="w-full">
+                                    </ui-input>` :
+                                    // If multiple academic years, show as dropdown
+                                    `<ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
+                                        ${academicYears.map(ay => `
+                                            <option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
+                                                ${ay.year_code}${ay.display_name ? ` (${ay.display_name})` : ''}
+                                            </option>
+                                        `).join('')}
+                                    </ui-dropdown>`;
+                            })()}`
+                        }
                     </div>
                     
                     <div>
@@ -292,7 +355,7 @@ class GradingPeriodUpdateModal extends HTMLElement {
                             <p class="font-medium">How this works</p>
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li>Update <strong>Name</strong>, <strong>Start Date</strong>, and <strong>End Date</strong> as needed.</li>
-                                <li><strong>Academic Year</strong> cannot be changed once set.</li>
+                                <li><strong>Academic Year</strong> automatically set to the current academic year for consistency.</li>
                                 <li>Set <strong>Status</strong> to inactive to hide the period from new assignments.</li>
                                 <li><strong>Description</strong> is optional but helpful for organization.</li>
                             </ul>

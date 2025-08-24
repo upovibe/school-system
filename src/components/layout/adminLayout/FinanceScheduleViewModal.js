@@ -36,7 +36,7 @@ class FinanceScheduleViewModal extends HTMLElement {
         <div>
           <!-- Header -->
           <div class="flex items-center gap-3 border-b pb-4">
-            <h3 class="text-xl font-semibold text-gray-900">${safe(s.classDisplay)} • ${safe(s.academic_year)} • ${safe(s.term)}</h3>
+            <h3 class="text-xl font-semibold text-gray-900">${safe(s.classDisplay)} • ${safe(s.academic_year)} • ${safe(s.grading_period)}</h3>
             <ui-badge color="${statusActive ? 'success' : 'error'}">
               <i class="fas fa-${statusActive ? 'check' : 'times'} mr-1"></i>
               ${statusActive ? 'Active' : 'Inactive'}
@@ -62,8 +62,8 @@ class FinanceScheduleViewModal extends HTMLElement {
                 <p class="text-gray-900 text-sm">${safe(s.academic_year)}</p>
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
-                <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-layer-group mr-1"></i>Term</label>
-                <p class="text-gray-900 text-sm">${safe(s.term)}</p>
+                <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-layer-group mr-1"></i>Grading Period</label>
+                <p class="text-gray-900 text-sm">${safe(s.grading_period)}</p>
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-user mr-1"></i>Student Type</label>

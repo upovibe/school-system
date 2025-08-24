@@ -53,7 +53,6 @@ Router::get('/settings/theme', 'SettingController@getThemeSettings');
 Router::get('/settings/contact', 'SettingController@getContactSettings');
 Router::get('/settings/social', 'SettingController@getSocialSettings');
 Router::get('/settings/map', 'SettingController@getMapSettings');
-Router::get('/settings/academic', 'SettingController@getAcademicSettings');
 Router::get('/settings/all', 'SettingController@getAllAsArray');
 Router::get('/settings/upload-stats', 'SettingController@getUploadStats');
 Router::get('/settings/key/{key}', 'SettingController@showByKey');
@@ -145,10 +144,28 @@ Router::get('/classes/with-student-counts', 'ClassController@getWithStudentCount
 Router::get('/classes/by-academic-year', 'ClassController@getByAcademicYear');
 Router::get('/classes/academic-years', 'ClassController@getAcademicYears');
 Router::get('/classes/sections', 'ClassController@getSections');
-Router::get('/classes/academic-year-switch-date', 'ClassController@getAcademicYearSwitchDate');
 Router::get('/classes/{id}', 'ClassController@show');
 Router::put('/classes/{id}', 'ClassController@update');
 Router::delete('/classes/{id}', 'ClassController@destroy');
+
+// Academic Year Management Routes (admin only)
+Router::get('/academic-years', 'AcademicYearController@index');
+Router::post('/academic-years', 'AcademicYearController@store');
+Router::get('/academic-years/current', 'AcademicYearController@getCurrent');
+Router::get('/academic-years/active', 'AcademicYearController@getActive');
+Router::get('/academic-years/selection', 'AcademicYearController@getForSelection');
+Router::get('/academic-years/{id}', 'AcademicYearController@show');
+Router::put('/academic-years/{id}', 'AcademicYearController@update');
+Router::delete('/academic-years/{id}', 'AcademicYearController@destroy');
+Router::post('/academic-years/{id}/archive', 'AcademicYearController@archive');
+
+// Academic Year Records Routes (admin only)
+Router::get('/academic-year-records', 'AcademicYearRecordController@index');
+Router::get('/academic-year-records/academic-year/{id}', 'AcademicYearRecordController@getByAcademicYear');
+Router::get('/academic-year-records/year-code/{yearCode}', 'AcademicYearRecordController@getByYearCode');
+Router::get('/academic-year-records/{id}', 'AcademicYearRecordController@show');
+Router::get('/academic-year-records/{id}/export', 'AcademicYearRecordController@export');
+Router::post('/academic-year-records/search', 'AcademicYearRecordController@search');
 
 // Teacher Management Routes (admin only)
 Router::get('/teachers', 'TeacherController@index');
@@ -282,7 +299,6 @@ Router::post('/grading-periods', 'GradingPeriodController@store');
 Router::get('/grading-periods/{id}', 'GradingPeriodController@show');
 Router::put('/grading-periods/{id}', 'GradingPeriodController@update');
 Router::delete('/grading-periods/{id}', 'GradingPeriodController@destroy');
-Router::get('/grading-periods/academic-year-switch-date', 'GradingPeriodController@getAcademicYearSwitchDate');
 
 // Student Grades Management Routes (admin + teacher)
 Router::get('/student-grades', 'StudentGradeController@index');
@@ -290,6 +306,10 @@ Router::post('/student-grades', 'StudentGradeController@store');
 Router::get('/student-grades/{id}', 'StudentGradeController@show');
 Router::put('/student-grades/{id}', 'StudentGradeController@update');
 Router::delete('/student-grades/{id}', 'StudentGradeController@destroy');
+
+// Print reports
+Router::get('/student-grades/print/class-report', 'StudentGradeController@printClassReport');
+Router::get('/student-grades/print/student-report', 'StudentGradeController@printStudentReport');
 
 // Teacher Student Grades (teacher-only protected in controller)
 Router::post('/teacher/student-grades', 'TeacherController@createStudentGrade');
@@ -301,6 +321,10 @@ Router::get('/teacher/grading-policy', 'TeacherController@getGradingPolicyBySubj
 Router::post('/teacher/students/promote', 'TeacherController@promoteStudent');
 Router::get('/teacher/classes/available-for-promotion', 'TeacherController@getAvailableClassesForPromotion');
 
+// Teacher Print Reports
+Router::get('/teacher/print/student-report', 'TeacherController@printStudentReport');
+Router::get('/teacher/print/class-report', 'TeacherController@printClassReport');
+
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');
@@ -310,6 +334,9 @@ Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects'
 // Finance - Fee Schedules (admin only)
 Router::get('/finance/schedules', 'FinanceController@indexSchedules');
 Router::post('/finance/schedules', 'FinanceController@storeSchedule');
+// Finance - Helpers (must come BEFORE {id} routes to avoid conflicts)
+Router::get('/finance/amount-due', 'FinanceController@getAmountDue');
+Router::get('/finance/schedules/by-class', 'FinanceController@getSchedulesByClass');
 Router::get('/finance/schedules/{id}', 'FinanceController@showSchedule');
 Router::put('/finance/schedules/{id}', 'FinanceController@updateSchedule');
 Router::delete('/finance/schedules/{id}', 'FinanceController@destroySchedule');
@@ -320,8 +347,6 @@ Router::post('/finance/invoices', 'FinanceController@storeInvoice');
 Router::get('/finance/invoices/{id}', 'FinanceController@showInvoice');
 Router::put('/finance/invoices/{id}', 'FinanceController@updateInvoice');
 Router::delete('/finance/invoices/{id}', 'FinanceController@destroyInvoice');
-// Finance - Helpers
-Router::get('/finance/amount-due', 'FinanceController@getAmountDue');
 
 // Finance - Payments (admin only)
 Router::get('/finance/payments', 'FinanceController@indexPayments');
@@ -359,6 +384,7 @@ Router::post('/cashier/payments', 'CashierController@storePayment');
 Router::get('/cashier/payments/{id}', 'CashierController@showPayment');
 Router::delete('/cashier/payments/{id}', 'CashierController@destroyPayment');
 Router::put('/cashier/payments/{id}/void', 'CashierController@voidPayment');
+
 
 // Cashier - Receipts (cashier only)
 Router::get('/cashier/receipts', 'CashierController@indexReceipts');

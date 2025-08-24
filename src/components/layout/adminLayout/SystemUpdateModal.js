@@ -75,6 +75,12 @@ class SystemUpdateModal extends HTMLElement {
     close() {
         this.removeAttribute('open');
         this.settingData = null;
+        
+        // Ensure all modals are properly closed
+        this.dispatchEvent(new CustomEvent('modal-closed', {
+            bubbles: true,
+            composed: true
+        }));
     }
 
     // Set setting data for editing
@@ -236,13 +242,23 @@ class SystemUpdateModal extends HTMLElement {
     // Update the setting
     async updateSetting() {
         try {
-            // Small delay to ensure components are initialized
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Longer delay to ensure components are fully initialized
+            await new Promise(resolve => setTimeout(resolve, 300));
             
-            // Get values from custom UI components
-            const settingValueInput = this.querySelector('ui-input[name="setting_value"]');
+            // Get values from custom UI components - try multiple selectors
+            let settingValueInput = this.querySelector('ui-input[name="setting_value"]');
             const descriptionTextarea = this.querySelector('ui-textarea[name="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
+
+            // If ui-input not found, try to find the actual input element inside
+            if (!settingValueInput) {
+                const actualInput = this.querySelector('input[name="setting_value"]');
+                if (actualInput) {
+                    settingValueInput = actualInput;
+                }
+            }
+            
+
 
             // Get value based on the type
             let valueInput;
@@ -262,11 +278,18 @@ class SystemUpdateModal extends HTMLElement {
                 case 'file':
                 case 'image':
                     fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
-                    valueInput = fileUpload ? fileUpload.value : '';
+                    if (fileUpload && fileUpload.getFiles().length > 0) {
+                        // For new file uploads, we'll get the file name temporarily
+                        // The actual URL path will come from the server response
+                        valueInput = fileUpload.getFiles()[0].name;
+                    } else {
+                        // Keep the existing value if no new file is selected
+                        valueInput = this.settingData?.setting_value || '';
+                    }
                     break;
                 case 'color':
                     const colorInput = this.querySelector('input[name="setting_value"]');
-                    valueInput = colorInput ? colorInput.value : '#000000';
+                    valueInput = colorInput ? colorInput.value : (this.settingData?.setting_value || '#000000');
                     break;
                 case 'date':
                     const dateInput = this.querySelector('ui-input[name="setting_value"]');
@@ -274,10 +297,32 @@ class SystemUpdateModal extends HTMLElement {
                     break;
                 default:
                     // For text and number types, use the settingValueInput directly
-                    valueInput = settingValueInput ? settingValueInput.value : '';
+                    if (settingValueInput) {
+                        valueInput = settingValueInput.value;
+                    } else {
+                        // Try to find the actual input element inside the custom component
+                        const actualInput = this.querySelector('input[name="setting_value"]');
+                        if (actualInput) {
+                            valueInput = actualInput.value;
+                        } else {
+                            // Last resort: try to get from the setting data
+                            valueInput = this.settingData?.setting_value || '';
+                        }
+                    }
                     break;
             }
 
+            // Validate that we have a value for required fields
+            if (settingType === 'text' && (!valueInput || valueInput.trim() === '')) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Setting value cannot be empty',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            
             // Fallback for setting value if not found
             if (!valueInput) {
                 if (settingType === 'date') {
@@ -298,13 +343,7 @@ class SystemUpdateModal extends HTMLElement {
                 is_active: statusSwitch ? statusSwitch.checked : true
             };
 
-            // Debug logging
-            console.log('Setting update debug:', {
-                settingType,
-                valueInput,
-                settingData,
-                originalValue: this.settingData?.setting_value
-            });
+
 
             // Validate required fields
             if (!settingData.setting_key) {
@@ -364,6 +403,11 @@ class SystemUpdateModal extends HTMLElement {
                 ...settingData,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
             };
+            
+            // If it's a file/image type and we have a response, use the server's file path
+            if ((settingType === 'file' || settingType === 'image') && response && response.data && response.data.data) {
+                updatedSetting.setting_value = response.data.data.setting_value || this.settingData.setting_value;
+            }
 
             // Close modal and dispatch event
             this.close();
@@ -372,6 +416,9 @@ class SystemUpdateModal extends HTMLElement {
                 bubbles: true,
                 composed: true
             }));
+            
+            // Reset the setting data to prevent issues
+            this.settingData = null;
 
         } catch (error) {
             console.error('❌ Error updating setting:', error);

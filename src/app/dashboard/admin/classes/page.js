@@ -19,6 +19,7 @@
             constructor() {
                 super();
                 this.classes = null;
+                this.academicYears = null;
                 this.loading = false;
                 this.showAddModal = false;
                 this.showUpdateModal = false;
@@ -211,7 +212,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Academic Year</span>
-                                <span class="text-sm text-gray-600">Auto-computed each year; no input required</span>
+                                <span class="text-sm text-gray-600">Select from available academic years</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium">Capacity</span>
@@ -225,7 +226,7 @@
                         <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <p class="text-sm text-blue-800">
                         <i class="fas fa-info-circle mr-1"></i>
-                        The academic year is auto-computed and shown read-only; you don't need to enter it.
+                        You can now select the academic year when creating or updating classes. If none is selected, the current academic year will be used automatically.
                             </p>
                         </div>
                     </div>
@@ -255,9 +256,16 @@
                     // Load classes data
                     const classesResponse = await api.withToken(token).get('/classes');
                     const rawClasses = classesResponse?.data?.data || [];
-                    // Data loaded
                     
+                    // Load only current academic year data
+                    const academicYearsResponse = await api.withToken(token).get('/academic-years/current');
+                    const currentYear = academicYearsResponse?.data?.data;
+                    // Convert single object to array for consistency with dropdown
+                    const rawAcademicYears = currentYear ? [currentYear] : [];
+                    
+                    // Data loaded
                     this.set('classes', rawClasses);
+                    this.set('academicYears', rawAcademicYears);
                     this.set('loading', false);
                     
                 } catch (error) {
@@ -334,18 +342,36 @@
                 if (!classes) return;
 
                 // Prepare table data
-                const tableData = classes.map((classItem, index) => ({
-                    id: classItem.id, // Keep ID for internal use
-                    index: index + 1, // Add index number for display
-                    name: classItem.name,
-                    section: classItem.section,
-                    academic_year: classItem.academic_year,
-                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
-                    capacity: classItem.capacity,
-                    status: classItem.status === 'active' ? 'Active' : 'Inactive',
-                    created: classItem.created_at,
-                    updated: classItem.updated_at
-                }));
+                const tableData = classes.map((classItem, index) => {
+                    // Format academic year to show full display name
+                    let academicYearDisplay = 'Unknown';
+                    if (classItem.academic_year && classItem.academic_year_display_name) {
+                        // Use the formatted display name from API
+                        academicYearDisplay = `${classItem.academic_year} (${classItem.academic_year_display_name})`;
+                    } else if (classItem.academic_year) {
+                        // Fallback to just the year code
+                        academicYearDisplay = classItem.academic_year;
+                    } else if (classItem.academic_year_id) {
+                        // If we only have ID, try to find the academic year from loaded data
+                        const academicYear = this.get('academicYears')?.find(ay => ay.id === classItem.academic_year_id);
+                        if (academicYear) {
+                            academicYearDisplay = `${academicYear.year_code}${academicYear.display_name ? ` (${academicYear.display_name})` : ''}`;
+                        }
+                    }
+                    
+                    return {
+                        id: classItem.id, // Keep ID for internal use
+                        index: index + 1, // Add index number for display
+                        name: classItem.name,
+                        section: classItem.section,
+                        academic_year: academicYearDisplay,
+                        class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
+                        capacity: classItem.capacity,
+                        status: classItem.status === 'active' ? 'Active' : 'Inactive',
+                        created: classItem.created_at,
+                        updated: classItem.updated_at
+                    };
+                });
                 // Table data prepared
 
                 // Find the table component and update its data
@@ -374,18 +400,36 @@
                 const showDeleteDialog = this.get('showDeleteDialog');
                 
                 // Prepare table data and columns for classes
-                const tableData = classes ? classes.map((classItem, index) => ({
-                    id: classItem.id, // Keep ID for internal use
-                    index: index + 1, // Add index number for display
-                    name: classItem.name,
-                    section: classItem.section,
-                    academic_year: classItem.academic_year,
-                    class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
-                    capacity: classItem.capacity,
-                    status: classItem.status === 'active' ? 'Active' : 'Inactive',
-                    created: classItem.created_at,
-                    updated: classItem.updated_at
-                })) : [];
+                const tableData = classes ? classes.map((classItem, index) => {
+                    // Format academic year to show full display name
+                    let academicYearDisplay = 'Unknown';
+                    if (classItem.academic_year && classItem.academic_year_display_name) {
+                        // Use the formatted display name from API
+                        academicYearDisplay = `${classItem.academic_year} (${classItem.academic_year_display_name})`;
+                    } else if (classItem.academic_year) {
+                        // Fallback to just the year code
+                        academicYearDisplay = classItem.academic_year;
+                    } else if (classItem.academic_year_id) {
+                        // If we only have ID, try to find the academic year from loaded data
+                        const academicYear = this.get('academicYears')?.find(ay => ay.id === classItem.academic_year_id);
+                        if (academicYear) {
+                            academicYearDisplay = `${academicYear.year_code}${academicYear.display_name ? ` (${academicYear.display_name})` : ''}`;
+                        }
+                    }
+                    
+                    return {
+                        id: classItem.id, // Keep ID for internal use
+                        index: index + 1, // Add index number for display
+                        name: classItem.name,
+                        section: classItem.section,
+                        academic_year: academicYearDisplay,
+                        class_teacher: (classItem.class_teacher_name && String(classItem.class_teacher_name).trim() !== '') ? classItem.class_teacher_name : 'No teacher',
+                        capacity: classItem.capacity,
+                        status: classItem.status === 'active' ? 'Active' : 'Inactive',
+                        created: classItem.created_at,
+                        updated: classItem.updated_at
+                    };
+                }) : [];
 
                 const tableColumns = [
                     { key: 'index', label: 'No.', html: false },
@@ -434,10 +478,16 @@
                     </div>
                     
                     <!-- Add Class Modal -->
-                    <class-add-modal ${showAddModal ? 'open' : ''}></class-add-modal>
+                    <class-add-modal 
+                        ${showAddModal ? 'open' : ''} 
+                        academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+                    </class-add-modal>
                     
-                    <!-- Update Class Modal -->
-                    <class-update-modal ${showUpdateModal ? 'open' : ''}></class-update-modal>
+                                <!-- Update Class Modal -->
+            <class-update-modal 
+                ${showUpdateModal ? 'open' : ''} 
+                academic-years='${JSON.stringify(this.get('academicYears') || [])}'>
+            </class-update-modal>
                     
                     <!-- View Class Modal -->
                     <class-view-modal id="view-modal" ${showViewModal ? 'open' : ''}></class-view-modal>

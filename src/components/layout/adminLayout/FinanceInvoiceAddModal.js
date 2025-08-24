@@ -33,7 +33,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
     const rebindAuto = () => {
       const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const trigger = () => this.autoFillAmountDueDebounced();
       if (studentDd && !studentDd._autoBound) {
         studentDd.addEventListener('change', () => { trigger(); });
@@ -45,13 +45,24 @@ class FinanceInvoiceAddModal extends HTMLElement {
         yearInput.addEventListener('change', () => { trigger(); });
         yearInput._autoBound = true;
       }
-      if (termInput && !termInput._autoBound) {
-        termInput.addEventListener('input', () => { trigger(); });
-        termInput.addEventListener('change', () => { trigger(); });
-        termInput._autoBound = true;
+      if (gradingPeriodInput && !gradingPeriodInput._autoBound) {
+        gradingPeriodInput.addEventListener('input', () => { trigger(); });
+        gradingPeriodInput.addEventListener('change', () => { trigger(); });
+        gradingPeriodInput._autoBound = true;
       }
     };
     setTimeout(rebindAuto, 0);
+
+         // Add event listener for grading period dropdown changes
+     this.addEventListener('change', (e) => {
+       const gradingPeriodDropdown = e.target.closest('ui-search-dropdown[name="grading_period"]');
+       if (gradingPeriodDropdown) {
+         // When grading period changes, update the amount
+         this.updateAmountForSelectedGradingPeriod();
+         // Also trigger form validation to enable/disable save button
+         setTimeout(() => this.validateForm(), 100);
+       }
+     });
     // Capture any change events from the student dropdown to ensure logging triggers
     if (!this._captureBound) {
       this.addEventListener(
@@ -106,48 +117,52 @@ class FinanceInvoiceAddModal extends HTMLElement {
   open() { this.setAttribute('open', ''); }
   close() { this.removeAttribute('open'); }
 
-  async saveInvoice() {
-    if (this._saving) return;
-    this._saving = true;
-    try {
-      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
-      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
-      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
-      const amountPaidInput = this.querySelector('ui-input[data-field="amount_paid"]');
-      const issueDateInput = this.querySelector('ui-input[data-field="issue_date"]');
-      const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
-      const notesInput = this.querySelector('ui-input[data-field="notes"]');
-      const studentTypeEl = this.querySelector('#current-student-type');
+     async saveInvoice() {
+     if (this._saving) return;
+     this._saving = true;
+     try {
+       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+       const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
+       const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+       const amountPaidInput = this.querySelector('ui-input[data-field="amount_paid"]');
+       const issueDateInput = this.querySelector('ui-input[data-field="issue_date"]');
+       const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
+       const notesInput = this.querySelector('ui-input[data-field="notes"]');
+       const studentTypeEl = this.querySelector('#current-student-type');
 
-      const payload = {
-        student_id: studentDropdown ? Number(studentDropdown.value) : null,
-        academic_year: yearInput?.value || '',
-        term: termInput?.value || '',
-        amount_due: amountDueInput?.value ? Number(amountDueInput.value) : 0,
-        amount_paid: amountPaidInput?.value ? Number(amountPaidInput.value) : 0,
-        issue_date: issueDateInput?.value || undefined,
-        due_date: dueDateInput?.value || undefined,
-        notes: notesInput?.value || undefined,
-        student_type: (studentTypeEl?.dataset?.type) || undefined,
-      };
+       // Get grading period value from either input or dropdown
+       const gradingPeriodValue = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
+
+       const payload = {
+         student_id: studentDropdown ? Number(studentDropdown.value) : null,
+         academic_year: yearInput?.value || '',
+         grading_period: gradingPeriodValue,
+         amount_due: amountDueInput?.value ? Number(amountDueInput.value) : 0,
+         amount_paid: amountPaidInput?.value ? Number(amountPaidInput.value) : 0,
+         issue_date: issueDateInput?.value || undefined,
+         due_date: dueDateInput?.value || undefined,
+         notes: notesInput?.value || undefined,
+         student_type: (studentTypeEl?.dataset?.type) || undefined,
+       };
 
       if (!payload.student_id) return Toast.show({ title: 'Validation', message: 'Select a student', variant: 'error', duration: 3000 });
       if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
-      if (!payload.term) return Toast.show({ title: 'Validation', message: 'Enter term', variant: 'error', duration: 3000 });
+      if (!payload.grading_period) return Toast.show({ title: 'Validation', message: 'Enter grading period', variant: 'error', duration: 3000 });
       if (!payload.amount_due || isNaN(payload.amount_due)) return Toast.show({ title: 'Validation', message: 'Enter amount due', variant: 'error', duration: 3000 });
 
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
 
-      // Frontend duplicate check: one invoice per student/year/term
+      // Frontend duplicate check: one invoice per student/year/grading_period
       try {
-        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, term: payload.term }).toString();
+        const q = new URLSearchParams({ student_id: String(payload.student_id), academic_year: payload.academic_year, grading_period: payload.grading_period }).toString();
         const dupResp = await api.withToken(token).get(`/finance/invoices?${q}`);
         const list = dupResp?.data?.data || [];
         if (Array.isArray(list) && list.length > 0) {
           this._saving = false;
-          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and term', variant: 'warning', duration: 3500 });
+          return Toast.show({ title: 'Duplicate', message: 'An invoice already exists for this student, year and grading period', variant: 'warning', duration: 3500 });
         }
       } catch (_) { /* ignore – backend unique index still protects */ }
 
@@ -176,33 +191,44 @@ class FinanceInvoiceAddModal extends HTMLElement {
     }
   }
 
-  // Validate required fields and toggle Save button
-  validateForm() {
-    try {
-      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
-      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
-      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
-      const saveBtn = this.querySelector('#save-invoice-btn');
-      const allFilled = !!String(studentDropdown?.value || '').trim() &&
-        !!String(yearInput?.value || '').trim() &&
-        !!String(termInput?.value || '').trim() &&
-        Number(amountDueInput?.value || 0) > 0;
-      if (saveBtn) {
-        if (allFilled) saveBtn.removeAttribute('disabled');
-        else saveBtn.setAttribute('disabled', '');
+     // Validate required fields and toggle Save button
+   validateForm() {
+     try {
+       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+       const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
+       const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+       const saveBtn = this.querySelector('#save-invoice-btn');
+       
+       // Get grading period value from either input or dropdown
+       const gradingPeriodValue = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
+       
+               const allFilled = !!String(studentDropdown?.value || '').trim() &&
+          !!String(yearInput?.value || '').trim() &&
+          !!String(gradingPeriodValue || '').trim() &&
+          Number(amountDueInput?.value || 0) > 0;
+        
+        if (saveBtn) {
+          if (allFilled) {
+            saveBtn.removeAttribute('disabled');
+          } else {
+            saveBtn.setAttribute('disabled', '');
+          }
+        }
+      } catch (error) { 
+        // Silent error handling
       }
-    } catch (_) { /* noop */ }
-  }
+   }
 
   addFormEventListeners() {
     const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
     const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
     const saveBtn = this.querySelector('#save-invoice-btn');
     if (studentDropdown) studentDropdown.addEventListener('change', () => this.validateForm());
-    [yearInput, termInput, amountDueInput].forEach(el => {
+    [yearInput, gradingPeriodInput, amountDueInput].forEach(el => {
       if (!el) return;
       el.addEventListener('input', () => this.validateForm());
       el.addEventListener('change', () => this.validateForm());
@@ -218,89 +244,208 @@ class FinanceInvoiceAddModal extends HTMLElement {
 
   async autoFillAmountDue() {
     try {
+      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+      const classInput = this.querySelector('ui-input[data-field="class"]');
+      const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
-      if (!amountDueInput) return;
-      // Only auto-fill if empty or zero to avoid overriding manual edits
-      const current = parseFloat(amountDueInput.value || '0');
-      if (current > 0) { return; }
+      const studentTypeInput = this.querySelector('ui-input[data-field="student_type"]');
 
+             const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
+       if (!studentId) return;
+
+             // Get student details - try both the individual student endpoint and the students list
+       const token = localStorage.getItem('token');
+       if (!token) return;
+
+       // First try to get from the students list we already have
+       let student = this._students.find(s => s.id === studentId);
+       
+       // Always fetch from API to get the full student details including current_class_id
+       const studentResp = await api.withToken(token).get(`/students/${studentId}`);
+       student = studentResp?.data?.data;
+       
+              if (!student) return;
+
+      // Auto-fill class and student type
+      if (classInput && student.class_name) {
+        classInput.value = student.class_name;
+      }
+      if (studentTypeInput && student.student_type) {
+        studentTypeInput.value = student.student_type;
+      }
+
+             // Get class ID for fee schedule lookup - try different possible field names
+       const classId = student.class_id || student.current_class_id || student.classId;
+       
+       if (!classId) {
+         // Show a message to the user that the student needs to be enrolled in a class
+         const infoEl = this.querySelector('#current-class-info');
+         if (infoEl) {
+           infoEl.innerHTML = '<span class="text-red-600 text-xs">⚠️ Student is not enrolled in any class. Please enroll the student in a class first.</span>';
+         }
+         return;
+       }
+
+      // Get amount due from schedule
+      const qs = new URLSearchParams();
+      qs.append('student_id', String(studentId));
+      
+      if (yearInput?.value) {
+        qs.append('academic_year', yearInput.value);
+      }
+             if (gradingPeriodInput?.value) {
+         qs.append('grading_period', gradingPeriodInput.value);
+       }
+
+      const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
+      const amountDue = amtResp?.data?.data?.amount_due;
+      const schedule = amtResp?.data?.data?.schedule || {};
+
+      if (amountDue != null) {
+        amountDueInput.value = String(amountDue);
+      }
+
+      // Auto-fill academic year and grading period from schedule
+      if (yearInput && schedule.academic_year && !yearInput.value) {
+        yearInput.value = schedule.academic_year;
+      }
+      if (gradingPeriodInput && schedule.grading_period && !gradingPeriodInput.value) {
+        gradingPeriodInput.value = schedule.grading_period;
+      }
+
+      // Check for multiple schedules and convert grading period to dropdown if needed
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const schedulesResp = await api.withToken(token).get(`/finance/schedules/by-class?class_id=${classId}${student.student_type ? `&student_type=${student.student_type}` : ''}`).catch(() => null);
+          const schedules = schedulesResp?.data?.data?.schedules || [];
+          
+          if (schedules.length > 1) {
+            // Multiple schedules - convert to dropdown
+            this.convertGradingPeriodToDropdown(schedules);
+          } else if (schedules.length === 1) {
+            // Single schedule - keep as readonly input
+            this.convertGradingPeriodToInput(schedules[0]);
+          }
+        }
+      } catch (error) {
+        // Silent error handling
+      }
+
+    } catch (error) {
+      // Silent error handling
+    }
+  }
+
+  convertGradingPeriodToDropdown(schedules) {
+    // Find the current grading period container (could be input or dropdown)
+    const gradingPeriodContainer = this.querySelector('[data-field="grading_period"]');
+    
+    if (!gradingPeriodContainer) {
+      return;
+    }
+    
+    // If it's already a dropdown, just update the options
+    if (gradingPeriodContainer.tagName === 'UI-SEARCH-DROPDOWN') {
+      const options = schedules.map(schedule => 
+        `<ui-option value="${schedule.grading_period}">${schedule.grading_period}</ui-option>`
+      ).join('');
+      gradingPeriodContainer.innerHTML = options;
+      return;
+    }
+    
+    // Convert input to dropdown
+    const dropdown = document.createElement('ui-search-dropdown');
+    dropdown.setAttribute('name', 'grading_period');
+    dropdown.setAttribute('placeholder', 'Select grading period');
+    dropdown.setAttribute('class', 'w-full');
+    dropdown.setAttribute('data-field', 'grading_period');
+    
+    // Add options
+    const options = schedules.map(schedule => 
+      `<ui-option value="${schedule.grading_period}">${schedule.grading_period}</ui-option>`
+    ).join('');
+    dropdown.innerHTML = options;
+    
+    // Replace input with dropdown
+    gradingPeriodContainer.parentElement.replaceChild(dropdown, gradingPeriodContainer);
+    
+    // Re-attach event listeners
+    this.setupEventListeners();
+  }
+
+  convertGradingPeriodToInput(schedule) {
+    // Find the current grading period container (could be input or dropdown)
+    const gradingPeriodContainer = this.querySelector('[data-field="grading_period"]');
+    
+    if (!gradingPeriodContainer) {
+      return;
+    }
+    
+    // If it's already an input, just update the value
+    if (gradingPeriodContainer.tagName === 'UI-INPUT') {
+      gradingPeriodContainer.value = schedule.grading_period || '';
+      return;
+    }
+    
+    // Convert dropdown back to input
+    const input = document.createElement('ui-input');
+    input.setAttribute('data-field', 'grading_period');
+    input.setAttribute('type', 'text');
+    input.setAttribute('placeholder', 'e.g., First Term');
+    input.setAttribute('class', 'w-full');
+    input.setAttribute('readonly', '');
+    input.value = schedule.grading_period || '';
+    
+    // Replace dropdown with input
+    gradingPeriodContainer.parentElement.replaceChild(input, gradingPeriodContainer);
+    
+    // Re-attach event listeners
+    this.setupEventListeners();
+  }
+
+  async updateAmountForSelectedGradingPeriod() {
+    try {
       const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
       const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
+      const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+      const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+      
       const studentId = studentDropdown?.value ? Number(studentDropdown.value) : null;
-      const typeBadge = this.querySelector('#current-student-type');
-      const overrideType = typeBadge?.dataset?.type || '';
       const academicYear = yearInput?.value || '';
-      const term = termInput?.value || '';
-      if (!studentId) { return; }
-
-      let classId = null;
-      const fromList = (this._students || []).find(s => String(s.id) === String(studentId));
-      if (fromList && fromList.current_class_id) {
-        classId = fromList.current_class_id;
+      const gradingPeriod = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
+      
+      if (!studentId || !academicYear || !gradingPeriod) {
+        return;
       }
-      if (!classId) {
-        const token = localStorage.getItem('token');
-        if (!token) { return; }
-        // Fallback: fetch the student to get current_class_id
-        const resp = await api.withToken(token).get(`/students/${studentId}`).catch(() => null);
-        classId = resp?.data?.data?.current_class_id || null;
-      }
-      if (!classId) { return; }
 
-      // Resolve and show current class inline (no logs)
-      try {
-        const token2 = localStorage.getItem('token');
-        if (token2) {
-          const cls = await api.withToken(token2).get(`/classes/${classId}`).catch(() => null);
-          const info = cls?.data?.data;
-          const infoEl = this.querySelector('#current-class-info');
-          if (info && infoEl) {
-            const label = `${info.name || 'Class'}${info.section ? ' ' + info.section : ''}`;
-            const typeBadge = this.querySelector('#current-student-type');
-            const type = typeBadge?.dataset?.type || '';
-            infoEl.innerHTML = `Current Class: ${label}${type ? ` <span id="current-student-type" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-gray-200" data-type="${type}">${type}</span>` : ''}`;
-          }
-        }
-      } catch (_) {}
-
-      // Simple backend computation endpoint
       const token = localStorage.getItem('token');
-      if (!token) { return; }
-      const qs = new URLSearchParams({ student_id: String(studentId) });
-      if (academicYear) qs.append('academic_year', academicYear);
-      if (term) qs.append('term', term);
-      // no manual override; backend derives by student type
+      if (!token) return;
 
-      const missBefore = this.querySelector('#schedule-missing');
-      if (missBefore) missBefore.remove();
-
-      try {
-        const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
-        const amountDue = amtResp?.data?.data?.amount_due;
-        const schedule = amtResp?.data?.data?.schedule || {};
-        if (amountDue != null) {
-          amountDueInput.value = String(amountDue);
-          if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
-          if (termInput && !termInput.value) termInput.value = schedule.term || '';
+      // Get the amount for the selected grading period
+      const qs = new URLSearchParams({ 
+        student_id: String(studentId),
+        academic_year: academicYear,
+        grading_period: gradingPeriod
+      });
+      
+      const amtResp = await api.withToken(token).get(`/finance/amount-due?${qs.toString()}`);
+      const amountDue = amtResp?.data?.data?.amount_due;
+      const schedule = amtResp?.data?.data?.schedule || {};
+      
+      if (amountDue != null) {
+        amountDueInput.value = String(amountDue);
+        // Update academic year if not set
+        if (!yearInput.value && schedule.academic_year) {
+          yearInput.value = schedule.academic_year;
         }
-      } catch (err) {
-        if (err?.response?.status === 404) {
-          amountDueInput.value = '';
-          if (yearInput) yearInput.value = '';
-          if (termInput) termInput.value = '';
-          const typeBadge = this.querySelector('#current-student-type');
-          const parent = typeBadge?.parentElement || this.querySelector('#current-class-info');
-          const typeText = (typeBadge?.dataset?.type || 'type');
-          if (parent) {
-            const existed = this.querySelector('#schedule-missing');
-            if (existed) existed.remove();
-            parent.insertAdjacentHTML('beforeend', ` <span id="schedule-missing" class="ml-2 text-[11px] px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">No schedule for ${typeText}</span>`);
-          }
-        }
+        // Trigger form validation after updating values
+        setTimeout(() => this.validateForm(), 50);
       }
-    } catch (_) {
-      // Silent fail; user can still enter manually
+    } catch (error) {
+      // Silent error handling
     }
   }
 
@@ -322,11 +467,11 @@ class FinanceInvoiceAddModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full"></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full"></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
+              <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full" readonly></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,7 +509,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
                 <li><strong>Student</strong>: select who the invoice is for.</li>
-                <li><strong>Academic Year & Term</strong>: align to the billing period.</li>
+                <li><strong>Academic Year & Grading Period</strong>: automatically filled from student's class fee schedule. If multiple schedules exist, you can select the grading period.</li>
                 <li><strong>Amount Due/Paid</strong>: balance and status compute automatically.</li>
               </ul>
             </div>

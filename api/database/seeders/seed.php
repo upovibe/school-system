@@ -18,6 +18,7 @@ class Seed {
         $this->seedNews();
         $this->seedGalleries();
         $this->seedTeams();
+        $this->seedAcademicYears();
         $this->seedSubjects();
         $this->seedTeachers();
         $this->seedStudents();
@@ -28,6 +29,7 @@ class Seed {
         $this->seedStudentAssignments();
         $this->assignStudentsToClasses();
         $this->seedGradingSystem();
+        $this->seedFeeSchedules();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -99,6 +101,15 @@ class Seed {
         $teamSeeder->run();
     }
     
+    private function seedAcademicYears() {
+        echo "📅 Seeding academic years...\n";
+        
+        // Include the academic year seeder
+        require_once __DIR__ . '/academic_year_seeder.php';
+        $academicYearSeeder = new AcademicYearSeeder($this->pdo);
+        $academicYearSeeder->run();
+    }
+    
     private function seedSubjects() {
         echo "📚 Seeding subjects...\n";
         
@@ -133,6 +144,15 @@ class Seed {
         require_once __DIR__ . '/class_seeder.php';
         $classSeeder = new ClassSeeder($this->pdo);
         $classSeeder->run();
+    }
+    
+    private function seedFeeSchedules() {
+        echo "💰 Seeding fee schedules...\n";
+        
+        // Include the fee schedule seeder
+        require_once __DIR__ . '/fee_schedule_seeder.php';
+        $feeScheduleSeeder = new FeeScheduleSeeder($this->pdo);
+        $feeScheduleSeeder->run();
     }
     
     private function seedClassSubjects() {

@@ -41,7 +41,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
     const yearInput = this.querySelector(
       'ui-input[data-field="academic_year"]'
     );
-    const termInput = this.querySelector('ui-input[data-field="term"]');
+    const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
     const amountDueInput = this.querySelector(
       'ui-input[data-field="amount_due"]'
     );
@@ -56,7 +56,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
     if (studentDropdown && inv.student_id != null)
       studentDropdown.value = String(inv.student_id);
     if (yearInput) yearInput.value = inv.academic_year || "";
-    if (termInput) termInput.value = inv.term || "";
+    if (gradingPeriodInput) gradingPeriodInput.value = inv.grading_period || "";
     if (amountDueInput) amountDueInput.value = inv.amount_due;
     if (amountPaidInput) amountPaidInput.value = inv.amount_paid;
     if (issueDateInput) issueDateInput.value = inv.issue_date || "";
@@ -74,11 +74,11 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const yearInput = this.querySelector(
         'ui-input[data-field="academic_year"]'
       );
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const trigger = () => this.autoFillAmountDueDebounced();
       if (studentDd && !studentDd._autoBound && !studentDd.hasAttribute('disabled')) {
+        studentDd.addEventListener("input", trigger);
         studentDd.addEventListener("change", trigger);
-        studentDd.addEventListener("value-change", trigger);
         studentDd._autoBound = true;
       }
       if (yearInput && !yearInput._autoBound && !yearInput.hasAttribute('disabled')) {
@@ -86,10 +86,10 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         yearInput.addEventListener("change", trigger);
         yearInput._autoBound = true;
       }
-      if (termInput && !termInput._autoBound && !termInput.hasAttribute('disabled')) {
-        termInput.addEventListener("input", trigger);
-        termInput.addEventListener("change", trigger);
-        termInput._autoBound = true;
+      if (gradingPeriodInput && !gradingPeriodInput._autoBound && !gradingPeriodInput.hasAttribute('disabled')) {
+        gradingPeriodInput.addEventListener("input", trigger);
+        gradingPeriodInput.addEventListener("change", trigger);
+        gradingPeriodInput._autoBound = true;
       }
       // No manual billing type selector in update modal
     };
@@ -147,7 +147,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const yearInput = this.querySelector(
         'ui-input[data-field="academic_year"]'
       );
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const amountDueInput = this.querySelector(
         'ui-input[data-field="amount_due"]'
       );
@@ -167,7 +167,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
           ? Number(studentDropdown.value)
           : undefined,
         academic_year: yearInput?.value || "",
-        term: termInput?.value || "",
+        grading_period: gradingPeriodInput?.value || "",
         amount_due: amountDueInput?.value ? Number(amountDueInput.value) : 0,
         amount_paid: amountPaidInput?.value ? Number(amountPaidInput.value) : 0,
         issue_date: issueDateInput?.value || undefined,
@@ -182,10 +182,10 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
           variant: "error",
           duration: 3000,
         });
-      if (!payload.term)
+      if (!payload.grading_period)
         return Toast.show({
           title: "Validation",
-          message: "Enter term",
+          message: "Enter grading period",
           variant: "error",
           duration: 3000,
         });
@@ -267,12 +267,12 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       const yearInput = this.querySelector(
         'ui-input[data-field="academic_year"]'
       );
-      const termInput = this.querySelector('ui-input[data-field="term"]');
+      const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
       const studentId = studentDropdown?.value
         ? Number(studentDropdown.value)
         : null;
       const academicYear = yearInput?.value || "";
-      const term = termInput?.value || "";
+      const gradingPeriod = gradingPeriodInput?.value || "";
       if (!studentId) return;
 
       let classId = null;
@@ -312,7 +312,7 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
       if (!token) return;
       const qs = new URLSearchParams({ student_id: String(studentId) });
       if (academicYear) qs.append("academic_year", academicYear);
-      if (term) qs.append("term", term);
+      if (gradingPeriod) qs.append("grading_period", gradingPeriod);
       const typeBadge = this.querySelector('#current-student-type');
       const overrideType = typeBadge?.dataset?.type || '';
       // no manual override
@@ -327,13 +327,13 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
         if (amountDue != null) {
           amountDueInput.value = String(amountDue);
           if (yearInput && !yearInput.value) yearInput.value = schedule.academic_year || '';
-          if (termInput && !termInput.value) termInput.value = schedule.term || '';
+          if (gradingPeriodInput && !gradingPeriodInput.value) gradingPeriodInput.value = schedule.grading_period || '';
         }
       } catch (err) {
         if (err?.response?.status === 404) {
           amountDueInput.value = '';
           if (yearInput) yearInput.value = '';
-          if (termInput) termInput.value = '';
+          if (gradingPeriodInput) gradingPeriodInput.value = '';
           const typeBadge2 = this.querySelector('#current-student-type');
           const parent = typeBadge2?.parentElement || this.querySelector('#current-class-info');
           const typeText = (typeBadge2?.dataset?.type || 'type');
@@ -380,8 +380,8 @@ class FinanceInvoiceUpdateModal extends HTMLElement {
               <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full" disabled></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-              <ui-input data-field="term" type="text" placeholder="e.g., Term 1" class="w-full" disabled></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
+              <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full" disabled></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

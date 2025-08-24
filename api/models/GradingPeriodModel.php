@@ -7,7 +7,7 @@ class GradingPeriodModel extends BaseModel {
     protected static $table = 'grading_periods';
     
     protected static $fillable = [
-        'name', 'academic_year', 'start_date', 'end_date', 
+        'name', 'academic_year_id', 'start_date', 'end_date', 
         'is_active', 'description', 'created_by'
     ];
     
@@ -38,10 +38,13 @@ class GradingPeriodModel extends BaseModel {
             SELECT 
                 gp.*,
                 u.name as creator_name,
-                u.email as creator_email
+                u.email as creator_email,
+                ay.year_code AS academic_year,
+                ay.display_name as academic_year_display_name
             FROM grading_periods gp
             LEFT JOIN users u ON gp.created_by = u.id
-            ORDER BY gp.academic_year DESC, gp.start_date DESC
+            LEFT JOIN academic_years ay ON gp.academic_year_id = ay.id
+            ORDER BY ay.start_date DESC, gp.start_date DESC
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
@@ -69,14 +72,14 @@ class GradingPeriodModel extends BaseModel {
     /**
      * Get periods by academic year
      */
-    public function getPeriodsByAcademicYear($academicYear) {
+    public function getPeriodsByAcademicYear($academicYearId) {
         $sql = "
             SELECT * FROM grading_periods 
-            WHERE academic_year = ? 
+            WHERE academic_year_id = ? 
             ORDER BY start_date ASC
         ";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$academicYear]);
+        $stmt->execute([$academicYearId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -84,15 +87,31 @@ class GradingPeriodModel extends BaseModel {
      * Get current academic year periods
      */
     public function getCurrentAcademicYearPeriods() {
-        $currentYear = date('Y');
-        $academicYear = ($currentYear - 1) . '-' . $currentYear;
-        
-        // If we're in the second half of the year, use current year as start
-        if (date('n') >= 7) {
-            $academicYear = $currentYear . '-' . ($currentYear + 1);
+        try {
+            // Get the current academic year from the database
+            $sql = "SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($currentYear) {
+                return $this->getPeriodsByAcademicYear($currentYear['id']);
+            } else {
+                // Fallback: get the most recent active academic year
+                $sql = "SELECT id FROM academic_years WHERE is_active = 1 ORDER BY start_date DESC LIMIT 1";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute();
+                $activeYear = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($activeYear) {
+                    return $this->getPeriodsByAcademicYear($activeYear['id']);
+                } else {
+                    return [];
+                }
+            }
+        } catch (Exception $e) {
+            return [];
         }
-        
-        return $this->getPeriodsByAcademicYear($academicYear);
     }
 
     /**
@@ -100,13 +119,13 @@ class GradingPeriodModel extends BaseModel {
      */
     public function getAvailableAcademicYears() {
         $sql = "
-            SELECT DISTINCT academic_year 
-            FROM grading_periods 
-            ORDER BY academic_year DESC
+            SELECT id, year_code, display_name, start_date, end_date, is_active, is_current
+            FROM academic_years 
+            ORDER BY start_date DESC
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

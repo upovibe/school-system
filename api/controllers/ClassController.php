@@ -3,7 +3,6 @@
 
 require_once __DIR__ . '/../models/ClassModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
-require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -65,8 +64,8 @@ class ClassController {
 			if (isset($data['section'])) {
 				$data['section'] = strtoupper(trim($data['section']));
 			}
-			if (isset($data['academic_year'])) {
-				$data['academic_year'] = trim($data['academic_year']);
+			if (isset($data['academic_year_id'])) {
+				$data['academic_year_id'] = (int)$data['academic_year_id'];
 			}
             
             // Validate required fields
@@ -88,9 +87,25 @@ class ClassController {
                 return;
             }
 
-
-			// Always compute academic year on the server (ignore client input)
-			$data['academic_year'] = $this->getCurrentAcademicYear();
+			// Academic year ID is required
+			if (empty($data['academic_year_id'])) {
+				http_response_code(400);
+				echo json_encode([
+					'success' => false,
+					'message' => 'Academic year is required'
+				]);
+				return;
+			}
+			
+			// Validate that the academic year exists and is active
+			if (!$this->isValidAcademicYear($data['academic_year_id'])) {
+				http_response_code(400);
+				echo json_encode([
+					'success' => false,
+					'message' => 'Invalid academic year selected'
+				]);
+				return;
+			}
 
             // Check if this class name already has this section
             $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
@@ -104,7 +119,7 @@ class ClassController {
             }
 
             // Check if class already exists with same name, section and academic year
-            $existingClass = $this->classModel->findByUniqueKey($data['name'], $data['section'], $data['academic_year']);
+            $existingClass = $this->classModel->findByUniqueKey($data['name'], $data['section'], $data['academic_year_id']);
             if ($existingClass) {
                 http_response_code(400);
                 echo json_encode([
@@ -197,8 +212,8 @@ class ClassController {
 			if (isset($data['section'])) {
 				$data['section'] = strtoupper(trim($data['section']));
 			}
-			if (isset($data['academic_year'])) {
-				$data['academic_year'] = trim($data['academic_year']);
+			if (isset($data['academic_year_id'])) {
+				$data['academic_year_id'] = (int)$data['academic_year_id'];
 			}
             
             // Check if class exists
@@ -231,8 +246,25 @@ class ClassController {
                 return;
             }
 
-			// Do not allow client to change academic year on update; keep original
-			$data['academic_year'] = $existingClass['academic_year'];
+			// Academic year ID is required for updates
+			if (empty($data['academic_year_id'])) {
+				http_response_code(400);
+				echo json_encode([
+					'success' => false,
+					'message' => 'Academic year is required'
+				]);
+				return;
+			}
+			
+			// Validate that the new academic year exists and is active
+			if (!$this->isValidAcademicYear($data['academic_year_id'])) {
+				http_response_code(400);
+				echo json_encode([
+					'success' => false,
+					'message' => 'Invalid academic year selected'
+				]);
+				return;
+			}
 
             // Check if this class name already has this section for different class
             $existingClassByNameAndSection = $this->classModel->findByNameAndSection($data['name'], $data['section']);
@@ -246,7 +278,7 @@ class ClassController {
             }
 
             // Check if class already exists with same name, section and academic year for different class
-            $existingClassWithKey = $this->classModel->findByUniqueKey($data['name'], $data['section'], $data['academic_year']);
+            $existingClassWithKey = $this->classModel->findByUniqueKey($data['name'], $data['section'], $data['academic_year_id']);
             if ($existingClassWithKey && $existingClassWithKey['id'] != $id) {
                 http_response_code(400);
                 echo json_encode([
@@ -391,18 +423,18 @@ class ClassController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $academicYear = $_GET['year'] ?? '';
+            $academicYearId = $_GET['academic_year_id'] ?? '';
             
-            if (empty($academicYear)) {
+            if (empty($academicYearId)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Academic year parameter is required'
+                    'message' => 'Academic year ID parameter is required'
                 ]);
                 return;
             }
             
-            $classes = $this->classModel->getClassesByAcademicYear($academicYear);
+            $classes = $this->classModel->getClassesByAcademicYear($academicYearId);
             
             http_response_code(200);
             echo json_encode([
@@ -536,36 +568,6 @@ class ClassController {
     }
 
     /**
-     * Get current academic year switch date (admin only)
-     */
-    public function getAcademicYearSwitchDate() {
-        try {
-            // Require admin authentication
-            global $pdo;
-            RoleMiddleware::requireAdmin($pdo);
-            
-            $settingModel = new SettingModel($this->pdo);
-            $switchDate = $settingModel->getAcademicYearSwitchDate();
-            
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'switch_date' => $switchDate,
-                    'current_academic_year' => $this->getCurrentAcademicYear()
-                ],
-                'message' => 'Academic year switch date retrieved successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error retrieving academic year switch date: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Log user action
      */
     private function logAction($action, $description = null, $metadata = null) {
@@ -601,56 +603,80 @@ class ClassController {
     }
 
 	/**
-	 * Compute current academic year based on the configured switch date.
-	 * Uses the 'academic_year_switch_date' setting to determine when the academic year changes.
+	 * Get the current academic year ID from the database.
+	 * This is used to ensure consistency when creating new classes.
 	 */
-	private function getCurrentAcademicYear() {
+	private function getCurrentAcademicYearId() {
 		try {
-			// Get the academic year switch date from settings
-			$settingModel = new SettingModel($this->pdo);
-			$switchDate = $settingModel->getAcademicYearSwitchDate();
-			
-			// Parse the switch date (format: MM-DD)
-			$switchParts = explode('-', $switchDate);
-			if (count($switchParts) !== 2) {
-				// Fallback to default September 1st if format is invalid
-				$switchMonth = 9;
-				$switchDay = 1;
+			// Get the current academic year from the database
+			$sql = "SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1";
+			$stmt = $this->pdo->prepare($sql);
+			$stmt->execute();
+			$currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			if ($currentYear) {
+				return $currentYear['id'];
 			} else {
-				$switchMonth = (int)$switchParts[0];
-				$switchDay = (int)$switchParts[1];
+				// Fallback: get the most recent active academic year
+				$sql = "SELECT id FROM academic_years WHERE is_active = 1 ORDER BY start_date DESC LIMIT 1";
+				$stmt = $this->pdo->prepare($sql);
+				$stmt->execute();
+				$activeYear = $stmt->fetch(PDO::FETCH_ASSOC);
+				
+				if ($activeYear) {
+					return $activeYear['id'];
+				} else {
+					throw new Exception('No academic year found in the system');
+				}
 			}
-			
-			$now = new DateTime('now');
-			$currentYear = (int)$now->format('Y');
-			
-			// Create the switch date for current year
-			$switchDateThisYear = new DateTime("$currentYear-$switchMonth-$switchDay");
-			
-			// If today is on or after the switch date, start new academic year
-			// If today is before the switch date, we're still in the previous academic year
-			if ($now >= $switchDateThisYear) {
-				$start = $currentYear;
-				$end = $currentYear + 1;
-			} else {
-				$start = $currentYear - 1;
-				$end = $currentYear;
-			}
-			
-			return $start . '-' . $end;
 		} catch (Exception $e) {
-			// Fallback to default September 1st logic if there's an error
-			$now = new DateTime('now');
-			$year = (int)$now->format('Y');
-			$month = (int)$now->format('n');
-			if ($month >= 9) {
-				$start = $year;
-				$end = $year + 1;
+			throw new Exception('Error getting current academic year: ' . $e->getMessage());
+		}
+	}
+
+	/**
+	 * Validate if an academic year ID exists and is active
+	 */
+	private function isValidAcademicYear($academicYearId) {
+		try {
+			$sql = "SELECT id FROM academic_years WHERE id = ? AND (is_active = 1 OR is_current = 1) LIMIT 1";
+			$stmt = $this->pdo->prepare($sql);
+			$stmt->execute([$academicYearId]);
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result !== false;
+		} catch (Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get the current academic year display name for API responses.
+	 * This is used to maintain backward compatibility in API responses.
+	 */
+	private function getCurrentAcademicYearDisplay() {
+		try {
+			$sql = "SELECT year_code, display_name FROM academic_years WHERE is_current = 1 LIMIT 1";
+			$stmt = $this->pdo->prepare($sql);
+			$stmt->execute();
+			$currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			if ($currentYear) {
+				return $currentYear['year_code'];
 			} else {
-				$start = $year - 1;
-				$end = $year;
+				// Fallback: get the most recent active academic year
+				$sql = "SELECT year_code FROM academic_years WHERE is_active = 1 ORDER BY start_date DESC LIMIT 1";
+				$stmt = $this->pdo->prepare($sql);
+				$stmt->execute();
+				$activeYear = $stmt->fetch(PDO::FETCH_ASSOC);
+				
+				if ($activeYear) {
+					return $activeYear['year_code'];
+				} else {
+					return 'No academic year found';
+				}
 			}
-			return $start . '-' . $end;
+		} catch (Exception $e) {
+			return 'Error getting academic year';
 		}
 	}
 }

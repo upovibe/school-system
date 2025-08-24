@@ -1,6 +1,6 @@
 <?php
 
-class Migration_20250809000110createfeeinvoicestable {
+class Migration_20241001000071createfeeinvoicestable {
     private $pdo;
 
     public function __construct($pdo) {
@@ -11,9 +11,9 @@ class Migration_20250809000110createfeeinvoicestable {
         $sql = "CREATE TABLE IF NOT EXISTS fee_invoices (
             id INT AUTO_INCREMENT PRIMARY KEY,
             student_id INT NOT NULL,
-            academic_year VARCHAR(20) NOT NULL,
-            term VARCHAR(20) NOT NULL,
-            student_type VARCHAR(20) NOT NULL DEFAULT 'Day',
+            academic_year VARCHAR(100) NOT NULL,
+            grading_period VARCHAR(100) NOT NULL,
+            student_type VARCHAR(100) NOT NULL DEFAULT 'Day',
             invoice_number VARCHAR(50) NOT NULL,
             status ENUM('draft','open','paid') NOT NULL DEFAULT 'open',
             issue_date DATE NOT NULL,
@@ -27,9 +27,9 @@ class Migration_20250809000110createfeeinvoicestable {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY uniq_invoice_number (invoice_number),
-            UNIQUE KEY uniq_student_year_term (student_id, academic_year, term),
+            UNIQUE KEY uniq_student_year_grading_period (student_id, academic_year, grading_period),
             INDEX idx_student (student_id),
-            INDEX idx_year_term (academic_year, term),
+            INDEX idx_year_grading_period (academic_year, grading_period),
             CONSTRAINT fk_fee_invoices_student FOREIGN KEY (student_id) REFERENCES students(id) ON UPDATE CASCADE ON DELETE RESTRICT,
             CONSTRAINT fk_fee_invoices_schedule FOREIGN KEY (schedule_id) REFERENCES fee_schedules(id) ON UPDATE CASCADE ON DELETE SET NULL,
             CONSTRAINT fk_fee_invoices_user FOREIGN KEY (created_by) REFERENCES users(id) ON UPDATE CASCADE ON DELETE SET NULL

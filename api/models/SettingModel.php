@@ -140,24 +140,5 @@ class SettingModel extends BaseModel {
     public function getMapSettings() {
         return $this->getByCategory('map');
     }
-
-    /**
-     * Get academic settings
-     */
-    public function getAcademicSettings() {
-        return $this->getByCategory('academic');
-    }
-
-    /**
-     * Get academic year switch date setting
-     */
-    public function getAcademicYearSwitchDate() {
-        $setting = $this->findByKey('academic_year_switch_date');
-        if ($setting) {
-            return $setting['setting_value'];
-        }
-        // Default to September 1st if not set
-        return '09-01';
-    }
 }
 ?> 

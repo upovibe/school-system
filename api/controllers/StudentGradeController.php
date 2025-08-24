@@ -6,6 +6,13 @@ require_once __DIR__ . '/../models/GradingPolicyModel.php';
 require_once __DIR__ . '/../models/TeacherModel.php';
 require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
+require_once __DIR__ . '/../models/ClassModel.php';
+require_once __DIR__ . '/../models/StudentModel.php';
+require_once __DIR__ . '/../models/SubjectModel.php';
+require_once __DIR__ . '/../models/GradingPeriodModel.php';
+require_once __DIR__ . '/../models/AcademicYearModel.php';
+require_once __DIR__ . '/../models/SettingModel.php';
+require_once __DIR__ . '/../models/ClassSubjectModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -302,6 +309,410 @@ class StudentGradeController {
         }
         return false;
     }
+
+    /**
+     * Print class grade report (admin and teacher)
+     * Generates HTML report for all students in a class for selected subjects
+     */
+    public function printClassReport() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireTeacher($pdo);
+
+            $query = $_GET ?? [];
+            $classId = isset($query['class_id']) ? (int)$query['class_id'] : null;
+            $subjectIds = isset($query['subject_ids']) ? explode(',', $query['subject_ids']) : [];
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+
+            if (!$classId) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class ID is required'
+                ]);
+                return;
+            }
+
+            // Get class information
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($classId);
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class not found'
+                ]);
+                return;
+            }
+
+            // Get students in the class
+            $studentModel = new StudentModel($pdo);
+            $students = $studentModel->getStudentsByClass($classId);
+
+            // Get grades for the class
+            $grades = $this->gradeModel->getClassGradesWithDetails($classId, [
+                'subject_id' => $subjectIds,
+                'grading_period_id' => $periodId
+            ]);
+
+            // Get teacher for class report (Subject Teacher first, then Class Teacher as fallback)
+            $teacherName = 'No Teacher Assigned';
+            
+            // First, try to get the Subject Teacher (teacher assigned to teach this subject in this class)
+            if (!empty($subjectIds)) {
+                try {
+                    $assignments = $this->teacherAssignmentModel->getWithDetails(['class_id' => $classId, 'subject_id' => $subjectIds[0]]);
+                    if (!empty($assignments)) {
+                        $firstAssignment = $assignments[0];
+                        if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
+                            $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Continue to fallback
+                }
+            }
+            
+            // If no Subject Teacher, try to get the Class Teacher as fallback
+            if ($teacherName === 'No Teacher Assigned') {
+                try {
+                    $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt->execute([$classId]);
+                    $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($classTeacher) {
+                        $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                    }
+                } catch (Exception $e) {
+                    // Keep default "No Teacher Assigned"
+                }
+            }
+
+            // Generate HTML report
+            $html = $this->generateClassReportHTML($class, $students, $grades, $teacherName, $subjectIds, $periodId);
+
+            // Set headers for HTML response
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: inline; filename="class_grade_report.html"');
+            
+            echo $html;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error generating class report: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Print student grade report (admin and teacher)
+     * Generates HTML report for a specific student across all subjects
+     */
+    public function printStudentReport() {
+        try {
+            global $pdo;
+            // Allow both admin and teacher roles
+            $currentUserId = $this->getCurrentUserId();
+            $isAdmin = $this->isCurrentUserAdmin();
+            
+            if (!$isAdmin) {
+                RoleMiddleware::requireTeacher($pdo);
+            }
+
+            $query = $_GET ?? [];
+            $studentId = isset($query['student_id']) ? (int)$query['student_id'] : null;
+            $classId = isset($query['class_id']) ? (int)$query['class_id'] : null;
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+
+            if (!$studentId || !$classId) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Both Student ID and Class ID are required'
+                ]);
+                return;
+            }
+
+            // Get student information
+            $studentModel = new StudentModel($pdo);
+            $student = $studentModel->findById($studentId);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+
+            // Get class information
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($classId);
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class not found'
+                ]);
+                return;
+            }
+
+            // Get grades for the student in this class
+            $grades = $this->gradeModel->getStudentGradesWithDetails($studentId, [
+                'class_id' => $classId,
+                'grading_period_id' => $periodId
+            ]);
+
+            // Get all subjects assigned to this class
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubjects = $classSubjectModel->getByClassId($classId);
+            if (!is_array($classSubjects)) {
+                $classSubjects = [];
+            }
+
+            // Get class teacher information (Class Teacher from teachers table)
+            $teacherName = 'No Teacher Assigned';
+            
+            // Get the Class Teacher (main teacher assigned to this class)
+            try {
+                $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                $stmt->execute([$class['id']]);
+                $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($classTeacher) {
+                    $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                }
+            } catch (Exception $e) {
+                // Keep default "No Teacher Assigned"
+            }
+
+            // Generate HTML report
+            $html = $this->generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId, $teacherName);
+
+            // Set headers for HTML response
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: inline; filename="student_grade_report.html"');
+            
+            echo $html;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error generating student report: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Generate HTML for class grade report
+     */
+    private function generateClassReportHTML($class, $students, $grades, $teacherName, $subjectIds, $periodId) {
+        // Read the PHP template
+        $templatePath = __DIR__ . '/../email/templates/class_grade_report.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception('Class grade report template not found');
+        }
+
+        // Get subject name and academic year
+        $subjectName = 'All Subjects';
+        $academicYear = 'N/A';
+        
+        if (!empty($subjectIds)) {
+            $subjectModel = new SubjectModel($this->pdo);
+            $subject = $subjectModel->findById($subjectIds[0]);
+            if ($subject) {
+                $subjectName = $subject['name'];
+            }
+        }
+        
+        // Get academic year from grading period if specified, otherwise from class
+        if ($periodId) {
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period && isset($period['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        } else {
+            // If no specific period, get academic year from class
+            if (isset($class['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($class['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        }
+        
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Prepare data for the template
+        $templateData = [
+            'class' => $class,
+            'students' => $students,
+            'grades' => $grades,
+            'teacherName' => $teacherName,
+            'subjectIds' => $subjectIds,
+            'periodId' => $periodId,
+            'subjectName' => $subjectName,
+            'academicYear' => $academicYear,
+            'gradingPeriodName' => $this->getGradingPeriodName($periodId),
+            'generatedDate' => date('F j, Y'),
+            'generatedTime' => date('g:i A'),
+            'totalStudents' => count($students),
+            'schoolSettings' => $schoolSettings
+        ];
+
+        // Start output buffering to capture the template output
+        ob_start();
+        extract($templateData);
+        include $templatePath;
+        $html = ob_get_clean();
+
+        return $html;
+    }
+
+    /**
+     * Generate HTML for student grade report
+     */
+    private function generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId, $teacherName) {
+        // Read the PHP template
+        $templatePath = __DIR__ . '/../email/templates/student_grade_report.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception('Student grade report template not found');
+        }
+
+        // Get academic year from grading period if specified, otherwise from student's class
+        $academicYear = 'N/A';
+        if ($periodId) {
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period && isset($period['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($period['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        } else {
+            // If no specific period, get academic year from class
+            if (isset($class['academic_year_id'])) {
+                $academicYearModel = new AcademicYearModel($this->pdo);
+                $academicYearData = $academicYearModel->findById($class['academic_year_id']);
+                if ($academicYearData) {
+                    $academicYear = $academicYearData['year_code'];
+                }
+            }
+        }
+        
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Prepare data for the template
+        $templateData = [
+            'student' => $student,
+            'class' => $class,
+            'grades' => $grades,
+            'classSubjects' => $classSubjects,
+            'periodId' => $periodId,
+            'academicYear' => $academicYear,
+            'gradingPeriodName' => $this->getGradingPeriodName($periodId),
+            'generatedDate' => date('F j, Y'),
+            'generatedTime' => date('g:i A'),
+            'teacherName' => $teacherName,
+            'schoolSettings' => $schoolSettings
+        ];
+
+        // Start output buffering to capture the template output
+        ob_start();
+        extract($templateData);
+        include $templatePath;
+        $html = ob_get_clean();
+
+        return $html;
+    }
+
+    /**
+     * Get grading period name by ID
+     */
+    private function getGradingPeriodName($periodId) {
+        if (!$periodId) {
+            // Get the first available grading period as default
+            try {
+                $periodModel = new GradingPeriodModel($this->pdo);
+                $periods = $periodModel->findAll();
+                if (!empty($periods)) {
+                    return $periods[0]['name'] ?? 'First Term';
+                }
+            } catch (Exception $e) {
+                // ignore
+            }
+            return 'First Term';
+        }
+        
+        try {
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            return $period['name'] ?? 'Unknown Period';
+        } catch (Exception $e) {
+            return 'Unknown Period';
+        }
+    }
+
+    /**
+     * Get school settings for report generation
+     */
+    private function getSchoolSettings() {
+        try {
+            // Load config for URLs
+            $config = require __DIR__ . '/../config/app_config.php';
+            
+            // Try to get settings from database first
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            // Construct full logo URL if logo exists
+            $logoUrl = null;
+            if (!empty($settings['application_logo'])) {
+                // If the logo path doesn't start with 'api/', add it
+                $logoPath = $settings['application_logo'];
+                if (strpos($logoPath, 'api/') !== 0) {
+                    $logoPath = 'api/' . $logoPath;
+                }
+                $logoUrl = $config['app_url'] . '/' . $logoPath;
+            }
+            
+            // Return settings with fallbacks
+            return [
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_logo' => $logoUrl,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'contact_address' => $settings['contact_address'] ?? 'School Address',
+                'contact_phone' => $settings['contact_phone'] ?? 'Phone Number',
+                'contact_email' => $settings['contact_email'] ?? 'info@school.com',
+                'contact_website' => $settings['contact_website'] ?? 'https://school.com'
+            ];
+        } catch (Exception $e) {
+            // Fallback to config only
+            $config = require __DIR__ . '/../config/app_config.php';
+            return [
+                'application_name' => 'School Management System',
+                'application_logo' => null,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => 'Excellence in Education'
+            ];
+        }
+    }
+
+
 }
 ?>
 

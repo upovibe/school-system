@@ -244,6 +244,11 @@ class TeacherStudentGradesPage extends App {
         this.set('grades', []);
         this.render();
       }
+      const printBtn = e.target.closest('[data-action="print-class-report"]');
+      if (printBtn) {
+        e.preventDefault();
+        this.printClassReport();
+      }
     });
   }
 
@@ -515,6 +520,11 @@ class TeacherStudentGradesPage extends App {
   // removed updateTableData; table data is derived in render()
 
   renderFilters() {
+    // Don't render filters if teacher has no assigned class
+    if (!this.teacherClass || !this.teacherClass.class_id) {
+      return '';
+    }
+
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
     const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
 
@@ -540,6 +550,9 @@ class TeacherStudentGradesPage extends App {
           <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
             <i class="fas fa-times mr-1"></i> Clear Filters
           </ui-button>
+          <ui-button type="button" data-action="print-class-report" variant="success" size="sm" ${(!this.teacherClass?.class_id || !filters.subject_id) ? 'disabled' : ''}>
+            <i class="fas fa-print mr-1"></i> Print Class Report
+          </ui-button>
         </div>
       </div>
     `;
@@ -556,6 +569,24 @@ class TeacherStudentGradesPage extends App {
     // Show skeleton loading during initial page load (check this FIRST)
     if (loading) {
       return `<data-skeleton></data-skeleton>`;
+    }
+
+    // Show complete "No Students to Grade" message if no class is assigned
+    if (!this.teacherClass || !this.teacherClass.class_id) {
+      return `
+        <div class="space-y-6">
+          <div class="bg-white shadow rounded-lg p-8 text-center">
+            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <i class="fas fa-user-graduate text-3xl text-gray-400"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Students to Grade</h3>
+            <p class="text-gray-500 max-w-md mx-auto">
+              You don't have any students assigned to you for grading. 
+              This usually means you need to be assigned to a class first.
+            </p>
+          </div>
+        </div>
+      `;
     }
 
     const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
@@ -646,6 +677,78 @@ class TeacherStudentGradesPage extends App {
     this.set('updateGradeData', null);
     this.set('viewGradeData', null);
     this.set('deleteGradeData', null);
+  }
+
+  async printClassReport() {
+    try {
+      const filters = this.get('filters') || {};
+      const { subject_id, grading_period_id } = filters;
+      
+      if (!this.teacherClass?.class_id || !subject_id) {
+        Toast.show({ 
+          title: 'Print Error', 
+          message: 'Please select both class and subject before printing', 
+          variant: 'error', 
+          duration: 3000 
+        });
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        Toast.show({ 
+          title: 'Authentication Error', 
+          message: 'Please log in to print reports', 
+          variant: 'error', 
+          duration: 3000 
+        });
+        return;
+      }
+
+      // Build the print URL with current filters
+      const params = new URLSearchParams({
+        class_id: this.teacherClass.class_id,
+        subject_ids: subject_id,
+        grading_period_id: grading_period_id || ''
+      });
+
+      const printUrl = `/api/teacher/print/class-report?${params.toString()}`;
+      
+      // Fetch the report HTML with authentication first
+      const response = await fetch(printUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/html'
+        }
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        
+        // Open new window and write the HTML content
+        const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.focus();
+          
+          // Wait for content to load then print
+          setTimeout(() => {
+            printWindow.print();
+          }, 1000);
+        }
+      } else {
+        throw new Error(`Print failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error printing class report:', error);
+      Toast.show({ 
+        title: 'Print Error', 
+        message: 'Failed to generate print report', 
+        variant: 'error', 
+        duration: 3000 
+      });
+    }
   }
 }
 

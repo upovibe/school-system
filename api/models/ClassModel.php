@@ -10,7 +10,7 @@ class ClassModel extends BaseModel {
     protected static $fillable = [
         'name',
         'section',
-        'academic_year',
+        'academic_year_id',
         'capacity',
         'status'
     ];
@@ -34,7 +34,8 @@ class ClassModel extends BaseModel {
      */
     public function getAllWithClassTeacher() {
         try {
-            $stmt = $this->pdo->prepare("\n                SELECT \n                    c.*, \n                    CONCAT(COALESCE(t.first_name, ''), ' ', COALESCE(t.last_name, '')) AS class_teacher_name,\n                    t.email AS class_teacher_email,\n                    t.gender AS class_teacher_gender\n                FROM {$this->getTableName()} c\n                LEFT JOIN teachers t ON t.class_id = c.id AND t.status = 'active'\n                ORDER BY c.name ASC, c.section ASC\n            ");
+            $stmt = $this->pdo->prepare("\n                SELECT \n                    c.*, \n                    CONCAT(COALESCE(t.first_name, ''), ' ', COALESCE(t.last_name, '')) AS class_teacher_name,\n                    t.email AS class_teacher_email,\n                    t.gender AS class_teacher_gender,\n                    ay.year_code AS academic_year,
+                    ay.display_name AS academic_year_display_name\n                FROM {$this->getTableName()} c\n                LEFT JOIN teachers t ON t.class_id = c.id AND t.status = 'active'\n                LEFT JOIN academic_years ay ON c.academic_year_id = ay.id\n                ORDER BY c.name ASC, c.section ASC\n            ");
             $stmt->execute();
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -51,13 +52,13 @@ class ClassModel extends BaseModel {
     /**
      * Find class by name, section and academic year
      */
-    public function findByUniqueKey($name, $section, $academicYear) {
+    public function findByUniqueKey($name, $section, $academicYearId) {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT * FROM {$this->getTableName()} 
-                WHERE name = ? AND section = ? AND academic_year = ?
+                WHERE name = ? AND section = ? AND academic_year_id = ?
             ");
-            $stmt->execute([$name, $section, $academicYear]);
+            $stmt->execute([$name, $section, $academicYearId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($result) {
@@ -118,16 +119,18 @@ class ClassModel extends BaseModel {
     }
     
     /**
-     * Get classes by academic year
+     * Get classes by academic year ID
      */
-    public function getClassesByAcademicYear($academicYear) {
+    public function getClassesByAcademicYear($academicYearId) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->getTableName()} 
-                WHERE academic_year = ? 
-                ORDER BY name ASC, section ASC
+                SELECT c.*, ay.year_code, ay.display_name as academic_year_name
+                FROM {$this->getTableName()} c
+                JOIN academic_years ay ON c.academic_year_id = ay.id
+                WHERE c.academic_year_id = ? 
+                ORDER BY c.name ASC, c.section ASC
             ");
-            $stmt->execute([$academicYear]);
+            $stmt->execute([$academicYearId]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Apply casts to each result
@@ -147,9 +150,11 @@ class ClassModel extends BaseModel {
     public function searchClasses($query, $limit = null) {
         try {
             $sql = "
-                SELECT * FROM {$this->getTableName()} 
-                WHERE (name LIKE ? OR section LIKE ? OR academic_year LIKE ?)
-                ORDER BY name ASC, section ASC
+                SELECT c.*, ay.year_code, ay.display_name as academic_year_name
+                FROM {$this->getTableName()} c
+                JOIN academic_years ay ON c.academic_year_id = ay.id
+                WHERE (c.name LIKE ? OR c.section LIKE ? OR ay.year_code LIKE ? OR ay.display_name LIKE ?)
+                ORDER BY c.name ASC, c.section ASC
             ";
             
             if ($limit) {
@@ -158,7 +163,7 @@ class ClassModel extends BaseModel {
             
             $stmt = $this->pdo->prepare($sql);
             $searchTerm = "%{$query}%";
-            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Apply casts to each result
@@ -204,12 +209,12 @@ class ClassModel extends BaseModel {
     public function getAvailableAcademicYears() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT DISTINCT academic_year 
-                FROM {$this->getTableName()} 
-                ORDER BY academic_year DESC
+                SELECT id, year_code, display_name, start_date, end_date, is_active, is_current
+                FROM academic_years 
+                ORDER BY start_date DESC
             ");
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception('Error fetching available academic years: ' . $e->getMessage());
         }

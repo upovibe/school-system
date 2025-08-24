@@ -20,19 +20,26 @@ class ClassSeeder
     private function seedClasses() {
         echo "📝 Seeding classes for Ghanaian education system...\n";
         
+        // Get the current academic year ID (2024-2025)
+        $academicYearId = $this->getCurrentAcademicYearId();
+        if (!$academicYearId) {
+            echo "❌ Error: Could not find academic year 2024-2025. Please run academic_year_seeder first.\n";
+            return;
+        }
+        
         $classes = [
             // Kindergarten (KG1-KG2)
             [
                 'name' => 'KG 1',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 25,
                 'status' => 'active'
             ],
             [
                 'name' => 'KG 2',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 25,
                 'status' => 'active'
             ],
@@ -41,42 +48,42 @@ class ClassSeeder
             [
                 'name' => 'P 1',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'P 2',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'P 3',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'P 4',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'P 5',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'P 6',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
@@ -85,21 +92,21 @@ class ClassSeeder
             [
                 'name' => 'JHS 1',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'JHS 2',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ],
             [
                 'name' => 'JHS 3',
                 'section' => 'A',
-                'academic_year' => '2024-2025',
+                'academic_year_id' => $academicYearId,
                 'capacity' => 30,
                 'status' => 'active'
             ]
@@ -114,30 +121,36 @@ class ClassSeeder
     
     private function seedClass($classData) {
         // Check if class already exists
-        $stmt = $this->pdo->prepare('SELECT id FROM classes WHERE name = ? AND section = ? AND academic_year = ?');
-        $stmt->execute([$classData['name'], $classData['section'], $classData['academic_year']]);
+        $stmt = $this->pdo->prepare('SELECT id FROM classes WHERE name = ? AND section = ? AND academic_year_id = ?');
+        $stmt->execute([$classData['name'], $classData['section'], $classData['academic_year_id']]);
         $existingClass = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($existingClass) {
-            echo "⚠️  Class {$classData['name']} Section {$classData['section']} for {$classData['academic_year']} already exists\n";
+            echo "⚠️  Class {$classData['name']} Section {$classData['section']} for {$classData['academic_year_id']} already exists\n";
             return;
         }
         
         // Insert class
         $stmt = $this->pdo->prepare('
-            INSERT INTO classes (name, section, academic_year, capacity, status, created_at, updated_at) 
+            INSERT INTO classes (name, section, academic_year_id, capacity, status, created_at, updated_at) 
             VALUES (?, ?, ?, ?, ?, NOW(), NOW())
         ');
         
         $stmt->execute([
             $classData['name'],
             $classData['section'],
-            $classData['academic_year'],
+            $classData['academic_year_id'],
             $classData['capacity'],
             $classData['status']
         ]);
         
-        echo "✅ Added class: {$classData['name']} Section {$classData['section']} ({$classData['academic_year']})\n";
+        echo "✅ Added class: {$classData['name']} Section {$classData['section']} ({$classData['academic_year_id']})\n";
+    }
+
+    private function getCurrentAcademicYearId() {
+        $stmt = $this->pdo->prepare('SELECT id FROM academic_years WHERE year_code = ?');
+        $stmt->execute(['2024-2025']);
+        return $stmt->fetchColumn();
     }
 }
 ?> 

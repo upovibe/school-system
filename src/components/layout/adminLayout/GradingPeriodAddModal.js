@@ -4,6 +4,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/Dropdown.js';
 import api from '@/services/api.js';
 
 /**
@@ -25,15 +26,14 @@ class GradingPeriodAddModal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['open'];
+        return ['open', 'academic-years'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
             this.render();
-            // Load current academic year and ensure validation is called after render when modal opens
+            // Ensure validation is called after render when modal opens
             setTimeout(() => {
-                this.loadCurrentAcademicYear();
                 this.validateForm();
             }, 100);
         }
@@ -42,8 +42,6 @@ class GradingPeriodAddModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        // Load current academic year when component is connected
-        this.loadCurrentAcademicYear();
     }
 
     setupEventListeners() {
@@ -123,28 +121,21 @@ class GradingPeriodAddModal extends HTMLElement {
         this.eventListenersAttached = true;
     }
 
-    // Compute academic year on client (display-only) - same as ClassAddModal
-    computeAcademicYear() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1; // 1-12
-        if (month >= 9) {
-            return `${year}-${year + 1}`;
+    // Get academic years data from attribute
+    getAcademicYears() {
+        try {
+            const academicYearsAttr = this.getAttribute('academic-years');
+            return academicYearsAttr ? JSON.parse(academicYearsAttr) : [];
+        } catch (error) {
+            return [];
         }
-        return `${year - 1}-${year}`;
     }
 
-    // Load and display the current academic year (now using client-side computation)
-    loadCurrentAcademicYear() {
-        try {
-            const currentYear = this.computeAcademicYear();
-            const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
-            if (yearInput) {
-                yearInput.value = currentYear;
-            }
-        } catch (error) {
-            // Silently handle error
-        }
+    // Get current academic year ID from loaded data
+    getCurrentAcademicYearId() {
+        const academicYears = this.getAcademicYears();
+        const currentYear = academicYears.find(ay => ay.is_current === 1);
+        return currentYear ? currentYear.id : null;
     }
 
     open() {
@@ -161,13 +152,12 @@ class GradingPeriodAddModal extends HTMLElement {
 
     // Save the new grading period
     async saveGradingPeriod() {
-        console.log('🚀 saveGradingPeriod called at:', new Date().toISOString());
         try {
             // Get form data using the data-field attributes for reliable selection
             const nameInput = this.querySelector('ui-input[data-field="name"]');
             const startDateInput = this.querySelector('ui-input[data-field="start_date"]');
             const endDateInput = this.querySelector('ui-input[data-field="end_date"]');
-            const academicYearInput = this.querySelector('ui-input[data-field="academic_year"]');
+            const academicYearDropdown = this.querySelector('ui-dropdown[data-field="academic_year_id"]');
             const descriptionTextarea = this.querySelector('ui-textarea[data-field="description"]');
             const statusSwitch = this.querySelector('ui-switch[name="is_active"]');
 
@@ -183,16 +173,28 @@ class GradingPeriodAddModal extends HTMLElement {
                 return;
             }
 
+            // Get academic year ID - handle both readonly input and dropdown cases
+            let academicYearId = this.getCurrentAcademicYearId();
+            if (academicYearDropdown) {
+                academicYearId = parseInt(academicYearDropdown.value);
+            } else {
+                // If no dropdown (readonly case), get from current academic years
+                const academicYears = this.getAcademicYears();
+                if (academicYears.length === 1) {
+                    academicYearId = academicYears[0].id;
+                }
+            }
+
             const gradingPeriodData = {
                 name: nameInput ? nameInput.value : '',
-                academic_year: academicYearInput ? academicYearInput.value : this.computeAcademicYear(),
+                academic_year_id: academicYearId,
                 start_date: startDateInput ? startDateInput.value : '',
                 end_date: endDateInput ? endDateInput.value : '',
                 description: descriptionTextarea ? descriptionTextarea.getValue() : '',
                 is_active: statusSwitch ? (statusSwitch.checked ? 1 : 0) : 1
             };
 
-            console.log('📝 Sending data:', gradingPeriodData);
+
 
             // Validate required fields
             if (!gradingPeriodData.name) {
@@ -246,10 +248,8 @@ class GradingPeriodAddModal extends HTMLElement {
                 confirmButton.textContent = 'Creating...';
             }
 
-            console.log('🌐 Making API call to create grading period...');
             // Send the request
             const response = await api.withToken(token).post('/grading-periods', gradingPeriodData);
-            console.log('✅ API response received:', response.data);
 
             if (response.data.success) {
                 Toast.show({
@@ -259,13 +259,20 @@ class GradingPeriodAddModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Get the current academic year display name
+                const currentAcademicYear = this.getAcademicYears()[0];
+                const academicYearDisplay = currentAcademicYear ? 
+                    `${currentAcademicYear.year_code}${currentAcademicYear.display_name ? ` (${currentAcademicYear.display_name})` : ''}` : 
+                    'Unknown';
+
                 // Dispatch event with the new grading period data
                 this.dispatchEvent(new CustomEvent('grading-period-saved', {
                     detail: {
                         gradingPeriod: {
                             id: response.data.data.id,
                             name: gradingPeriodData.name,
-                            academic_year: gradingPeriodData.academic_year,
+                            academic_year: academicYearDisplay,
+                            academic_year_id: gradingPeriodData.academic_year_id,
                             start_date: gradingPeriodData.start_date,
                             end_date: gradingPeriodData.end_date,
                             description: gradingPeriodData.description,
@@ -322,7 +329,8 @@ class GradingPeriodAddModal extends HTMLElement {
     }
 
     render() {
-        const computedYear = this.computeAcademicYear();
+        const academicYears = this.getAcademicYears();
+        const currentYearId = this.getCurrentAcademicYearId();
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -342,14 +350,24 @@ class GradingPeriodAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-                        <ui-input 
-                            data-field="academic_year"
-                            type="text" 
-                            placeholder="Academic year is auto-computed"
-                            value="${computedYear}"
-                            readonly
-                            class="w-full">
-                        </ui-input>
+                        ${academicYears.length === 1 ? 
+                            // If only one academic year (current), show as readonly input
+                            `<ui-input 
+                                data-field="academic_year_id"
+                                type="text" 
+                                value="${academicYears[0].year_code}${academicYears[0].display_name ? ` (${academicYears[0].display_name})` : ''}"
+                                readonly
+                                class="w-full">
+                            </ui-input>` :
+                            // If multiple academic years, show as dropdown
+                            `<ui-dropdown data-field="academic_year_id" value="${currentYearId || ''}">
+                                ${academicYears.map(ay => `
+                                    <option value="${ay.id}" ${ay.id == currentYearId ? 'selected' : ''}>
+                                        ${ay.year_code}${ay.display_name ? ` (${ay.display_name})` : ''}
+                                    </option>
+                                `).join('')}
+                            </ui-dropdown>`
+                        }
                     </div>
                     
                     <div>

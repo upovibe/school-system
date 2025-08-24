@@ -73,9 +73,6 @@ class SettingsSeeder
             ['setting_key' => 'meta_keywords', 'setting_value' => 'school, education, learning, students', 'setting_type' => 'text', 'category' => 'general', 'description' => 'SEO meta keywords'],
             ['setting_key' => 'google_analytics', 'setting_value' => '', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Google Analytics tracking code'],
             ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode'],
-
-            // Academic Settings
-            ['setting_key' => 'academic_year_switch_date', 'setting_value' => '09-01', 'setting_type' => 'date', 'category' => 'academic', 'description' => 'Date when academic year switches (MM-DD format). Default: September 1st'],
         ];
 
         foreach ($defaultSettings as $setting) {

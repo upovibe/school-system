@@ -243,6 +243,11 @@ class TeacherStudentGradeReportPage extends App {
                 // Re-render to reset dropdowns
                 this.render();
             }
+            const printBtn = e.target.closest('[data-action="print-student-report"]');
+            if (printBtn) {
+                e.preventDefault();
+                this.printStudentReport();
+            }
         });
     }
 
@@ -515,6 +520,9 @@ class TeacherStudentGradeReportPage extends App {
                     <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
                         <i class="fas fa-times mr-1"></i> Clear Filters
                     </ui-button>
+                    <ui-button type="button" data-action="print-student-report" variant="success" size="sm" ${(!class_id || !student_id) ? 'disabled' : ''}>
+                        <i class="fas fa-print mr-1"></i> Print Student Report
+                    </ui-button>
                 </div>
             </div>
         `;
@@ -530,7 +538,7 @@ class TeacherStudentGradeReportPage extends App {
             return `<data-skeleton></data-skeleton>`;
         }
 
-        // Show complete "No Teaching Assignments" message if no class is assigned
+        // Show complete "No Students to Report On" message if no class is assigned
         if (!this.classes || this.classes.length === 0) {
             return `
                 <div class="space-y-6">
@@ -538,10 +546,10 @@ class TeacherStudentGradeReportPage extends App {
                         <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                             <i class="fas fa-chalkboard-teacher text-3xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Teaching Assignments</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Students to Report On</h3>
                         <p class="text-gray-500 max-w-md mx-auto">
-                            You are not currently assigned to any classes or subjects. 
-                            Please contact the administration for teaching assignments.
+                            You don't have any students assigned to you for grade reporting. 
+                            This usually means you need to be assigned to a class first.
                         </p>
                     </div>
                 </div>
@@ -614,6 +622,78 @@ class TeacherStudentGradeReportPage extends App {
             </div>
         `;
      }
+
+    async printStudentReport() {
+        try {
+            const filters = this.get('filters') || {};
+            const { class_id, student_id, grading_period_id } = filters;
+            
+            if (!class_id || !student_id) {
+                Toast.show({ 
+                    title: 'Print Error', 
+                    message: 'Please select both class and student before printing', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ 
+                    title: 'Authentication Error', 
+                    message: 'Please log in to print reports', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            // Build the print URL with current filters
+            const params = new URLSearchParams({
+                class_id: class_id,
+                student_id: student_id,
+                grading_period_id: grading_period_id || ''
+            });
+
+            const printUrl = `/api/teacher/print/student-report?${params.toString()}`;
+            
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(`Print failed with status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error printing student report:', error);
+            Toast.show({ 
+                title: 'Print Error', 
+                message: 'Failed to generate print report', 
+                variant: 'error', 
+                duration: 3000 
+            });
+        }
+    }
  }
  
  customElements.define('app-teacher-student-grade-report-page', TeacherStudentGradeReportPage);

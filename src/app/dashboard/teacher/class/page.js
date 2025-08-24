@@ -30,17 +30,24 @@ class TeacherClassPage extends App {
     }
 
     async connectedCallback() {
+        console.log('🚀 TeacherClassPage connectedCallback started');
         super.connectedCallback();
+        console.log('📝 Setting document title');
         document.title = 'My Class | School System';
+        
+        console.log('📊 Loading class data...');
         await this.loadClassData();
+        console.log('✅ Class data loading completed');
         
         // Add event listeners for table events
+        console.log('🎧 Setting up event listeners...');
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
         this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
         this.addEventListener('click', this.handleHeaderActions.bind(this));
         
         // Listen for student-promoted event to refresh data
         this.addEventListener('student-promoted', (event) => {
+            console.log('🎉 Student promoted event received:', event.detail);
             // Close the promote dialog
             this.set('showPromoteDialog', false);
             this.set('promoteStudentData', null);
@@ -55,6 +62,8 @@ class TeacherClassPage extends App {
                 duration: 5000
             });
         });
+        
+        console.log('🎯 TeacherClassPage fully initialized');
     }
 
     handleHeaderActions(event) {
@@ -91,31 +100,56 @@ class TeacherClassPage extends App {
 
     async loadClassData() {
         try {
+            console.log('🔍 Starting loadClassData...');
             this.set('loading', true);
             this.set('error', null);
 
             // Get token from localStorage
             const token = localStorage.getItem('token');
+            console.log('🔑 Token found:', token ? 'Yes' : 'No');
             if (!token) {
+                console.log('❌ No token found');
                 this.set('error', 'Authentication required. Please log in again.');
                 return;
             }
 
+            console.log('📡 Making API call to /teachers/my-class...');
             const response = await api.withToken(token).get('/teachers/my-class');
+            console.log('📥 API Response:', response);
             
             if (response.data && response.data.success) {
+                console.log('✅ Success! Class data:', response.data.data);
                 this.set('classData', response.data.data);
             } else {
+                console.log('❌ API returned success: false');
                 this.set('error', 'Failed to load class data');
             }
         } catch (error) {
-            console.error('Error loading class data:', error);
+            console.error('💥 Error loading class data:', error);
+            console.error('💥 Error details:', {
+                message: error.message,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                url: error.config?.url,
+                method: error.config?.method
+            });
+            
             if (error.response && error.response.status === 401) {
+                console.log('🔒 401 Unauthorized error');
                 this.set('error', 'Authentication failed. Please log in again.');
+            } else if (error.response && error.response.status === 404) {
+                console.log('🔍 404 Not Found error');
+                this.set('error', 'Class assignment not found. Please contact administration.');
+            } else if (error.response && error.response.status === 500) {
+                console.log('💥 500 Server error');
+                this.set('error', 'Server error occurred. Please try again later.');
             } else {
-                this.set('error', 'Failed to load class information. Please try again.');
+                console.log('❓ Unknown error type');
+                this.set('error', `Failed to load class information: ${error.message}`);
             }
         } finally {
+            console.log('🏁 Setting loading to false');
             this.set('loading', false);
         }
     }

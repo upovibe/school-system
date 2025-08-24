@@ -349,10 +349,11 @@ class TeacherModel extends BaseModel {
             $stmt = $this->pdo->prepare("
                 SELECT t.*, u.name, u.email, u.status as user_status,
                        c.name as class_name, c.section as class_section,
-                       c.academic_year, c.capacity
+                       ay.year_code AS academic_year, ay.display_name AS academic_year_display_name, c.capacity
                 FROM {$this->getTableName()} t
                 LEFT JOIN users u ON t.user_id = u.id
                 LEFT JOIN classes c ON t.class_id = c.id
+                LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
                 WHERE t.class_id IS NOT NULL AND t.status = 'active'
                 ORDER BY c.name ASC, c.section ASC
             ");
@@ -653,6 +654,7 @@ class TeacherModel extends BaseModel {
                     'class_name' => $class['name'],
                     'class_section' => $class['section'],
                     'class_academic_year' => $class['academic_year'],
+                    'class_academic_year_display' => $class['academic_year_display_name'],
                     'class_capacity' => $class['capacity'],
                     'class_status' => $class['status'],
                     'subjects' => $subjects,
@@ -713,14 +715,16 @@ class TeacherModel extends BaseModel {
                     c.id,
                     c.name,
                     c.section,
-                    c.academic_year,
+                    ay.year_code AS academic_year,
+                    ay.display_name AS academic_year_display_name,
                     c.capacity,
                     c.status,
                     COUNT(ta.id) as assignment_count
                 FROM teacher_assignments ta
                 JOIN classes c ON ta.class_id = c.id
+                LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
                 WHERE ta.teacher_id = ?
-                GROUP BY c.id, c.name, c.section, c.academic_year, c.capacity, c.status
+                GROUP BY c.id, c.name, c.section, ay.year_code, ay.display_name, c.capacity, c.status
                 ORDER BY c.name ASC, c.section ASC
             ");
             $stmt->execute([$teacherId]);

@@ -25,7 +25,7 @@ class CashierInvoicesPage extends App {
     // this.updateInvoiceData removed
     this.viewInvoiceData = null;
     this.deleteInvoiceData = null;
-    this.filters = { academic_year: '', status: '', term: '' };
+    this.filters = { academic_year: '', status: '', grading_period: '' };
   }
 
   // Header counts
@@ -43,18 +43,18 @@ class CashierInvoicesPage extends App {
   }
 
   renderFilters() {
-    // Get unique academic years, statuses, and terms from invoices data - filter out null/empty values
+    // Get unique academic years, statuses, and grading periods from invoices data - filter out null/empty values
     const invoices = this.get('invoices') || [];
     const academicYears = [...new Set(invoices.map(i => i.academic_year).filter(year => year && year !== null && year !== ''))].sort().reverse();
     const statuses = [...new Set(invoices.map(i => String(i.status || '')).filter(status => status && status !== null && status !== ''))].sort();
-    const terms = [...new Set(invoices.map(i => i.term).filter(term => term && term !== null && term !== ''))].sort();
+    const gradingPeriods = [...new Set(invoices.map(i => i.grading_period).filter(gp => gp && gp !== null && gp !== ''))].sort();
     
     const academicYearOptions = academicYears.map(year => `<ui-option value="${year}">${year}</ui-option>`).join('');
     const statusOptions = statuses.map(status => `<ui-option value="${status}">${status}</ui-option>`).join('');
-    const termOptions = terms.map(term => `<ui-option value="${term}">${term}</ui-option>`).join('');
+    const gradingPeriodOptions = gradingPeriods.map(gp => `<ui-option value="${gp}">${gp}</ui-option>`).join('');
 
-    const filters = this.get('filters') || { academic_year: '', status: '', term: '' };
-    const { academic_year, status, term } = filters;
+    const filters = this.get('filters') || { academic_year: '', status: '', grading_period: '' };
+    const { academic_year, status, grading_period } = filters;
     
     return `
       <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
@@ -72,9 +72,9 @@ class CashierInvoicesPage extends App {
             </ui-search-dropdown>
           </div>
           <div>
-            <label class="block text-xs text-gray-600 mb-1">Term</label>
-            <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
-              ${termOptions}
+            <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
+            <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full" value="${grading_period || ''}">
+              ${gradingPeriodOptions}
             </ui-search-dropdown>
           </div>
         </div>
@@ -200,7 +200,7 @@ class CashierInvoicesPage extends App {
       if (clearBtn) {
         e.preventDefault();
         this.closeAllModals();
-        const defaults = { academic_year: '', status: '', term: '' };
+        const defaults = { academic_year: '', status: '', grading_period: '' };
         this.set('filters', defaults);
         // Reset table to show all data
         this.render();
@@ -245,7 +245,7 @@ class CashierInvoicesPage extends App {
       <div slot="content" class="space-y-4">
         <p class="text-gray-700">View student invoices and track status (Open/Paid) and balances. Cashiers can view and delete where allowed.</p>
         <div class="bg-gray-50 rounded-lg p-4 space-y-2">
-          <div class="flex justify-between"><span class="text-sm font-medium">Academic Year & Term</span><span class="text-sm text-gray-600">Billing period</span></div>
+                     <div class="flex justify-between"><span class="text-sm font-medium">Academic Year & Grading Period</span><span class="text-sm text-gray-600">Billing period</span></div>
           <div class="flex justify-between"><span class="text-sm font-medium">Amount Due/Paid/Balance</span><span class="text-sm text-gray-600">Computed from payments</span></div>
           <div class="flex justify-between"><span class="text-sm font-medium">Status</span><span class="text-sm text-gray-600">Open or Paid</span></div>
         </div>
@@ -303,8 +303,8 @@ class CashierInvoicesPage extends App {
     if (filters.status && filters.status !== '') {
       filteredCount = invoices.filter(inv => String(inv.status || '') === String(filters.status)).length;
     }
-    if (filters.term && filters.term !== '') {
-      filteredCount = invoices.filter(inv => String(inv.term) === String(filters.term)).length;
+    if (filters.grading_period && filters.grading_period !== '') {
+      filteredCount = invoices.filter(inv => String(inv.grading_period) === String(filters.grading_period)).length;
     }
     
     // Trigger re-render to show filtered data
@@ -360,7 +360,7 @@ class CashierInvoicesPage extends App {
   // onAdd removed
 
   clearFilters() {
-    this.set('filters', { academic_year: '', status: '', term: '' });
+    this.set('filters', { academic_year: '', status: '', grading_period: '' });
     this.render(); // Just re-render with cleared filters
   }
 
@@ -390,17 +390,17 @@ class CashierInvoicesPage extends App {
     if (filters.status && filters.status !== '') {
       displayInvoices = displayInvoices.filter(inv => String(inv.status || '') === String(filters.status));
     }
-    if (filters.term && filters.term !== '') {
-      displayInvoices = displayInvoices.filter(inv => String(inv.term) === String(filters.term));
+    if (filters.grading_period && filters.grading_period !== '') {
+      displayInvoices = displayInvoices.filter(inv => String(inv.grading_period) === String(filters.grading_period));
     }
 
     const tableData = displayInvoices.map((i, idx) => ({
       id: i.id,
       index: idx + 1,
       student: this.studentDisplay(i.student_id),
-      academic_year: i.academic_year,
-      term: i.term,
-      invoice_number: i.invoice_number,
+             academic_year: i.academic_year,
+       grading_period: i.grading_period,
+       invoice_number: i.invoice_number,
       amount_due: Number(i.amount_due).toFixed(2),
       amount_paid: Number(i.amount_paid).toFixed(2),
       balance: Number(i.balance).toFixed(2),
@@ -413,7 +413,7 @@ class CashierInvoicesPage extends App {
       { key: 'index', label: 'No.' },
       { key: 'student', label: 'Student' },
       { key: 'academic_year', label: 'Academic Year' },
-      { key: 'term', label: 'Term' },
+      { key: 'grading_period', label: 'Grading Period' },
       { key: 'invoice_number', label: 'Invoice #' },
       { key: 'amount_due', label: 'Amount Due' },
       { key: 'balance', label: 'Balance' },

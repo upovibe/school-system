@@ -192,6 +192,19 @@
             width: auto;
             white-space: nowrap;
         }
+
+        .school-contact {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .school-contact p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 
@@ -302,6 +315,21 @@
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            <?php endif; ?>
+        </div>
+
+        <div class="school-contact">
+            <?php if (!empty($schoolSettings['contact_address'])): ?>
+                <p><?= htmlspecialchars($schoolSettings['contact_address']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($schoolSettings['contact_phone'])): ?>
+                <p>Phone: <?= htmlspecialchars($schoolSettings['contact_phone']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($schoolSettings['contact_email'])): ?>
+                <p>Email: <?= htmlspecialchars($schoolSettings['contact_email']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($schoolSettings['contact_website'])): ?>
+                <p>Website: <?= htmlspecialchars($schoolSettings['contact_website']) ?></p>
             <?php endif; ?>
         </div>
 

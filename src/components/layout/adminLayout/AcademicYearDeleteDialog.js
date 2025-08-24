@@ -50,12 +50,7 @@ class AcademicYearDeleteDialog extends HTMLElement {
         this.removeAttribute('open');
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && newValue !== null) {
-            // Re-render when dialog is opened to ensure content is displayed
-            this.render();
-        }
-    }
+
 
     // Set academic year data for deletion
     setAcademicYearData(academicYear) {
@@ -135,31 +130,24 @@ class AcademicYearDeleteDialog extends HTMLElement {
         }
     }
 
-    // Wire events for live validation and delete
-    addFormEventListeners() {
-        // No need for manual button handling - ui-dialog handles it automatically
-    }
+
 
     render() {
-        if (!this.academicYearData) {
+        const data = this.academicYearData;
+        
+        if (!data) {
             this.innerHTML = `
-                <ui-modal 
+                <ui-dialog 
                     ${this.hasAttribute('open') ? 'open' : ''} 
-                    position="right" 
-                    close-button="true">
+                    variant="danger">
                     <div slot="title">Delete Academic Year</div>
-                    <div class="text-center py-8">
+                    <div slot="content">
                         <p class="text-gray-500">No academic year data to delete</p>
                     </div>
-                    <div slot="footer" class="flex justify-end">
-                        <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
-                    </div>
-                </ui-modal>
+                </ui-dialog>
             `;
             return;
         }
-
-        const data = this.academicYearData;
         
         this.innerHTML = `
             <ui-dialog 
@@ -176,8 +164,6 @@ class AcademicYearDeleteDialog extends HTMLElement {
                 </div>
             </ui-dialog>
         `;
-
-        // No need to add event listeners - ui-dialog handles buttons automatically
     }
 }
 

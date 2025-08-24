@@ -170,6 +170,22 @@
             font-weight: bold;
         }
         
+        .grades-table th:nth-child(3),
+        .grades-table th:nth-child(4),
+        .grades-table th:nth-child(5),
+        .grades-table th:nth-child(6) {
+            width: auto;
+            white-space: nowrap;
+        }
+        
+        .grades-table td:nth-child(3),
+        .grades-table td:nth-child(4),
+        .grades-table td:nth-child(5),
+        .grades-table td:nth-child(6) {
+            width: auto;
+            white-space: nowrap;
+        }
+        
 
     </style>
 </head>
@@ -217,17 +233,7 @@
                 </div>
                 <div class="info-right">
                     <span class="info-label">Generated Date:</span>
-                    <span class="info-value"><?php echo $generatedDate; ?></span>
-                </div>
-            </div>
-            <div class="info-row">
-                <div class="info-left">
-                    <span class="info-label">Generated Time:</span>
-                    <span class="info-value"><?php echo $generatedTime; ?></span>
-                </div>
-                <div class="info-right">
-                    <span class="info-label"></span>
-                    <span class="info-value"></span>
+                    <span class="info-value"><?php echo $generatedDate . ' at ' . $generatedTime; ?></span>
                 </div>
             </div>
         </div>

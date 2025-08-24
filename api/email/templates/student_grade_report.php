@@ -247,7 +247,6 @@
                         <tr>
                             <th>No.</th>
                             <th>Subject</th>
-                            <th>Period</th>
                             <th>Assignment Total</th>
                             <th>Exam Total</th>
                             <th>Final %</th>
@@ -270,7 +269,6 @@
                             <tr>
                                 <td><?php echo $index + 1; ?></td>
                                 <td><?php echo htmlspecialchars($subject['subject_name'] ?? $subject['subject_code'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($gradingPeriodName); ?></td>
                                 <td class="grade-cell"><?php echo $grade && $grade['assignment_total'] !== null ? number_format($grade['assignment_total'], 2) : '—'; ?></td>
                                 <td class="grade-cell"><?php echo $grade && $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—'; ?></td>
                                 <td class="grade-cell"><?php echo $grade && $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—'; ?></td>

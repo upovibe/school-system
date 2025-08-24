@@ -113,7 +113,7 @@
         .grades-table th {
             border: 1px solid #000;
             padding: 8px;
-            text-align: center;
+            text-align: left;
             font-weight: bold;
             background-color: #f0f0f0;
         }
@@ -121,7 +121,7 @@
         .grades-table td {
             border: 1px solid #000;
             padding: 8px;
-            text-align: center;
+            text-align: left;
         }
         
         .grades-table tr:nth-child(even) {
@@ -143,7 +143,7 @@
         }
         
         .grade-cell {
-            text-align: center;
+            text-align: left;
             font-weight: bold;
         }
         

@@ -25,6 +25,8 @@ class Migration_20241001000016createacademicyearrecordstable {
             archive_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             archived_by INT NULL,
             notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             
             FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE CASCADE,
             FOREIGN KEY (archived_by) REFERENCES users(id) ON DELETE SET NULL,

@@ -355,14 +355,14 @@ class AcademicYearController {
             $this->userLogModel->logAction($currentUser['id'], 'academic_year_archived', [
                 'academic_year_id' => $id,
                 'year_code' => $existingYear['year_code'],
-                'archive_record_id' => $archiveResult['id']
+                'archive_record_id' => $archiveResult
             ]);
 
             http_response_code(200);
             echo json_encode([
                 'success' => true,
                 'message' => 'Academic year archived successfully',
-                'archive_record_id' => $archiveResult['id']
+                'archive_record_id' => $archiveResult
             ]);
         } catch (Exception $e) {
             http_response_code(500);

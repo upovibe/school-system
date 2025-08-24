@@ -124,43 +124,22 @@ class AcademicYearRecordsPage extends App {
 
     // Action handlers
     onRowClick(event) {
-        console.log('🔍 Row click event received:', event);
-        console.log('🔍 Event detail:', event.detail);
-        
         const { detail } = event;
         const viewRecord = this.get('records').find(record => record.id === detail.row.id);
         
-        console.log('🔍 Found record:', viewRecord);
-        
         if (viewRecord) {
-            console.log('🔍 Closing all dialogs...');
             this.closeAllDialogs();
-            
-            console.log('🔍 Setting view record data...');
             this.set('viewRecordData', viewRecord);
-            
-            console.log('🔍 Setting show view dialog to true...');
             this.set('showViewDialog', true);
             
-            console.log('🔍 Current showViewDialog state:', this.get('showViewDialog'));
-            
             setTimeout(() => {
-                console.log('🔍 Looking for record-view-dialog element...');
                 const viewDialog = this.querySelector('record-view-dialog');
-                console.log('🔍 Found dialog element:', viewDialog);
                 
                 if (viewDialog) {
-                    console.log('🔍 Setting record data to dialog...');
                     viewDialog.setRecordData(viewRecord);
-                    console.log('🔍 Opening dialog...');
                     viewDialog.open();
-                    console.log('🔍 Dialog should now be open');
-                } else {
-                    console.log('❌ Dialog element not found!');
                 }
             }, 0);
-        } else {
-            console.log('❌ Record not found for ID:', detail.row.id);
         }
     }
 

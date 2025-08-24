@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../models/FeeInvoice.php';
 require_once __DIR__ . '/../models/FeePayment.php';
 require_once __DIR__ . '/../models/FeeReceipt.php';
+require_once __DIR__ . '/../models/SettingModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -679,25 +680,51 @@ class CashierController {
 
 
 
+    /**
+     * Get school settings for receipt generation
+     */
     private function getSchoolSettings() {
         try {
-            $stmt = $this->pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE category IN ('general', 'contact') AND is_active = 1");
-            $stmt->execute();
-            $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $result = [];
-            foreach ($settings as $setting) {
-                $result[$setting['setting_key']] = $setting['setting_value'];
+            // Load config for URLs
+            $config = require __DIR__ . '/../config/app_config.php';
+            
+            // Try to get settings from database first
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            // Construct full logo URL if logo exists
+            // Use api_url since logo is an API resource
+            $logoUrl = null;
+            if (!empty($settings['application_logo'])) {
+                // If the logo path doesn't start with 'api/', add it
+                $logoPath = $settings['application_logo'];
+                if (strpos($logoPath, 'api/') !== 0) {
+                    $logoPath = 'api/' . $logoPath;
+                }
+                $logoUrl = $config['app_url'] . '/' . $logoPath;
             }
-            return $result;
-        } catch (Exception $e) {
+            
+            // Return settings with fallbacks
             return [
-                'application_name' => 'School System',
-                'application_logo' => '',
-                'application_tagline' => '',
-                'contact_address' => '',
-                'contact_phone' => '',
-                'contact_email' => '',
-                'contact_website' => ''
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_logo' => $logoUrl,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'contact_address' => $settings['contact_address'] ?? 'School Address',
+                'contact_phone' => $settings['contact_phone'] ?? 'Phone Number',
+                'contact_email' => $settings['contact_email'] ?? 'info@school.com',
+                'contact_website' => $settings['contact_website'] ?? 'https://school.com'
+            ];
+        } catch (Exception $e) {
+            // Fallback to config only
+            $config = require __DIR__ . '/../config/app_config.php';
+            return [
+                'application_name' => 'School Management System',
+                'application_logo' => null,
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url'],
+                'application_tagline' => 'Excellence in Education'
             ];
         }
     }
@@ -1137,5 +1164,6 @@ class CashierController {
         }
         return null;
     }
+
 }
 ?>

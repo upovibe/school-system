@@ -59,22 +59,22 @@
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: 14px;
         }
         
         .info-left {
-            flex: 1;
+            flex: 0 0 auto;
         }
         
         .info-right {
-            flex: 1;
-            text-align: right;
+            flex: 0 0 auto;
         }
         
         .info-label {
             font-weight: bold;
             margin-right: 10px;
+            text-align: left;
         }
         
         .info-value {

@@ -58,29 +58,31 @@
             margin-bottom: 30px;
         }
         
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
         
-        .info-item {
-            padding: 15px 0;
-            border-bottom: 1px solid #ddd;
+        .info-left {
+            flex: 0 0 auto;
+        }
+        
+        .info-right {
+            flex: 0 0 auto;
         }
         
         .info-label {
-            font-size: 14px;
             font-weight: bold;
-            color: #000;
-            margin-bottom: 5px;
+            margin-right: 10px;
+            text-align: left;
         }
         
         .info-value {
-            font-size: 16px;
-            color: #000;
             min-width: 50px;
             display: inline-block;
+            text-align: left;
         }
         
         .grades-section {
@@ -151,34 +153,44 @@
         </div>
         
         <div class="student-info">
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Student Name</div>
-                    <div class="info-value"><?php echo htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? '')); ?></div>
+            <div class="info-row">
+                <div class="info-left">
+                    <span class="info-label">Student Name:</span>
+                    <span class="info-value"><?php echo htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? '')); ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Student ID</div>
-                    <div class="info-value"><?php echo htmlspecialchars($student['student_id'] ?? 'Unknown'); ?></div>
+                <div class="info-right">
+                    <span class="info-label">Student ID:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($student['student_id'] ?? 'Unknown'); ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Class</div>
-                    <div class="info-value"><?php echo htmlspecialchars($student['class_name'] ?? 'Unknown Class'); ?><?php echo $student['class_section'] ? ' - ' . htmlspecialchars($student['class_section']) : ''; ?></div>
+            </div>
+            <div class="info-row">
+                <div class="info-left">
+                    <span class="info-label">Class:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($student['class_name'] ?? 'Unknown Class'); ?><?php echo $student['class_section'] ? ' - ' . htmlspecialchars($student['class_section']) : ''; ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Grading Period</div>
-                    <div class="info-value"><?php echo htmlspecialchars($gradingPeriodName); ?></div>
+                <div class="info-right">
+                    <span class="info-label">Grading Period:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($gradingPeriodName); ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Academic Year</div>
-                    <div class="info-value"><?php echo htmlspecialchars($academicYear ?? 'N/A'); ?></div>
+            </div>
+            <div class="info-row">
+                <div class="info-left">
+                    <span class="info-label">Academic Year:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($academicYear ?? 'N/A'); ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Generated Date</div>
-                    <div class="info-value"><?php echo $generatedDate; ?></div>
+                <div class="info-right">
+                    <span class="info-label">Generated Date:</span>
+                    <span class="info-value"><?php echo $generatedDate; ?></span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Generated Time</div>
-                    <div class="info-value"><?php echo $generatedTime; ?></div>
+            </div>
+            <div class="info-row">
+                <div class="info-left">
+                    <span class="info-label">Generated Time:</span>
+                    <span class="info-value"><?php echo $generatedTime; ?></span>
+                </div>
+                <div class="info-right">
+                    <span class="info-label"></span>
+                    <span class="info-value"></span>
                 </div>
             </div>
         </div>

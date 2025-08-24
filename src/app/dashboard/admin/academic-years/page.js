@@ -261,6 +261,10 @@ class AcademicYearManagementPage extends App {
                         <span class="font-medium">Archived Years:</span>
                         <span class="text-gray-600">Completed years with preserved historical data</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Archive Function:</span>
+                        <span class="text-gray-600">Any year (including current) can be archived to preserve data</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -433,7 +437,7 @@ class AcademicYearManagementPage extends App {
             created: year.created_at,
             updated: year.updated_at ? this.formatDate(year.updated_at) : '',
             // Add metadata for custom actions
-            can_archive: year.status !== 'archived' && !year.is_current && !year.is_active, // Can archive if not archived, not current, and not active
+            can_archive: year.status !== 'archived', // Can archive if not already archived
             can_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Can delete if not archived and (not current OR not active)
             show_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Show delete if not archived and (not current OR not active)
             can_edit: year.status !== 'archived', // Can edit if not archived
@@ -483,7 +487,7 @@ class AcademicYearManagementPage extends App {
             created: year.created_at,
             updated: year.updated_at ? this.formatDate(year.updated_at) : '',
             // Add metadata for custom actions
-            can_archive: year.status !== 'archived' && !year.is_current && !year.is_active, // Can archive if not archived, not current, and not active
+            can_archive: year.status !== 'archived', // Can archive if not already archived
             can_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Can delete if not archived and (not current OR not active)
             show_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Show delete if not archived and (not current OR not active)
             can_edit: year.status !== 'archived', // Can edit if not archived

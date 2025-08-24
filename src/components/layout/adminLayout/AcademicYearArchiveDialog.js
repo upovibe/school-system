@@ -130,9 +130,11 @@ class AcademicYearArchiveDialog extends HTMLElement {
                 <div slot="content">
                     <p class="text-gray-700 mb-4">
                         Are you sure you want to archive <strong>${data.display_name}</strong> (${data.year_code})?
+                        ${data.is_current ? '<br><span class="text-orange-600 font-semibold">⚠️ This is the CURRENT academic year!</span>' : ''}
                     </p>
                     <p class="text-sm text-gray-500">
                         This will create a complete snapshot of all data and mark the year as archived. The action cannot be undone, but all data will be preserved for historical reference.
+                        ${data.is_current ? '<br><br><strong>Note:</strong> Since this is the current year, you may want to set another year as current before archiving.' : ''}
                     </p>
                 </div>
             </ui-dialog>

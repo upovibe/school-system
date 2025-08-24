@@ -36,7 +36,10 @@
         }
 
         .report-header {
-            text-align: center;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 30px;
             border-bottom: 2px solid #000;
             padding-bottom: 20px;
@@ -47,7 +50,6 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
-            margin-bottom: 20px;
         }
 
         .school-logo {
@@ -76,7 +78,6 @@
         .report-title {
             font-size: 20px;
             font-weight: bold;
-            margin-bottom: 5px;
         }
 
         .report-subtitle {
@@ -200,8 +201,10 @@
                     <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline'] ?? 'Excellence in Education') ?></div>
                 </div>
             </div>
-            <div class="report-title">Class Grade Report</div>
-            <div class="report-subtitle">Academic Performance Overview</div>
+            <div class="report-title-container">
+                <div class="report-title">Class Grade Report</div>
+                <div class="report-subtitle">Academic Performance Overview</div>
+            </div>
         </div>
 
         <div class="report-info">

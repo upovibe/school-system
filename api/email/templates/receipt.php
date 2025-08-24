@@ -12,8 +12,21 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
         .receipt { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .header-top { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
+        .header { 
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #333; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+        }
+        .header-top { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 20px; 
+        }
         .school-logo { max-width: 120px; max-height: 80px; object-fit: contain; }
         .school-info { text-align: center; }
         .school-name { font-size: 24px; font-weight: bold; color: #333; margin: 0 0 5px 0; }
@@ -46,8 +59,10 @@
                     <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline'] ?? 'Excellence in Education') ?></div>
                 </div>
             </div>
-            <div class="receipt-title">OFFICIAL RECEIPT</div>
-            <div class="receipt-number"><?= htmlspecialchars($receipt['receipt_number']) ?></div>
+            <div class="receipt-title-container">
+                <div class="receipt-title">OFFICIAL RECEIPT</div>
+                <div class="receipt-number"><?= htmlspecialchars($receipt['receipt_number']) ?></div>
+            </div>
         </div>
 
         <?php if ($isVoided): ?>

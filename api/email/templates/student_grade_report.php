@@ -79,6 +79,8 @@
         .info-value {
             font-size: 16px;
             color: #000;
+            min-width: 50px;
+            display: inline-block;
         }
         
         .grades-section {

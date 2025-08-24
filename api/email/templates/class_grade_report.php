@@ -78,10 +78,9 @@
         }
         
         .info-value {
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
-            min-width: 150px;
+            min-width: 50px;
             display: inline-block;
+            text-align: left;
         }
         
         .grades-section {

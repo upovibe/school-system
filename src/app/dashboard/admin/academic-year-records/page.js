@@ -184,6 +184,16 @@ class AcademicYearRecordsPage extends App {
         this.loadData();
     }
 
+    formatRecordType(recordType) {
+        if (!recordType) return '—';
+        
+        // Convert snake_case to Title Case
+        return recordType
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
+
     // Update table data without full page reload
     updateTableData() {
         const records = this.get('records');
@@ -194,7 +204,7 @@ class AcademicYearRecordsPage extends App {
             id: record.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             year_code: record.year_code,
-            record_type: record.record_type,
+            record_type: this.formatRecordType(record.record_type),
             total_records: record.total_records,
             archive_date: new Date(record.archive_date).toLocaleDateString(),
             archived_by: record.archived_by_name || 'System',
@@ -224,7 +234,7 @@ class AcademicYearRecordsPage extends App {
             id: record.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             year_code: record.year_code,
-            record_type: record.record_type,
+            record_type: this.formatRecordType(record.record_type),
             total_records: record.total_records,
             archive_date: new Date(record.archive_date).toLocaleDateString(),
             archived_by: record.archived_by_name || 'System',

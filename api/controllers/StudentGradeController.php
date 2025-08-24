@@ -355,25 +355,35 @@ class StudentGradeController {
                 'grading_period_id' => $periodId
             ]);
 
-            // Get subject teacher or class teacher
-            $teacherName = 'No teacher assigned';
+            // Get teacher for class report (Subject Teacher first, then Class Teacher as fallback)
+            $teacherName = 'No Teacher Assigned';
             
-            // First, try to get the subject teacher
+            // First, try to get the Subject Teacher (teacher assigned to teach this subject in this class)
             if (!empty($subjectIds)) {
-                $teacherAssignment = $this->teacherAssignmentModel->findByUniqueKey(null, $classId, $subjectIds[0]);
-                if ($teacherAssignment) {
-                    $teacher = $this->teacherModel->findById($teacherAssignment['teacher_id']);
-                    if ($teacher) {
-                        $teacherName = $teacher['first_name'] . ' ' . $teacher['last_name'];
+                try {
+                    $assignments = $this->teacherAssignmentModel->getWithDetails(['class_id' => $classId, 'subject_id' => $subjectIds[0]]);
+                    if (!empty($assignments)) {
+                        $firstAssignment = $assignments[0];
+                        if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
+                            $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+                        }
                     }
+                } catch (Exception $e) {
+                    // Continue to fallback
                 }
             }
             
-            // If no subject teacher, try to get the class teacher
-            if ($teacherName === 'No teacher assigned' && isset($class['teacher_id']) && !empty($class['teacher_id'])) {
-                $teacher = $this->teacherModel->findById($class['teacher_id']);
-                if ($teacher) {
-                    $teacherName = $teacher['first_name'] . ' ' . $teacher['last_name'];
+            // If no Subject Teacher, try to get the Class Teacher as fallback
+            if ($teacherName === 'No Teacher Assigned') {
+                try {
+                    $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt->execute([$classId]);
+                    $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($classTeacher) {
+                        $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                    }
+                } catch (Exception $e) {
+                    // Keep default "No Teacher Assigned"
                 }
             }
 
@@ -461,19 +471,19 @@ class StudentGradeController {
                 $classSubjects = [];
             }
 
-            // Get class teacher information from teacher assignments
-            $teacherName = 'No Class Teacher';
+            // Get class teacher information (Class Teacher from teachers table)
+            $teacherName = 'No Teacher Assigned';
+            
+            // Get the Class Teacher (main teacher assigned to this class)
             try {
-                // Get the first teacher assignment for this class (any subject)
-                $assignments = $this->teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
-                if (!empty($assignments)) {
-                    $firstAssignment = $assignments[0];
-                    if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
-                        $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
-                    }
+                $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                $stmt->execute([$class['id']]);
+                $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($classTeacher) {
+                    $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
                 }
             } catch (Exception $e) {
-                // Keep default teacher name if there's an error
+                // Keep default "No Teacher Assigned"
             }
 
             // Generate HTML report

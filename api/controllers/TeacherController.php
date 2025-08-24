@@ -3121,22 +3121,39 @@ class TeacherController {
             }
         }
         
-        // Get class teacher information from teacher assignments
-        $teacherName = 'No Class Teacher';
-        try {
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
-            
-            // Get the first teacher assignment for this class (any subject)
-            $assignments = $teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
-            if (!empty($assignments)) {
-                $firstAssignment = $assignments[0];
-                if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
-                    $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+        // Get teacher for class report (Subject Teacher first, then Class Teacher as fallback)
+        $teacherName = 'No Teacher Assigned';
+        
+        // First, try to get the Subject Teacher (teacher assigned to teach this subject in this class)
+        if (!empty($subjects)) {
+            try {
+                require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+                $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+                
+                $assignments = $teacherAssignmentModel->getWithDetails(['class_id' => $class['id'], 'subject_id' => $subjects[0]['id']]);
+                if (!empty($assignments)) {
+                    $firstAssignment = $assignments[0];
+                    if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
+                        $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+                    }
                 }
+            } catch (Exception $e) {
+                // Continue to fallback
             }
-        } catch (Exception $e) {
-            // Keep default teacher name if there's an error
+        }
+        
+        // If no Subject Teacher, try to get the Class Teacher as fallback
+        if ($teacherName === 'No Teacher Assigned') {
+            try {
+                $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                $stmt->execute([$class['id']]);
+                $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($classTeacher) {
+                    $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                }
+            } catch (Exception $e) {
+                // Keep default "No Teacher Assigned"
+            }
         }
         
         // Get current date and time

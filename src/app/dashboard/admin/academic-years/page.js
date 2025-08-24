@@ -347,7 +347,7 @@ class AcademicYearManagementPage extends App {
                 setTimeout(() => {
                     const archiveDialog = this.querySelector('academic-year-archive-dialog');
                     if (archiveDialog) {
-                        archiveDialog.setDataAndOpen(yearData);
+                        archiveDialog.setAcademicYearData(yearData);
                     } else {
                         console.error('Archive dialog not found');
                     }

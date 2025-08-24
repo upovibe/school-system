@@ -87,8 +87,6 @@ class SystemSettingsPage extends App {
                 
                 // Update table data
                 this.updateTableData();
-                
-                console.log('✅ Setting updated, table refreshed:', updatedSetting);
             } else {
                 this.loadData();
             }
@@ -103,7 +101,6 @@ class SystemSettingsPage extends App {
                     modal.setSettingData(updateSettingData);
                 } else {
                     // If no data, close the modal
-                    console.log('❌ No update data found, closing modal');
                     this.set('showUpdateModal', false);
                 }
             } else if (modal.tagName === 'SYSTEM-VIEW-MODAL') {
@@ -112,7 +109,6 @@ class SystemSettingsPage extends App {
                     modal.setSettingData(viewSettingData);
                 } else {
                     // If no data, close the modal
-                    console.log('❌ No view data found, closing modal');
                     this.set('showViewModal', false);
                 }
             }
@@ -276,7 +272,6 @@ class SystemSettingsPage extends App {
     updateTableData() {
         const settings = this.get('settings');
         if (!settings || !Array.isArray(settings)) {
-            console.log('❌ No settings data to update table');
             return;
         }
 
@@ -293,34 +288,28 @@ class SystemSettingsPage extends App {
                     status: setting.is_active ? 'Active' : 'Inactive',
                     updated: new Date(setting.updated_at || Date.now()).toLocaleString(),
                 };
-            } catch (error) {
-                console.error('❌ Error processing setting:', setting, error);
-                return {
-                    id: setting.id || 0,
-                    index: index + 1,
-                    setting_key: setting.setting_key || 'Error',
-                    setting_value: 'Error processing value',
-                    setting_type: setting.setting_type || 'unknown',
-                    category: setting.category || 'unknown',
-                    status: 'Error',
-                    updated: new Date().toLocaleString(),
-                };
-            }
+                            } catch (error) {
+                    return {
+                        id: setting.id || 0,
+                        index: index + 1,
+                        setting_key: setting.setting_key || 'Error',
+                        setting_value: 'Error processing value',
+                        setting_type: setting.setting_type || 'unknown',
+                        category: setting.category || 'unknown',
+                        status: 'Error',
+                        updated: new Date().toLocaleString(),
+                    };
+                }
         });
-
-        console.log('🔄 Updating table with data:', tableData);
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
         if (tableComponent) {
             try {
                 tableComponent.setAttribute('data', JSON.stringify(tableData));
-                console.log('✅ Table data updated successfully');
             } catch (error) {
-                console.error('❌ Error updating table:', error);
+                // Silent error handling
             }
-        } else {
-            console.log('❌ Table component not found');
         }
     }
 

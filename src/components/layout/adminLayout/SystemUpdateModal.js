@@ -258,24 +258,7 @@ class SystemUpdateModal extends HTMLElement {
                 }
             }
             
-            // Additional debugging for the input element
-            if (settingValueInput) {
-                console.log('🔍 Input element details:', {
-                    tagName: settingValueInput.tagName,
-                    className: settingValueInput.className,
-                    attributes: Array.from(settingValueInput.attributes).map(attr => `${attr.name}="${attr.value}"`),
-                    innerHTML: settingValueInput.innerHTML,
-                    outerHTML: settingValueInput.outerHTML
-                });
-            }
 
-            // Debug: Check what input elements we found
-            console.log('🔍 Input elements found:', {
-                settingValueInput: !!settingValueInput,
-                settingValueInputTag: settingValueInput?.tagName,
-                descriptionTextarea: !!descriptionTextarea,
-                statusSwitch: !!statusSwitch
-            });
 
             // Get value based on the type
             let valueInput;
@@ -296,14 +279,9 @@ class SystemUpdateModal extends HTMLElement {
                 case 'image':
                     fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
                     if (fileUpload && fileUpload.getFiles().length > 0) {
-                        // Get the file name or path from the file upload component
-                        const files = fileUpload.getFiles();
-                        if (files.length > 0) {
-                            // For new file uploads, we'll get the file name
-                            valueInput = files[0].name;
-                        } else {
-                            valueInput = this.settingData?.setting_value || '';
-                        }
+                        // For new file uploads, we'll get the file name temporarily
+                        // The actual URL path will come from the server response
+                        valueInput = fileUpload.getFiles()[0].name;
                     } else {
                         // Keep the existing value if no new file is selected
                         valueInput = this.settingData?.setting_value || '';
@@ -365,18 +343,7 @@ class SystemUpdateModal extends HTMLElement {
                 is_active: statusSwitch ? statusSwitch.checked : true
             };
 
-            // Debug logging
-            console.log('Setting update debug:', {
-                settingType,
-                valueInput,
-                valueInputLength: valueInput ? valueInput.length : 0,
-                valueInputTrimmed: valueInput ? valueInput.trim() : '',
-                settingData,
-                originalValue: this.settingData?.setting_value,
-                inputElement: settingValueInput ? settingValueInput.value : 'NOT_FOUND',
-                inputElementFound: !!settingValueInput,
-                inputElementType: settingValueInput ? settingValueInput.tagName : 'NOT_FOUND'
-            });
+
 
             // Validate required fields
             if (!settingData.setting_key) {
@@ -436,6 +403,16 @@ class SystemUpdateModal extends HTMLElement {
                 ...settingData,
                 updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
             };
+            
+            // If it's a file/image type and we have a response, use the server's file path
+            if ((settingType === 'file' || settingType === 'image') && response && response.data && response.data.data) {
+                // Use the server's file path from the response
+                updatedSetting.setting_value = response.data.data.setting_value || this.settingData.setting_value;
+            } else if ((settingType === 'file' || settingType === 'image') && fileUpload && fileUpload.getFiles().length > 0) {
+                // If no response data but we have a file, keep the existing value
+                // The server response should contain the actual file path
+                updatedSetting.setting_value = this.settingData.setting_value || '';
+            }
 
             // Close modal and dispatch event
             this.close();

@@ -319,7 +319,7 @@ class StudentGradeController {
             $query = $_GET ?? [];
             $classId = isset($query['class_id']) ? (int)$query['class_id'] : null;
             $subjectIds = isset($query['subject_ids']) ? explode(',', $query['subject_ids']) : [];
-            $periodId = isset($query['grading_period_id']) ? (int)$query['period_id'] : null;
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
 
             if (!$classId) {
                 http_response_code(400);
@@ -398,7 +398,7 @@ class StudentGradeController {
 
             $query = $_GET ?? [];
             $studentId = isset($query['student_id']) ? (int)$query['student_id'] : null;
-            $periodId = isset($query['grading_period_id']) ? (int)$query['period_id'] : null;
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
 
             if (!$studentId) {
                 http_response_code(400);
@@ -520,6 +520,8 @@ class StudentGradeController {
             return 'Unknown Period';
         }
     }
+
+
 }
 ?>
 

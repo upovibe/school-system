@@ -456,8 +456,18 @@ class StudentGradeController {
                 $classSubjects = [];
             }
 
+            // Get class teacher information
+            $teacherName = 'No Class Teacher';
+            if (isset($class['teacher_id']) && !empty($class['teacher_id'])) {
+                $teacherModel = new TeacherModel($pdo);
+                $teacher = $teacherModel->findById($class['teacher_id']);
+                if ($teacher) {
+                    $teacherName = $teacher['first_name'] . ' ' . $teacher['last_name'];
+                }
+            }
+
             // Generate HTML report
-            $html = $this->generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId);
+            $html = $this->generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId, $teacherName);
 
             // Set headers for HTML response
             header('Content-Type: text/html; charset=utf-8');
@@ -550,7 +560,7 @@ class StudentGradeController {
     /**
      * Generate HTML for student grade report
      */
-    private function generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId) {
+    private function generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId, $teacherName) {
         // Read the PHP template
         $templatePath = __DIR__ . '/../email/templates/student_grade_report.php';
         if (!file_exists($templatePath)) {
@@ -594,6 +604,7 @@ class StudentGradeController {
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
             'generatedDate' => date('F j, Y'),
             'generatedTime' => date('g:i A'),
+            'teacherName' => $teacherName,
             'schoolSettings' => $schoolSettings
         ];
 

@@ -242,6 +242,11 @@ class StudentGradeReportPage extends App {
                 this.set('grades', []);
                 this.render();
             }
+            const printBtn = e.target.closest('[data-action="print-student-report"]');
+            if (printBtn) {
+                e.preventDefault();
+                this.printStudentReport();
+            }
         });
     }
 
@@ -467,12 +472,17 @@ class StudentGradeReportPage extends App {
                         </ui-search-dropdown>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-3">
-                    <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
-                        <i class="fas fa-filter mr-1"></i> Apply Filters
-                    </ui-button>
-                    <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
-                        <i class="fas fa-times mr-1"></i> Clear Filters
+                <div class="flex justify-between gap-2 mt-3 w-full">                    
+                    <div class="flex gap-2">
+                        <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
+                            <i class="fas fa-filter mr-1"></i> Apply Filters
+                        </ui-button>
+                        <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+                            <i class="fas fa-times mr-1"></i> Clear Filters
+                        </ui-button>
+                    </div>
+                    <ui-button type="button" data-action="print-student-report" variant="success" size="sm" ${(!class_id || !student_id) ? 'disabled' : ''}>
+                        <i class="fas fa-print mr-1"></i> Print Student Report
                     </ui-button>
                 </div>
             </div>
@@ -546,6 +556,77 @@ class StudentGradeReportPage extends App {
         `;
     }
 
+    async printStudentReport() {
+        try {
+            const filters = this.get('filters') || {};
+            const { class_id, student_id, grading_period_id } = filters;
+            
+            if (!class_id || !student_id) {
+                Toast.show({ 
+                    title: 'Print Error', 
+                    message: 'Please select both class and student before printing', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ 
+                    title: 'Authentication Error', 
+                    message: 'Please log in to print reports', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            // Build the print URL with current filters
+            const params = new URLSearchParams({
+                class_id: class_id,
+                student_id: student_id,
+                grading_period_id: grading_period_id || ''
+            });
+
+            const printUrl = `/api/student-grades/print/student-report?${params.toString()}`;
+            
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(`Print failed with status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error printing student report:', error);
+            Toast.show({ 
+                title: 'Print Error', 
+                message: 'Failed to generate print report', 
+                variant: 'error', 
+                duration: 3000 
+            });
+        }
+    }
 
 }
 

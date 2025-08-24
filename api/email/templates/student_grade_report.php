@@ -203,7 +203,7 @@
             <div class="info-row">
                 <div class="info-left">
                     <span class="info-label">Class:</span>
-                    <span class="info-value"><?php echo htmlspecialchars($student['class_name'] ?? 'Unknown Class'); ?><?php echo $student['class_section'] ? ' - ' . htmlspecialchars($student['class_section']) : ''; ?></span>
+                    <span class="info-value"><?php echo htmlspecialchars($class['name'] ?? 'Unknown Class'); ?><?php echo !empty($class['section']) ? ' - ' . htmlspecialchars($class['section']) : ''; ?></span>
                 </div>
                 <div class="info-right">
                     <span class="info-label">Grading Period:</span>
@@ -237,10 +237,9 @@
                 Subject Grades Summary
             </div>
             
-            <?php if (empty($grades)): ?>
+            <?php if (empty($classSubjects)): ?>
                 <div class="no-data">
-                    <p>No grades available for this student.</p>
-                    <p>Grades may not have been recorded yet.</p>
+                    <p>No subjects assigned to this class.</p>
                 </div>
             <?php else: ?>
                 <table class="grades-table">
@@ -256,15 +255,25 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($grades as $index => $grade): ?>
+                        <?php foreach ($classSubjects as $index => $subject): ?>
+                            <?php 
+                            // Find if there's a grade for this subject
+                            $grade = null;
+                            foreach ($grades as $g) {
+                                if (isset($g['subject_id']) && isset($subject['subject_id']) && $g['subject_id'] == $subject['subject_id']) {
+                                    $grade = $g;
+                                    break;
+                                }
+                            }
+                            ?>
                             <tr>
                                 <td><?php echo $index + 1; ?></td>
-                                <td><?php echo htmlspecialchars($grade['subject_name'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($grade['grading_period_name'] ?? 'N/A'); ?></td>
-                                <td class="grade-cell"><?php echo $grade['assignment_total'] !== null ? number_format($grade['assignment_total'], 2) : '—'; ?></td>
-                                <td class="grade-cell"><?php echo $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—'; ?></td>
-                                <td class="grade-cell"><?php echo $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—'; ?></td>
-                                <td class="grade-cell"><?php echo htmlspecialchars($grade['final_letter_grade'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($subject['subject_name'] ?? $subject['subject_code'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($gradingPeriodName); ?></td>
+                                <td class="grade-cell"><?php echo $grade && $grade['assignment_total'] !== null ? number_format($grade['assignment_total'], 2) : '—'; ?></td>
+                                <td class="grade-cell"><?php echo $grade && $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—'; ?></td>
+                                <td class="grade-cell"><?php echo $grade && $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—'; ?></td>
+                                <td class="grade-cell"><?php echo $grade ? htmlspecialchars($grade['final_letter_grade'] ?? 'N/A') : 'Not Graded'; ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

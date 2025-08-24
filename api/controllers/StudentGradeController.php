@@ -12,6 +12,7 @@ require_once __DIR__ . '/../models/SubjectModel.php';
 require_once __DIR__ . '/../models/GradingPeriodModel.php';
 require_once __DIR__ . '/../models/AcademicYearModel.php';
 require_once __DIR__ . '/../models/SettingModel.php';
+require_once __DIR__ . '/../models/ClassSubjectModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 
@@ -396,24 +397,31 @@ class StudentGradeController {
     public function printStudentReport() {
         try {
             global $pdo;
-            RoleMiddleware::requireTeacher($pdo);
+            // Allow both admin and teacher roles
+            $currentUserId = $this->getCurrentUserId();
+            $isAdmin = $this->isCurrentUserAdmin();
+            
+            if (!$isAdmin) {
+                RoleMiddleware::requireTeacher($pdo);
+            }
 
             $query = $_GET ?? [];
             $studentId = isset($query['student_id']) ? (int)$query['student_id'] : null;
+            $classId = isset($query['class_id']) ? (int)$query['class_id'] : null;
             $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
 
-            if (!$studentId) {
+            if (!$studentId || !$classId) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Student ID is required'
+                    'message' => 'Both Student ID and Class ID are required'
                 ]);
                 return;
             }
 
             // Get student information
             $studentModel = new StudentModel($pdo);
-            $student = $studentModel->findByUserId($studentId);
+            $student = $studentModel->findById($studentId);
             if (!$student) {
                 http_response_code(404);
                 echo json_encode([
@@ -423,13 +431,33 @@ class StudentGradeController {
                 return;
             }
 
-            // Get grades for the student
+            // Get class information
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($classId);
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Class not found'
+                ]);
+                return;
+            }
+
+            // Get grades for the student in this class
             $grades = $this->gradeModel->getStudentGradesWithDetails($studentId, [
+                'class_id' => $classId,
                 'grading_period_id' => $periodId
             ]);
 
+            // Get all subjects assigned to this class
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubjects = $classSubjectModel->getByClassId($classId);
+            if (!is_array($classSubjects)) {
+                $classSubjects = [];
+            }
+
             // Generate HTML report
-            $html = $this->generateStudentReportHTML($student, $grades, $periodId);
+            $html = $this->generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId);
 
             // Set headers for HTML response
             header('Content-Type: text/html; charset=utf-8');
@@ -522,7 +550,7 @@ class StudentGradeController {
     /**
      * Generate HTML for student grade report
      */
-    private function generateStudentReportHTML($student, $grades, $periodId) {
+    private function generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId) {
         // Read the PHP template
         $templatePath = __DIR__ . '/../email/templates/student_grade_report.php';
         if (!file_exists($templatePath)) {
@@ -542,10 +570,10 @@ class StudentGradeController {
                 }
             }
         } else {
-            // If no specific period, get academic year from student's class
-            if (isset($student['academic_year_id'])) {
+            // If no specific period, get academic year from class
+            if (isset($class['academic_year_id'])) {
                 $academicYearModel = new AcademicYearModel($this->pdo);
-                $academicYearData = $academicYearModel->findById($student['academic_year_id']);
+                $academicYearData = $academicYearModel->findById($class['academic_year_id']);
                 if ($academicYearData) {
                     $academicYear = $academicYearData['year_code'];
                 }
@@ -558,7 +586,9 @@ class StudentGradeController {
         // Prepare data for the template
         $templateData = [
             'student' => $student,
+            'class' => $class,
             'grades' => $grades,
+            'classSubjects' => $classSubjects,
             'periodId' => $periodId,
             'academicYear' => $academicYear,
             'gradingPeriodName' => $this->getGradingPeriodName($periodId),
@@ -604,10 +634,14 @@ class StudentGradeController {
             $settings = $settingModel->getAllAsArray();
             
             // Construct full logo URL if logo exists
-            // Use api_url since logo is an API resource
             $logoUrl = null;
             if (!empty($settings['application_logo'])) {
-                $logoUrl = $config['api_url'] . '/' . $settings['application_logo'];
+                // If the logo path doesn't start with 'api/', add it
+                $logoPath = $settings['application_logo'];
+                if (strpos($logoPath, 'api/') !== 0) {
+                    $logoPath = 'api/' . $logoPath;
+                }
+                $logoUrl = $config['app_url'] . '/' . $logoPath;
             }
             
             // Return settings with fallbacks

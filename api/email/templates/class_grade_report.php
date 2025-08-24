@@ -144,6 +144,7 @@
             font-style: italic;
             color: #666;
             vertical-align: middle;
+            text-align: center;
         }
 
         .report-footer {

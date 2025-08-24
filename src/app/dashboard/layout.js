@@ -522,6 +522,20 @@ class DashboardLayout extends App {
                     background-color: ${primaryColor || '#2563eb'};
                 }
 
+                /* Logo container styling */
+                .logo-container {
+                    min-width: 0;
+                    flex-shrink: 0;
+                }
+
+                .logo-container img {
+                    max-height: 40px;
+                    width: auto;
+                    max-width: 112px;
+                    object-fit: contain;
+                    border-radius: 8px;
+                }
+
                 @media (min-width: 1280px) {
                     [data-sidebar] {
                         transform: translateX(0);
@@ -585,8 +599,8 @@ class DashboardLayout extends App {
                 <!-- Sidebar -->
                 <aside data-sidebar class="fixed inset-y-0 left-0 text-white flex flex-col shadow-lg">
                     <div class="flex items-center justify-between h-16 px-4 border-b border-[${secondaryColor || '#3b82f6'}] flex-shrink-0">
-                        <div class="flex items-center space-x-3">
-                            <img src="${this.logoUrl ? this.getImageUrl(this.logoUrl) : '/src/assets/logo.png'}" alt="Logo" class="h-10 w-auto max-w-24 object-contain" />
+                        <div class="flex items-center space-x-3 logo-container">
+                            <img src="${this.logoUrl ? this.getImageUrl(this.logoUrl) : '/src/assets/logo.png'}" alt="Logo" />
                         </div>
                         <button type="button" data-sidebar-toggle class="xl:hidden size-8 rounded-md text-[${textColor || '#bfdbfe'}] hover:text-white hover:bg-[${hoverPrimary || '#3b82f6'}]">
                             <i class="fas fa-times text-lg"></i>

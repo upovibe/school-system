@@ -356,7 +356,9 @@ class StudentGradeController {
             ]);
 
             // Get subject teacher or class teacher
-            $teacherName = 'Not Assigned';
+            $teacherName = 'No teacher assigned';
+            
+            // First, try to get the subject teacher
             if (!empty($subjectIds)) {
                 $teacherAssignment = $this->teacherAssignmentModel->findByUniqueKey(null, $classId, $subjectIds[0]);
                 if ($teacherAssignment) {
@@ -366,10 +368,13 @@ class StudentGradeController {
                     }
                 }
             }
-
-            // If no subject teacher, use default
-            if ($teacherName === 'Not Assigned') {
-                $teacherName = 'Class Teacher';
+            
+            // If no subject teacher, try to get the class teacher
+            if ($teacherName === 'No teacher assigned' && isset($class['teacher_id']) && !empty($class['teacher_id'])) {
+                $teacher = $this->teacherModel->findById($class['teacher_id']);
+                if ($teacher) {
+                    $teacherName = $teacher['first_name'] . ' ' . $teacher['last_name'];
+                }
             }
 
             // Generate HTML report

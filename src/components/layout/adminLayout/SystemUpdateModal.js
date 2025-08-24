@@ -406,12 +406,7 @@ class SystemUpdateModal extends HTMLElement {
             
             // If it's a file/image type and we have a response, use the server's file path
             if ((settingType === 'file' || settingType === 'image') && response && response.data && response.data.data) {
-                // Use the server's file path from the response
                 updatedSetting.setting_value = response.data.data.setting_value || this.settingData.setting_value;
-            } else if ((settingType === 'file' || settingType === 'image') && fileUpload && fileUpload.getFiles().length > 0) {
-                // If no response data but we have a file, keep the existing value
-                // The server response should contain the actual file path
-                updatedSetting.setting_value = this.settingData.setting_value || '';
             }
 
             // Close modal and dispatch event

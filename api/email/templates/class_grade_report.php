@@ -59,7 +59,7 @@
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-size: 14px;
         }
         
@@ -68,7 +68,7 @@
         }
         
         .info-right {
-            flex: 0 0 auto;
+            text-align: left;
         }
         
         .info-label {

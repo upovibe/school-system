@@ -321,6 +321,9 @@ Router::get('/teacher/grading-policy', 'TeacherController@getGradingPolicyBySubj
 Router::post('/teacher/students/promote', 'TeacherController@promoteStudent');
 Router::get('/teacher/classes/available-for-promotion', 'TeacherController@getAvailableClassesForPromotion');
 
+-// Teacher Print Reports
+Router::get('/teacher/print/student-report', 'TeacherController@printStudentReport');
+
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');

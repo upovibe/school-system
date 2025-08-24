@@ -307,6 +307,10 @@ Router::get('/student-grades/{id}', 'StudentGradeController@show');
 Router::put('/student-grades/{id}', 'StudentGradeController@update');
 Router::delete('/student-grades/{id}', 'StudentGradeController@destroy');
 
+// Print reports
+Router::get('/student-grades/print/class-report', 'StudentGradeController@printClassReport');
+Router::get('/student-grades/print/student-report', 'StudentGradeController@printStudentReport');
+
 // Teacher Student Grades (teacher-only protected in controller)
 Router::post('/teacher/student-grades', 'TeacherController@createStudentGrade');
 Router::put('/teacher/student-grades/{id}', 'TeacherController@updateStudentGrade');

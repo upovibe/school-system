@@ -754,7 +754,7 @@ class TeacherController {
                 return;
             }
 
-            // Get class details
+            // Get class details with academic year information
             require_once __DIR__ . '/../models/ClassModel.php';
             $classModel = new ClassModel($pdo);
             $class = $classModel->findById($teacher['class_id']);
@@ -766,6 +766,14 @@ class TeacherController {
                     'message' => 'Assigned class not found'
                 ]);
                 return;
+            }
+
+            // Get academic year information
+            require_once __DIR__ . '/../models/AcademicYearModel.php';
+            $academicYearModel = new AcademicYearModel($pdo);
+            $academicYear = null;
+            if (!empty($class['academic_year_id'])) {
+                $academicYear = $academicYearModel->findById($class['academic_year_id']);
             }
 
             // Get students in this class
@@ -807,7 +815,7 @@ class TeacherController {
                     'class_id' => $class['id'],
                     'class_name' => $class['name'],
                     'class_section' => $class['section'],
-                    'academic_year' => $class['academic_year'],
+                    'academic_year' => $academicYear ? $academicYear['year_code'] : 'N/A',
                     'capacity' => $class['capacity'],
                     'status' => $class['status'],
                     'students' => $students,

@@ -205,7 +205,7 @@ class AcademicYearRecordsPage extends App {
             index: index + 1, // Add index number for display
             year_code: record.year_code,
             record_type: this.formatRecordType(record.record_type),
-            total_records: record.total_records,
+            total_records: String(record.total_records || 0),
             archive_date: new Date(record.archive_date).toLocaleDateString(),
             archived_by: record.archived_by_name || 'System',
             notes: record.notes || '—'
@@ -235,7 +235,7 @@ class AcademicYearRecordsPage extends App {
             index: index + 1, // Add index number for display
             year_code: record.year_code,
             record_type: this.formatRecordType(record.record_type),
-            total_records: record.total_records,
+            total_records: String(record.total_records || 0),
             archive_date: new Date(record.archive_date).toLocaleDateString(),
             archived_by: record.archived_by_name || 'System',
             notes: record.notes || '—'

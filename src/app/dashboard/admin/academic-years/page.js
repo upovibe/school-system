@@ -333,7 +333,22 @@ class AcademicYearManagementPage extends App {
         const { actionName, action, row } = event.detail;
         const act = actionName || action;
         
-        if (act === 'archive-year') {
+        if (act === 'edit-year') {
+            // Find the academic year data for this row
+            const yearData = this.get('academicYears')?.find(y => y.id === row.id);
+            if (yearData) {
+                this.closeAllModals();
+                this.set('updateAcademicYearData', yearData);
+                this.set('showUpdateModal', true);
+                
+                setTimeout(() => {
+                    const updateModal = this.querySelector('academic-year-update-modal');
+                    if (updateModal) {
+                        updateModal.setAcademicYearData(yearData);
+                    }
+                }, 0);
+            }
+        } else if (act === 'archive-year') {
             // Find the academic year data for this row
             const yearData = this.get('academicYears')?.find(y => y.id === row.id);
             if (yearData) {
@@ -348,11 +363,34 @@ class AcademicYearManagementPage extends App {
                     }
                 }, 0);
             }
+        } else if (act === 'delete-year') {
+            // Find the academic year data for this row
+            const yearData = this.get('academicYears')?.find(y => y.id === row.id);
+            if (yearData) {
+                this.closeAllModals();
+                this.set('deleteAcademicYearData', yearData);
+                this.set('showDeleteDialog', true);
+                
+                setTimeout(() => {
+                    const deleteDialog = this.querySelector('academic-year-delete-dialog');
+                    if (deleteDialog) {
+                        deleteDialog.setAcademicYearData(yearData);
+                    }
+                }, 0);
+            }
         }
     }
 
     getCustomActions() {
         return [
+            {
+                name: 'edit-year',
+                label: 'Edit',
+                icon: 'fas fa-edit',
+                variant: 'primary',
+                size: 'sm',
+                showField: 'show_edit'
+            },
             {
                 name: 'archive-year',
                 label: 'Archive',
@@ -360,6 +398,14 @@ class AcademicYearManagementPage extends App {
                 variant: 'warning',
                 size: 'sm',
                 showField: 'can_archive'
+            },
+            {
+                name: 'delete-year',
+                label: 'Delete',
+                icon: 'fas fa-trash',
+                variant: 'danger',
+                size: 'sm',
+                showField: 'show_delete'
             }
         ];
     }
@@ -381,11 +427,17 @@ class AcademicYearManagementPage extends App {
             display_name: year.display_name,
             start_date: year.start_date,
             end_date: year.end_date,
-            status: year.is_active ? 'Active' : 'Inactive',
+            status: year.status === 'archived' ? 'Archived' : (year.is_active ? 'Active' : 'Inactive'),
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
-            updated: year.updated_at ? this.formatDate(year.updated_at) : ''
+            updated: year.updated_at ? this.formatDate(year.updated_at) : '',
+            // Add metadata for custom actions
+            can_archive: year.status !== 'archived' && !year.is_current && !year.is_active, // Can archive if not archived, not current, and not active
+            can_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Can delete if not archived and (not current OR not active)
+            show_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Show delete if not archived and (not current OR not active)
+            can_edit: year.status !== 'archived', // Can edit if not archived
+            show_edit: year.status !== 'archived' // Show edit if not archived
         }));
 
         // Find the table component and update its data
@@ -425,13 +477,17 @@ class AcademicYearManagementPage extends App {
             display_name: year.display_name,
             start_date: year.start_date,
             end_date: year.end_date,
-            status: year.is_active ? 'Active' : 'Inactive',
+            status: year.status === 'archived' ? 'Archived' : (year.is_active ? 'Active' : 'Inactive'),
             is_current: year.is_current ? 'Yes' : 'No',
             is_active: year.is_active ? 'Yes' : 'No',
             created: year.created_at,
             updated: year.updated_at ? this.formatDate(year.updated_at) : '',
             // Add metadata for custom actions
-            can_archive: year.status !== 'archived' && !year.is_current // Can archive if not archived and not current
+            can_archive: year.status !== 'archived' && !year.is_current && !year.is_active, // Can archive if not archived, not current, and not active
+            can_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Can delete if not archived and (not current OR not active)
+            show_delete: year.status !== 'archived' && (!year.is_current || !year.is_active), // Show delete if not archived and (not current OR not active)
+            can_edit: year.status !== 'archived', // Can edit if not archived
+            show_edit: year.status !== 'archived' // Show edit if not archived
         })) : [];
 
         const tableColumns = [
@@ -469,6 +525,7 @@ class AcademicYearManagementPage extends App {
                             pagination
                             page-size="50"
                             action
+                            actions="view"
                             addable
                             refresh
                             print

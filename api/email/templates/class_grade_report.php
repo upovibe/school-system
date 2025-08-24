@@ -170,6 +170,7 @@
             color: #666;
             vertical-align: middle;
             text-align: center;
+            vertical-align: middle;
         }
 
         .report-footer {

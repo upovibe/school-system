@@ -13,9 +13,11 @@
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
         .receipt { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .school-logo { max-width: 120px; max-height: 80px; margin-bottom: 15px; }
-        .school-name { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .school-tagline { font-size: 14px; color: #666; margin-bottom: 10px; font-style: italic; }
+        .header-top { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
+        .school-logo { max-width: 120px; max-height: 80px; object-fit: contain; }
+        .school-info { text-align: center; }
+        .school-name { font-size: 24px; font-weight: bold; color: #333; margin: 0 0 5px 0; }
+        .school-tagline { font-size: 14px; color: #666; margin: 0; font-style: italic; }
         .receipt-title { font-size: 18px; color: #666; }
         .receipt-number { font-size: 16px; color: #333; font-weight: bold; }
         .voided-banner { background: #ff4444; color: white; text-align: center; padding: 10px; margin: 20px 0; border-radius: 5px; font-weight: bold; }
@@ -35,13 +37,15 @@
 <body>
     <div class="receipt">
         <div class="header">
-            <?php if (!empty($schoolSettings['application_logo'])): ?>
-                <img src="http://localhost:8000/<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
-            <?php endif; ?>
-            <div class="school-name"><?= htmlspecialchars($schoolSettings['application_name'] ?? 'SCHOOL SYSTEM') ?></div>
-            <?php if (!empty($schoolSettings['application_tagline'])): ?>
-                <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline']) ?></div>
-            <?php endif; ?>
+            <div class="header-top">
+                <?php if (!empty($schoolSettings['application_logo'])): ?>
+                    <img src="<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
+                <?php endif; ?>
+                <div class="school-info">
+                    <div class="school-name"><?= htmlspecialchars($schoolSettings['application_name'] ?? 'SCHOOL SYSTEM') ?></div>
+                    <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline'] ?? 'Excellence in Education') ?></div>
+                </div>
+            </div>
             <div class="receipt-title">OFFICIAL RECEIPT</div>
             <div class="receipt-number"><?= htmlspecialchars($receipt['receipt_number']) ?></div>
         </div>

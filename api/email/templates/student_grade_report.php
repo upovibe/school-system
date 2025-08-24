@@ -252,6 +252,7 @@
                             <th>Exam Total</th>
                             <th>Final %</th>
                             <th>Grade</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -274,6 +275,7 @@
                                 <td class="grade-cell"><?php echo $grade && $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—'; ?></td>
                                 <td class="grade-cell"><?php echo $grade && $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—'; ?></td>
                                 <td class="grade-cell"><?php echo $grade ? htmlspecialchars($grade['final_letter_grade'] ?? 'N/A') : 'Not Graded'; ?></td>
+                                <td class="grade-cell"><?php echo $grade && !empty($grade['remarks']) ? htmlspecialchars($grade['remarks']) : '—'; ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

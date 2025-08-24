@@ -461,14 +461,19 @@ class StudentGradeController {
                 $classSubjects = [];
             }
 
-            // Get class teacher information
+            // Get class teacher information from teacher assignments
             $teacherName = 'No Class Teacher';
-            if (isset($class['teacher_id']) && !empty($class['teacher_id'])) {
-                $teacherModel = new TeacherModel($pdo);
-                $teacher = $teacherModel->findById($class['teacher_id']);
-                if ($teacher) {
-                    $teacherName = $teacher['first_name'] . ' ' . $teacher['last_name'];
+            try {
+                // Get the first teacher assignment for this class (any subject)
+                $assignments = $this->teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
+                if (!empty($assignments)) {
+                    $firstAssignment = $assignments[0];
+                    if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
+                        $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+                    }
                 }
+            } catch (Exception $e) {
+                // Keep default teacher name if there's an error
             }
 
             // Generate HTML report

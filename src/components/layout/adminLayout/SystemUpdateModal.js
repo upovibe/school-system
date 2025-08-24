@@ -296,7 +296,14 @@ class SystemUpdateModal extends HTMLElement {
                 case 'image':
                     fileUpload = this.querySelector('ui-file-upload[name="setting_value"]');
                     if (fileUpload && fileUpload.getFiles().length > 0) {
-                        valueInput = fileUpload.value;
+                        // Get the file name or path from the file upload component
+                        const files = fileUpload.getFiles();
+                        if (files.length > 0) {
+                            // For new file uploads, we'll get the file name
+                            valueInput = files[0].name;
+                        } else {
+                            valueInput = this.settingData?.setting_value || '';
+                        }
                     } else {
                         // Keep the existing value if no new file is selected
                         valueInput = this.settingData?.setting_value || '';

@@ -15,6 +15,7 @@ class FinancePaymentsPage extends App {
     this.payments = null;
     this.invoices = [];
     this.students = [];
+    this.classes = [];
     this.loading = false;
     this.showAddModal = false;
     this.showViewModal = false;
@@ -193,31 +194,36 @@ class FinancePaymentsPage extends App {
     }
 
     try {
-      const [presp, iresp, sresp, uresp] = await Promise.all([
+      const [presp, iresp, sresp, uresp, cresp] = await Promise.all([
         api.withToken(token).get('/finance/payments'),
         api.withToken(token).get('/finance/invoices'),
         api.withToken(token).get('/students'),
         api.withToken(token).get('/users'),
+        api.withToken(token).get('/classes'),
       ]);
       
       const payments = presp?.data?.data || [];
       const invoices = iresp?.data?.data || [];
       const students = sresp?.data?.data || [];
       const users = uresp?.data || uresp?.data?.data || [];
+      const classes = cresp?.data?.data || [];
       
       this.set('payments', payments);
       this.set('invoices', invoices);
       this.set('students', students);
       this.set('users', users);
+      this.set('classes', classes);
       this.invoices = invoices;
       this.students = students;
       this.users = users;
+      this.classes = classes;
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load payments', variant: 'error', duration: 3000 });
       this.set('payments', []);
       this.set('invoices', []);
       this.set('students', []);
       this.set('users', []);
+      this.set('classes', []);
     }
 
     this.set('loading', false);
@@ -334,7 +340,11 @@ class FinancePaymentsPage extends App {
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('finance-payment-add-modal');
-      if (modal) modal.setData({ invoices: this.invoices, students: this.students });
+      if (modal) modal.setData({ 
+        invoices: this.invoices, 
+        students: this.students, 
+        classes: this.classes 
+      });
     }, 0);
   }
 

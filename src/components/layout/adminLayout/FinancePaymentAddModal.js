@@ -16,9 +16,10 @@ class FinancePaymentAddModal extends HTMLElement {
 
   connectedCallback() { this.render(); this.setup(); }
 
-  setData({ invoices = [], students = [] } = {}) {
+  setData({ invoices = [], students = [], classes = [] } = {}) {
     this._invoices = Array.isArray(invoices) ? invoices : [];
     this._students = Array.isArray(students) ? students : [];
+    this._classes = Array.isArray(classes) ? classes : [];
     this.render();
     this.setup();
   }
@@ -26,6 +27,7 @@ class FinancePaymentAddModal extends HTMLElement {
   setup() {
     this.addEventListener('confirm', () => this.save());
     this.addEventListener('cancel', () => this.close());
+    
     // Set current date as default and minimum for paid_on field
     setTimeout(() => {
       const dateInput = this.querySelector('ui-input[data-field="paid_on"]');
@@ -36,18 +38,116 @@ class FinancePaymentAddModal extends HTMLElement {
       }
     }, 0);
 
+    // Setup class selection event listeners
+    const classDd = this.querySelector('ui-search-dropdown[name="class_id"]');
+    if (classDd && !classDd._bound) {
+      classDd.addEventListener('change', () => this.onClassChange());
+      classDd.addEventListener('value-change', () => this.onClassChange());
+      classDd._bound = true;
+    }
+
+    // Setup student selection event listeners
+    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
+    if (studentDd && !studentDd._bound) {
+      studentDd.addEventListener('change', () => this.onStudentChange());
+      studentDd.addEventListener('value-change', () => this.onStudentChange());
+      studentDd._bound = true;
+    }
+
+    // Setup invoice selection event listeners
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
-    const info = this.querySelector('#invoice-info');
     if (invoiceDd && !invoiceDd._bound) {
       invoiceDd.addEventListener('change', () => this.updateInvoiceInfo());
       invoiceDd.addEventListener('value-change', () => this.updateInvoiceInfo());
       invoiceDd._bound = true;
     }
+
     setTimeout(() => this.updateInvoiceInfo(), 0);
   }
 
   open() { this.setAttribute('open', ''); }
   close() { this.removeAttribute('open'); }
+
+  // Handle class selection change
+  onClassChange() {
+    const classDd = this.querySelector('ui-search-dropdown[name="class_id"]');
+    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
+    const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    
+    if (!classDd || !studentDd || !invoiceDd) return;
+    
+    const selectedClassId = classDd.value;
+    
+    // Reset student and invoice selections
+    studentDd.value = '';
+    invoiceDd.value = '';
+    
+    // Filter students by selected class
+    if (selectedClassId) {
+      const classStudents = this._students.filter(s => String(s.current_class_id) === String(selectedClassId));
+      this.renderStudentOptions(classStudents);
+    } else {
+      this.renderStudentOptions([]);
+    }
+    
+    // Clear invoice info
+    this.updateInvoiceInfo();
+  }
+
+  // Handle student selection change
+  onStudentChange() {
+    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
+    const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    
+    if (!studentDd || !invoiceDd) return;
+    
+    const selectedStudentId = studentDd.value;
+    
+    // Reset invoice selection
+    invoiceDd.value = '';
+    
+    // Filter invoices by selected student
+    if (selectedStudentId) {
+      const studentInvoices = this._invoices.filter(i => String(i.student_id) === String(selectedStudentId));
+      this.renderInvoiceOptions(studentInvoices);
+    } else {
+      this.renderInvoiceOptions([]);
+    }
+    
+    // Clear invoice info
+    this.updateInvoiceInfo();
+  }
+
+  // Render student options for selected class
+  renderStudentOptions(students) {
+    const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
+    if (!studentDd) return;
+    
+    const options = students.map(s => {
+      const name = s.name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.full_name || s.username || s.email || `Student #${s.id}`;
+      return `<ui-option value="${s.id}">${name}</ui-option>`;
+    }).join('');
+    
+    studentDd.innerHTML = options;
+  }
+
+  // Render invoice options for selected student
+  renderInvoiceOptions(invoices) {
+    const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    if (!invoiceDd) return;
+    
+    const openInvoices = invoices.filter(i => 
+      String(i.status).toLowerCase() !== 'paid' && 
+      Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0
+    );
+    
+    const options = openInvoices.map(i => {
+      const name = this.invoiceDisplay(i);
+      return `<ui-option value="${i.id}">${name}</ui-option>`;
+    }).join('');
+    
+    invoiceDd.innerHTML = options;
+  }
 
   invoiceDisplay(inv) {
     if (!inv) return '';
@@ -76,6 +176,8 @@ class FinancePaymentAddModal extends HTMLElement {
     if (this._saving) return;
     this._saving = true;
     try {
+      const classDd = this.querySelector('ui-search-dropdown[name="class_id"]');
+      const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
       const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
       const amountInput = this.querySelector('ui-input[data-field="amount"]');
       const methodDd = this.querySelector('ui-search-dropdown[name="method"]');
@@ -83,24 +185,49 @@ class FinancePaymentAddModal extends HTMLElement {
       const dateInput = this.querySelector('ui-input[data-field="paid_on"]');
       const notesInput = this.querySelector('ui-input[data-field="notes"]');
 
-      const payload = {
-        invoice_id: invoiceDd?.value ? Number(invoiceDd.value) : null,
-        amount: amountInput?.value ? Number(amountInput.value) : 0,
+      const amount = amountInput?.value ? Number(amountInput.value) : 0;
+      if (!amount || isNaN(amount) || amount <= 0) {
+        return Toast.show({ title: 'Validation', message: 'Enter valid amount', variant: 'error', duration: 3000 });
+      }
+
+      let payload = {
+        amount: amount,
         method: methodDd?.value || undefined,
         reference: refInput?.value || undefined,
         paid_on: dateInput?.value || undefined,
         notes: notesInput?.value || undefined,
       };
 
-      if (!payload.invoice_id) return Toast.show({ title: 'Validation', message: 'Select invoice', variant: 'error', duration: 3000 });
-      if (!payload.amount || isNaN(payload.amount) || payload.amount <= 0) return Toast.show({ title: 'Validation', message: 'Enter valid amount', variant: 'error', duration: 3000 });
+      // Check if we have invoice_id or need to create invoice
+      if (invoiceDd?.value) {
+        // Existing invoice payment
+        payload.invoice_id = Number(invoiceDd.value);
+      } else if (studentDd?.value) {
+        // New payment - auto-create invoice
+        const selectedStudent = this._students.find(s => String(s.id) === String(studentDd.value));
+        if (!selectedStudent) {
+          return Toast.show({ title: 'Validation', message: 'Please select a valid student', variant: 'error', duration: 3000 });
+        }
+        
+        // Get current academic year and grading period (you might want to make these configurable)
+        const currentYear = new Date().getFullYear();
+        const academicYear = `${currentYear}-${currentYear + 1}`;
+        const gradingPeriod = 'First Term'; // This could be made dynamic
+        
+        payload.student_id = Number(studentDd.value);
+        payload.academic_year = academicYear;
+        payload.grading_period = gradingPeriod;
+      } else {
+        return Toast.show({ title: 'Validation', message: 'Please select a student or invoice', variant: 'error', duration: 3000 });
+      }
 
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
 
       const resp = await api.withToken(token).post('/finance/payments', payload);
       if (resp.status === 201 || resp.data?.success) {
-        Toast.show({ title: 'Success', message: 'Payment recorded', variant: 'success', duration: 2000 });
+        const message = payload.invoice_id ? 'Payment recorded' : 'Invoice created and payment recorded';
+        Toast.show({ title: 'Success', message: message, variant: 'success', duration: 2000 });
         this.close();
         this.dispatchEvent(new CustomEvent('payment-saved', { bubbles: true, composed: true }));
       } else {
@@ -114,16 +241,29 @@ class FinancePaymentAddModal extends HTMLElement {
   }
 
   render() {
-    const openInvoices = (this._invoices || []).filter(i => String(i.status).toLowerCase() !== 'paid' && Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0);
     const today = new Date().toISOString().split('T')[0];
     this.innerHTML = `
       <ui-dialog ${this.hasAttribute('open') ? 'open' : ''} title="Add Payment">
         <div slot="content">
         <form class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+              <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
+                ${(this._classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' (' + c.section + ')' : ''}</ui-option>`).join('')}
+              </ui-search-dropdown>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+              <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full">
+                <ui-option value="">Select class first</ui-option>
+              </ui-search-dropdown>
+            </div>
+          </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
-            <ui-search-dropdown name="invoice_id" placeholder="Select invoice" class="w-full">
-              ${openInvoices.map(i => `<ui-option value="${i.id}">${this.invoiceDisplay(i)}</ui-option>`).join('')}
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice (Optional - will auto-create if none exists)</label>
+            <ui-search-dropdown name="invoice_id" placeholder="Select invoice or leave empty to create new" class="w-full">
+              <ui-option value="">No invoice selected - will create new</ui-option>
             </ui-search-dropdown>
             <div id="invoice-info"></div>
           </div>
@@ -162,7 +302,8 @@ class FinancePaymentAddModal extends HTMLElement {
             <div>
               <p class="font-medium">How to make a payment</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
-                <li><strong>Invoice</strong>: Select the invoice this payment is for. The system will show the current balance.</li>
+                <li><strong>Class & Student</strong>: First select a class, then select a student from that class.</li>
+                <li><strong>Invoice</strong>: If the student has an existing invoice, select it. If none exists, leave empty and the system will auto-create one.</li>
                 <li><strong>Amount</strong>: Enter the payment amount. This will automatically update the invoice balance.</li>
                 <li><strong>Method</strong>: Choose how the payment was made (cash, bank transfer, etc.).</li>
                 <li><strong>Paid On</strong>: The payment date defaults to today and cannot be backdated.</li>

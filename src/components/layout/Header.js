@@ -368,30 +368,17 @@
 
               <!-- Contact Information - Hidden on mobile -->
               <div class="hidden lg:flex flex-col text-sm text-[${primaryColor}] space-y-1">
-                ${this.get('contactEmail') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${secondaryColor}] transition-colors duration-300">
-                    <i class="fas fa-envelope"></i>
-                    <a href="mailto:${this.get('contactEmail')}" class="transition-colors">
-                      ${this.get('contactEmail')}
-                    </a>
-                  </div>
-                ` : ''}
-                ${this.get('contactPhone') ? `
-                  <div class="flex items-center space-x-2 hover:text-[${secondaryColor}] transition-colors duration-300">
-                    <i class="fas text-lg fa-phone"></i>
-                    <a href="tel:${this.get('contactPhone')}" class="transition-colors">
-                      ${this.get('contactPhone')}
-                    </a>
-                  </div>
-                ` : ''}
-                <a href="/public/apply" class="mt-3 inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${primaryColor}] focus:outline-none focus:ring-2 focus:ring-[${primaryColor}] focus:ring-offset-2 transition-all duration-300 animate-pulse text-base group">
-                  <span class="mr-2">Apply Now</span>
-                  <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
-                </a>
-                <a href="/auth/login" class="mt-3 inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${primaryColor}] focus:outline-none focus:ring-2 focus:ring-[${primaryColor}] focus:ring-offset-2 transition-all duration-300 animate-pulse text-base group">
-                  <span class="mr-2">Login</span>
-                  <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
-                </a>
+                <!-- Action Buttons - Desktop -->
+                <div class="hidden lg:flex items-center space-x-3">
+                  <a href="/public/admissions" class="inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${primaryColor}] focus:outline-none focus:ring-2 focus:ring-[${primaryColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
+                    <span class="mr-2">Apply Now</span>
+                    <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
+                  </a>
+                  <a href="/auth/login" class="inline-flex items-center justify-center px-6 py-2 bg-[${primaryColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${accentColor}] focus:outline-none focus:ring-2 focus:ring-[${accentColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
+                    <span class="mr-2">Login</span>
+                    <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform duration-300"></i>
+                  </a>
+                </div>
               </div>
 
               <!-- Mobile Menu Button - Right side -->
@@ -407,8 +394,18 @@
                 ${renderNavLinks(false)}
               </nav>
 
-              <!-- Social Icons -->
+              <!-- Social Icons & Contact Info -->
               <div class="flex items-center space-x-2 lg:space-x-4">
+                ${this.get('contactEmail') ? `
+                  <a href="mailto:${this.get('contactEmail')}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300" title="Send Email">
+                    <i class="fas fa-envelope text-sm lg:text-base"></i>
+                  </a>
+                ` : ''}
+                ${this.get('contactPhone') ? `
+                  <a href="tel:${this.get('contactPhone')}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300" title="Call Us">
+                    <i class="fas fa-phone text-sm lg:text-base"></i>
+                  </a>
+                ` : ''}
                 ${renderSocialIcons(false)}
               </div>
             </div>
@@ -428,7 +425,7 @@
             </div>
 
             <!-- Mobile Content -->
-            <div class="h-[calc(100vh-200px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full">
+            <div class="h-[calc(100vh-100px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full">
               <!-- Mobile Contact Info -->
               <div class="border-b border-[${textColor}] pb-4 w-full">
                 <div class="flex flex-col items-center justify-center text-sm text-[${textColor}] space-y-3">
@@ -451,13 +448,35 @@
                 </div>
               </div>
 
+              <!-- Mobile Action Buttons -->
+              <div class="flex flex-col items-center justify-center space-y-3 w-full border-b border-[${textColor}] pb-4">
+                <a href="/public/admissions" class="w-full inline-flex items-center justify-center px-6 py-3 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${primaryColor}] focus:outline-none focus:ring-2 focus:ring-[${primaryColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
+                  <span class="mr-2">Apply Now</span>
+                  <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
+                </a>
+                <a href="/auth/login" class="w-full inline-flex items-center justify-center px-6 py-3 bg-[${primaryColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${accentColor}] focus:outline-none focus:ring-2 focus:ring-[${accentColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
+                  <span class="mr-2">Login</span>
+                  <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform duration-300"></i>
+                </a>
+              </div>
+
               <!-- Mobile Navigation -->
               <nav class="flex flex-col items-center justify-center space-y-4 w-full">
                 ${renderNavLinks(true)}
               </nav>
 
-              <!-- Mobile Social Icons -->
+              <!-- Mobile Social Icons & Contact -->
               <div class="flex mx-auto mt-auto items-center justify-center space-x-6">
+                ${this.get('contactEmail') ? `
+                  <a href="mailto:${this.get('contactEmail')}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300" title="Send Email">
+                    <i class="fas fa-envelope text-lg"></i>
+                  </a>
+                ` : ''}
+                ${this.get('contactPhone') ? `
+                  <a href="tel:${this.get('contactPhone')}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300" title="Call Us">
+                    <i class="fas fa-phone text-lg"></i>
+                  </a>
+                ` : ''}
                 ${renderSocialIcons(true)}
               </div>
             </div>

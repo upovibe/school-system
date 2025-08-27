@@ -186,7 +186,7 @@ class CommunitySection extends App {
                                     </a>
                                     
                                     <!-- Apply Now Card -->
-                                    <a href="/public/apply" class="block bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6 text-center group cursor-pointer">
+                                    <a href="/public/admissions" class="block bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-6 text-center group cursor-pointer">
                                         <div class="w-16 h-16 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                                             <i class="fas fa-graduation-cap text-white text-xl"></i>
                                         </div>

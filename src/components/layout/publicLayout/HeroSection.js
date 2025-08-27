@@ -166,15 +166,15 @@ class HeroSection extends App {
                                 <p class="text-lg lg:text-xl mb-10 opacity-95 leading-relaxed max-w-3xl mx-auto drop-shadow-md">
                                     ${heroSubtitle}
                                 </p>
-                                <div class="flex flex-row gap-2 sm:gap-4 justify-center">
+                                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                                     <a href="/public/about-us" 
-                                       class="inline-flex items-center justify-center px-3 py-2 sm:px-6 sm:py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl whitespace-nowrap text-sm sm:text-base">
-                                        <i class="fas fa-info-circle mr-1 sm:mr-2 text-sm sm:text-base"></i>
+                                       class="inline-flex items-center justify-center px-4 py-3 sm:px-6 sm:py-3 bg-[${primaryColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
+                                        <i class="fas fa-info-circle mr-2 text-sm sm:text-base"></i>
                                         Learn More
                                     </a>
                                     <a href="/public/admissions" 
-                                       class="inline-flex items-center justify-center px-3 py-2 sm:px-6 sm:py-3 border-2 border-[${textColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${textColor}] hover:text-[${secondaryColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl whitespace-nowrap text-sm sm:text-base">
-                                        <i class="fas fa-graduation-cap mr-1 sm:mr-2 text-sm sm:text-base"></i>
+                                       class="inline-flex items-center justify-center px-4 py-3 sm:px-6 sm:py-3 border-2 border-[${textColor}] text-[${textColor}] font-semibold rounded-lg hover:bg-[${textColor}] hover:text-[${secondaryColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
+                                        <i class="fas fa-graduation-cap mr-2 text-sm sm:text-base"></i>
                                         Apply Now
                                     </a>
                                 </div>

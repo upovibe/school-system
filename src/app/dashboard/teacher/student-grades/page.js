@@ -340,11 +340,18 @@ class TeacherStudentGradesPage extends App {
         this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
       }
 
-      // Default: preselect the first existing grading period - NOW THIS WILL WORK
+      // Default: preselect the first active grading period if available, otherwise first period
       if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
-        const firstPeriodId = String(this.periods[0].id);
-        const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
-        this.set('filters', next);
+        const firstActivePeriod = this.periods.find(p => p.is_active === 1);
+        if (firstActivePeriod) {
+          const firstActivePeriodId = String(firstActivePeriod.id);
+          const next = { ...this.get('filters'), grading_period_id: firstActivePeriodId };
+          this.set('filters', next);
+        } else {
+          const firstPeriodId = String(this.periods[0].id);
+          const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+          this.set('filters', next);
+        }
       }
 
       // Initial load if we have class
@@ -525,7 +532,10 @@ class TeacherStudentGradesPage extends App {
     }
 
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
-    const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
+    const periodOptions = (this.periods || []).map(p => {
+      const isActive = p.is_active === 1; // Check if is_active = 1
+      return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+    }).join('');
 
     const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
     const { subject_id, grading_period_id } = filters;

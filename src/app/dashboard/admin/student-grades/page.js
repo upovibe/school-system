@@ -379,10 +379,15 @@ class StudentGradesManagementPage extends App {
                         .slice(-1)[0]
                 );
                 if (lastId) {
-                    // Auto-select first grading period if available
+                    // Auto-select first active grading period if available, otherwise first period
                     let firstPeriodId = '';
                     if (this.periods && this.periods.length > 0) {
-                        firstPeriodId = String(this.periods[0].id);
+                        const firstActivePeriod = this.periods.find(p => p.is_active === 1);
+                        if (firstActivePeriod) {
+                            firstPeriodId = String(firstActivePeriod.id);
+                        } else {
+                            firstPeriodId = String(this.periods[0].id);
+                        }
                     }
                     
                     const next = { ...currentFilters, class_id: lastId, subject_id: '', grading_period_id: firstPeriodId };
@@ -809,7 +814,10 @@ class StudentGradesManagementPage extends App {
         const subjectOptions = (this.classSubjects && this.classSubjects.length > 0)
             ? this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
             : '<ui-option value="" disabled>No subjects assigned to this class</ui-option>';
-        const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
+        const periodOptions = (this.periods || []).map(p => {
+            const isActive = p.is_active === 1; // Check if is_active = 1
+            return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+        }).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
         const { class_id, subject_id, grading_period_id } = filters;

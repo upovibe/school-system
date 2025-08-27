@@ -138,15 +138,25 @@ class SearchDropdown extends HTMLElement {
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                this.focusedIndex = (this.focusedIndex + 1) % options.length;
+                let nextIndex = (this.focusedIndex + 1) % options.length;
+                // Skip disabled options
+                while (nextIndex !== this.focusedIndex && options[nextIndex] && options[nextIndex].hasAttribute('disabled')) {
+                    nextIndex = (nextIndex + 1) % options.length;
+                }
+                this.focusedIndex = nextIndex;
                 break;
             case 'ArrowUp':
                 e.preventDefault();
-                this.focusedIndex = (this.focusedIndex - 1 + options.length) % options.length;
+                let prevIndex = (this.focusedIndex - 1 + options.length) % options.length;
+                // Skip disabled options
+                while (prevIndex !== this.focusedIndex && options[prevIndex] && options[prevIndex].hasAttribute('disabled')) {
+                    prevIndex = (prevIndex - 1 + options.length) % options.length;
+                }
+                this.focusedIndex = prevIndex;
                 break;
             case 'Enter':
                 e.preventDefault();
-                if (this.focusedIndex > -1 && options[this.focusedIndex]) {
+                if (this.focusedIndex > -1 && options[this.focusedIndex] && !options[this.focusedIndex].hasAttribute('disabled')) {
                     this._selectOption(options[this.focusedIndex]);
                 }
                 break;
@@ -262,7 +272,14 @@ class SearchDropdown extends HTMLElement {
         this.optionsContainer.querySelectorAll('.UpoSearchDropdown__option').forEach(el => {
             // Prevent click-through to underlying elements (e.g., buttons behind the dropdown)
             el.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); });
-            el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const option = this._options.find(o => o.getAttribute('value') === el.dataset.value); if (option) this._selectOption(option); });
+            el.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                const option = this._options.find(o => o.getAttribute('value') === el.dataset.value); 
+                if (option && !option.hasAttribute('disabled')) {
+                    this._selectOption(option);
+                }
+            });
             el.addEventListener('mouseup', (e) => { e.stopPropagation(); });
         });
     }

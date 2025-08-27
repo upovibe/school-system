@@ -163,7 +163,7 @@ class RootPage extends App {
 
         if (!allData) {
             return `
-                <div class="container flex items-center justify-center mx-auto p-8">
+                <div class="container flex items-center justify-center mx-auto p-8 min-h-screen">
                     <page-loader></page-loader>
                 </div>
             `;

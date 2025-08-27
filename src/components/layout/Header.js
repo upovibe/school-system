@@ -317,15 +317,15 @@
                   ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
                 </ui-link>
                 ${link.subLinks ? `
-                  <div class="absolute top-full left-0 mt-4 w-48 bg-[${primaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
-                    <div class="py-2">
-                      ${link.subLinks.map(subLink => `
-                        <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${primaryColor}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${hoverAccent}] ${isActive(subLink.href) ? 'active-link' : ''}">
-                          ${subLink.label}
-                        </ui-link>
-                      `).join('')}
-                    </div>
-                  </div>
+                                     <div class="absolute top-full left-0 mt-4 w-48 bg-[${primaryColor}] rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50">
+                     <div class="py-2">
+                       ${link.subLinks.map(subLink => `
+                         <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${hoverSecondary}] transition-all duration-200 text-sm border-b-2 border-transparent hover:border-[${hoverAccent}] ${isActive(subLink.href) ? 'active-link' : ''}">
+                           ${subLink.label}
+                         </ui-link>
+                       `).join('')}
+                     </div>
+                   </div>
                 ` : ''}
               </div>
             `;
@@ -425,7 +425,7 @@
             </div>
 
             <!-- Mobile Content -->
-            <div class="h-[calc(100vh-100px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full">
+            <div class="h-[calc(100vh-100px)] flex flex-col gap-4 items-start p-4 overflow-y-auto w-full pb-20">
               <!-- Mobile Contact Info -->
               <div class="border-b border-[${textColor}] pb-4 w-full">
                 <div class="flex flex-col items-center justify-center text-sm text-[${textColor}] space-y-3">
@@ -464,9 +464,11 @@
               <nav class="flex flex-col items-center justify-center space-y-4 w-full">
                 ${renderNavLinks(true)}
               </nav>
+            </div>
 
-              <!-- Mobile Social Icons & Contact -->
-              <div class="flex mx-auto mt-auto items-center justify-center space-x-6">
+            <!-- Fixed Mobile Footer with Social Icons & Contact -->
+            <div class="absolute bottom-0 left-0 right-0 bg-[${primaryColor}] border-t border-[${textColor}] p-4">
+              <div class="flex items-center justify-center space-x-6">
                 ${this.get('contactEmail') ? `
                   <a href="mailto:${this.get('contactEmail')}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300" title="Send Email">
                     <i class="fas fa-envelope text-lg"></i>

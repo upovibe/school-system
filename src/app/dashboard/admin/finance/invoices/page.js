@@ -412,7 +412,10 @@ class FinanceInvoicesPage extends App {
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('finance-invoice-add-modal');
-      if (modal) modal.setStudents(this.students);
+      if (modal) {
+        modal.setClasses(this.classes);
+        modal.setStudents(this.students);
+      }
     }, 0);
   }
 

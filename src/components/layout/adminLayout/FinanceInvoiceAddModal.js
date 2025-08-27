@@ -9,6 +9,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
   constructor() {
     super();
     this._students = [];
+    this._classes = [];
     this._saving = false;
     this._listenersAttached = false;
   }
@@ -24,6 +25,66 @@ class FinanceInvoiceAddModal extends HTMLElement {
     this._students = Array.isArray(students) ? students : [];
     this.render();
     this.setupEventListeners();
+  }
+
+  // Set classes data (called from parent page)
+  setClasses(classes) {
+    this._classes = Array.isArray(classes) ? classes : [];
+    this.render();
+    this.setupEventListeners();
+  }
+
+  // Load students by class
+  async loadStudentsByClass(classId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await api.withToken(token).get(`/students/by-class?class_id=${classId}`);
+      const students = response.data?.data || [];
+      
+      // Update the student dropdown
+      const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
+      if (studentDropdown) {
+        const studentOptions = students.map(s => {
+          const name = s.name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.full_name || s.username || s.email || `Student #${s.id}`;
+          return `<ui-option value="${s.id}">${name}</ui-option>`;
+        }).join('');
+        studentDropdown.innerHTML = studentOptions;
+        
+        // Clear previous selection
+        studentDropdown.value = '';
+        
+        // Clear dependent fields
+        this.clearDependentFields();
+      }
+    } catch (error) {
+      console.error('Error loading students by class:', error);
+    }
+  }
+
+  // Clear dependent fields when class changes
+  clearDependentFields() {
+    const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
+    const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
+    const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+    const infoEl = this.querySelector('#current-class-info');
+    const missBadge = this.querySelector('#schedule-missing');
+
+    if (yearInput) yearInput.value = '';
+    if (gradingPeriodInput) gradingPeriodInput.value = '';
+    if (amountDueInput) amountDueInput.value = '';
+    if (infoEl) infoEl.textContent = '';
+    if (missBadge) missBadge.remove();
+  }
+
+  // Get academic year for a selected class
+  getClassAcademicYear(classId) {
+    const selectedClass = this._classes.find(c => c.id === Number(classId));
+    if (selectedClass && selectedClass.academic_year) {
+      return selectedClass.academic_year;
+    }
+    return null;
   }
 
   setupEventListeners() {
@@ -194,6 +255,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
      // Validate required fields and toggle Save button
    validateForm() {
      try {
+       const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
        const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
        const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
        const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
@@ -204,7 +266,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
        // Get grading period value from either input or dropdown
        const gradingPeriodValue = gradingPeriodInput?.value || gradingPeriodDropdown?.value || '';
        
-               const allFilled = !!String(studentDropdown?.value || '').trim() &&
+               const allFilled = !!String(classDropdown?.value || '').trim() &&
+          !!String(studentDropdown?.value || '').trim() &&
           !!String(yearInput?.value || '').trim() &&
           !!String(gradingPeriodValue || '').trim() &&
           Number(amountDueInput?.value || 0) > 0;
@@ -222,11 +285,33 @@ class FinanceInvoiceAddModal extends HTMLElement {
    }
 
   addFormEventListeners() {
+    const classDropdown = this.querySelector('ui-search-dropdown[name="class_id"]');
     const studentDropdown = this.querySelector('ui-search-dropdown[name="student_id"]');
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
     const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
     const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
     const saveBtn = this.querySelector('#save-invoice-btn');
+    
+    // Handle class selection to load students and auto-fill academic year
+    if (classDropdown) {
+      classDropdown.addEventListener('change', () => {
+        const classId = classDropdown.value;
+        if (classId) {
+          // Load students for this class
+          this.loadStudentsByClass(classId);
+          
+          // Auto-fill academic year
+          if (yearInput) {
+            const academicYear = this.getClassAcademicYear(classId);
+            if (academicYear) {
+              yearInput.value = academicYear;
+            }
+          }
+        }
+        this.validateForm();
+      });
+    }
+    
     if (studentDropdown) studentDropdown.addEventListener('change', () => this.validateForm());
     [yearInput, gradingPeriodInput, amountDueInput].forEach(el => {
       if (!el) return;
@@ -455,19 +540,24 @@ class FinanceInvoiceAddModal extends HTMLElement {
         <div slot="title">Add Fee Invoice</div>
         <form class="space-y-4">
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
+            <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
+              ${(this._classes || []).map(c => `
+                <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
+              `).join('')}
+            </ui-search-dropdown>
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Student *</label>
-            <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full">
-              ${(this._students || []).map(s => {
-                const name = s.name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.full_name || s.username || s.email || `Student #${s.id}`;
-                return `<ui-option value="${s.id}">${name}</ui-option>`;
-              }).join('')}
+            <ui-search-dropdown name="student_id" placeholder="Select class first" class="w-full" disabled>
+              <ui-option value="">Select a class first</ui-option>
             </ui-search-dropdown>
             <div id="current-class-info" class="text-xs text-gray-500 mt-1"></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
-              <ui-input data-field="academic_year" type="text" placeholder="e.g., 2024-2025" class="w-full" readonly></ui-input>
+              <ui-input data-field="academic_year" type="text" placeholder="Auto-filled from class" class="w-full" readonly></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
@@ -508,9 +598,10 @@ class FinanceInvoiceAddModal extends HTMLElement {
             <div>
               <p class="font-medium">How this works</p>
               <ul class="list-disc pl-5 mt-1 space-y-1">
-                <li><strong>Student</strong>: select who the invoice is for.</li>
-                <li><strong>Academic Year & Grading Period</strong>: automatically filled from student's class fee schedule. If multiple schedules exist, you can select the grading period.</li>
-                <li><strong>Amount Due/Paid</strong>: balance and status compute automatically.</li>
+                <li><strong>Class</strong>: first select the class to narrow down student options.</li>
+                <li><strong>Student</strong>: then select a student from the selected class.</li>
+                <li><strong>Academic Year</strong>: automatically filled from the selected class.</li>
+                <li><strong>Grading Period & Amount</strong>: automatically filled from student's class fee schedule.</li>
               </ul>
             </div>
           </div>

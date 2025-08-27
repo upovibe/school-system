@@ -215,6 +215,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
       if (!payload.academic_year) return Toast.show({ title: 'Validation', message: 'Enter academic year', variant: 'error', duration: 3000 });
       if (!payload.grading_period) return Toast.show({ title: 'Validation', message: 'Enter grading period', variant: 'error', duration: 3000 });
       if (!payload.amount_due || isNaN(payload.amount_due)) return Toast.show({ title: 'Validation', message: 'Enter amount due', variant: 'error', duration: 3000 });
+      if (!payload.amount_paid || isNaN(payload.amount_paid) || payload.amount_paid < 0) return Toast.show({ title: 'Validation', message: 'Enter a valid amount paid', variant: 'error', duration: 3000 });
 
       const token = localStorage.getItem('token');
       if (!token) return Toast.show({ title: 'Auth', message: 'Please log in', variant: 'error', duration: 3000 });
@@ -264,6 +265,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
        const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
        const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
        const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+       const amountPaidInput = this.querySelector('ui-input[data-field="amount_paid"]');
        const saveBtn = this.querySelector('#save-invoice-btn');
        
        // Get grading period value from either input or dropdown
@@ -273,7 +275,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
           !!String(studentDropdown?.value || '').trim() &&
           !!String(yearInput?.value || '').trim() &&
           !!String(gradingPeriodValue || '').trim() &&
-          Number(amountDueInput?.value || 0) > 0;
+          Number(amountDueInput?.value || 0) > 0 &&
+          Number(amountPaidInput?.value || 0) > 0;
         
         if (saveBtn) {
           if (allFilled) {
@@ -293,6 +296,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
     const yearInput = this.querySelector('ui-input[data-field="academic_year"]');
     const gradingPeriodInput = this.querySelector('ui-input[data-field="grading_period"]');
     const amountDueInput = this.querySelector('ui-input[data-field="amount_due"]');
+    const amountPaidInput = this.querySelector('ui-input[data-field="amount_paid"]');
     const saveBtn = this.querySelector('#save-invoice-btn');
     
     // Handle class selection to load students and auto-fill academic year
@@ -316,7 +320,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
     }
     
     if (studentDropdown) studentDropdown.addEventListener('change', () => this.validateForm());
-    [yearInput, gradingPeriodInput, amountDueInput].forEach(el => {
+    [yearInput, gradingPeriodInput, amountDueInput, amountPaidInput].forEach(el => {
       if (!el) return;
       el.addEventListener('input', () => this.validateForm());
       el.addEventListener('change', () => this.validateForm());

@@ -55,6 +55,9 @@ class FinanceInvoiceAddModal extends HTMLElement {
         // Clear previous selection
         studentDropdown.value = '';
         
+        // Enable the dropdown
+        studentDropdown.removeAttribute('disabled');
+        
         // Clear dependent fields
         this.clearDependentFields();
       }

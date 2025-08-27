@@ -322,6 +322,17 @@ class FinanceInvoicesPage extends App {
       this.set('students', []);
     }
 
+    // Load classes for the add modal; ignore failure
+    try {
+      const classesResp = await api.withToken(token).get('/classes');
+      const classes = (classesResp.data?.data) || [];
+      this.classes = classes;
+      this.set('classes', classes);
+    } catch (_) {
+      this.classes = [];
+      this.set('classes', []);
+    }
+
     this.set('loading', false);
     // Trigger render to show the loaded data
     this.render();

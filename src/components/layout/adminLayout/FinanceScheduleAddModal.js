@@ -54,6 +54,24 @@ class FinanceScheduleAddModal extends HTMLElement {
     this._gradingPeriods = Array.isArray(gradingPeriods) ? gradingPeriods : [];
     this.render();
     this.setupEventListeners();
+    
+    // Auto-select first active grading period after render
+    setTimeout(() => this.autoSelectDefaultGradingPeriod(), 0);
+  }
+
+  // Auto-select the first active grading period
+  autoSelectDefaultGradingPeriod() {
+    if (this._gradingPeriods && this._gradingPeriods.length > 0) {
+      const firstActivePeriod = this._gradingPeriods.find(gp => gp.is_active === 1);
+      if (firstActivePeriod) {
+        const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+        if (gradingPeriodDropdown) {
+          gradingPeriodDropdown.value = firstActivePeriod.name;
+          // Trigger validation after setting default value
+          setTimeout(() => this.validateForm(), 100);
+        }
+      }
+    }
   }
 
   setupEventListeners() {

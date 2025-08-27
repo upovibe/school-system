@@ -57,6 +57,24 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     this.render();
     this.setupEventListeners();
     this.fillForm();
+    
+    // Auto-select first active grading period if none is currently selected
+    setTimeout(() => this.autoSelectDefaultGradingPeriod(), 0);
+  }
+
+  // Auto-select the first active grading period if none is currently selected
+  autoSelectDefaultGradingPeriod() {
+    const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+    if (gradingPeriodDropdown && !gradingPeriodDropdown.value && this._gradingPeriods && this._gradingPeriods.length > 0) {
+      const firstActivePeriod = this._gradingPeriods.find(gp => gp.is_active === 1);
+      if (firstActivePeriod) {
+        gradingPeriodDropdown.value = firstActivePeriod.name;
+        // Update the schedule data to reflect the default selection
+        if (this._schedule) {
+          this._schedule.grading_period = firstActivePeriod.name;
+        }
+      }
+    }
   }
 
   fillForm() {

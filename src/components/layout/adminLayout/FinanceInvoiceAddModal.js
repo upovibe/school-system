@@ -580,7 +580,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
-              <ui-input data-field="issue_date" type="date" class="w-full"></ui-input>
+              <ui-input data-field="issue_date" type="date" class="w-full" max="${new Date().toISOString().split('T')[0]}"></ui-input>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>

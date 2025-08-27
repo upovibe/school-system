@@ -573,8 +573,8 @@ class FinanceInvoiceAddModal extends HTMLElement {
               <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid (optional)</label>
-              <ui-input data-field="amount_paid" type="number" step="0.01" placeholder="0.00" class="w-full"></ui-input>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid *</label>
+              <ui-input data-field="amount_paid" type="number" step="0.01" placeholder="0.00" class="w-full" required></ui-input>
             </div>           
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

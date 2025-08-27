@@ -191,9 +191,8 @@ class TeacherStudentGradesPage extends App {
     this.addEventListener('student-grade-saved', (event) => {
       const newItem = event.detail.grade;
       if (newItem) {
-        const current = this.get('grades') || [];
-        this.set('grades', [newItem, ...current]);
-        this.render();
+        // Reload the grades to ensure proper data structure and table update
+        this.loadGrades();
         this.set('showAddModal', false);
       } else {
         this.loadGrades();

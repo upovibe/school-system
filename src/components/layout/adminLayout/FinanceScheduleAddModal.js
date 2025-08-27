@@ -201,9 +201,10 @@ class FinanceScheduleAddModal extends HTMLElement {
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
               <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full">
-                ${(this._gradingPeriods || []).map(gp => `
-                  <ui-option value="${gp.name}">${gp.name}</ui-option>
-                `).join('')}
+                ${(this._gradingPeriods || []).map(gp => {
+                  const isActive = gp.is_active === 1; // Check if is_active = 1
+                  return `<ui-option value="${gp.name}" ${!isActive ? 'disabled' : ''}>${gp.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+                }).join('')}
               </ui-search-dropdown>
             </div>
           </div>

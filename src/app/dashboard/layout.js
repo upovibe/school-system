@@ -287,6 +287,15 @@ class DashboardLayout extends App {
                     ]
                 },
                 {
+                group: 'Finance',
+                items: [
+                    { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
+                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
+                    { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
+                    { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
+                ]
+            },
+                {
                     group: 'Management',
                     items: [
                         { label: 'User Roles', icon: 'fas fa-user-tag', href: '/dashboard/admin/user-role' },
@@ -299,15 +308,6 @@ class DashboardLayout extends App {
                         { label: 'Video Gallery', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
                     ]
                 },
-                {
-                group: 'Finance',
-                items: [
-                    { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
-                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
-                    { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
-                    { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
-                ]
-            },
             {
                     group: 'Settings',
                     items: [

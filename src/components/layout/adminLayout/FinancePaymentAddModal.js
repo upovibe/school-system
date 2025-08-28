@@ -22,6 +22,13 @@ class FinancePaymentAddModal extends HTMLElement {
     this._classes = Array.isArray(classes) ? classes : [];
     this.render();
     this.setup();
+    // Ensure invoice dropdown is visible by default
+    setTimeout(() => {
+      const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+      const invoiceReadOnly = this.querySelector('#invoice-readonly');
+      if (invoiceDd) invoiceDd.style.display = 'block';
+      if (invoiceReadOnly) invoiceReadOnly.style.display = 'none';
+    }, 0);
   }
 
   setup() {
@@ -73,6 +80,7 @@ class FinancePaymentAddModal extends HTMLElement {
     const classDd = this.querySelector('ui-search-dropdown[name="class_id"]');
     const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    const invoiceReadOnly = this.querySelector('#invoice-readonly');
     
     if (!classDd || !studentDd || !invoiceDd) return;
     
@@ -92,12 +100,20 @@ class FinancePaymentAddModal extends HTMLElement {
     
     // Clear invoice info
     this.updateInvoiceInfo();
+
+    // Show invoice dropdown by default when no student is selected
+    invoiceDd.style.display = 'block';
+    if (invoiceReadOnly) invoiceReadOnly.style.display = 'none';
+    
+    // Reset invoice dropdown to show "Select student first" message
+    this.renderInvoiceOptions([]);
   }
 
   // Handle student selection change
   onStudentChange() {
     const studentDd = this.querySelector('ui-search-dropdown[name="student_id"]');
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
+    const invoiceReadOnly = this.querySelector('#invoice-readonly');
     
     if (!studentDd || !invoiceDd) return;
     
@@ -106,11 +122,28 @@ class FinancePaymentAddModal extends HTMLElement {
     // Reset invoice selection
     invoiceDd.value = '';
     
-    // Filter invoices by selected student
+    // Check if student has any invoices
     if (selectedStudentId) {
       const studentInvoices = this._invoices.filter(i => String(i.student_id) === String(selectedStudentId));
-      this.renderInvoiceOptions(studentInvoices);
+      const openInvoices = studentInvoices.filter(i => 
+        String(i.status).toLowerCase() !== 'paid' && 
+        Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0
+      );
+      
+      if (openInvoices.length > 0) {
+        // Student has invoices - show dropdown, hide read-only
+        invoiceDd.style.display = 'block';
+        if (invoiceReadOnly) invoiceReadOnly.style.display = 'none';
+        this.renderInvoiceOptions(openInvoices);
+      } else {
+        // Student has no invoices - hide dropdown, show read-only
+        invoiceDd.style.display = 'none';
+        if (invoiceReadOnly) invoiceReadOnly.style.display = 'block';
+      }
     } else {
+      // No student selected - show dropdown, hide read-only
+      invoiceDd.style.display = 'block';
+      if (invoiceReadOnly) invoiceReadOnly.style.display = 'none';
       this.renderInvoiceOptions([]);
     }
     
@@ -141,12 +174,17 @@ class FinancePaymentAddModal extends HTMLElement {
       Number(i.balance || (i.amount_due - (i.amount_paid || 0))) > 0
     );
     
-    const options = openInvoices.map(i => {
-      const name = this.invoiceDisplay(i);
-      return `<ui-option value="${i.id}">${name}</ui-option>`;
-    }).join('');
-    
-    invoiceDd.innerHTML = options;
+    if (openInvoices.length === 0) {
+      // No invoices available - show appropriate message
+      invoiceDd.innerHTML = '<ui-option value="">Select student first</ui-option>';
+    } else {
+      // Has invoices - show only the invoices
+      const options = openInvoices.map(i => {
+        const name = this.invoiceDisplay(i);
+        return `<ui-option value="${i.id}">${name}</ui-option>`;
+      }).join('');
+      invoiceDd.innerHTML = options;
+    }
   }
 
   invoiceDisplay(inv) {
@@ -159,17 +197,28 @@ class FinancePaymentAddModal extends HTMLElement {
   updateInvoiceInfo() {
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
     const infoEl = this.querySelector('#invoice-info');
-    if (!invoiceDd || !infoEl) return;
-    const inv = (this._invoices || []).find(i => String(i.id) === String(invoiceDd.value));
-    if (!inv) { infoEl.innerHTML = ''; return; }
-    const bal = Number(inv.balance || (inv.amount_due - (inv.amount_paid || 0))).toFixed(2);
-    infoEl.innerHTML = `
-      <div class="text-xs text-gray-600 mt-1">
-        Amount Due: <span class="font-medium">${Number(inv.amount_due).toFixed(2)}</span>
-        • Paid: <span class="font-medium">${Number(inv.amount_paid).toFixed(2)}</span>
-        • Balance: <span class="font-semibold ${Number(bal)>0?'text-red-600':'text-green-600'}">${bal}</span>
-      </div>
-    `;
+    if (!infoEl) return;
+    
+    // Check if dropdown is visible (student has invoices) or hidden (student has no invoices)
+    if (invoiceDd && invoiceDd.style.display !== 'none') {
+      // Dropdown is visible - show invoice details
+      const inv = (this._invoices || []).find(i => String(i.id) === String(invoiceDd.value));
+      if (!inv) { 
+        infoEl.innerHTML = ''; 
+        return; 
+      }
+      const bal = Number(inv.balance || (inv.amount_due - (inv.amount_paid || 0))).toFixed(2);
+      infoEl.innerHTML = `
+        <div class="text-xs text-gray-600 mt-1">
+          Amount Due: <span class="font-medium">${Number(inv.amount_due).toFixed(2)}</span>
+          • Paid: <span class="font-medium">${Number(inv.amount_paid || 0).toFixed(2)}</span>
+          • Balance: <span class="font-semibold ${Number(bal)>0?'text-red-600':'text-green-600'}">${bal}</span>
+        </div>
+      `;
+         } else {
+       // Read-only input is visible - clear info since message is already in the input
+       infoEl.innerHTML = '';
+     }
   }
 
   async save() {
@@ -261,10 +310,13 @@ class FinancePaymentAddModal extends HTMLElement {
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice (Optional - will auto-create if none exists)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
             <ui-search-dropdown name="invoice_id" placeholder="Select invoice or leave empty to create new" class="w-full">
               <ui-option value="">No invoice selected - will create new</ui-option>
             </ui-search-dropdown>
+            <div id="invoice-readonly" style="display: none;">
+              <ui-input type="text" readonly value="New invoice will be created for this student" class="w-full bg-gray-50 text-gray-600 mt-2"></ui-input>
+            </div>
             <div id="invoice-info"></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

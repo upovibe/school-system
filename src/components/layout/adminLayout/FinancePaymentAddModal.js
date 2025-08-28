@@ -429,5 +429,3 @@ class FinancePaymentAddModal extends HTMLElement {
 
 customElements.define('finance-payment-add-modal', FinancePaymentAddModal);
 export default FinancePaymentAddModal;
-
-

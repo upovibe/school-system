@@ -851,7 +851,7 @@ class StudentController {
                 // Resolve class teacher (homeroom teacher) if any
                 $classTeacher = null;
                 try {
-                    $stmt = $pdo->prepare("SELECT first_name, last_name, gender, email FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt = $pdo->prepare("SELECT first_name, last_name, gender, email, phone FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
                     $stmt->execute([$student['class_id']]);
                     $t = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($t) {
@@ -859,6 +859,7 @@ class StudentController {
                             'name' => trim(($t['first_name'] ?? '') . ' ' . ($t['last_name'] ?? '')),
                             'gender' => $t['gender'] ?? null,
                             'email' => $t['email'] ?? null,
+                            'phone' => $t['phone'] ?? null,
                         ];
                     }
                 } catch (Exception $_) {
@@ -886,7 +887,9 @@ class StudentController {
                     if ($teacherAssignment) {
                         $subject['teacher'] = [
                             'name' => $teacherAssignment['teacher_first_name'] . ' ' . $teacherAssignment['teacher_last_name'],
-                            'gender' => $teacherAssignment['gender']
+                            'gender' => $teacherAssignment['gender'],
+                            'email' => $teacherAssignment['teacher_email'] ?? null,
+                            'phone' => $teacherAssignment['teacher_phone'] ?? null
                         ];
                     } else {
                         $subject['teacher'] = null;

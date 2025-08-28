@@ -60,7 +60,7 @@ class TeacherAssignmentModel extends BaseModel {
         try {
             $sql = "
                 SELECT ta.*, 
-                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.email as teacher_email,
                        c.name as class_name, c.section as class_section,
                        s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta
@@ -135,7 +135,7 @@ class TeacherAssignmentModel extends BaseModel {
     public function getByClassId($classId) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT ta.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, s.name as subject_name, s.code as subject_code
+                SELECT ta.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.email as teacher_email, s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta
                 LEFT JOIN teachers t ON ta.teacher_id = t.id
                 LEFT JOIN subjects s ON ta.subject_id = s.id
@@ -159,7 +159,7 @@ class TeacherAssignmentModel extends BaseModel {
     public function getBySubjectId($subjectId) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT ta.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, c.name as class_name, c.section as class_section
+                SELECT ta.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.email as teacher_email, c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} ta
                 LEFT JOIN teachers t ON ta.teacher_id = t.id
                 LEFT JOIN classes c ON ta.class_id = c.id
@@ -240,7 +240,7 @@ class TeacherAssignmentModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT ta.*, 
-                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.email as teacher_email,
                        c.name as class_name, c.section as class_section,
                        s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta
@@ -284,7 +284,7 @@ class TeacherAssignmentModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT ta.*, 
-                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id,
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.email as teacher_email,
                        c.name as class_name, c.section as class_section,
                        s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta
@@ -327,7 +327,7 @@ class TeacherAssignmentModel extends BaseModel {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT ta.*, 
-                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.gender,
+                       t.first_name as teacher_first_name, t.last_name as teacher_last_name, t.employee_id, t.gender, t.email as teacher_email, t.phone as teacher_phone,
                        c.name as class_name, c.section as class_section,
                        s.name as subject_name, s.code as subject_code
                 FROM {$this->getTableName()} ta

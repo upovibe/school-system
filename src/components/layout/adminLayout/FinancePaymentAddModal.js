@@ -407,14 +407,14 @@ class FinancePaymentAddModal extends HTMLElement {
               <ui-option value="Cheque">Cheque</ui-option>
             </ui-search-dropdown>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-            <ui-input data-field="reference" type="text" placeholder="Optional reference" class="w-full"></ui-input>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <ui-input data-field="notes" type="text" placeholder="Optional note" class="w-full"></ui-input>
-          </div>
+            <div>
+               <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+               <ui-input data-field="reference" type="text" value="Payment reference" placeholder="e.g., Receipt #12345, Bank Transfer ID, or leave empty" class="w-full"></ui-input>
+             </div>
+             <div>
+               <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+               <ui-input data-field="notes" type="text" value="Payment received" placeholder="e.g., First term payment, Partial payment, or leave empty" class="w-full"></ui-input>
+             </div>
         </form>
 
         <div class="mt-4 p-3 rounded-md bg-blue-50 border border-blue-100 text-blue-800 text-sm">

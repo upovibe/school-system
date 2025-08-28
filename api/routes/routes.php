@@ -365,6 +365,15 @@ Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateR
 // Finance - Analytics (admin only)
 Router::get('/finance/monthly-income', 'FinanceController@getMonthlyIncome');
 
+// Announcement Management Routes (admin only)
+Router::get('/announcements', 'AnnouncementController@index');
+Router::post('/announcements', 'AnnouncementController@store');
+Router::get('/announcements/stats', 'AnnouncementController@getStats');
+Router::get('/announcements/available-classes', 'AnnouncementController@getAvailableClasses');
+Router::get('/announcements/{id}', 'AnnouncementController@show');
+Router::put('/announcements/{id}', 'AnnouncementController@update');
+Router::delete('/announcements/{id}', 'AnnouncementController@destroy');
+
 // Cashier - Fee Schedules (cashier only)
 Router::get('/cashier/schedules', 'CashierController@indexSchedules');
 Router::get('/cashier/schedules/{id}', 'CashierController@showSchedule');

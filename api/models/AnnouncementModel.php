@@ -403,5 +403,150 @@ class AnnouncementModel extends BaseModel {
             throw new Exception('Error deactivating expired announcements: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get all announcements with enhanced details (for admin)
+     */
+    public function getAllWithDetails($where = '', $params = []) {
+        try {
+            $sql = "
+                SELECT 
+                    a.*,
+                    u.first_name as creator_first_name,
+                    u.last_name as creator_last_name,
+                    u.role as creator_role,
+                    u.email as creator_email,
+                    c.name as class_name,
+                    c.section as class_section
+                FROM announcements a
+                LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN classes c ON a.target_class_id = c.id
+            ";
+            
+            if ($where) {
+                $sql .= " " . $where;
+            }
+            
+            $sql .= " ORDER BY a.is_pinned DESC, a.priority DESC, a.created_at DESC";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching announcements with details: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get announcement with details by ID (for admin)
+     */
+    public function getWithDetails($id) {
+        try {
+            $sql = "
+                SELECT 
+                    a.*,
+                    u.first_name as creator_first_name,
+                    u.last_name as creator_last_name,
+                    u.role as creator_role,
+                    u.email as creator_email,
+                    c.name as class_name,
+                    c.section as class_section
+                FROM announcements a
+                LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN classes c ON a.target_class_id = c.id
+                WHERE a.id = ?
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching announcement with details: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get announcement statistics (for admin)
+     */
+    public function getStats() {
+        try {
+            $sql = "
+                SELECT 
+                    COUNT(*) as total_announcements,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_announcements,
+                    SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive_announcements,
+                    SUM(CASE WHEN is_pinned = 1 THEN 1 ELSE 0 END) as pinned_announcements,
+                    SUM(CASE WHEN expires_at IS NOT NULL AND expires_at <= NOW() THEN 1 ELSE 0 END) as expired_announcements,
+                    COUNT(DISTINCT announcement_type) as unique_types,
+                    COUNT(DISTINCT target_audience) as unique_audiences
+                FROM announcements
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Get counts by type
+            $typeSql = "
+                SELECT 
+                    announcement_type,
+                    COUNT(*) as count
+                FROM announcements 
+                WHERE is_active = 1
+                GROUP BY announcement_type
+            ";
+            $typeStmt = $this->pdo->prepare($typeSql);
+            $typeStmt->execute();
+            $typeCounts = $typeStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get counts by priority
+            $prioritySql = "
+                SELECT 
+                    priority,
+                    COUNT(*) as count
+                FROM announcements 
+                WHERE is_active = 1
+                GROUP BY priority
+            ";
+            $priorityStmt = $this->pdo->prepare($prioritySql);
+            $priorityStmt->execute();
+            $priorityCounts = $priorityStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get counts by target audience
+            $audienceSql = "
+                SELECT 
+                    target_audience,
+                    COUNT(*) as count
+                FROM announcements 
+                WHERE is_active = 1
+                GROUP BY target_audience
+            ";
+            $audienceStmt = $this->pdo->prepare($audienceSql);
+            $audienceStmt->execute();
+            $audienceCounts = $audienceStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'overview' => $result,
+                'by_type' => $typeCounts,
+                'by_priority' => $priorityCounts,
+                'by_audience' => $audienceCounts
+            ];
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching announcement statistics: ' . $e->getMessage());
+        }
+    }
 }
 ?>

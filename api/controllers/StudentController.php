@@ -1561,7 +1561,7 @@ class StudentController {
             StudentMiddleware::requireStudent($pdo);
             require_once __DIR__ . '/../models/GradingPeriodModel.php';
             $gpm = new GradingPeriodModel($pdo);
-            $periods = $gpm->findAll();
+            $periods = $gpm->getAllPeriodsWithCreator();
             http_response_code(200);
             echo json_encode(['success' => true, 'data' => $periods, 'message' => 'Grading periods retrieved successfully']);
         } catch (Exception $e) {

@@ -402,7 +402,8 @@ class StudentGradesPage extends App {
     renderFilters() {
         const periodOptions = (this.periods || []).map(p => {
             const activeLabel = p.is_active === 1 ? ' (Active)' : '';
-            return `<ui-option value="${p.id}">${p.name} (${p.academic_year})${activeLabel}</ui-option>`;
+            const yearDisplay = p.academic_year_display_name || p.academic_year || 'N/A';
+            return `<ui-option value="${p.id}">${p.name} (${yearDisplay})${activeLabel}</ui-option>`;
         }).join('');
 
         const filters = this.get('filters') || { grading_period_id: '' };

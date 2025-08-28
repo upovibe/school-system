@@ -321,7 +321,7 @@ class AuthController {
             // Update session
             $this->sessionModel->update($session['id'], [
                 'token' => $newToken,
-                'expires_at' => date('Y-m-d H:i:s', strtotime('+24 hours'))
+                'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour'))
             ]);
             
             unset($user['password']);

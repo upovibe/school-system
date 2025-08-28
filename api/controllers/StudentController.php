@@ -766,7 +766,7 @@ class StudentController {
             'email' => $student['email'],
             'role' => 'student',
             'iat' => time(),
-            'exp' => time() + (24 * 60 * 60) // 24 hours
+            'exp' => time() + (60 * 60) // 1 hour
         ]);
         
         $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));

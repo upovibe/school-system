@@ -462,7 +462,7 @@ class StudentGradesPage extends App {
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
             { key: 'final_pct', label: 'Final Total Score %' },
-            { key: 'final_grade', label: 'Letter' },
+            { key: 'final_grade', label: 'Grade' },
             { key: 'remarks', label: 'Remarks' },
             { key: 'updated', label: 'Updated' }
         ];

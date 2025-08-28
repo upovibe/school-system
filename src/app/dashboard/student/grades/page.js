@@ -177,10 +177,11 @@ class StudentGradesPage extends App {
             await this.loadSubjects();
             await this.loadGradingPeriods();
             
-            // Default: preselect the first available grading period
+            // Default: preselect the active grading period (is_active=1)
             if (this.periods && this.periods.length > 0) {
-                const firstPeriodId = String(this.periods[0].id);
-                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+                const activePeriod = this.periods.find(p => p.is_active === 1);
+                const selectedPeriodId = activePeriod ? String(activePeriod.id) : String(this.periods[0].id);
+                const next = { ...this.get('filters'), grading_period_id: selectedPeriodId };
                 this.set('filters', next);
             }
 
@@ -399,16 +400,26 @@ class StudentGradesPage extends App {
     }
 
     renderFilters() {
-        const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name} (${p.academic_year})</ui-option>`).join('');
+        const periodOptions = (this.periods || []).map(p => {
+            const activeLabel = p.is_active === 1 ? ' (Active)' : '';
+            return `<ui-option value="${p.id}">${p.name} (${p.academic_year})${activeLabel}</ui-option>`;
+        }).join('');
 
         const filters = this.get('filters') || { grading_period_id: '' };
         const { grading_period_id } = filters;
+        
+        // Find the selected period to show if it's active
+        const selectedPeriod = this.periods.find(p => String(p.id) === String(grading_period_id));
+        const isActivePeriod = selectedPeriod && selectedPeriod.is_active === 1;
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300 my-10">
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
+                        <label class="block text-xs text-gray-600 mb-1">
+                            Grading Period
+                            ${isActivePeriod ? '<span class="ml-1 text-green-600 font-medium">(Active Period)</span>' : ''}
+                        </label>
                         <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
                             ${periodOptions}
                         </ui-search-dropdown>

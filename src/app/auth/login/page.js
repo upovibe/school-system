@@ -40,16 +40,12 @@ class LoginPage extends App {
             
             // If both userData and token exist, user is authenticated
             if (userData && token) {
-                console.log('🔐 User already authenticated, redirecting to dashboard...');
-                
                 // Parse user data to get role
                 const user = JSON.parse(userData);
                 const role = user.role || 'admin';
                 
                 // Redirect to appropriate dashboard
                 this.redirectToDashboard(role);
-            } else {
-                console.log('🔓 User not authenticated, showing login form');
             }
         } catch (error) {
             console.error('❌ Error checking authentication:', error);

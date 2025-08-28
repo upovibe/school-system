@@ -24,8 +24,6 @@ window.router = router;
  */
 function clearAuthStorage() {
     try {
-        console.log('🔄 Clearing authentication data from localStorage...');
-        
         // Clear all authentication-related data
         localStorage.removeItem('userData');
         localStorage.removeItem('token');
@@ -35,8 +33,6 @@ function clearAuthStorage() {
         localStorage.removeItem('lastActivity');
         localStorage.removeItem('sessionStart');
         localStorage.removeItem('rememberMe');
-        
-        console.log('✅ Authentication data cleared.');
     } catch (error) {
         console.error('❌ Error clearing localStorage:', error);
     }
@@ -50,18 +46,13 @@ function clearAuthStorage() {
 function handleSessionState() {
     // If 'session_active' is not 'true', it means this is a new tab/window.
     if (sessionStorage.getItem('session_active') !== 'true') {
-        console.log('🚪 New session detected (tab/browser opened). Clearing auth data.');
         clearAuthStorage();
-    } else {
-        console.log('✅ Session active.');
     }
 }
 
 // Run the session check as soon as the script loads.
 try {
-    console.log('🚀 Initializing session state handler...');
     handleSessionState();
-    console.log('✅ Session state handler initialized.');
 } catch (error) {
     console.error('❌ Error initializing session state handler:', error);
 }

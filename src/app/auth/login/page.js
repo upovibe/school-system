@@ -25,6 +25,38 @@ class LoginPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Login | School System';
+        
+        // Check if user is already authenticated and redirect if so
+        this.checkAuthenticationAndRedirect();
+    }
+    
+    /**
+     * Check if user is already authenticated and redirect to appropriate dashboard
+     */
+    checkAuthenticationAndRedirect() {
+        try {
+            const userData = localStorage.getItem('userData');
+            const token = localStorage.getItem('token');
+            
+            // If both userData and token exist, user is authenticated
+            if (userData && token) {
+                console.log('🔐 User already authenticated, redirecting to dashboard...');
+                
+                // Parse user data to get role
+                const user = JSON.parse(userData);
+                const role = user.role || 'admin';
+                
+                // Redirect to appropriate dashboard
+                this.redirectToDashboard(role);
+            } else {
+                console.log('🔓 User not authenticated, showing login form');
+            }
+        } catch (error) {
+            console.error('❌ Error checking authentication:', error);
+            // If there's an error parsing user data, clear it and show login
+            localStorage.removeItem('userData');
+            localStorage.removeItem('token');
+        }
     }
 
     handleInputChange(field, value) {
@@ -113,6 +145,10 @@ class LoginPage extends App {
                 profileData: user.profile_data || null
             }));
             localStorage.setItem('token', user.token);
+
+            // Mark the session as active in sessionStorage.
+            // This flag will be checked on page load to determine if it's a new tab.
+            sessionStorage.setItem('session_active', 'true');
 
             // Check if user needs to change password
             if (requires_password_change) {

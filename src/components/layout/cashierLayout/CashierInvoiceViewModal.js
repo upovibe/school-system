@@ -32,7 +32,7 @@ class CashierInvoiceViewModal extends HTMLElement {
     const money = (v) => Number(v || 0).toFixed(2);
     const formatDate = (d) => {
       if (!d) return 'N/A';
-      try { return new Date(d).toLocaleString(); } catch { return d; }
+      try { return new Date(d).toLocaleDateString(); } catch { return d; }
     };
 
     if (!i) {

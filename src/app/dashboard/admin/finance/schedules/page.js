@@ -85,7 +85,7 @@ class FinanceSchedulesPage extends App {
               <div class="text-emerald-100 text-xs sm:text-sm">Total Schedules</div>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">

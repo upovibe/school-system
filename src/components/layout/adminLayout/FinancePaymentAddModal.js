@@ -10,6 +10,7 @@ class FinancePaymentAddModal extends HTMLElement {
     this._invoices = [];
     this._students = [];
     this._saving = false;
+    this._studentFeeAmount = null;
   }
 
   static get observedAttributes() { return ['open']; }
@@ -68,6 +69,16 @@ class FinancePaymentAddModal extends HTMLElement {
       invoiceDd.addEventListener('value-change', () => this.updateInvoiceInfo());
       invoiceDd._bound = true;
     }
+
+    // Setup amount input event listener to update invoice info for new invoices
+    setTimeout(() => {
+      const amountInput = this.querySelector('ui-input[data-field="amount"]');
+      if (amountInput && !amountInput._bound) {
+        amountInput.addEventListener('input', () => this.updateInvoiceInfo());
+        amountInput.addEventListener('change', () => this.updateInvoiceInfo());
+        amountInput._bound = true;
+      }
+    }, 0);
 
     setTimeout(() => this.updateInvoiceInfo(), 0);
   }
@@ -139,6 +150,8 @@ class FinancePaymentAddModal extends HTMLElement {
         // Student has no invoices - hide dropdown, show read-only
         invoiceDd.style.display = 'none';
         if (invoiceReadOnly) invoiceReadOnly.style.display = 'block';
+        // Get the fee amount for this student
+        this.getStudentFeeAmount(selectedStudentId);
       }
     } else {
       // No student selected - show dropdown, hide read-only
@@ -194,6 +207,24 @@ class FinancePaymentAddModal extends HTMLElement {
     return `${inv.invoice_number || ('#' + inv.id)} — ${name}`;
   }
 
+  // Get the fee amount for a student from the fee schedule
+  async getStudentFeeAmount(studentId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await api.withToken(token).get(`/finance/amount-due?student_id=${studentId}`);
+      if (response.status === 200 && response.data?.success) {
+        this._studentFeeAmount = response.data.data.amount_due;
+        // Update the invoice info to show the actual fee amount
+        this.updateInvoiceInfo();
+      }
+    } catch (error) {
+      console.error('Error getting student fee amount:', error);
+      this._studentFeeAmount = null;
+    }
+  }
+
   updateInvoiceInfo() {
     const invoiceDd = this.querySelector('ui-search-dropdown[name="invoice_id"]');
     const infoEl = this.querySelector('#invoice-info');
@@ -215,10 +246,37 @@ class FinancePaymentAddModal extends HTMLElement {
           • Balance: <span class="font-semibold ${Number(bal)>0?'text-red-600':'text-green-600'}">${bal}</span>
         </div>
       `;
-         } else {
-       // Read-only input is visible - clear info since message is already in the input
-       infoEl.innerHTML = '';
-     }
+    } else {
+      // Read-only input is visible - show new invoice details
+      const amountInput = this.querySelector('ui-input[data-field="amount"]');
+      const amount = amountInput?.value ? Number(amountInput.value) : 0;
+      
+      // Use the actual fee amount from fee schedule if available, otherwise use payment amount
+      const feeAmount = this._studentFeeAmount || amount;
+      
+      if (feeAmount > 0) {
+        // Show new invoice details based on fee schedule amount
+        const paymentAmount = amount || 0;
+        const balance = feeAmount - paymentAmount;
+        
+        infoEl.innerHTML = `
+          <div class="text-xs text-gray-600 mt-1">
+            Amount Due: <span class="font-medium">${feeAmount.toFixed(2)}</span>
+            • Paid: <span class="font-medium">${paymentAmount.toFixed(2)}</span>
+            • Balance: <span class="font-semibold ${balance > 0 ? 'text-red-600' : 'text-green-600'}">${balance.toFixed(2)}</span>
+          </div>
+        `;
+      } else {
+        // No fee amount available yet
+        infoEl.innerHTML = `
+          <div class="text-xs text-gray-600 mt-1">
+            Amount Due: <span class="font-medium">Loading...</span>
+            • Paid: <span class="font-medium">0.00</span>
+            • Balance: <span class="font-semibold text-gray-600">Loading...</span>
+          </div>
+        `;
+      }
+    }
   }
 
   async save() {

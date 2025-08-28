@@ -453,7 +453,7 @@ class AuthController {
             'email' => $user['email'],
             'role_id' => $user['role_id'],
             'iat' => time(),
-            'exp' => time() + (24 * 60 * 60) // 24 hours
+            'exp' => time() + (60 * 60) // 1 hour
         ]);
         
         $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
@@ -506,7 +506,7 @@ class AuthController {
                 'token' => $token,
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
                 'ip_address' => $this->getRealIpAddress(),
-                'expires_at' => date('Y-m-d H:i:s', time() + (24 * 60 * 60)) // 24 hours
+                'expires_at' => date('Y-m-d H:i:s', time() + (60 * 60)) // 1 hour
             ];
             
             $this->sessionModel->create($sessionData);

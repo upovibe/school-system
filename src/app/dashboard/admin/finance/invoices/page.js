@@ -517,7 +517,7 @@ class FinanceInvoicesPage extends App {
               pagination
               page-size="50"
               action
-              addable
+              actions='view,delete'
               refresh
               print
               bordered

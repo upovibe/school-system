@@ -449,7 +449,6 @@ class GradingPeriodManagementPage extends App {
                             action
                             addable
                             refresh
-                            print
                             bordered
                             striped
                             class="w-full">

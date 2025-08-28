@@ -662,7 +662,6 @@ class TeacherStudentGradesPage extends App {
             page-size="50"
             action
             refresh
-            print
             bordered
             striped
             custom-actions='${JSON.stringify(this.getCustomActions())}'

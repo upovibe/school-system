@@ -553,7 +553,6 @@ class StudentGradeReportPage extends App {
                             pagination
                             page-size="50"
                             refresh
-                            print
                             bordered
                             striped
                             class="w-full">

@@ -290,8 +290,8 @@ class DashboardLayout extends App {
                 group: 'Finance',
                 items: [
                     { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
-                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
                     { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
+                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
                     { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
                 ]
             },
@@ -405,8 +405,8 @@ class DashboardLayout extends App {
                        group: 'Finance Management',
                        items: [
                            { label: 'Payment Scheduler', icon: 'fas fa-calendar-alt', href: '/dashboard/cashier/payment-scheduler' },
-                           { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Payment', icon: 'fas fa-credit-card', href: '/dashboard/cashier/payment' },
+                           { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/cashier/receipts' },
                        ]
                    }

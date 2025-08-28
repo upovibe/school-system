@@ -232,20 +232,31 @@ class FinancePaymentAddModal extends HTMLElement {
     
     // Check if dropdown is visible (student has invoices) or hidden (student has no invoices)
     if (invoiceDd && invoiceDd.style.display !== 'none') {
-      // Dropdown is visible - show invoice details
+      // Dropdown is visible - show invoice details with real-time payment updates
       const inv = (this._invoices || []).find(i => String(i.id) === String(invoiceDd.value));
       if (!inv) { 
         infoEl.innerHTML = ''; 
         return; 
       }
-      const bal = Number(inv.balance || (inv.amount_due - (inv.amount_paid || 0))).toFixed(2);
-      infoEl.innerHTML = `
-        <div class="text-xs text-gray-600 mt-1">
-          Amount Due: <span class="font-medium">${Number(inv.amount_due).toFixed(2)}</span>
-          • Paid: <span class="font-medium">${Number(inv.amount_paid || 0).toFixed(2)}</span>
-          • Balance: <span class="font-semibold ${Number(bal)>0?'text-red-600':'text-green-600'}">${bal}</span>
-        </div>
-      `;
+      
+      // Get the new payment amount being entered
+      const amountInput = this.querySelector('ui-input[data-field="amount"]');
+      const newPaymentAmount = amountInput?.value ? Number(amountInput.value) : 0;
+      
+      // Calculate current balance and projected balance after new payment
+      const currentPaid = Number(inv.amount_paid || 0);
+      const currentBalance = Number(inv.balance || (inv.amount_due - currentPaid));
+      const projectedPaid = currentPaid + newPaymentAmount;
+      const projectedBalance = Number(inv.amount_due) - projectedPaid;
+      
+             infoEl.innerHTML = `
+         <div class="text-xs text-gray-600 mt-1">
+           Amount Due: <span class="font-medium">${Number(inv.amount_due).toFixed(2)}</span>
+           • Paid: <span class="font-medium">${currentPaid.toFixed(2)}</span>
+           ${newPaymentAmount > 0 ? `• + New Payment: <span class="font-medium text-blue-600">${newPaymentAmount.toFixed(2)}</span>` : ''}
+           • Balance: <span class="font-semibold ${(currentBalance - newPaymentAmount) > 0 ? 'text-red-600' : 'text-green-600'}">${(currentBalance - newPaymentAmount).toFixed(2)}</span>
+         </div>
+       `;
     } else {
       // Read-only input is visible - show new invoice details
       const amountInput = this.querySelector('ui-input[data-field="amount"]');

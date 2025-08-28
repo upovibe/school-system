@@ -120,7 +120,7 @@ class CashierInvoiceViewModal extends HTMLElement {
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   <i class="fas fa-calendar-alt mr-1"></i>Term
                 </label>
-                <p class="text-gray-900 text-sm">${safe(i.term)}</p>
+                <p class="text-gray-900 text-sm">${safe(i.grading_period || i.term)}</p>
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1">

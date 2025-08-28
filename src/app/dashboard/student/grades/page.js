@@ -41,7 +41,25 @@ class StudentGradesPage extends App {
         super.connectedCallback();
         document.title = 'My Grades | School System';
         this.bootstrap();
-        this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Single event listener for all button clicks
+        this.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            
+            if (action === 'show-student-grades-info') {
+                this.showStudentGradesInfo();
+            } else if (action === 'print-report') {
+                this.printTerminalReport();
+            } else if (action === 'apply-filters') {
+                this.loadGrades();
+            } else if (action === 'clear-filters') {
+                this.set('filters', { grading_period_id: '' });
+                this.loadGrades();
+            }
+        });
 
         // Filter interactions
         this.addEventListener('change', (e) => {
@@ -55,27 +73,9 @@ class StudentGradesPage extends App {
                 this.loadGrades();
             }
         });
-
-        // Apply/Clear filter buttons
-        this.addEventListener('click', (e) => {
-            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
-            if (action === 'apply-filters') {
-                this.loadGrades();
-            } else if (action === 'clear-filters') {
-                this.set('filters', { grading_period_id: '' });
-                this.loadGrades();
-            }
-        });
     }
 
-    handleHeaderActions(event) {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
-        const action = button.getAttribute('data-action');
-        if (action === 'show-student-grades-info') {
-            this.showStudentGradesInfo();
-        }
-    }
+
 
     showStudentGradesInfo() {
         const dialog = document.createElement('ui-dialog');
@@ -96,6 +96,79 @@ class StudentGradesPage extends App {
             </div>
         `;
         document.body.appendChild(dialog);
+    }
+
+    async printTerminalReport() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ 
+                    title: 'Authentication Error', 
+                    message: 'Please log in to print your report', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            const filters = this.get('filters') || {};
+            const periodId = filters.grading_period_id;
+            
+            // Build the print URL with the selected grading period
+            let printUrl = '/api/student/print/terminal-report';
+            if (periodId) {
+                printUrl += `?grading_period_id=${periodId}`;
+            }
+
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    Toast.show({ 
+                        title: 'Print Report', 
+                        message: 'Terminal report opened in new window. Use browser print function to print.', 
+                        variant: 'success', 
+                        duration: 3000 
+                    });
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                } else {
+                    Toast.show({ 
+                        title: 'Print Error', 
+                        message: 'Please allow pop-ups to print your report', 
+                        variant: 'warning', 
+                        duration: 3000 
+                    });
+                }
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Print failed with status: ${response.status}. ${errorText}`);
+            }
+        } catch (error) {
+            Toast.show({ 
+                title: 'Print Error', 
+                message: `Failed to generate print report: ${error.message}`, 
+                variant: 'error', 
+                duration: 5000 
+            });
+        }
     }
 
     async bootstrap() {
@@ -341,12 +414,17 @@ class StudentGradesPage extends App {
                         </ui-search-dropdown>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-3">
-                    <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
+                <div class="flex justify-between gap-2 mt-3">
+                    <div>
+                        <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
                         <i class="fas fa-filter mr-1"></i> Apply Filters
                     </ui-button>
                     <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
                         <i class="fas fa-times mr-1"></i> Clear Filters
+                    </ui-button>
+                    </div>
+                    <ui-button type="button" data-action="print-report" variant="success" size="sm">
+                        <i class="fas fa-print mr-1"></i> Print Terminal Report
                     </ui-button>
                 </div>
             </div>
@@ -404,7 +482,6 @@ class StudentGradesPage extends App {
                         pagination
                         page-size="50"
                         refresh
-                        print
                         bordered
                         striped
                         class="w-full">

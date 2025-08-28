@@ -1601,6 +1601,236 @@ class StudentController {
     }
 
     /**
+     * Print terminal report for the authenticated student (student-only)
+     * Generates HTML report for the student across all subjects
+     */
+    public function printTerminalReport() {
+        try {
+            // Require student authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+
+            $student = $_REQUEST['current_student'];
+            $query = $_GET ?? [];
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+
+            // Get student's class information
+            $classId = $student['current_class_id'] ?? null;
+            if (!$classId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Student not assigned to any class']);
+                return;
+            }
+
+            // Get class information
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($classId);
+            
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Class not found']);
+                return;
+            }
+
+            // Get class subjects
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubjects = $classSubjectModel->getByClassId($classId);
+            
+            if (!is_array($classSubjects)) {
+                $classSubjects = [];
+            }
+
+            // Get grades for this student
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grades = $gradeModel->getStudentGradesWithDetails((int)$student['id'], ['class_id' => $classId, 'grading_period_id' => $periodId]);
+
+            // Generate the HTML report using the existing template
+            $html = $this->generateStudentTerminalReportHTML($student, $class, $grades, $classSubjects, $periodId);
+
+            // Set content type to HTML
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: inline; filename="student_terminal_report.html"');
+            
+            echo $html;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error generating terminal report: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate student terminal report HTML using the existing template
+     */
+    private function generateStudentTerminalReportHTML($student, $class, $grades, $classSubjects, $periodId) {
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Get grading period name
+        $gradingPeriodName = 'All Periods';
+        if ($periodId) {
+            require_once __DIR__ . '/../models/GradingPeriodModel.php';
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period) {
+                $gradingPeriodName = $period['name'];
+            }
+        }
+        
+        // Get academic year
+        $academicYear = 'N/A';
+        if ($class['academic_year_id']) {
+            require_once __DIR__ . '/../models/AcademicYearModel.php';
+            $academicYearModel = new AcademicYearModel($this->pdo);
+            $academicYearData = $academicYearModel->findById($class['academic_year_id']);
+            if ($academicYearData) {
+                $academicYear = $academicYearData['year_code'];
+            }
+        }
+        
+        // Get class teacher information
+        $teacherName = 'No Class Teacher';
+        try {
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+            
+            // Get the first teacher assignment for this class (any subject)
+            $assignments = $teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
+            
+            if (!empty($assignments)) {
+                $firstAssignment = $assignments[0];
+                $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+            }
+        } catch (Exception $e) {
+            // If there's an error, keep the default value
+            $teacherName = 'No Class Teacher';
+        }
+        
+        // Generate HTML directly
+        $html = '<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Student Terminal Report - ' . htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) . '</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                .school-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                .report-title { font-size: 20px; margin-bottom: 10px; }
+                .student-info { margin-bottom: 30px; }
+                .info-row { display: flex; margin-bottom: 10px; }
+                .info-label { font-weight: bold; width: 150px; }
+                .grades-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                .grades-table th, .grades-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                .grades-table th { background-color: #f2f2f2; font-weight: bold; }
+                .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                @media print { body { margin: 0; } .no-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="school-name">' . htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') . '</div>
+                <div class="report-title">Student Terminal Report</div>
+                <div>' . htmlspecialchars($gradingPeriodName) . ' - ' . htmlspecialchars($academicYear) . '</div>
+            </div>
+            
+            <div class="student-info">
+                <div class="info-row">
+                    <span class="info-label">Student Name:</span>
+                    <span>' . htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) . '</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Student ID:</span>
+                    <span>' . htmlspecialchars($student['student_id'] ?? 'N/A') . '</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Class:</span>
+                    <span>' . htmlspecialchars($class['name'] . ' (' . $class['section'] . ')') . '</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Class Teacher:</span>
+                    <span>' . htmlspecialchars($teacherName) . '</span>
+                </div>
+            </div>
+            
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Assignment Total</th>
+                        <th>Exam Total</th>
+                        <th>Final Percentage</th>
+                        <th>Letter Grade</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>';
+        
+        // Add grade rows
+        foreach ($classSubjects as $subject) {
+            $subjectId = $subject['subject_id'];
+            $grade = null;
+            
+            // Find grade for this subject
+            foreach ($grades as $g) {
+                if ($g['subject_id'] == $subjectId) {
+                    $grade = $g;
+                    break;
+                }
+            }
+            
+            $html .= '<tr>
+                <td>' . htmlspecialchars($subject['subject_name'] ?? $subject['subject_code']) . '</td>
+                <td>' . ($grade ? number_format($grade['assignment_total'] ?? 0, 2) : 'N/A') . '</td>
+                <td>' . ($grade ? number_format($grade['exam_total'] ?? 0, 2) : 'N/A') . '</td>
+                <td>' . ($grade ? number_format($grade['final_percentage'] ?? 0, 2) . '%' : 'N/A') . '</td>
+                <td>' . htmlspecialchars($grade['final_letter_grade'] ?? 'N/A') . '</td>
+                <td>' . htmlspecialchars($grade['remarks'] ?? '') . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated on: ' . date('F j, Y \a\t g:i A') . '</p>
+                <p>This is an official document from ' . htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') . '</p>
+            </div>
+        </body>
+        </html>';
+        
+        return $html;
+    }
+
+    /**
+     * Get school settings for the report
+     */
+    private function getSchoolSettings() {
+        try {
+            require_once __DIR__ . '/../models/SettingModel.php';
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            return $settings;
+        } catch (Exception $e) {
+            // Return default settings if there's an error
+            return [
+                'application_name' => 'School Management System',
+                'application_tagline' => 'Excellence in Education',
+                'application_logo' => '',
+                'school_address' => 'School Address',
+                'school_phone' => 'School Phone',
+                'school_email' => 'school@example.com'
+            ];
+        }
+    }
+
+    /**
      * Download assignment attachment (student only)
      */
     public function downloadAssignmentAttachment($filename) {

@@ -330,6 +330,7 @@ Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');
 Router::get('/student/grading-periods', 'StudentController@getGradingPeriods');
 Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects');
+Router::get('/student/print/terminal-report', 'StudentController@printTerminalReport');
 
 // Finance - Fee Schedules (admin only)
 Router::get('/finance/schedules', 'FinanceController@indexSchedules');

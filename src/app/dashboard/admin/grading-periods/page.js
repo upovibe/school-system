@@ -448,6 +448,7 @@ class GradingPeriodManagementPage extends App {
                             page-size="50"
                             action
                             addable
+                            print
                             refresh
                             bordered
                             striped

@@ -1710,99 +1710,21 @@ class StudentController {
             $teacherName = 'No Class Teacher';
         }
         
-        // Generate HTML directly
-        $html = '<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Student Terminal Report - ' . htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) . '</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-                .school-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-                .report-title { font-size: 20px; margin-bottom: 10px; }
-                .student-info { margin-bottom: 30px; }
-                .info-row { display: flex; margin-bottom: 10px; }
-                .info-label { font-weight: bold; width: 150px; }
-                .grades-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                .grades-table th, .grades-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                .grades-table th { background-color: #f2f2f2; font-weight: bold; }
-                .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                @media print { body { margin: 0; } .no-print { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="school-name">' . htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') . '</div>
-                <div class="report-title">Student Terminal Report</div>
-                <div>' . htmlspecialchars($gradingPeriodName) . ' - ' . htmlspecialchars($academicYear) . '</div>
-            </div>
-            
-            <div class="student-info">
-                <div class="info-row">
-                    <span class="info-label">Student Name:</span>
-                    <span>' . htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) . '</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Student ID:</span>
-                    <span>' . htmlspecialchars($student['student_id'] ?? 'N/A') . '</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Class:</span>
-                    <span>' . htmlspecialchars($class['name'] . ' (' . $class['section'] . ')') . '</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Class Teacher:</span>
-                    <span>' . htmlspecialchars($teacherName) . '</span>
-                </div>
-            </div>
-            
-            <table class="grades-table">
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Assignment Total</th>
-                        <th>Exam Total</th>
-                        <th>Final Percentage</th>
-                        <th>Letter Grade</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>';
+        // Use the separate template file
+        $templatePath = __DIR__ . '/../email/templates/student_terminal_report.php';
         
-        // Add grade rows
-        foreach ($classSubjects as $subject) {
-            $subjectId = $subject['subject_id'];
-            $grade = null;
-            
-            // Find grade for this subject
-            foreach ($grades as $g) {
-                if ($g['subject_id'] == $subjectId) {
-                    $grade = $g;
-                    break;
-                }
-            }
-            
-            $html .= '<tr>
-                <td>' . htmlspecialchars($subject['subject_name'] ?? $subject['subject_code']) . '</td>
-                <td>' . ($grade ? number_format($grade['assignment_total'] ?? 0, 2) : 'N/A') . '</td>
-                <td>' . ($grade ? number_format($grade['exam_total'] ?? 0, 2) : 'N/A') . '</td>
-                <td>' . ($grade ? number_format($grade['final_percentage'] ?? 0, 2) . '%' : 'N/A') . '</td>
-                <td>' . htmlspecialchars($grade['final_letter_grade'] ?? 'N/A') . '</td>
-                <td>' . htmlspecialchars($grade['remarks'] ?? '') . '</td>
-            </tr>';
+        if (!file_exists($templatePath)) {
+            throw new Exception('Student terminal report template not found');
         }
         
-        $html .= '</tbody>
-            </table>
-            
-            <div class="footer">
-                <p>Generated on: ' . date('F j, Y \a\t g:i A') . '</p>
-                <p>This is an official document from ' . htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') . '</p>
-            </div>
-        </body>
-        </html>';
+        // Start output buffering to capture the template output
+        ob_start();
+        
+        // Include the template with variables available
+        include $templatePath;
+        
+        // Get the captured HTML content
+        $html = ob_get_clean();
         
         return $html;
     }

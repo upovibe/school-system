@@ -371,6 +371,9 @@ Router::get('/cashier/schedules/student', 'CashierController@getStudentSchedules
 Router::get('/cashier/schedules/active', 'CashierController@getActiveSchedules');
 Router::get('/cashier/schedules/search', 'CashierController@searchSchedules');
 
+// Cashier - Helpers (must come BEFORE {id} routes to avoid conflicts)
+Router::get('/cashier/amount-due', 'CashierController@getAmountDue');
+
 // Cashier - Fee Invoices (cashier only)
 Router::get('/cashier/invoices', 'CashierController@indexInvoices');
 Router::post('/cashier/invoices', 'CashierController@storeInvoice');

@@ -369,8 +369,31 @@ class CashierController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
             $invoiceId = isset($data['invoice_id']) ? (int)$data['invoice_id'] : 0;
             $amount = isset($data['amount']) ? (float)$data['amount'] : 0.0;
-            if ($invoiceId <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'invoice_id is required']); return; }
+            
             if ($amount <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'amount must be greater than 0']); return; }
+
+            // Check if we have invoice_id or need to create invoice
+            if ($invoiceId <= 0) {
+                // Try to create invoice automatically if we have student details
+                if (isset($data['student_id']) && isset($data['academic_year']) && isset($data['grading_period'])) {
+                    $studentId = (int)$data['student_id'];
+                    $academicYear = (string)$data['academic_year'];
+                    $gradingPeriod = (string)$data['grading_period'];
+                    
+                    // Auto-create invoice for this student
+                    $invoice = $this->autoCreateInvoiceForStudent($studentId, $academicYear, $gradingPeriod);
+                    if (!$invoice) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'message' => 'Could not create invoice for student. Please ensure student is enrolled in a class with fee schedule.']);
+                        return;
+                    }
+                    $invoiceId = $invoice['id'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'Either invoice_id OR (student_id + academic_year + grading_period) is required']);
+                    return;
+                }
+            }
 
             $invoice = $this->feeInvoiceModel->findById($invoiceId);
             if (!$invoice) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Invoice not found']); return; }
@@ -1017,22 +1040,60 @@ class CashierController {
      */
     private function deriveAmountDueFromSchedule(int $studentId, string $academicYear, string $gradingPeriod): ?float {
         try {
-            // Get student's current class
-            $classStmt = $this->pdo->prepare("SELECT current_class_id FROM students WHERE id = ? LIMIT 1");
-            $classStmt->execute([$studentId]);
-            $classId = $classStmt->fetchColumn();
-            
+            // Find student's current class
+            $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $stmt->execute([$studentId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $classId = $row['current_class_id'] ?? null;
             if (!$classId) return null;
-            
-            // Get student type
-            $studentStmt = $this->pdo->prepare("SELECT student_type FROM students WHERE id = ? LIMIT 1");
-            $studentStmt->execute([$studentId]);
-            $studentType = $studentStmt->fetchColumn();
-            
-            // Find matching schedule
-            $schedule = $this->findScheduleByComposite($classId, $academicYear, $gradingPeriod, $studentType);
-            
-            return $schedule ? (float)($schedule['total_fee'] ?? 0) : null;
+
+            // Resolve student's type if available to match typed schedules (e.g., Day/Boarding)
+            $typeStmt = $this->pdo->prepare('SELECT student_type FROM students WHERE id = ? LIMIT 1');
+            $typeStmt->execute([$studentId]);
+            $studentType = $typeStmt->fetchColumn() ?: null;
+
+            // Normalize inputs and try multiple candidates for year/term
+            $yearCandidates = [];
+            $trimYear = trim($academicYear);
+            $yearCandidates[] = $trimYear;
+            if (preg_match('/(\d{4})$/', $trimYear, $m)) {
+                $yearCandidates[] = $m[1];
+            }
+            $yearCandidates = array_values(array_unique($yearCandidates));
+
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            $gradingPeriodCandidates[] = $gradingPeriodLower;
+            // If numeric like '1', add 'term1'
+            if (preg_match('/^\s*(\d+)\s*$/', $gradingPeriodLower, $tm)) {
+                $gradingPeriodCandidates[] = 'term' . $tm[1];
+            }
+            // Also remove spaces variant
+            $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
+            $gradingPeriodCandidates = array_values(array_unique($gradingPeriodCandidates));
+
+            foreach ($yearCandidates as $y) {
+                foreach ($gradingPeriodCandidates as $t) {
+                    $schedule = $this->findScheduleByComposite($classId, $y, $t, $studentType);
+                    if ($schedule && isset($schedule['total_fee'])) {
+                        return (float)$schedule['total_fee'];
+                    }
+                }
+            }
+
+            // Fallback: choose the most recent schedule for the class matching the student's type (if known)
+            if ($studentType) {
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
+                $stmt2->execute([$classId, $studentType]);
+            } else {
+                $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY academic_year DESC, grading_period DESC, id DESC LIMIT 1');
+                $stmt2->execute([$classId]);
+            }
+            $fallback = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($fallback && isset($fallback['total_fee'])) {
+                return (float)$fallback['total_fee'];
+            }
+            return null;
         } catch (Exception $e) {
             return null;
         }
@@ -1054,6 +1115,188 @@ class CashierController {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Auto-create invoice for a student if none exists for the given period
+     * Used by the enhanced payment system to create invoices on-demand
+     */
+    private function autoCreateInvoiceForStudent(int $studentId, string $academicYear, string $gradingPeriod) {
+        try {
+            // Get student details
+            $student = $this->studentModel->findById($studentId);
+            if (!$student) return null;
+
+            // Get student's current class
+            $classId = $student['current_class_id'] ?? null;
+            if (!$classId) return null;
+
+            // Check if invoice already exists for this student/period combination
+            $existingInvoice = $this->findInvoiceByStudentAndPeriod($studentId, $academicYear, $gradingPeriod);
+            if ($existingInvoice) return $existingInvoice;
+
+            // Get amount due from fee schedule
+            $amountDue = $this->deriveAmountDueFromSchedule($studentId, $academicYear, $gradingPeriod);
+            if ($amountDue === null || $amountDue <= 0) return null;
+
+            // Create invoice data
+            $invoiceData = [
+                'student_id' => $studentId,
+                'academic_year' => $academicYear,
+                'grading_period' => $gradingPeriod,
+                'amount_due' => $amountDue,
+                'amount_paid' => 0,
+                'balance' => $amountDue,
+                'status' => 'open',
+                'issue_date' => date('Y-m-d'),
+                'student_type' => $student['student_type'] ?? null,
+                'created_by' => $this->getCurrentUserIdFromToken()
+            ];
+
+            // Generate invoice number
+            $invoiceData['invoice_number'] = $this->generateInvoiceNumber();
+
+            // Create the invoice
+            $invoiceId = $this->feeInvoiceModel->create($invoiceData);
+            if (!$invoiceId) return null;
+
+            // Get the created invoice
+            $createdInvoice = $this->feeInvoiceModel->findById($invoiceId);
+            
+            // Log the auto-creation
+            $this->logAction('cashier_invoice_auto_created', 'Auto-created invoice for payment', [
+                'fee_invoice_id' => $invoiceId,
+                'student_id' => $studentId,
+                'academic_year' => $academicYear,
+                'grading_period' => $gradingPeriod,
+                'amount_due' => $amountDue
+            ]);
+
+            return $createdInvoice;
+        } catch (Exception $e) {
+            error_log('Error auto-creating invoice: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Find existing invoice for student and period combination
+     */
+    private function findInvoiceByStudentAndPeriod(int $studentId, string $academicYear, string $gradingPeriod) {
+        try {
+            $sql = "SELECT * FROM fee_invoices WHERE student_id = ? AND academic_year = ? AND grading_period = ? LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$studentId, $academicYear, $gradingPeriod]);
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Compute amount due for a student based on current class and schedules.
+     * Params: student_id (required), academic_year (optional), term (optional)
+     */
+    public function getAmountDue() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            $studentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
+            $year = isset($_GET['academic_year']) ? (string)$_GET['academic_year'] : '';
+            $gradingPeriod = isset($_GET['grading_period']) ? (string)$_GET['grading_period'] : '';
+            if ($studentId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'student_id is required']);
+                return;
+            }
+
+            // Resolve class_id
+            $stmt = $this->pdo->prepare('SELECT current_class_id FROM students WHERE id = ? LIMIT 1');
+            $stmt->execute([$studentId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $classId = $row['current_class_id'] ?? null;
+            if (!$classId) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Student has no current class']);
+                return;
+            }
+
+            // Build candidate years/terms similar to derive method
+            $yearCandidates = [];
+            $trimYear = trim($year);
+            if ($trimYear !== '') {
+                $yearCandidates[] = $trimYear;
+                if (preg_match('/(\\d{4})$/', $trimYear, $m)) {
+                    $yearCandidates[] = $m[1];
+                }
+            }
+
+            $gradingPeriodCandidates = [];
+            $gradingPeriodLower = strtolower(trim($gradingPeriod));
+            if ($gradingPeriodLower !== '') {
+                $gradingPeriodCandidates[] = $gradingPeriodLower;
+                if (preg_match('/^\\s*(\\d+)\\s*$/', $gradingPeriodLower, $tm)) {
+                    $gradingPeriodCandidates[] = 'term' . $tm[1];
+                }
+                $gradingPeriodCandidates[] = str_replace(' ', '', $gradingPeriodLower);
+            }
+
+            // Resolve student's type to match typed schedules; allow override via as_type
+            $typeStmt = $this->pdo->prepare('SELECT student_type FROM students WHERE id = ? LIMIT 1');
+            $typeStmt->execute([$studentId]);
+            $studentType = $typeStmt->fetchColumn() ?: null;
+            $overrideType = isset($_GET['as_type']) && $_GET['as_type'] !== '' ? (string)$_GET['as_type'] : null;
+            if ($overrideType) { $studentType = $overrideType; }
+
+            $chosen = null;
+            if (!empty($yearCandidates) && !empty($gradingPeriodCandidates)) {
+                foreach ($yearCandidates as $y) {
+                    foreach ($gradingPeriodCandidates as $t) {
+                        $s = $this->findScheduleByComposite($classId, $y, $t, $studentType);
+                        if ($s) { $chosen = $s; break 2; }
+                    }
+                }
+            }
+
+            if (!$chosen) {
+                // Fallback pick most recent/active for the class matching the student's type if present
+                if ($studentType) {
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? AND student_type = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
+                    $stmt2->execute([$classId, $studentType]);
+                } else {
+                    $stmt2 = $this->pdo->prepare('SELECT * FROM fee_schedules WHERE class_id = ? ORDER BY is_active DESC, academic_year DESC, grading_period DESC, id DESC LIMIT 1');
+                    $stmt2->execute([$classId]);
+                }
+                $chosen = $stmt2->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+
+            if (!$chosen) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No schedule found for class and student type']);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'amount_due' => isset($chosen['total_fee']) ? (float)$chosen['total_fee'] : 0,
+                    'schedule' => [
+                        'class_id' => (int)$chosen['class_id'],
+                        'academic_year' => $chosen['academic_year'] ?? null,
+                        'grading_period' => $chosen['grading_period'] ?? null,
+                        'total_fee' => $chosen['total_fee'] ?? null,
+                        'is_active' => isset($chosen['is_active']) ? (int)$chosen['is_active'] : null,
+                        'student_type' => $chosen['student_type'] ?? null,
+                    ]
+                ],
+                'message' => 'Amount due computed successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error computing amount due: ' . $e->getMessage()]);
+        }
     }
 
     /**

@@ -505,7 +505,7 @@ class StudentModel extends BaseModel {
     public function getStudentsBasicInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.status, c.name as class_name
+                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.status, s.current_class_id, c.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 WHERE s.status = 'active'

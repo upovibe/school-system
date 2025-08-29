@@ -270,9 +270,90 @@ class AdminAnnouncementsPage extends App {
         }
     }
 
+    // Render announcement card for preview tab
+    renderAnnouncementCard(announcement, index) {
+        const isPinned = Number(announcement.is_pinned) === 1;
+        const isHighPriority = announcement.priority === 'high';
+        const isUrgent = announcement.priority === 'urgent';
+        const isAdminSpecific = announcement.target_audience === 'admin';
+        
+        // Priority badge styling
+        let priorityBadge = '';
+        if (isUrgent) {
+            priorityBadge = '<span class="inline-flex items-center text-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Urgent</span>';
+        } else if (isHighPriority) {
+            priorityBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 text-nowrap">High Priority</span>';
+        }
+        
+        // Audience label
+        const audienceLabel = isAdminSpecific ? 'Admin-Specific' : 'General';
+        const audienceColor = isAdminSpecific ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
+        
+        // Status indicator
+        const statusColor = Number(announcement.is_active) === 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+        const statusText = Number(announcement.is_active) === 1 ? 'Active' : 'Inactive';
+        
+        return `
+            <div class="bg-white rounded-lg shadow-md border-l-4 ${isPinned ? 'border-l-yellow-500' : isHighPriority ? 'border-l-orange-500' : isUrgent ? 'border-l-red-500' : 'border-l-blue-500'} p-6 mb-6 hover:shadow-lg transition-shadow">
+                ${isPinned ? `
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-thumbtack text-yellow-500 mr-2"></i>
+                        <span class="text-yellow-700 text-sm font-medium">Pinned Announcement</span>
+                    </div>
+                ` : ''}
+                
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h3 class="text-xl font-bold text-gray-900">${announcement.title || 'No Title'}</h3>
+                            ${priorityBadge}
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${audienceColor}">
+                                <i class="fas ${isAdminSpecific ? 'fa-user-shield' : 'fa-users'} mr-1"></i>
+                                ${audienceLabel}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+                                <i class="fas fa-circle mr-1 text-xs"></i>
+                                ${statusText}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-tag mr-1"></i>
+                                ${announcement.announcement_type || 'General'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prose max-w-none">
+                    <div class="text-gray-700 leading-relaxed whitespace-pre-wrap">${announcement.content || 'No content available'}</div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="text-left">
+                            <span>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></span>
+                        </div>
+                        <div class="text-right">
+                            <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
+                            ${announcement.updated_at && announcement.updated_at !== announcement.created_at ? 
+                                `<div>Updated: ${new Date(announcement.updated_at).toLocaleDateString()}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
+        
+        // Filter announcements to only show those meant for admins
+        const adminAnnouncements = announcements ? announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'admin'
+        ) : [];
         
         return `
             ${this.renderHeader()}
@@ -328,7 +409,32 @@ class AdminAnnouncementsPage extends App {
                         
                         <!-- Preview Tab Panel -->
                         <ui-tab-panel value="preview">
-                            <!-- Preview content will be added here later -->
+                            <div class="space-y-6">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                                    <h3 class="text-lg font-semibold text-gray-900">Announcements Preview</h3>
+                                    <div class="ml-auto flex items-center space-x-4">
+                                        <div class="text-sm text-gray-500">
+                                            ${adminAnnouncements ? `${adminAnnouncements.length} announcements` : '0 announcements'}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${adminAnnouncements && adminAnnouncements.length > 0 ? `
+                                    <div class="space-y-6">
+                                        ${adminAnnouncements.map((announcement, index) => this.renderAnnouncementCard(announcement, index)).join('')}
+                                    </div>
+                                ` : `
+                                    <!-- No Announcements -->
+                                    <div class="text-center py-12">
+                                        <div class="mx-auto h-24 w-24 text-gray-300 mb-4">
+                                            <i class="fas fa-bullhorn text-6xl"></i>
+                                        </div>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
+                                        <p class="text-gray-500">There are no admin announcements available at the moment.</p>
+                                        <p class="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                                    </div>
+                                `}
+                            </div>
                         </ui-tab-panel>
                     </ui-tabs>
                 `}

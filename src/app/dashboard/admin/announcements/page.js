@@ -16,6 +16,7 @@ class AdminAnnouncementsPage extends App {
         this.announcements = null;
         this.loading = false;
         this.activeTab = 'table'; // Default active tab
+        this.activePreviewTab = 'pinned'; // Default active preview tab
     }
 
     // Summary counts for header
@@ -534,9 +535,9 @@ class AdminAnnouncementsPage extends App {
                                     <!-- Preview Tabs Interface -->
                                     <div class="rounded-xl overflow-hidden">                    
                                         <div class="pt-4">
-                                            <ui-tabs>
+                                            <ui-tabs value="pinned">
                                                 <ui-tab-list class="flex items-center justify-center">
-                                                    <ui-tab value="pinned">
+                                                    <ui-tab value="pinned" selected>
                                                         <i class="fas fa-thumbtack text-yellow-600 text-lg lg:text-base"></i>
                                                         <span class="hidden lg:inline ml-1 font-medium">Pinned (${this.getPreviewTabCounts().pinned})</span>
                                                     </ui-tab>

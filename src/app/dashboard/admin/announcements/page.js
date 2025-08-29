@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Tabs.js';
 import api from '@/services/api.js';
 
 /**
@@ -14,6 +15,7 @@ class AdminAnnouncementsPage extends App {
         super();
         this.announcements = null;
         this.loading = false;
+        this.activeTab = 'table'; // Default active tab
     }
 
     // Summary counts for header
@@ -129,6 +131,7 @@ class AdminAnnouncementsPage extends App {
         document.title = 'Announcements Management | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        this.addEventListener('tab-change', this.handleTabChange.bind(this));
     }
 
     handleHeaderActions(event) {
@@ -137,6 +140,14 @@ class AdminAnnouncementsPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-announcements-info') {
             this.showAnnouncementsInfo();
+        }
+    }
+
+    handleTabChange(event) {
+        const { detail } = event;
+        if (detail && detail.value) {
+            this.activeTab = detail.value;
+            // The tab content will automatically update through the render method
         }
     }
 
@@ -274,37 +285,52 @@ class AdminAnnouncementsPage extends App {
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
                     </div>
                 ` : `
-                    <!-- Announcements Table Section -->
-                    <div class="mb-8">
-                        <ui-table 
-                            title="Announcements Database"
-                            data="[]"
-                            columns='${JSON.stringify([
-                                { key: 'index', label: 'No.', html: false },
-                                { key: 'title', label: 'Title' },
-                                { key: 'content', label: 'Content' },
-                                { key: 'target_audience', label: 'Target Audience' },
-                                { key: 'announcement_type', label: 'Type' },
-                                { key: 'priority', label: 'Priority' },
-                                { key: 'is_active', label: 'Status' },
-                                { key: 'is_pinned', label: 'Pinned' },
-                                { key: 'created_by', label: 'Created By' },
-                                { key: 'updated', label: 'Updated' }
-                            ])}'
-                            sortable
-                            searchable
-                            search-placeholder="Search announcements..."
-                            pagination
-                            page-size="50"
-                            action
-                            addable
-                            print
-                            refresh
-                            bordered
-                            striped
-                            class="w-full">
-                        </ui-table>
-                    </div>
+                    <!-- Tabs Section -->
+                    <ui-tabs>
+                        <ui-tab-list>
+                            <ui-tab value="table">Table</ui-tab>
+                            <ui-tab value="preview">Preview</ui-tab>
+                        </ui-tab-list>
+                        
+                        <!-- Table Tab Panel -->
+                        <ui-tab-panel value="table">
+                            <div class="mb-8">
+                                <ui-table 
+                                    title="Announcements Database"
+                                    data="[]"
+                                    columns='${JSON.stringify([
+                                        { key: 'index', label: 'No.', html: false },
+                                        { key: 'title', label: 'Title' },
+                                        { key: 'content', label: 'Content' },
+                                        { key: 'target_audience', label: 'Target Audience' },
+                                        { key: 'announcement_type', label: 'Type' },
+                                        { key: 'priority', label: 'Priority' },
+                                        { key: 'is_active', label: 'Status' },
+                                        { key: 'is_pinned', label: 'Pinned' },
+                                        { key: 'created_by', label: 'Created By' },
+                                        { key: 'updated', label: 'Updated' }
+                                    ])}'
+                                    sortable
+                                    searchable
+                                    search-placeholder="Search announcements..."
+                                    pagination
+                                    page-size="50"
+                                    action
+                                    addable
+                                    print
+                                    refresh
+                                    bordered
+                                    striped
+                                    class="w-full">
+                                </ui-table>
+                            </div>
+                        </ui-tab-panel>
+                        
+                        <!-- Preview Tab Panel -->
+                        <ui-tab-panel value="preview">
+                            <!-- Preview content will be added here later -->
+                        </ui-tab-panel>
+                    </ui-tabs>
                 `}
             </div>
         `;

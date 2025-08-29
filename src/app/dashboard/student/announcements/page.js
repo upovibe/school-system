@@ -394,11 +394,15 @@ class StudentAnnouncementsPage extends App {
                 </div>
                 
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <div class="text-right text-sm text-gray-500 mt-2 sm:mt-0 flex justify-between">
-                        <div>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></div>
-                        <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
-                        ${announcement.updated_at && announcement.updated_at !== announcement.created_at ? 
-                            `<div>Updated: ${new Date(announcement.updated_at).toLocaleDateString()}</div>` : ''}
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="text-left">
+                            <span>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></span>
+                        </div>
+                        <div class="text-right">
+                            <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
+                            ${announcement.updated_at && announcement.updated_at !== announcement.created_at ? 
+                                `<div>Updated: ${new Date(announcement.updated_at).toLocaleDateString()}</div>` : ''}
+                        </div>
                     </div>
                 </div>
             </div>

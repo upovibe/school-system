@@ -345,6 +345,117 @@ class AdminAnnouncementsPage extends App {
         `;
     }
 
+    // Get announcements by type for preview tabs
+    getAnnouncementsByType(type) {
+        const announcements = this.get('announcements') || [];
+        
+        // Filter announcements to only show those meant for admins
+        const adminAnnouncements = announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'admin'
+        );
+        
+        switch (type) {
+            case 'pinned':
+                return adminAnnouncements.filter(a => Number(a.is_pinned) === 1);
+            case 'general':
+                return adminAnnouncements.filter(a => 
+                    a.announcement_type === 'general' || 
+                    !a.announcement_type || 
+                    a.announcement_type === ''
+                );
+            case 'academic':
+                return adminAnnouncements.filter(a => 
+                    a.announcement_type === 'academic' || 
+                    a.announcement_type === 'exam' || 
+                    a.announcement_type === 'assignment' ||
+                    a.announcement_type === 'grade'
+                );
+            case 'events':
+                return adminAnnouncements.filter(a => 
+                    a.announcement_type === 'event' || 
+                    a.announcement_type === 'activity' || 
+                    a.announcement_type === 'celebration'
+                );
+            case 'reminders':
+                return adminAnnouncements.filter(a => 
+                    a.announcement_type === 'reminder' || 
+                    a.announcement_type === 'notice' || 
+                    a.announcement_type === 'update'
+                );
+            case 'emergency':
+                return adminAnnouncements.filter(a => 
+                    a.announcement_type === 'emergency' || 
+                    a.priority === 'urgent'
+                );
+            default:
+                return adminAnnouncements;
+        }
+    }
+
+    // Get tab counts for preview tabs
+    getPreviewTabCounts() {
+        const announcements = this.get('announcements') || [];
+        return {
+            pinned: this.getAnnouncementsByType('pinned').length,
+            general: this.getAnnouncementsByType('general').length,
+            academic: this.getAnnouncementsByType('academic').length,
+            events: this.getAnnouncementsByType('events').length,
+            reminders: this.getAnnouncementsByType('reminders').length,
+            emergency: this.getAnnouncementsByType('emergency').length
+        };
+    }
+
+    // Get tab icon
+    getPreviewTabIcon(type) {
+        const icons = {
+            'pinned': 'fa-thumbtack',
+            'general': 'fa-bullhorn',
+            'academic': 'fa-graduation-cap',
+            'events': 'fa-calendar-alt',
+            'reminders': 'fa-bell',
+            'emergency': 'fa-exclamation-triangle'
+        };
+        return icons[type] || 'fa-bullhorn';
+    }
+
+    // Get tab label
+    getPreviewTabLabel(type) {
+        const labels = {
+            'pinned': 'Pinned',
+            'general': 'General',
+            'academic': 'Academic',
+            'events': 'Events',
+            'reminders': 'Reminders',
+            'emergency': 'Emergency'
+        };
+        return labels[type] || 'General';
+    }
+
+    // Render content for each preview tab
+    renderPreviewTabContent(type, announcements) {
+        const announcementsInTab = this.getAnnouncementsByType(type);
+        
+        if (announcementsInTab.length === 0) {
+            return `
+                <div class="text-center py-12">
+                    <div class="mx-auto h-24 w-24 text-gray-300 mb-4">
+                        <i class="fas ${this.getPreviewTabIcon(type)} text-6xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No ${this.getPreviewTabLabel(type)} Announcements</h3>
+                    <p class="text-gray-500">There are no ${this.getPreviewTabLabel(type).toLowerCase()} announcements available at the moment.</p>
+                    <p class="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="space-y-6">
+                ${announcementsInTab.map((announcement, index) => this.renderAnnouncementCard(announcement, index)).join('')}
+            </div>
+        `;
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
@@ -420,8 +531,68 @@ class AdminAnnouncementsPage extends App {
                                 </div>
                                 
                                 ${adminAnnouncements && adminAnnouncements.length > 0 ? `
-                                    <div class="space-y-6">
-                                        ${adminAnnouncements.map((announcement, index) => this.renderAnnouncementCard(announcement, index)).join('')}
+                                    <!-- Preview Tabs Interface -->
+                                    <div class="rounded-xl overflow-hidden">                    
+                                        <div class="pt-4">
+                                            <ui-tabs>
+                                                <ui-tab-list class="flex items-center justify-center">
+                                                    <ui-tab value="pinned">
+                                                        <i class="fas fa-thumbtack text-yellow-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">Pinned (${this.getPreviewTabCounts().pinned})</span>
+                                                    </ui-tab>
+                                                    <ui-tab value="general">
+                                                        <i class="fas fa-bullhorn text-blue-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">General (${this.getPreviewTabCounts().general})</span>
+                                                    </ui-tab>
+                                                    <ui-tab value="academic">
+                                                        <i class="fas fa-graduation-cap text-green-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">Academic (${this.getPreviewTabCounts().academic})</span>
+                                                    </ui-tab>
+                                                    <ui-tab value="events">
+                                                        <i class="fas fa-calendar-alt text-purple-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">Events (${this.getPreviewTabCounts().events})</span>
+                                                    </ui-tab>
+                                                    <ui-tab value="reminders">
+                                                        <i class="fas fa-bell text-amber-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">Reminders (${this.getPreviewTabCounts().reminders})</span>
+                                                    </ui-tab>
+                                                    <ui-tab value="emergency">
+                                                        <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
+                                                        <span class="hidden lg:inline ml-1 font-medium">Emergency (${this.getPreviewTabCounts().emergency})</span>
+                                                    </ui-tab>
+                                                </ui-tab-list>
+                                                
+                                                <!-- Pinned Tab -->
+                                                <ui-tab-panel value="pinned">
+                                                    ${this.renderPreviewTabContent('pinned', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                                
+                                                <!-- General Tab -->
+                                                <ui-tab-panel value="general">
+                                                    ${this.renderPreviewTabContent('general', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                                
+                                                <!-- Academic Tab -->
+                                                <ui-tab-panel value="academic">
+                                                    ${this.renderPreviewTabContent('academic', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                                
+                                                <!-- Events Tab -->
+                                                <ui-tab-panel value="events">
+                                                    ${this.renderPreviewTabContent('events', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                                
+                                                <!-- Reminders Tab -->
+                                                <ui-tab-panel value="reminders">
+                                                    ${this.renderPreviewTabContent('reminders', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                                
+                                                <!-- Emergency Tab -->
+                                                <ui-tab-panel value="emergency">
+                                                    ${this.renderPreviewTabContent('emergency', adminAnnouncements)}
+                                                </ui-tab-panel>
+                                            </ui-tabs>
+                                        </div>
                                     </div>
                                 ` : `
                                     <!-- No Announcements -->

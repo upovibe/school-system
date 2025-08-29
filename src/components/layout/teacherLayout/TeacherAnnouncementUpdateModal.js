@@ -28,6 +28,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         this.teacherClass = null;
         this.teacherAssignments = null;
         this.isClassTeacher = false;
+        this.availableClasses = [];
     }
 
     static get observedAttributes() {
@@ -38,8 +39,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.addFormEventListeners();
-        // Load teacher's assignments when modal is connected
-        this.loadTeacherAssignments();
+        // Remove redundant call - will be handled in setAnnouncementData
     }
 
     setupEventListeners() {
@@ -105,9 +105,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         this.announcementData = announcement;
         
         // First ensure teacher assignments are loaded
-        if (!this.teacherClass && !this.teacherAssignments) {
-            await this.loadTeacherAssignments();
-        }
+        await this.loadTeacherAssignments();
         
         // Then populate the form
         await this.populateForm();
@@ -116,6 +114,9 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
     // Populate form with existing announcement data
     async populateForm() {
         if (!this.announcementData) return;
+
+        // First set the target audience options based on teacher type
+        this.setDefaultTargetAudience();
 
         const titleInput = this.querySelector('ui-input[data-field="title"]');
         const contentInput = this.querySelector('ui-textarea[data-field="content"]');
@@ -145,7 +146,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
             }
         }
 
-        // Handle target class field visibility and population
+        // Handle target audience change to show/hide target class field
         this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
         
         // If targeting specific class, populate the class dropdown and set the correct display value
@@ -177,10 +178,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                         
                         // Also try to trigger the component's attribute change callback
                         targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
-                    } else {
-                        console.error('Target option not found for value:', this.announcementData.target_class_id);
-                        console.log('Available classes:', this.availableClasses);
-                        console.log('Looking for class ID:', this.announcementData.target_class_id);
                     }
                 }
             }, 150); // Increased delay for better rendering
@@ -218,7 +215,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                 // Teacher is a class teacher
                 this.teacherClass = classResponse.data.data;
                 this.isClassTeacher = true;
-                this.setDefaultTargetAudience();
             } else {
                 // Teacher is not a class teacher, check for subject assignments
                 const assignmentsResponse = await api.withToken(token).get('/teachers/my-assignments');
@@ -226,14 +222,14 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                 if (assignmentsResponse.data.success && assignmentsResponse.data.data && assignmentsResponse.data.data.assignments) {
                     this.teacherAssignments = assignmentsResponse.data.data.assignments;
                     this.isClassTeacher = false;
-                    this.setDefaultTargetAudience();
                 } else {
                     // No assignments at all
-                    this.setDefaultTargetAudience();
+                    this.isClassTeacher = false;
+                    this.teacherAssignments = [];
                 }
             }
         } catch (error) {
-            console.error('Error loading teacher assignments:', error);
+            // Silent error handling for better UX
         }
     }
 
@@ -258,7 +254,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                 this.populateClassDropdown([]);
             }
         } catch (error) {
-            console.error('Error loading classes:', error);
             Toast.show({
                 title: 'Error',
                 message: 'Failed to load available classes',
@@ -527,8 +522,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error updating announcement:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update announcement',
@@ -577,8 +570,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
-                        <ui-search-dropdown data-field="target_audience" value="all" placeholder="Loading target audience options...">
-                            <ui-option value="">Loading...</ui-option>
+                        <ui-search-dropdown data-field="target_audience" value="all" placeholder="Select target audience...">
                             <!-- Options will be set dynamically based on teacher type -->
                         </ui-search-dropdown>
                     </div>
@@ -589,7 +581,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                         <ui-search-dropdown 
                             data-field="target_class_id" 
                             class="w-full"
-                            placeholder="Search for a class...">
+                            placeholder="Select a class...">
                         </ui-search-dropdown>
                     </div>
                     

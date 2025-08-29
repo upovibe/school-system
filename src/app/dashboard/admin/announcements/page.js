@@ -4,6 +4,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/AnnouncementAddModal.js';
+import '@/components/layout/adminLayout/AnnouncementUpdateModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -19,6 +20,8 @@ class AdminAnnouncementsPage extends App {
         this.activeTab = 'table'; // Default active tab
         this.activePreviewTab = 'pinned'; // Default active preview tab
         this.showAddModal = false;
+        this.showUpdateModal = false;
+        this.updateAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -138,6 +141,7 @@ class AdminAnnouncementsPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-edit', this.onEdit.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -149,6 +153,23 @@ class AdminAnnouncementsPage extends App {
                 this.updateTableData();
                 // Close the add modal
                 this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
+
+        this.addEventListener('announcement-updated', (event) => {
+            // Update the existing announcement in the data
+            const updatedAnnouncement = event.detail.announcement;
+            if (updatedAnnouncement) {
+                const currentAnnouncements = this.get('announcements') || [];
+                const updatedAnnouncements = currentAnnouncements.map(announcement => 
+                    announcement.id === updatedAnnouncement.id ? updatedAnnouncement : announcement
+                );
+                this.set('announcements', updatedAnnouncements);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
             } else {
                 this.loadData();
             }
@@ -175,6 +196,23 @@ class AdminAnnouncementsPage extends App {
     onAdd(event) {
         // Close any open modals first
         this.set('showAddModal', true);
+    }
+
+    onEdit(event) {
+        const { detail } = event;
+        const editAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (editAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('updateAnnouncementData', editAnnouncement);
+            this.set('showUpdateModal', true);
+            setTimeout(() => {
+                const updateModal = this.querySelector('announcement-update-modal');
+                if (updateModal) {
+                    updateModal.setAnnouncementData(editAnnouncement);
+                }
+            }, 0);
+        }
     }
 
     showAnnouncementsInfo() {
@@ -505,6 +543,7 @@ class AdminAnnouncementsPage extends App {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
         
         // As admin, show ALL announcements regardless of target audience
         const adminAnnouncements = announcements || [];
@@ -656,6 +695,9 @@ class AdminAnnouncementsPage extends App {
             
             <!-- Add Announcement Modal -->
             <announcement-add-modal ${showAddModal ? 'open' : ''}></announcement-add-modal>
+            
+            <!-- Update Announcement Modal -->
+            <announcement-update-modal ${showUpdateModal ? 'open' : ''}></announcement-update-modal>
         `;
     }
 }

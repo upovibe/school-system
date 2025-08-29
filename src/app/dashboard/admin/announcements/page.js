@@ -261,12 +261,11 @@ class AdminAnnouncementsPage extends App {
         }
     }
 
-    updateTableData() {
-        const announcements = this.get('announcements');
-        if (!announcements) return;
-
-        // Prepare table data for announcements with safe content handling
-        const tableData = announcements.map((announcement, index) => {
+    // Prepare table data for announcements with safe content handling
+    prepareTableData(announcements) {
+        if (!announcements || !Array.isArray(announcements)) return [];
+        
+        return announcements.map((announcement, index) => {
             // Truncate content to prevent JSON issues
             const safeContent = announcement.content ? 
                 (announcement.content.length > 100 ? 
@@ -288,6 +287,14 @@ class AdminAnnouncementsPage extends App {
                 updated: announcement.updated_at ? new Date(announcement.updated_at).toLocaleDateString() : 'N/A'
             };
         });
+    }
+
+    updateTableData() {
+        const announcements = this.get('announcements');
+        if (!announcements) return;
+
+        // Prepare table data for announcements with safe content handling
+        const tableData = this.prepareTableData(announcements);
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
@@ -516,7 +523,7 @@ class AdminAnnouncementsPage extends App {
                             <div class="mb-8">
                                 <ui-table 
                                     title="Announcements Database"
-                                    data="[]"
+                                    data='${JSON.stringify(this.prepareTableData(adminAnnouncements))}'
                                     columns='${JSON.stringify([
                                         { key: 'index', label: 'No.', html: false },
                                         { key: 'title', label: 'Title' },

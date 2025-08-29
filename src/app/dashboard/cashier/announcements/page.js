@@ -40,41 +40,47 @@ class CashierAnnouncementsPage extends App {
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
         
+        // Filter announcements to only show those meant for cashiers
+        const cashierAnnouncements = announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'cashier'
+        );
+        
         switch (type) {
             case 'pinned':
-                return announcements.filter(a => Number(a.is_pinned) === 1);
+                return cashierAnnouncements.filter(a => Number(a.is_pinned) === 1);
             case 'general':
-                return announcements.filter(a => 
+                return cashierAnnouncements.filter(a => 
                     a.announcement_type === 'general' || 
                     !a.announcement_type || 
                     a.announcement_type === ''
                 );
             case 'financial':
-                return announcements.filter(a => 
+                return cashierAnnouncements.filter(a => 
                     a.announcement_type === 'financial' || 
                     a.announcement_type === 'payment' || 
                     a.announcement_type === 'fee' ||
                     a.announcement_type === 'billing'
                 );
             case 'events':
-                return announcements.filter(a => 
+                return cashierAnnouncements.filter(a => 
                     a.announcement_type === 'event' || 
                     a.announcement_type === 'activity' || 
                     a.announcement_type === 'celebration'
                 );
             case 'reminders':
-                return announcements.filter(a => 
+                return cashierAnnouncements.filter(a => 
                     a.announcement_type === 'reminder' || 
                     a.announcement_type === 'notice' || 
                     a.announcement_type === 'update'
                 );
             case 'emergency':
-                return announcements.filter(a => 
+                return cashierAnnouncements.filter(a => 
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
             default:
-                return announcements;
+                return cashierAnnouncements;
         }
     }
 
@@ -94,14 +100,21 @@ class CashierAnnouncementsPage extends App {
     // Summary counts for header
     getHeaderCounts() {
         const announcements = this.get('announcements') || [];
-        const total = announcements.length;
+        
+        // Filter announcements to only show those meant for cashiers
+        const cashierAnnouncements = announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'cashier'
+        );
+        
+        const total = cashierAnnouncements.length;
         let active = 0;
         let pinned = 0;
         let highPriority = 0;
         let cashierSpecific = 0;
         let generalAnnouncements = 0;
         
-        announcements.forEach((announcement) => {
+        cashierAnnouncements.forEach((announcement) => {
             const isActive = Number(announcement.is_active) === 1;
             const isPinned = Number(announcement.is_pinned) === 1;
             const isHighPriority = announcement.priority === 'high';

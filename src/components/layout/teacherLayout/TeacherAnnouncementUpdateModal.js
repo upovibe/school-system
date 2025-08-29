@@ -115,9 +115,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
     async populateForm() {
         if (!this.announcementData) return;
 
-        // First set the target audience options based on teacher type
-        this.setDefaultTargetAudience();
-
         const titleInput = this.querySelector('ui-input[data-field="title"]');
         const contentInput = this.querySelector('ui-textarea[data-field="content"]');
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
@@ -128,7 +125,7 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
 
         if (titleInput) titleInput.value = this.announcementData.title || '';
         if (contentInput) contentInput.setValue(this.announcementData.content || '');
-        if (targetAudienceDropdown) targetAudienceDropdown.value = this.announcementData.target_audience || 'all';
+        // Don't set target audience value yet - we need to populate options first
         if (announcementTypeDropdown) announcementTypeDropdown.value = this.announcementData.announcement_type || 'general';
         if (priorityDropdown) priorityDropdown.value = this.announcementData.priority || 'normal';
         if (isActiveSwitch) {
@@ -146,6 +143,12 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
             }
         }
 
+        // Now set the target audience options based on teacher type (after form elements are populated)
+        this.setDefaultTargetAudience();
+        
+        // Now set the target audience value after options are populated
+        if (targetAudienceDropdown) targetAudienceDropdown.value = this.announcementData.target_audience || 'all';
+        
         // Handle target audience change to show/hide target class field
         this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
         
@@ -341,17 +344,12 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
             classMembersOption.textContent = 'Class Members';
             targetAudienceDropdown.appendChild(classMembersOption);
 
-            // Set default value
-            targetAudienceDropdown.value = 'specific_class';
         } else if (teacherType === 'subject') {
             // Subject teacher can only target class members (must select specific class)
             const classMembersOption = document.createElement('ui-option');
             classMembersOption.setAttribute('value', 'specific_class');
             classMembersOption.textContent = 'Class Members';
             targetAudienceDropdown.appendChild(classMembersOption);
-
-            // Set default value
-            targetAudienceDropdown.value = 'specific_class';
         } else {
             // No assignments - show general options only
             const allOption = document.createElement('ui-option');
@@ -363,9 +361,6 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
             teachersOption.setAttribute('value', 'teachers');
             teachersOption.textContent = 'Teachers Only';
             targetAudienceDropdown.appendChild(teachersOption);
-
-            // Set default value
-            targetAudienceDropdown.value = 'all';
         }
     }
 

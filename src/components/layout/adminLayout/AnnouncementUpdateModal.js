@@ -101,11 +101,6 @@ class AnnouncementUpdateModal extends HTMLElement {
 
     // Set announcement data for editing
     async setAnnouncementData(announcement) {
-        // Debug: Log the announcement data received
-        console.log('🔍 Update modal received announcement data:', announcement);
-        console.log('🔍 target_class_id:', announcement.target_class_id);
-        console.log('🔍 target_audience:', announcement.target_audience);
-        
         this.announcementData = announcement;
         await this.populateForm();
     }
@@ -157,41 +152,25 @@ class AnnouncementUpdateModal extends HTMLElement {
                     // First, populate the dropdown with options
                     this.populateClassDropdown(this.availableClasses);
                     
-                    // Then set the value - this should now display the formatted name
-                    console.log('🔍 Setting dropdown value to:', this.announcementData.target_class_id);
-                    
-                    // Try to find and select the correct option
-                    const targetOption = targetClassDropdown.querySelector(`ui-option[value="${this.announcementData.target_class_id}"]`);
-                    if (targetOption) {
-                        console.log('🔍 Found target option:', targetOption.textContent);
-                        
-                        // Set the value - this should trigger the component's internal logic
-                        targetClassDropdown.value = this.announcementData.target_class_id;
-                        
-                        // Force the component to re-render by dispatching a custom event
-                        targetClassDropdown.dispatchEvent(new CustomEvent('value-changed', {
-                            detail: { value: this.announcementData.target_class_id },
-                            bubbles: true,
-                            composed: true
-                        }));
-                        
-                        // Also try to trigger the component's attribute change callback
-                        targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
-                        
-                        console.log('🔍 Dropdown value after setting:', targetClassDropdown.value);
-                        console.log('🔍 Dropdown attribute value:', targetClassDropdown.getAttribute('value'));
-                        
-                                                 // Wait a bit and check if the display updated
-                         setTimeout(() => {
-                             const selectionElement = targetClassDropdown.shadowRoot?.querySelector('.UpoSearchDropdown__selection');
-                             if (selectionElement) {
-                                 console.log('🔍 Selection element content:', selectionElement.innerHTML);
-                             }
-                             
-                                                                                         // Form validation is no longer needed for update modal
-                          }, 100);
+                                         // Then set the value - this should now display the formatted name
+                     
+                     // Try to find and select the correct option
+                     const targetOption = targetClassDropdown.querySelector(`ui-option[value="${this.announcementData.target_class_id}"]`);
+                     if (targetOption) {
+                         // Set the value - this should trigger the component's internal logic
+                         targetClassDropdown.value = this.announcementData.target_class_id;
+                         
+                         // Force the component to re-render by dispatching a custom event
+                         targetClassDropdown.dispatchEvent(new CustomEvent('value-changed', {
+                             detail: { value: this.announcementData.target_class_id },
+                             bubbles: true,
+                             composed: true
+                         }));
+                         
+                         // Also try to trigger the component's attribute change callback
+                         targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
                       } else {
-                          console.log('❌ Target option not found for value:', this.announcementData.target_class_id);
+                          console.error('Target option not found for value:', this.announcementData.target_class_id);
                       }
                   }
               }, 150); // Increased delay for better rendering
@@ -244,8 +223,6 @@ class AnnouncementUpdateModal extends HTMLElement {
         const classDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
         if (!classDropdown) return;
 
-        console.log('🔍 Populating class dropdown with classes:', classes);
-
         // Clear existing options
         classDropdown.innerHTML = '';
 
@@ -261,15 +238,12 @@ class AnnouncementUpdateModal extends HTMLElement {
             option.setAttribute('value', classItem.id);
             option.textContent = `${classItem.name} (${classItem.section})`;
             classDropdown.appendChild(option);
-            console.log(`🔍 Added option: value="${classItem.id}", text="${classItem.name} (${classItem.section})"`);
         });
 
-        console.log('🔍 Final dropdown HTML:', classDropdown.innerHTML);
-
-        // Add change event listener
+        // Add change event listener (no validation needed for update modal)
         if (!classDropdown._changeHandlerAdded) {
             classDropdown.addEventListener('change', () => {
-                this.validateForm();
+                // No validation needed for update modal
             });
             classDropdown._changeHandlerAdded = true;
         }

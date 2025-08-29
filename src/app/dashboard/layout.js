@@ -344,6 +344,7 @@ class DashboardLayout extends App {
                     group: 'Communication',
                     items: [
                         { label: 'My Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements' },
+                        { label: 'All Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/all-announcements' },
                     ]
                 }
             ],
@@ -477,9 +478,10 @@ class DashboardLayout extends App {
             'invoices': 'Invoices',
             'payments': 'Payments',
             'receipts': 'Receipts',
-            'class': 'My Class',
-            'class-subjects': 'My Classes & Subjects',
-            'announcements': 'Announcements',
+                         'class': 'My Class',
+             'class-subjects': 'My Classes & Subjects',
+             'announcements': 'Announcements',
+             'all-announcements': 'All Announcements',
             // Cashier specific
             'payment-scheduler': 'Payment Scheduler',
             'invoices': 'Invoices',

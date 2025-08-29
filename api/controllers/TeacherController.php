@@ -50,6 +50,68 @@ class TeacherController {
     }
 
     /**
+     * Get only the teacher's own announcements (teacher only)
+     * This method returns ONLY announcements created by the current teacher
+     */
+    public function getMyOwnAnnouncements() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            $conditions = [];
+            $params = [];
+            
+            // Add filters if provided
+            if (isset($_GET['announcement_type']) && $_GET['announcement_type'] !== '') {
+                $conditions[] = 'announcement_type = ?';
+                $params[] = $_GET['announcement_type'];
+            }
+            if (isset($_GET['priority']) && $_GET['priority'] !== '') {
+                $conditions[] = 'priority = ?';
+                $params[] = $_GET['priority'];
+            }
+            if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
+                $conditions[] = 'is_active = ?';
+                $params[] = (int) (!!$_GET['is_active']);
+            }
+            if (isset($_GET['is_pinned']) && $_GET['is_pinned'] !== '') {
+                $conditions[] = 'is_pinned = ?';
+                $params[] = (int) (!!$_GET['is_pinned']);
+            }
+            
+            // ONLY show announcements created by the current teacher
+            $conditions[] = 'created_by = ?';
+            $params[] = $teacher['user_id'];
+            
+            $where = '';
+            if (!empty($conditions)) {
+                $where = 'WHERE ' . implode(' AND ', $conditions);
+            }
+            
+            // Get announcements with enhanced details
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcements = $announcementModel->getAllWithDetails($where, $params);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $announcements,
+                'message' => 'Your announcements retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving your announcements: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Create a new teacher (admin only)
      */
     public function store() {

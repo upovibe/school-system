@@ -328,6 +328,7 @@ Router::get('/teacher/print/class-report', 'TeacherController@printClassReport')
 // Teacher Announcement Management (teacher-only protected in controller)
 Router::post('/teacher/announcements', 'TeacherController@createAnnouncement');
 Router::get('/teacher/announcements', 'TeacherController@getMyAnnouncements');
+Router::get('/teacher/announcements/my', 'TeacherController@getMyOwnAnnouncements');
 Router::put('/teacher/announcements/{id}', 'TeacherController@updateAnnouncement');
 Router::delete('/teacher/announcements/{id}', 'TeacherController@deleteAnnouncement');
 Router::get('/teacher/announcements/stats', 'TeacherController@getAnnouncementStats');

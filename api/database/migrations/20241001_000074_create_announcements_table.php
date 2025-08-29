@@ -15,7 +15,7 @@ class Migration_20241001000074createannouncementstable {
                 content LONGTEXT NOT NULL,
                 announcement_type ENUM('general', 'academic', 'event', 'reminder', 'emergency') DEFAULT 'general',
                 priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
-                target_audience ENUM('all', 'students', 'teachers', 'admins', 'specific_class') DEFAULT 'all',
+                target_audience ENUM('all', 'students', 'teachers', 'admin', 'cashier', 'specific_class') DEFAULT 'all',
                 target_class_id INT NULL,
                 is_active BOOLEAN DEFAULT 1,
                 is_pinned BOOLEAN DEFAULT 0,

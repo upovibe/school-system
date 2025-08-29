@@ -88,6 +88,24 @@ class AnnouncementSeeder {
                     'target_audience' => 'all',
                     'is_pinned' => 0,
                     'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'Financial Report Due - Cashiers',
+                    'content' => 'All cashiers are reminded that monthly financial reports are due by the 5th of each month. Please ensure all transactions are properly recorded and reconciled.',
+                    'announcement_type' => 'reminder',
+                    'priority' => 'normal',
+                    'target_audience' => 'cashier',
+                    'is_pinned' => 0,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'System Maintenance Notice',
+                    'content' => 'Scheduled system maintenance will occur this weekend from 2:00 AM to 6:00 AM. During this time, the school portal may be temporarily unavailable. We apologize for any inconvenience.',
+                    'announcement_type' => 'general',
+                    'priority' => 'normal',
+                    'target_audience' => 'admin',
+                    'is_pinned' => 1,
+                    'created_by' => $adminUserId
                 ]
             ];
 

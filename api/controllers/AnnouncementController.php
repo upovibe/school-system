@@ -107,7 +107,7 @@ class AnnouncementController {
             }
 
             // Validate target_audience
-            $validAudiences = ['all', 'students', 'teachers', 'admins', 'specific_class'];
+            $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class'];
             if (!in_array($data['target_audience'], $validAudiences)) {
                 http_response_code(400);
                 echo json_encode([
@@ -237,7 +237,7 @@ class AnnouncementController {
 
             // Validate target_audience if provided
             if (isset($data['target_audience'])) {
-                $validAudiences = ['all', 'students', 'teachers', 'admins', 'specific_class'];
+                $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class'];
                 if (!in_array($data['target_audience'], $validAudiences)) {
                     http_response_code(400);
                     echo json_encode([

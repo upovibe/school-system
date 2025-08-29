@@ -3,11 +3,9 @@
 
 class AnnouncementSeeder {
     private $pdo;
-    private $announcementModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        $this->announcementModel = new AnnouncementModel($pdo);
     }
 
     public function run() {
@@ -90,9 +88,22 @@ class AnnouncementSeeder {
                 ]
             ];
 
-            // Insert announcements
+            // Insert announcements using direct SQL
+            $stmt = $this->pdo->prepare('
+                INSERT INTO announcements (title, content, announcement_type, priority, target_audience, is_pinned, created_by, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ');
+
             foreach ($announcements as $announcement) {
-                $this->announcementModel->create($announcement);
+                $stmt->execute([
+                    $announcement['title'],
+                    $announcement['content'],
+                    $announcement['announcement_type'],
+                    $announcement['priority'],
+                    $announcement['target_audience'],
+                    $announcement['is_pinned'],
+                    $announcement['created_by']
+                ]);
             }
 
             echo "Announcements seeded successfully!\n";

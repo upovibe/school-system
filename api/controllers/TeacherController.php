@@ -3283,12 +3283,12 @@ class TeacherController {
             }
             
             // Validate target_audience for teachers
-            $validAudiences = ['all', 'students', 'teachers', 'specific_class'];
+            $validAudiences = ['students', 'specific_class'];
             if (!in_array($data['target_audience'], $validAudiences)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Invalid target audience. Teachers can only target: ' . implode(', ', $validAudiences)
+                    'message' => 'Invalid target audience. Teachers can only target: students or specific_class'
                 ]);
                 return;
             }
@@ -3305,14 +3305,47 @@ class TeacherController {
                 }
                 
                 // Verify teacher has access to this class
-                if ($teacher['class_id'] != $data['target_class_id']) {
+                $hasAccess = false;
+                
+                // Check if teacher is a class teacher for this class
+                if ($teacher['class_id'] == $data['target_class_id']) {
+                    $hasAccess = true;
+                }
+                
+                // If not a class teacher, check if they teach subjects in this class
+                if (!$hasAccess) {
+                    require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+                    $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+                    $assignments = $teacherAssignmentModel->getByTeacherAndClass($teacher['id'], $data['target_class_id']);
+                    
+                    if (!empty($assignments)) {
+                        $hasAccess = true;
+                    }
+                }
+                
+                if (!$hasAccess) {
                     http_response_code(403);
                     echo json_encode([
                         'success' => false,
-                        'message' => 'Access denied. You can only create announcements for your assigned class.'
+                        'message' => 'Access denied. You can only create announcements for your assigned class or classes where you teach subjects.'
                     ]);
                     return;
                 }
+            }
+            
+            // Validate that only class teachers can target students only
+            if ($data['target_audience'] === 'students') {
+                if (!$teacher['class_id']) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Access denied. Only class teachers can target students only. Subject teachers must target specific classes.'
+                    ]);
+                    return;
+                }
+                
+                // Set target_class_id to teacher's assigned class when targeting students
+                $data['target_class_id'] = $teacher['class_id'];
             }
             
             // Set defaults

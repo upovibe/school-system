@@ -93,6 +93,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 isValid = false; // No assignments, cannot create announcements
             } else if (targetAudience === 'specific_class') {
                 isValid = isValid && !!targetClass;
+            } else if (targetAudience === 'students' && !this.isClassTeacher) {
+                // Only class teachers can target students only
+                isValid = false;
             }
             
             if (saveBtn) {
@@ -222,11 +225,13 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 targetAudienceDropdown.value = 'specific_class';
                 this.showTargetClassField();
                 this.updateHelpText('class');
+                this.updateTargetAudienceOptions('class');
             } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
                 // Subject teacher can target classes where they teach
                 targetAudienceDropdown.value = 'specific_class';
                 this.showTargetClassField();
                 this.updateHelpText('subject');
+                this.updateTargetAudienceOptions('subject');
             }
         }
     }
@@ -241,6 +246,37 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 helpText.textContent = 'Select a class where you teach subjects to target announcements';
             }
         }
+    }
+
+    // Update target audience options based on teacher type
+    updateTargetAudienceOptions(teacherType) {
+        const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+        if (!targetAudienceDropdown) return;
+
+        // Clear existing options
+        targetAudienceDropdown.innerHTML = '';
+
+        if (teacherType === 'class') {
+            // Class teacher can target both students and class members
+            const studentsOption = document.createElement('ui-option');
+            studentsOption.setAttribute('value', 'students');
+            studentsOption.textContent = 'Students Only';
+            targetAudienceDropdown.appendChild(studentsOption);
+
+            const classMembersOption = document.createElement('ui-option');
+            classMembersOption.setAttribute('value', 'specific_class');
+            classMembersOption.textContent = 'Class Members';
+            targetAudienceDropdown.appendChild(classMembersOption);
+        } else if (teacherType === 'subject') {
+            // Subject teacher can only target class members (must select specific class)
+            const classMembersOption = document.createElement('ui-option');
+            classMembersOption.setAttribute('value', 'specific_class');
+            classMembersOption.textContent = 'Class Members';
+            targetAudienceDropdown.appendChild(classMembersOption);
+        }
+
+        // Set the default value
+        targetAudienceDropdown.value = 'specific_class';
     }
 
     // Show target class field and populate with teacher's class
@@ -359,11 +395,29 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 is_pinned: isPinnedSwitch ? (isPinnedSwitch.checked ? 1 : 0) : 0
             };
 
-            // Set target_class_id based on teacher type
-            if (this.isClassTeacher && this.teacherClass) {
-                announcementData.target_class_id = this.teacherClass.class_id;
-            } else if (this.teacherAssignments && targetClassDropdown) {
-                announcementData.target_class_id = targetClassDropdown.value;
+            // Set target_class_id based on teacher type and target audience
+            const targetAudience = targetAudienceDropdown ? targetAudienceDropdown.value : 'specific_class';
+            
+            if (targetAudience === 'students') {
+                // Students only - must be class teacher with assigned class
+                if (this.isClassTeacher && this.teacherClass) {
+                    announcementData.target_class_id = this.teacherClass.class_id;
+                } else {
+                    Toast.show({
+                        title: 'Validation Error',
+                        message: 'Only class teachers can target students only',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
+            } else if (targetAudience === 'specific_class') {
+                // Class members - can be either class teacher or subject teacher
+                if (this.isClassTeacher && this.teacherClass) {
+                    announcementData.target_class_id = this.teacherClass.class_id;
+                } else if (this.teacherAssignments && targetClassDropdown) {
+                    announcementData.target_class_id = targetClassDropdown.value;
+                }
             }
 
             // Validate required fields
@@ -490,9 +544,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
-                        <ui-search-dropdown data-field="target_audience" value="specific_class" placeholder="Search target audience...">
-                            <ui-option value="students">Students Only</ui-option>
-                            <ui-option value="specific_class">Class Members</ui-option>
+                        <ui-search-dropdown data-field="target_audience" value="specific_class" placeholder="Loading target audience options...">
+                            <ui-option value="">Loading...</ui-option>
+                            <!-- Options will be set dynamically based on teacher type -->
                         </ui-search-dropdown>
                     </div>
                     
@@ -562,7 +616,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Title</strong>: Clear, concise title for the announcement.</li>
                                 <li><strong>Content</strong>: Detailed information about the announcement.</li>
-                                <li><strong>Target Audience</strong>: Who should see this announcement (students only or class members).</li>
+                                <li><strong>Target Audience</strong>: Who should see this announcement (varies by teacher type).</li>
                                 <li><strong>Target Class</strong>: Select from your teaching assignments (class teacher or subject teacher).</li>
                                 <li><strong>Type</strong>: Categorizes the announcement for better organization.</li>
                                 <li><strong>Priority</strong>: Sets importance level (urgent announcements are highlighted).</li>

@@ -12,6 +12,9 @@ class AnnouncementSeeder {
         try {
             echo "Seeding announcements table...\n";
             
+            // Check if users exist, if not create a default admin user
+            $adminUserId = $this->ensureAdminUserExists();
+            
             // Sample announcements data
             $announcements = [
                 [
@@ -21,7 +24,7 @@ class AnnouncementSeeder {
                     'priority' => 'high',
                     'target_audience' => 'students',
                     'is_pinned' => 1,
-                    'created_by' => 1 // Assuming user ID 1 is an admin
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Parent-Teacher Conference Schedule',
@@ -30,7 +33,7 @@ class AnnouncementSeeder {
                     'priority' => 'normal',
                     'target_audience' => 'all',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Sports Day Registration Open',
@@ -39,7 +42,7 @@ class AnnouncementSeeder {
                     'priority' => 'normal',
                     'target_audience' => 'students',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Library Hours Extended',
@@ -48,7 +51,7 @@ class AnnouncementSeeder {
                     'priority' => 'low',
                     'target_audience' => 'students',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Emergency Contact Update Required',
@@ -57,7 +60,7 @@ class AnnouncementSeeder {
                     'priority' => 'high',
                     'target_audience' => 'all',
                     'is_pinned' => 1,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Science Fair Project Guidelines',
@@ -66,7 +69,7 @@ class AnnouncementSeeder {
                     'priority' => 'normal',
                     'target_audience' => 'students',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Staff Meeting - Friday 3:00 PM',
@@ -75,7 +78,7 @@ class AnnouncementSeeder {
                     'priority' => 'normal',
                     'target_audience' => 'teachers',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ],
                 [
                     'title' => 'Cafeteria Menu Update',
@@ -84,7 +87,7 @@ class AnnouncementSeeder {
                     'priority' => 'low',
                     'target_audience' => 'all',
                     'is_pinned' => 0,
-                    'created_by' => 1
+                    'created_by' => $adminUserId
                 ]
             ];
 
@@ -111,6 +114,65 @@ class AnnouncementSeeder {
 
         } catch (Exception $e) {
             echo "Error seeding announcements: " . $e->getMessage() . "\n";
+        }
+    }
+
+    /**
+     * Ensure an admin user exists, create one if needed
+     */
+    private function ensureAdminUserExists() {
+        try {
+            // First check if any users exist
+            $stmt = $this->pdo->prepare('SELECT id FROM users LIMIT 1');
+            $stmt->execute();
+            $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($existingUser) {
+                // Users exist, return the first one
+                return $existingUser['id'];
+            }
+            
+            // No users exist, we need to create an admin user
+            echo "No users found, creating default admin user...\n";
+            
+            // First check if admin role exists
+            $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
+            $stmt->execute(['admin']);
+            $adminRole = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$adminRole) {
+                // Create admin role if it doesn't exist
+                $stmt = $this->pdo->prepare('INSERT INTO roles (name, description) VALUES (?, ?)');
+                $stmt->execute(['admin', 'System Administrator']);
+                $adminRoleId = $this->pdo->lastInsertId();
+            } else {
+                $adminRoleId = $adminRole['id'];
+            }
+            
+            // Create default admin user
+            $stmt = $this->pdo->prepare('
+                INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ');
+            
+            $stmt->execute([
+                'System Administrator',
+                'admin@school.com',
+                '+1234567890',
+                password_hash('admin123', PASSWORD_DEFAULT),
+                true,
+                $adminRoleId,
+                'active'
+            ]);
+            
+            $adminUserId = $this->pdo->lastInsertId();
+            echo "Default admin user created with ID: $adminUserId\n";
+            
+            return $adminUserId;
+            
+        } catch (Exception $e) {
+            echo "Error ensuring admin user exists: " . $e->getMessage() . "\n";
+            throw $e;
         }
     }
 }

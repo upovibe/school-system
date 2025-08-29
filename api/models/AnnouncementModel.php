@@ -46,13 +46,13 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.is_active = 1 
                 AND (a.expires_at IS NULL OR a.expires_at > NOW())
@@ -137,13 +137,13 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.announcement_type = ? 
                 AND a.is_active = 1
@@ -178,13 +178,13 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.is_pinned = 1 
                 AND a.is_active = 1
@@ -231,13 +231,13 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.is_active = 1
             ";
@@ -312,14 +312,14 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.id = ?
             ";
@@ -412,14 +412,14 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
             ";
             
@@ -452,14 +452,14 @@ class AnnouncementModel extends BaseModel {
             $sql = "
                 SELECT 
                     a.*,
-                    u.first_name as creator_first_name,
-                    u.last_name as creator_last_name,
-                    u.role as creator_role,
+                    u.name as creator_name,
+                    r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
                     c.section as class_section
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
                 WHERE a.id = ?
             ";

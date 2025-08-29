@@ -2631,11 +2631,11 @@ class TeacherController {
             // Get all active classes
             require_once __DIR__ . '/../models/ClassModel.php';
             $classModel = new ClassModel($pdo);
-            $classes = $classModel->findAll(['status' => 'active']);
+            $classes = $classModel->findAll();
             
-            // Filter out the teacher's current class (can't promote to same class)
+            // Filter to only active classes and exclude teacher's current class
             $availableClasses = array_filter($classes, function($class) use ($teacher) {
-                return $class['id'] != $teacher['class_id'];
+                return $class['status'] === 'active' && $class['id'] != $teacher['class_id'];
             });
             
             http_response_code(200);
@@ -2857,7 +2857,7 @@ class TeacherController {
             // Get grades for this student
             require_once __DIR__ . '/../models/StudentGradeModel.php';
             $gradeModel = new StudentGradeModel($pdo);
-            $grades = $gradeModel->getStudentGradesWithDetails($studentId, $classId, $periodId);
+            $grades = $gradeModel->getStudentGradesWithDetails($studentId, ['class_id' => $classId, 'grading_period_id' => $periodId]);
             
             // Generate the HTML report using the same template
             $html = $this->generateStudentReportHTML($student, $class, $grades, $classSubjects, $periodId);
@@ -3192,6 +3192,427 @@ class TeacherController {
         $html = ob_get_clean();
         
         return $html;
+    }
+
+    /**
+     * Create a new announcement (teacher only)
+     * Teachers can create announcements for their classes or general announcements
+     */
+    public function createAnnouncement() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            
+            // Validate required fields
+            $required = ['title', 'content', 'target_audience'];
+            foreach ($required as $field) {
+                if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required'
+                    ]);
+                    return;
+                }
+            }
+            
+            // Validate target_audience for teachers
+            $validAudiences = ['all', 'students', 'teachers', 'specific_class'];
+            if (!in_array($data['target_audience'], $validAudiences)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid target audience. Teachers can only target: ' . implode(', ', $validAudiences)
+                ]);
+                return;
+            }
+            
+            // Validate target_class_id if specific_class is selected
+            if ($data['target_audience'] === 'specific_class') {
+                if (!isset($data['target_class_id']) || $data['target_class_id'] === '') {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Target class ID is required when targeting specific class'
+                    ]);
+                    return;
+                }
+                
+                // Verify teacher has access to this class
+                if ($teacher['class_id'] != $data['target_class_id']) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Access denied. You can only create announcements for your assigned class.'
+                    ]);
+                    return;
+                }
+            }
+            
+            // Set defaults
+            if (!isset($data['announcement_type'])) {
+                $data['announcement_type'] = 'general';
+            }
+            if (!isset($data['priority'])) {
+                $data['priority'] = 'normal';
+            }
+            if (!isset($data['is_active'])) {
+                $data['is_active'] = 1;
+            }
+            if (!isset($data['is_pinned'])) {
+                $data['is_pinned'] = 0;
+            }
+            
+            // Set created_by to current teacher's user ID
+            $data['created_by'] = $teacher['user_id'];
+            
+            // Create the announcement
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcementId = $announcementModel->create($data);
+            
+            // Log the action
+            $this->logTeacherAction('announcement_created', 'Created announcement', [
+                'announcement_id' => $announcementId,
+                'title' => $data['title'],
+                'target_audience' => $data['target_audience'],
+                'target_class_id' => $data['target_class_id'] ?? null
+            ]);
+            
+            http_response_code(201);
+            echo json_encode([
+                'success' => true,
+                'data' => ['id' => $announcementId],
+                'message' => 'Announcement created successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error creating announcement: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Get announcements for teacher (teacher only)
+     * Teachers can see announcements they created and announcements relevant to their class
+     */
+    public function getMyAnnouncements() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            $conditions = [];
+            $params = [];
+            
+            // Add filters if provided
+            if (isset($_GET['announcement_type']) && $_GET['announcement_type'] !== '') {
+                $conditions[] = 'announcement_type = ?';
+                $params[] = $_GET['announcement_type'];
+            }
+            if (isset($_GET['priority']) && $_GET['priority'] !== '') {
+                $conditions[] = 'priority = ?';
+                $params[] = $_GET['priority'];
+            }
+            if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
+                $conditions[] = 'is_active = ?';
+                $params[] = (int) (!!$_GET['is_active']);
+            }
+            if (isset($_GET['is_pinned']) && $_GET['is_pinned'] !== '') {
+                $conditions[] = 'is_pinned = ?';
+                $params[] = (int) (!!$_GET['is_pinned']);
+            }
+            
+            // Teachers can see:
+            // 1. Announcements they created
+            // 2. Announcements for their class
+            // 3. General announcements (all, teachers)
+            $teacherConditions = [
+                'created_by = ?', // Their own announcements
+                'target_audience = "all"', // General announcements
+                'target_audience = "teachers"', // Teacher-specific announcements
+                '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
+            ];
+            $conditions[] = '(' . implode(' OR ', $teacherConditions) . ')';
+            $params[] = $teacher['user_id']; // created_by
+            $params[] = $teacher['class_id']; // target_class_id
+            
+            $where = '';
+            if (!empty($conditions)) {
+                $where = 'WHERE ' . implode(' AND ', $conditions);
+            }
+            
+            // Get announcements with enhanced details
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcements = $announcementModel->getAllWithDetails($where, $params);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $announcements,
+                'message' => 'Announcements retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving announcements: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Update an announcement (teacher only)
+     * Teachers can only update announcements they created
+     */
+    public function updateAnnouncement($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            
+            // Get the announcement
+            $announcement = $announcementModel->findById($id);
+            if (!$announcement) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Announcement not found'
+                ]);
+                return;
+            }
+            
+            // Verify teacher owns this announcement
+            if ($announcement['created_by'] != $teacher['user_id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. You can only update announcements you created.'
+                ]);
+                return;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            
+            // Validate target_audience if provided
+            if (isset($data['target_audience'])) {
+                $validAudiences = ['all', 'students', 'teachers', 'specific_class'];
+                if (!in_array($data['target_audience'], $validAudiences)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid target audience. Teachers can only target: ' . implode(', ', $validAudiences)
+                    ]);
+                    return;
+                }
+                
+                // Validate target_class_id if specific_class is selected
+                if ($data['target_audience'] === 'specific_class') {
+                    if (!isset($data['target_class_id']) || $data['target_class_id'] === '') {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Target class ID is required when targeting specific class'
+                        ]);
+                        return;
+                    }
+                    
+                    // Verify teacher has access to this class
+                    if ($teacher['class_id'] != $data['target_class_id']) {
+                        http_response_code(403);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Access denied. You can only target your assigned class.'
+                        ]);
+                        return;
+                    }
+                }
+            }
+            
+            $updated = $announcementModel->update($id, $data);
+            
+            if ($updated) {
+                // Log the action
+                $this->logTeacherAction('announcement_updated', 'Updated announcement', [
+                    'announcement_id' => $id,
+                    'changes' => $data
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Announcement updated successfully'
+                ]);
+            } else {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No changes made to announcement'
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error updating announcement: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Delete an announcement (teacher only)
+     * Teachers can only delete announcements they created
+     */
+    public function deleteAnnouncement($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            
+            // Get the announcement
+            $announcement = $announcementModel->findById($id);
+            if (!$announcement) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Announcement not found'
+                ]);
+                return;
+            }
+            
+            // Verify teacher owns this announcement
+            if ($announcement['created_by'] != $teacher['user_id']) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. You can only delete announcements you created.'
+                ]);
+                return;
+            }
+            
+            $deleted = $announcementModel->delete($id);
+            
+            if ($deleted) {
+                // Log the action
+                $this->logTeacherAction('announcement_deleted', 'Deleted announcement', [
+                    'announcement_id' => $id,
+                    'title' => $announcement['title']
+                ]);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Announcement deleted successfully'
+                ]);
+            } else {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to delete announcement'
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error deleting announcement: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Get announcement statistics for teacher (teacher only)
+     */
+    public function getAnnouncementStats() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            
+            // Get basic stats
+            $stats = $announcementModel->getStats();
+            
+            // Get teacher-specific stats
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    COUNT(*) as total_created,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_created,
+                    SUM(CASE WHEN is_pinned = 1 THEN 1 ELSE 0 END) as pinned_created,
+                    COUNT(CASE WHEN target_audience = 'specific_class' THEN 1 END) as class_specific,
+                    COUNT(CASE WHEN target_audience = 'students' THEN 1 END) as student_targeted,
+                    COUNT(CASE WHEN target_audience = 'teachers' THEN 1 END) as teacher_targeted,
+                    COUNT(CASE WHEN target_audience = 'all' THEN 1 END) as general
+                FROM announcements 
+                WHERE created_by = ?
+            ");
+            $stmt->execute([$teacher['user_id']]);
+            $teacherStats = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Combine stats
+            $combinedStats = array_merge($stats, $teacherStats);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $combinedStats,
+                'message' => 'Announcement statistics retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving announcement statistics: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Log teacher actions for audit trail
+     */
+    private function logTeacherAction($action, $description, $details = []) {
+        try {
+            require_once __DIR__ . '/../models/UserLogModel.php';
+            $logModel = new UserLogModel($this->pdo);
+            
+            $logData = [
+                'user_id' => $_REQUEST['current_teacher']['user_id'],
+                'action' => $action,
+                'description' => $description,
+                'details' => json_encode($details),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            ];
+            
+            $logModel->create($logData);
+        } catch (Exception $e) {
+            // Don't fail the main operation if logging fails
+            error_log("Failed to log teacher announcement action: " . $e->getMessage());
+        }
     }
 
 }

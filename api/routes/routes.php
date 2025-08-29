@@ -325,6 +325,13 @@ Router::get('/teacher/classes/available-for-promotion', 'TeacherController@getAv
 Router::get('/teacher/print/student-report', 'TeacherController@printStudentReport');
 Router::get('/teacher/print/class-report', 'TeacherController@printClassReport');
 
+// Teacher Announcement Management (teacher-only protected in controller)
+Router::post('/teacher/announcements', 'TeacherController@createAnnouncement');
+Router::get('/teacher/announcements', 'TeacherController@getMyAnnouncements');
+Router::put('/teacher/announcements/{id}', 'TeacherController@updateAnnouncement');
+Router::delete('/teacher/announcements/{id}', 'TeacherController@deleteAnnouncement');
+Router::get('/teacher/announcements/stats', 'TeacherController@getAnnouncementStats');
+
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');

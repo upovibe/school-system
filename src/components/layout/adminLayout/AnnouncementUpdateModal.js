@@ -57,38 +57,37 @@ class AnnouncementUpdateModal extends HTMLElement {
         const updateBtn = this.querySelector('#update-announcement-btn');
 
         if (titleInput) {
-            titleInput.addEventListener('input', () => this.validateForm());
-            titleInput.addEventListener('change', () => this.validateForm());
+            titleInput.addEventListener('input', () => {});
+            titleInput.addEventListener('change', () => {});
         }
         if (contentInput) {
-            contentInput.addEventListener('input', () => this.validateForm());
-            contentInput.addEventListener('change', () => this.validateForm());
+            contentInput.addEventListener('input', () => {});
+            contentInput.addEventListener('change', () => {});
         }
         if (targetAudienceDropdown) {
             targetAudienceDropdown.addEventListener('change', (e) => {
                 this.handleTargetAudienceChange(e);
-                this.validateForm();
             });
         }
 
         // Add event listener for target class dropdown when it becomes available
         this.addEventListener('change', (e) => {
             if (e.target.matches('ui-search-dropdown[data-field="target_class_id"]')) {
-                this.validateForm();
+                // No validation needed for update modal
             }
         });
 
         // Add event listeners for search dropdowns
         this.addEventListener('change', (e) => {
             if (e.target.matches('ui-search-dropdown[data-field="announcement_type"]')) {
-                this.validateForm();
+                // No validation needed for update modal
             }
         });
         if (updateBtn) {
             updateBtn.addEventListener('click', () => this.updateAnnouncement());
         }
 
-        // Initial validation state
+        // Enable update button immediately for update modal
         this.validateForm();
     }
 
@@ -189,20 +188,16 @@ class AnnouncementUpdateModal extends HTMLElement {
                                  console.log('🔍 Selection element content:', selectionElement.innerHTML);
                              }
                              
-                             // Now that the dropdown is fully populated and has a value, validate the form
-                             this.validateForm();
-                         }, 100);
-                     } else {
-                         console.log('❌ Target option not found for value:', this.announcementData.target_class_id);
-                     }
-                 }
-             }, 150); // Increased delay for better rendering
-         } else {
-             // If not targeting specific class, validate form immediately
-             this.validateForm();
-         }
-         
-         // Content field is now updated using setValue() method
+                                                                                         // Form validation is no longer needed for update modal
+                          }, 100);
+                      } else {
+                          console.log('❌ Target option not found for value:', this.announcementData.target_class_id);
+                      }
+                  }
+              }, 150); // Increased delay for better rendering
+          }
+          
+          // Content field is now updated using setValue() method
     }
 
     // Handle target audience change to show/hide target class field
@@ -426,33 +421,11 @@ class AnnouncementUpdateModal extends HTMLElement {
 
     // Validate form and toggle Update button
     validateForm() {
-        try {
-            const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const contentInput = this.querySelector('ui-textarea[data-field="content"]');
-            const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
-            const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
-            const updateBtn = this.querySelector('#update-announcement-btn');
-            
-            const title = titleInput ? String(titleInput.value || '').trim() : '';
-            const content = contentInput ? String(contentInput.value || '').trim() : '';
-            const targetAudience = targetAudienceDropdown ? targetAudienceDropdown.value : '';
-            const targetClass = targetClassDropdown ? targetClassDropdown.value : '';
-            
-            let isValid = !!title && !!content && !!targetAudience;
-            
-            // Additional validation for specific class selection
-            if (targetAudience === 'specific_class') {
-                isValid = isValid && !!targetClass;
-            }
-            
-            if (updateBtn) {
-                if (isValid) {
-                    updateBtn.removeAttribute('disabled');
-                } else {
-                    updateBtn.setAttribute('disabled', '');
-                }
-            }
-        } catch (_) { /* noop */ }
+        // For update modal, always enable the button since fields are pre-populated
+        const updateBtn = this.querySelector('#update-announcement-btn');
+        if (updateBtn) {
+            updateBtn.removeAttribute('disabled');
+        }
     }
 
     render() {

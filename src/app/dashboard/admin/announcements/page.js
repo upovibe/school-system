@@ -3,6 +3,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Tabs.js';
+import '@/components/layout/adminLayout/AnnouncementAddModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -17,6 +18,7 @@ class AdminAnnouncementsPage extends App {
         this.loading = false;
         this.activeTab = 'table'; // Default active tab
         this.activePreviewTab = 'pinned'; // Default active preview tab
+        this.showAddModal = false;
     }
 
     // Summary counts for header
@@ -133,6 +135,24 @@ class AdminAnnouncementsPage extends App {
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
         this.addEventListener('tab-change', this.handleTabChange.bind(this));
+        
+        // Add event listeners for table events
+        this.addEventListener('table-add', this.onAdd.bind(this));
+        
+        // Listen for success events to refresh data
+        this.addEventListener('announcement-saved', (event) => {
+            // Add the new announcement to the existing data
+            const newAnnouncement = event.detail.announcement;
+            if (newAnnouncement) {
+                const currentAnnouncements = this.get('announcements') || [];
+                this.set('announcements', [...currentAnnouncements, newAnnouncement]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -150,6 +170,11 @@ class AdminAnnouncementsPage extends App {
             this.activeTab = detail.value;
             // The tab content will automatically update through the render method
         }
+    }
+
+    onAdd(event) {
+        // Close any open modals first
+        this.set('showAddModal', true);
     }
 
     showAnnouncementsInfo() {
@@ -460,6 +485,7 @@ class AdminAnnouncementsPage extends App {
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
         
         // Filter announcements to only show those meant for admins
         const adminAnnouncements = announcements ? announcements.filter(a => 
@@ -611,6 +637,9 @@ class AdminAnnouncementsPage extends App {
                     </ui-tabs>
                 `}
             </div>
+            
+            <!-- Add Announcement Modal -->
+            <announcement-add-modal ${showAddModal ? 'open' : ''}></announcement-add-modal>
         `;
     }
 }

@@ -397,7 +397,16 @@ class AnnouncementController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
 
-            $classes = $this->classModel->getActiveClasses();
+            // Get classes with academic year information
+            $stmt = $pdo->prepare("
+                SELECT c.*, ay.display_name as academic_year_display_name
+                FROM classes c
+                LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
+                WHERE c.status = 'active'
+                ORDER BY c.name ASC, c.section ASC
+            ");
+            $stmt->execute();
+            $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             http_response_code(200);
             echo json_encode([

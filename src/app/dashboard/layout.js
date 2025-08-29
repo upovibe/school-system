@@ -284,6 +284,7 @@ class DashboardLayout extends App {
                         { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
                         { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/admin/announcements' },
                     ]
                 },
                 {
@@ -338,6 +339,12 @@ class DashboardLayout extends App {
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
                         { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/teacher/student-grade-report' },
                     ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'My Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements' },
+                    ]
                 }
             ],
             student: [
@@ -355,6 +362,12 @@ class DashboardLayout extends App {
                         { label: 'Grade-Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student/grades' },
                     ]
                 },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/student/announcements' },
+                    ]
+                },
             ],
             parent: [
                 {
@@ -369,6 +382,12 @@ class DashboardLayout extends App {
                         { label: 'Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
                         { label: 'Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
                         { label: 'Messages', icon: 'fas fa-comments', href: '/dashboard/parent/messages' },
+                    ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/parent/announcements' },
                     ]
                 },
                 {
@@ -392,6 +411,12 @@ class DashboardLayout extends App {
                         { label: 'Reports', icon: 'fas fa-file-alt', href: '/dashboard/staff/reports' },
                         { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' },
                     ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/staff/announcements' },
+                    ]
                 }
             ],
             cashier: [
@@ -408,6 +433,12 @@ class DashboardLayout extends App {
                            { label: 'Payment', icon: 'fas fa-credit-card', href: '/dashboard/cashier/payment' },
                            { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/cashier/receipts' },
+                       ]
+                   },
+                   {
+                       group: 'Communication',
+                       items: [
+                           { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/cashier/announcements' },
                        ]
                    }
                 ]
@@ -448,11 +479,12 @@ class DashboardLayout extends App {
             'receipts': 'Receipts',
             'class': 'My Class',
             'class-subjects': 'My Classes & Subjects',
-                             // Cashier specific
-                 'payment-scheduler': 'Payment Scheduler',
-                 'invoices': 'Invoices',
-                 'payment': 'Payment',
-                 'receipts': 'Receipts'
+            'announcements': 'Announcements',
+            // Cashier specific
+            'payment-scheduler': 'Payment Scheduler',
+            'invoices': 'Invoices',
+            'payment': 'Payment',
+            'receipts': 'Receipts'
         };
         return titles[lastSegment] || 'Dashboard';
     }

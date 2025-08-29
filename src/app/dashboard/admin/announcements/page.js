@@ -5,6 +5,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/AnnouncementAddModal.js';
 import '@/components/layout/adminLayout/AnnouncementUpdateModal.js';
+import '@/components/layout/adminLayout/AnnouncementViewModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -21,7 +22,9 @@ class AdminAnnouncementsPage extends App {
         this.activePreviewTab = 'pinned'; // Default active preview tab
         this.showAddModal = false;
         this.showUpdateModal = false;
+        this.showViewModal = false;
         this.updateAnnouncementData = null;
+        this.viewAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -142,6 +145,7 @@ class AdminAnnouncementsPage extends App {
         // Add event listeners for table events
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-edit', this.onEdit.bind(this));
+        this.addEventListener('table-view', this.onView.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -198,12 +202,32 @@ class AdminAnnouncementsPage extends App {
         this.set('showAddModal', true);
     }
 
+    onView(event) {
+        const { detail } = event;
+        const viewAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (viewAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('viewAnnouncementData', viewAnnouncement);
+            this.set('showViewModal', true);
+            setTimeout(() => {
+                const viewModal = this.querySelector('announcement-view-modal');
+                if (viewModal) {
+                    viewModal.setAnnouncementData(viewAnnouncement);
+                }
+            }, 0);
+        }
+    }
+
     onEdit(event) {
         const { detail } = event;
         const editAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
         if (editAnnouncement) {
             // Close any open modals first
             this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('showViewModal', false);
             this.set('updateAnnouncementData', editAnnouncement);
             this.set('showUpdateModal', true);
             setTimeout(async () => {
@@ -544,6 +568,7 @@ class AdminAnnouncementsPage extends App {
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
+        const showViewModal = this.get('showViewModal');
         
         // As admin, show ALL announcements regardless of target audience
         const adminAnnouncements = announcements || [];
@@ -698,6 +723,9 @@ class AdminAnnouncementsPage extends App {
             
             <!-- Update Announcement Modal -->
             <announcement-update-modal ${showUpdateModal ? 'open' : ''}></announcement-update-modal>
+            
+            <!-- View Announcement Modal -->
+            <announcement-view-modal ${showViewModal ? 'open' : ''}></announcement-view-modal>
         `;
     }
 }

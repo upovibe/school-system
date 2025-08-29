@@ -25,6 +25,9 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
     constructor() {
         super();
         this.announcementData = null;
+        this.teacherClass = null;
+        this.teacherAssignments = null;
+        this.isClassTeacher = false;
     }
 
     static get observedAttributes() {
@@ -35,7 +38,8 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.addFormEventListeners();
-        // Teacher assignments not needed for update modal
+        // Load teacher's assignments when modal is connected
+        this.loadTeacherAssignments();
     }
 
     setupEventListeners() {
@@ -187,18 +191,57 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         }
     }
 
-    // Load available classes from API
+    // Load teacher's assignments (both class and subject assignments)
+    async loadTeacherAssignments() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            // First try to get if teacher is a class teacher
+            const classResponse = await api.withToken(token).get('/teachers/my-class');
+            
+            if (classResponse.data.success && classResponse.data.data) {
+                // Teacher is a class teacher
+                this.teacherClass = classResponse.data.data;
+                this.isClassTeacher = true;
+                this.setDefaultTargetAudience();
+            } else {
+                // Teacher is not a class teacher, check for subject assignments
+                const assignmentsResponse = await api.withToken(token).get('/teachers/my-assignments');
+                
+                if (assignmentsResponse.data.success && assignmentsResponse.data.data && assignmentsResponse.data.data.assignments) {
+                    this.teacherAssignments = assignmentsResponse.data.data.assignments;
+                    this.isClassTeacher = false;
+                    this.setDefaultTargetAudience();
+                } else {
+                    // No assignments at all
+                    this.setDefaultTargetAudience();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading teacher assignments:', error);
+        }
+    }
+
+    // Load available classes from API (for update modal)
     async loadAvailableClasses() {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await api.withToken(token).get('/teachers/available-classes');
-            
-            if (response.data.success) {
-                const classes = response.data.data || [];
-                this.availableClasses = classes; // Store for later use
-                this.populateClassDropdown(classes);
+            // Use teacher's own assignments instead of all available classes
+            if (this.isClassTeacher && this.teacherClass) {
+                // Class teacher - use their assigned class
+                this.availableClasses = [this.teacherClass];
+                this.populateClassDropdown([this.teacherClass]);
+            } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
+                // Subject teacher - use classes where they teach
+                this.availableClasses = this.teacherAssignments;
+                this.populateClassDropdown(this.teacherAssignments);
+            } else {
+                // No assignments - show empty dropdown
+                this.availableClasses = [];
+                this.populateClassDropdown([]);
             }
         } catch (error) {
             console.error('Error loading classes:', error);
@@ -225,13 +268,23 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         defaultOption.textContent = 'Select a class...';
         classDropdown.appendChild(defaultOption);
 
-        // Add class options with proper formatting
-        classes.forEach(classItem => {
+        // Add class options with proper formatting based on teacher type
+        if (this.isClassTeacher && this.teacherClass) {
+            // For class teacher, show their assigned class
+            const classItem = this.teacherClass;
             const option = document.createElement('ui-option');
-            option.setAttribute('value', classItem.id);
-            option.textContent = `${classItem.name} (${classItem.section})`;
+            option.setAttribute('value', classItem.class_id);
+            option.textContent = `${classItem.class_name} (${classItem.class_section})`;
             classDropdown.appendChild(option);
-        });
+        } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
+            // For subject teacher, show all classes where they teach subjects
+            this.teacherAssignments.forEach(assignment => {
+                const option = document.createElement('ui-option');
+                option.setAttribute('value', assignment.class_id);
+                option.textContent = `${assignment.class_name} (${assignment.class_section})`;
+                classDropdown.appendChild(option);
+            });
+        }
 
         // Add change event listener (no validation needed for update modal)
         if (!classDropdown._changeHandlerAdded) {
@@ -242,7 +295,70 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         }
     }
 
+    // Set default target audience based on teacher type
+    setDefaultTargetAudience() {
+        const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+        if (targetAudienceDropdown) {
+            if (this.isClassTeacher) {
+                // Class teacher can target both students and class members
+                this.updateTargetAudienceOptions('class');
+            } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
+                // Subject teacher can target classes where they teach
+                this.updateTargetAudienceOptions('subject');
+            } else {
+                // No assignments - show limited options only
+                this.updateTargetAudienceOptions('none');
+            }
+        }
+    }
 
+    // Update target audience options based on teacher type
+    updateTargetAudienceOptions(teacherType) {
+        const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+        if (!targetAudienceDropdown) return;
+
+        // Clear existing options
+        targetAudienceDropdown.innerHTML = '';
+
+        if (teacherType === 'class') {
+            // Class teacher can target both students and class members
+            const studentsOption = document.createElement('ui-option');
+            studentsOption.setAttribute('value', 'students');
+            studentsOption.textContent = 'Students Only';
+            targetAudienceDropdown.appendChild(studentsOption);
+
+            const classMembersOption = document.createElement('ui-option');
+            classMembersOption.setAttribute('value', 'specific_class');
+            classMembersOption.textContent = 'Class Members';
+            targetAudienceDropdown.appendChild(classMembersOption);
+
+            // Set default value
+            targetAudienceDropdown.value = 'specific_class';
+        } else if (teacherType === 'subject') {
+            // Subject teacher can only target class members (must select specific class)
+            const classMembersOption = document.createElement('ui-option');
+            classMembersOption.setAttribute('value', 'specific_class');
+            classMembersOption.textContent = 'Class Members';
+            targetAudienceDropdown.appendChild(classMembersOption);
+
+            // Set default value
+            targetAudienceDropdown.value = 'specific_class';
+        } else {
+            // No assignments - show general options only
+            const allOption = document.createElement('ui-option');
+            allOption.setAttribute('value', 'all');
+            allOption.textContent = 'All Users';
+            targetAudienceDropdown.appendChild(allOption);
+
+            const teachersOption = document.createElement('ui-option');
+            teachersOption.setAttribute('value', 'teachers');
+            teachersOption.textContent = 'Teachers Only';
+            targetAudienceDropdown.appendChild(teachersOption);
+
+            // Set default value
+            targetAudienceDropdown.value = 'all';
+        }
+    }
 
     // Update the announcement
     async updateAnnouncement() {
@@ -421,11 +537,9 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
-                        <ui-search-dropdown data-field="target_audience" value="all" placeholder="Search target audience...">
-                            <ui-option value="all">All Users</ui-option>
-                            <ui-option value="students">Students Only</ui-option>
-                            <ui-option value="teachers">Teachers Only</ui-option>
-                            <ui-option value="specific_class">Specific Class</ui-option>
+                        <ui-search-dropdown data-field="target_audience" value="all" placeholder="Loading target audience options...">
+                            <ui-option value="">Loading...</ui-option>
+                            <!-- Options will be set dynamically based on teacher type -->
                         </ui-search-dropdown>
                     </div>
                     

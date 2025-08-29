@@ -211,12 +211,14 @@ class AdminAnnouncementsPage extends App {
             this.set('showUpdateModal', false);
             this.set('viewAnnouncementData', viewAnnouncement);
             this.set('showViewModal', true);
-            setTimeout(() => {
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(() => {
                 const viewModal = this.querySelector('announcement-view-modal');
                 if (viewModal) {
                     viewModal.setAnnouncementData(viewAnnouncement);
                 }
-            }, 0);
+            });
         }
     }
 
@@ -230,12 +232,14 @@ class AdminAnnouncementsPage extends App {
             this.set('showViewModal', false);
             this.set('updateAnnouncementData', editAnnouncement);
             this.set('showUpdateModal', true);
-            setTimeout(async () => {
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(async () => {
                 const updateModal = this.querySelector('announcement-update-modal');
                 if (updateModal) {
                     await updateModal.setAnnouncementData(editAnnouncement);
                 }
-            }, 0);
+            });
         }
     }
 

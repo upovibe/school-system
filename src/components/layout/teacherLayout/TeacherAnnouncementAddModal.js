@@ -243,7 +243,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             if (teacherType === 'class') {
                 helpText.textContent = 'This is automatically set to your assigned class';
             } else if (teacherType === 'subject') {
-                helpText.textContent = 'Select a class where you teach subjects to target announcements';
+                helpText.textContent = 'Where you teach subjects to target announcements';
             }
         }
     }
@@ -320,7 +320,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             const classItem = classes[0]; // Should only be one class
             const option = document.createElement('ui-option');
             option.setAttribute('value', classItem.class_id);
-            option.textContent = `${classItem.class_name} Section ${classItem.class_section} (${classItem.academic_year || 'N/A'}) - My Assigned Class`;
+            option.textContent = `${classItem.class_name} (${classItem.class_section})`;
             classDropdown.appendChild(option);
             
             // Automatically select the class
@@ -334,12 +334,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             classes.forEach(assignment => {
                 const option = document.createElement('ui-option');
                 option.setAttribute('value', assignment.class_id);
-                
-                // Get unique subjects for this class
-                const subjects = assignment.subjects || [];
-                const subjectNames = subjects.map(s => s.subject_name).join(', ');
-                
-                option.textContent = `${assignment.class_name} Section ${assignment.class_section} (${assignment.class_academic_year || 'N/A'}) - ${subjectNames}`;
+                option.textContent = `${assignment.class_name} (${assignment.class_section})`;
                 classDropdown.appendChild(option);
             });
             
@@ -364,7 +359,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
 
         if (this.isClassTeacher && this.teacherClass) {
             // For class teacher, ensure the display shows the class name, not the ID
-            const expectedText = `${this.teacherClass.class_name} Section ${this.teacherClass.class_section} (${this.teacherClass.academic_year || 'N/A'}) - My Assigned Class`;
+            const expectedText = `${this.teacherClass.class_name} (${this.teacherClass.class_section})`;
             
             // Update the placeholder to show the selected text
             classDropdown.setAttribute('placeholder', expectedText);
@@ -553,11 +548,11 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     <!-- Target Class Field -->
                     <div id="target-class-field">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Class</label>
-                        <ui-search-dropdown data-field="target_class_id" value="" placeholder="Loading your teaching assignments...">
+                        <ui-search-dropdown data-field="target_class_id" value="" placeholder="Select class">
                             <ui-option value="">Loading...</ui-option>
                             <!-- Classes will be loaded dynamically -->
                         </ui-search-dropdown>
-                        <p class="text-sm text-gray-500 mt-1" id="class-help-text">Loading your teaching assignments...</p>
+                        <p class="text-sm text-gray-500 mt-1" id="class-help-text">Loading...</p>
                     </div>
                     
                     <div>
@@ -617,7 +612,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                                 <li><strong>Title</strong>: Clear, concise title for the announcement.</li>
                                 <li><strong>Content</strong>: Detailed information about the announcement.</li>
                                 <li><strong>Target Audience</strong>: Who should see this announcement (varies by teacher type).</li>
-                                <li><strong>Target Class</strong>: Select from your teaching assignments (class teacher or subject teacher).</li>
+                                <li><strong>Target Class</strong>: Select from your teaching assignments (e.g., JHS (A), JHS (B)).</li>
                                 <li><strong>Type</strong>: Categorizes the announcement for better organization.</li>
                                 <li><strong>Priority</strong>: Sets importance level (urgent announcements are highlighted).</li>
                                 <li><strong>Active</strong>: Only active announcements are visible to users.</li>

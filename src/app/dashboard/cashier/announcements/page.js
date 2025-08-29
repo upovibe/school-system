@@ -201,7 +201,7 @@ class CashierAnnouncementsPage extends App {
             }
 
             // Load cashier announcements data
-            const response = await api.withToken(token).get('/announcements');
+            const response = await api.withToken(token).get('/cashier/announcements');
             
             if (response.data && response.data.success) {
                 // Filter announcements for cashiers (all + cashier-specific)

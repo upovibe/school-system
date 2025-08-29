@@ -419,3 +419,6 @@ Router::post('/cashier/receipts/{id}/regenerate', 'CashierController@regenerateR
 // Cashier - Students (cashier only)
 Router::get('/cashier/students', 'CashierController@getStudents');
 Router::get('/cashier/students/{id}', 'CashierController@showStudent');
+
+// Cashier - Announcements (cashier only)
+Router::get('/cashier/announcements', 'CashierController@getAnnouncements');

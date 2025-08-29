@@ -343,9 +343,9 @@ class StudentAnnouncementsPage extends App {
         // Priority badge styling
         let priorityBadge = '';
         if (isUrgent) {
-            priorityBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Urgent</span>';
+            priorityBadge = '<span class="inline-flex items-center text-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Urgent</span>';
         } else if (isHighPriority) {
-            priorityBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">High Priority</span>';
+            priorityBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 text-nowrap">High Priority</span>';
         }
         
         // Audience label
@@ -386,11 +386,7 @@ class StudentAnnouncementsPage extends App {
                             </span>
                         </div>
                     </div>
-                    <div class="text-right text-sm text-gray-500 mt-2 sm:mt-0">
-                        <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
-                        ${announcement.updated_at && announcement.updated_at !== announcement.created_at ? 
-                            `<div>Updated: ${new Date(announcement.updated_at).toLocaleDateString()}</div>` : ''}
-                    </div>
+                    
                 </div>
                 
                 <div class="prose max-w-none">
@@ -398,9 +394,11 @@ class StudentAnnouncementsPage extends App {
                 </div>
                 
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <span>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></span>
-                        <span class="text-xs">ID: ${announcement.id}</span>
+                    <div class="text-right text-sm text-gray-500 mt-2 sm:mt-0 flex justify-between">
+                        <div>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></div>
+                        <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
+                        ${announcement.updated_at && announcement.updated_at !== announcement.created_at ? 
+                            `<div>Updated: ${new Date(announcement.updated_at).toLocaleDateString()}</div>` : ''}
                     </div>
                 </div>
             </div>

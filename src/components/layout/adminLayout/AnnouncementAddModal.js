@@ -271,6 +271,10 @@ class AnnouncementAddModal extends HTMLElement {
                     duration: 3000
                 });
 
+                // Get current admin's name from localStorage
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const adminName = userData.name || userData.full_name || 'Unknown Admin';
+
                 // Construct the new announcement data from response
                 const newAnnouncement = {
                     id: response.data.data.id,
@@ -283,7 +287,7 @@ class AnnouncementAddModal extends HTMLElement {
                     is_pinned: announcementData.is_pinned,
                     created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                    creator_name: 'Current User' // This will be filled by the API
+                    creator_name: adminName
                 };
 
                 // Close modal and dispatch event

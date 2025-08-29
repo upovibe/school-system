@@ -3,6 +3,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementAddModal.js';
+import '@/components/layout/teacherLayout/TeacherAnnouncementUpdateModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -16,6 +17,8 @@ class TeacherAnnouncementsPage extends App {
         this.announcements = null;
         this.loading = false;
         this.showAddModal = false;
+        this.showUpdateModal = false;
+        this.updateAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -136,6 +139,7 @@ class TeacherAnnouncementsPage extends App {
         
         // Add event listeners for table events
         this.addEventListener('table-add', this.onAdd.bind(this));
+        this.addEventListener('table-edit', this.onEdit.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -147,6 +151,23 @@ class TeacherAnnouncementsPage extends App {
                 this.updateTableData();
                 // Close the add modal
                 this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
+
+        this.addEventListener('announcement-updated', (event) => {
+            // Update the existing announcement in the data
+            const updatedAnnouncement = event.detail.announcement;
+            if (updatedAnnouncement) {
+                const currentAnnouncements = this.get('announcements') || [];
+                const updatedAnnouncements = currentAnnouncements.map(announcement => 
+                    announcement.id === updatedAnnouncement.id ? updatedAnnouncement : announcement
+                );
+                this.set('announcements', updatedAnnouncements);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
             } else {
                 this.loadData();
             }
@@ -290,10 +311,28 @@ class TeacherAnnouncementsPage extends App {
         this.set('showAddModal', true);
     }
 
+    onEdit(event) {
+        const { detail } = event;
+        const editAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (editAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('updateAnnouncementData', editAnnouncement);
+            this.set('showUpdateModal', true);
+            setTimeout(async () => {
+                const updateModal = this.querySelector('teacher-announcement-update-modal');
+                if (updateModal) {
+                    await updateModal.setAnnouncementData(editAnnouncement);
+                }
+            }, 0);
+        }
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
         
         return `
             ${this.renderHeader()}
@@ -342,6 +381,9 @@ class TeacherAnnouncementsPage extends App {
             
             <!-- Add Announcement Modal -->
             <teacher-announcement-add-modal ${showAddModal ? 'open' : ''}></teacher-announcement-add-modal>
+            
+            <!-- Update Announcement Modal -->
+            <teacher-announcement-update-modal ${showUpdateModal ? 'open' : ''}></teacher-announcement-update-modal>
         `;
     }
 }

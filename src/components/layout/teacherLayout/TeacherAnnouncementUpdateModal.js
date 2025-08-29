@@ -103,6 +103,13 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
     // Set announcement data for editing
     async setAnnouncementData(announcement) {
         this.announcementData = announcement;
+        
+        // First ensure teacher assignments are loaded
+        if (!this.teacherClass && !this.teacherAssignments) {
+            await this.loadTeacherAssignments();
+        }
+        
+        // Then populate the form
         await this.populateForm();
     }
 
@@ -144,9 +151,14 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
         // If targeting specific class, populate the class dropdown and set the correct display value
         if (this.announcementData.target_audience === 'specific_class' && this.announcementData.target_class_id) {
             // Ensure the dropdown is fully rendered before setting value
-            setTimeout(() => {
+            setTimeout(async () => {
                 const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
-                if (targetClassDropdown && this.availableClasses) {
+                if (targetClassDropdown) {
+                    // Ensure we have the latest available classes
+                    if (!this.availableClasses || this.availableClasses.length === 0) {
+                        await this.loadAvailableClasses();
+                    }
+                    
                     // First, populate the dropdown with options
                     this.populateClassDropdown(this.availableClasses);
                     
@@ -167,6 +179,8 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                         targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
                     } else {
                         console.error('Target option not found for value:', this.announcementData.target_class_id);
+                        console.log('Available classes:', this.availableClasses);
+                        console.log('Looking for class ID:', this.announcementData.target_class_id);
                     }
                 }
             }, 150); // Increased delay for better rendering
@@ -442,6 +456,31 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                     duration: 3000
                 });
                 return;
+            }
+
+            // Validate that the target class is accessible to the teacher
+            if (announcementData.target_audience === 'specific_class' && announcementData.target_class_id) {
+                let hasAccess = false;
+                
+                if (this.isClassTeacher && this.teacherClass) {
+                    // Class teacher can only target their assigned class
+                    hasAccess = this.teacherClass.class_id == announcementData.target_class_id;
+                } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
+                    // Subject teacher can target classes where they teach
+                    hasAccess = this.teacherAssignments.some(assignment => 
+                        assignment.class_id == announcementData.target_class_id
+                    );
+                }
+                
+                if (!hasAccess) {
+                    Toast.show({
+                        title: 'Access Denied',
+                        message: 'You can only target classes you have access to',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
             }
 
             // Update announcement using teacher API endpoint

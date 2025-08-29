@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/layout/teacherLayout/TeacherAnnouncementAddModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -14,6 +15,7 @@ class TeacherAnnouncementsPage extends App {
         super();
         this.announcements = null;
         this.loading = false;
+        this.showAddModal = false;
     }
 
     // Summary counts for header
@@ -131,6 +133,24 @@ class TeacherAnnouncementsPage extends App {
         document.title = 'My Announcements | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Add event listeners for table events
+        this.addEventListener('table-add', this.onAdd.bind(this));
+        
+        // Listen for success events to refresh data
+        this.addEventListener('announcement-saved', (event) => {
+            // Add the new announcement to the existing data
+            const newAnnouncement = event.detail.announcement;
+            if (newAnnouncement) {
+                const currentAnnouncements = this.get('announcements') || [];
+                this.set('announcements', [...currentAnnouncements, newAnnouncement]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -223,12 +243,11 @@ class TeacherAnnouncementsPage extends App {
         }
     }
 
-    updateTableData() {
-        const announcements = this.get('announcements');
-        if (!announcements) return;
-
-        // Prepare table data for announcements with safe content handling
-        const tableData = announcements.map((announcement, index) => {
+    // Prepare table data for announcements with safe content handling
+    prepareTableData(announcements) {
+        if (!announcements || !Array.isArray(announcements)) return [];
+        
+        return announcements.map((announcement, index) => {
             // Truncate content to prevent JSON issues
             const safeContent = announcement.content ? 
                 (announcement.content.length > 100 ? 
@@ -250,6 +269,14 @@ class TeacherAnnouncementsPage extends App {
                 updated: announcement.updated_at ? new Date(announcement.updated_at).toLocaleDateString() : 'N/A'
             };
         });
+    }
+
+    updateTableData() {
+        const announcements = this.get('announcements');
+        if (!announcements) return;
+
+        // Prepare table data for announcements with safe content handling
+        const tableData = this.prepareTableData(announcements);
 
         // Find the table component and update its data
         const tableComponent = this.querySelector('ui-table');
@@ -258,9 +285,15 @@ class TeacherAnnouncementsPage extends App {
         }
     }
 
+    onAdd(event) {
+        // Open the add modal
+        this.set('showAddModal', true);
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
         
         return `
             ${this.renderHeader()}
@@ -277,7 +310,7 @@ class TeacherAnnouncementsPage extends App {
                     <div class="mb-8">
                         <ui-table 
                             title="My Announcements"
-                            data="[]"
+                            data='${JSON.stringify(this.prepareTableData(announcements))}'
                             columns='${JSON.stringify([
                                 { key: 'index', label: 'No.', html: false },
                                 { key: 'title', label: 'Title' },
@@ -306,6 +339,9 @@ class TeacherAnnouncementsPage extends App {
                     </div>
                 `}
             </div>
+            
+            <!-- Add Announcement Modal -->
+            <teacher-announcement-add-modal ${showAddModal ? 'open' : ''}></teacher-announcement-add-modal>
         `;
     }
 }

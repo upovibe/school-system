@@ -117,6 +117,19 @@ class AnnouncementController {
                 return;
             }
 
+            // Validate announcement_type if provided
+            if (isset($data['announcement_type']) && $data['announcement_type'] !== '') {
+                $validTypes = ['general', 'academic', 'event', 'reminder', 'emergency', 'financial', 'payment', 'fee', 'billing'];
+                if (!in_array($data['announcement_type'], $validTypes)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid announcement type. Must be one of: ' . implode(', ', $validTypes)
+                    ]);
+                    return;
+                }
+            }
+
             // Validate target_class_id if specific_class is selected
             if ($data['target_audience'] === 'specific_class') {
                 if (!isset($data['target_class_id']) || $data['target_class_id'] === '') {

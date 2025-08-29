@@ -13,7 +13,7 @@ class Migration_20241001000074createannouncementstable {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 content LONGTEXT NOT NULL,
-                announcement_type ENUM('general', 'academic', 'event', 'reminder', 'emergency') DEFAULT 'general',
+                announcement_type ENUM('general', 'academic', 'event', 'reminder', 'emergency', 'financial', 'payment', 'fee', 'billing') DEFAULT 'general',
                 priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
                 target_audience ENUM('all', 'students', 'teachers', 'admin', 'cashier', 'specific_class') DEFAULT 'all',
                 target_class_id INT NULL,

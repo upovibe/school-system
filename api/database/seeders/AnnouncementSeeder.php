@@ -106,13 +106,79 @@ class AnnouncementSeeder {
                     'target_audience' => 'admin',
                     'is_pinned' => 1,
                     'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'Fee Payment Deadline Extended',
+                    'content' => 'The deadline for first term fee payments has been extended to October 30th. Please ensure all payments are made through the cashier\'s office or online portal. Late payments will incur additional charges.',
+                    'announcement_type' => 'financial',
+                    'priority' => 'high',
+                    'target_audience' => 'all',
+                    'is_pinned' => 1,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'New Payment Methods Available',
+                    'content' => 'We now accept mobile money payments (MTN, Vodafone, AirtelTigo) for all school fees and charges. This provides a convenient way for parents to make payments without visiting the cashier\'s office.',
+                    'announcement_type' => 'payment',
+                    'priority' => 'normal',
+                    'target_audience' => 'cashier',
+                    'is_pinned' => 0,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'Billing System Update',
+                    'content' => 'The school billing system will be updated this weekend. All cashiers should complete their daily reconciliations by Friday evening. The new system will provide better reporting and tracking capabilities.',
+                    'announcement_type' => 'billing',
+                    'priority' => 'normal',
+                    'target_audience' => 'cashier',
+                    'is_pinned' => 0,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'JHS 1 Class Meeting - Parents Only',
+                    'content' => 'Important class meeting for JHS 1 parents on Friday, October 20th at 4:00 PM in the JHS 1 classroom. We will discuss academic progress, upcoming exams, and class activities. Attendance is mandatory.',
+                    'announcement_type' => 'academic',
+                    'priority' => 'high',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => 9,
+                    'is_pinned' => 1,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'JHS 1 Science Project Due Date',
+                    'content' => 'JHS 1 students: Your science project presentations are scheduled for November 15th. Please ensure all projects are completed and ready for demonstration. Contact your science teacher for any questions.',
+                    'announcement_type' => 'academic',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => 9,
+                    'is_pinned' => 0,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'JHS 1 Field Trip to Science Museum',
+                    'content' => 'JHS 1 students will have an educational field trip to the Science Museum on November 10th. Permission slips must be returned by October 25th. Cost: $5 per student. Contact your class teacher for details.',
+                    'announcement_type' => 'event',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => 9,
+                    'is_pinned' => 0,
+                    'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'Fee Structure Update for 2024',
+                    'content' => 'The school fee structure for the 2024 academic year has been updated. New rates will be effective from January 2024. Detailed breakdown is available at the cashier\'s office. Contact the administration for any clarifications.',
+                    'announcement_type' => 'fee',
+                    'priority' => 'high',
+                    'target_audience' => 'all',
+                    'is_pinned' => 1,
+                    'created_by' => $adminUserId
                 ]
             ];
 
             // Insert announcements using direct SQL
             $stmt = $this->pdo->prepare('
-                INSERT INTO announcements (title, content, announcement_type, priority, target_audience, is_pinned, created_by, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                INSERT INTO announcements (title, content, announcement_type, priority, target_audience, target_class_id, is_pinned, created_by, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ');
 
             foreach ($announcements as $announcement) {
@@ -122,6 +188,7 @@ class AnnouncementSeeder {
                     $announcement['announcement_type'],
                     $announcement['priority'],
                     $announcement['target_audience'],
+                    $announcement['target_class_id'] ?? null,
                     $announcement['is_pinned'],
                     $announcement['created_by']
                 ]);

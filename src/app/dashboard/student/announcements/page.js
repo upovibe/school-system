@@ -41,41 +41,47 @@ class StudentAnnouncementsPage extends App {
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
         
+        // Filter announcements to only show those meant for students
+        const studentAnnouncements = announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'students'
+        );
+        
         switch (type) {
             case 'pinned':
-                return announcements.filter(a => Number(a.is_pinned) === 1);
+                return studentAnnouncements.filter(a => Number(a.is_pinned) === 1);
             case 'general':
-                return announcements.filter(a => 
+                return studentAnnouncements.filter(a => 
                     a.announcement_type === 'general' || 
                     !a.announcement_type || 
                     a.announcement_type === ''
                 );
             case 'academic':
-                return announcements.filter(a => 
+                return studentAnnouncements.filter(a => 
                     a.announcement_type === 'academic' || 
                     a.announcement_type === 'exam' || 
                     a.announcement_type === 'assignment' ||
                     a.announcement_type === 'grade'
                 );
             case 'events':
-                return announcements.filter(a => 
+                return studentAnnouncements.filter(a => 
                     a.announcement_type === 'event' || 
                     a.announcement_type === 'activity' || 
                     a.announcement_type === 'celebration'
                 );
             case 'reminders':
-                return announcements.filter(a => 
+                return studentAnnouncements.filter(a => 
                     a.announcement_type === 'reminder' || 
                     a.announcement_type === 'notice' || 
                     a.announcement_type === 'update'
                 );
             case 'emergency':
-                return announcements.filter(a => 
+                return studentAnnouncements.filter(a => 
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
             default:
-                return announcements;
+                return studentAnnouncements;
         }
     }
 
@@ -95,14 +101,21 @@ class StudentAnnouncementsPage extends App {
     // Summary counts for header
     getHeaderCounts() {
         const announcements = this.get('announcements') || [];
-        const total = announcements.length;
+        
+        // Filter announcements to only show those meant for students
+        const studentAnnouncements = announcements.filter(a => 
+            a.target_audience === 'all' || 
+            a.target_audience === 'students'
+        );
+        
+        const total = studentAnnouncements.length;
         let active = 0;
         let pinned = 0;
         let highPriority = 0;
         let classAnnouncements = 0;
         let generalAnnouncements = 0;
         
-        announcements.forEach((announcement) => {
+        studentAnnouncements.forEach((announcement) => {
             const isActive = Number(announcement.is_active) === 1;
             const isPinned = Number(announcement.is_pinned) === 1;
             const isHighPriority = announcement.priority === 'high';

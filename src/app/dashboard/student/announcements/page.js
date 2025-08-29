@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/Tabs.js';
 import api from '@/services/api.js';
 
 /**
@@ -15,6 +16,7 @@ class StudentAnnouncementsPage extends App {
         this.announcements = null;
         this.loading = false;
         this.currentStudent = null;
+        this.activeTab = 'general'; // Default active tab
     }
 
     // Get current student info from user data
@@ -33,6 +35,58 @@ class StudentAnnouncementsPage extends App {
             console.error('Error parsing user data:', error);
         }
         return null;
+    }
+
+    // Get announcements by type for tabs
+    getAnnouncementsByType(type) {
+        const announcements = this.get('announcements') || [];
+        
+        switch (type) {
+            case 'general':
+                return announcements.filter(a => 
+                    a.announcement_type === 'general' || 
+                    !a.announcement_type || 
+                    a.announcement_type === ''
+                );
+            case 'academic':
+                return announcements.filter(a => 
+                    a.announcement_type === 'academic' || 
+                    a.announcement_type === 'exam' || 
+                    a.announcement_type === 'assignment' ||
+                    a.announcement_type === 'grade'
+                );
+            case 'events':
+                return announcements.filter(a => 
+                    a.announcement_type === 'event' || 
+                    a.announcement_type === 'activity' || 
+                    a.announcement_type === 'celebration'
+                );
+            case 'reminders':
+                return announcements.filter(a => 
+                    a.announcement_type === 'reminder' || 
+                    a.announcement_type === 'notice' || 
+                    a.announcement_type === 'update'
+                );
+            case 'emergency':
+                return announcements.filter(a => 
+                    a.announcement_type === 'emergency' || 
+                    a.priority === 'urgent'
+                );
+            default:
+                return announcements;
+        }
+    }
+
+    // Get tab counts for header
+    getTabCounts() {
+        const announcements = this.get('announcements') || [];
+        return {
+            general: this.getAnnouncementsByType('general').length,
+            academic: this.getAnnouncementsByType('academic').length,
+            events: this.getAnnouncementsByType('events').length,
+            reminders: this.getAnnouncementsByType('reminders').length,
+            emergency: this.getAnnouncementsByType('emergency').length
+        };
     }
 
     // Summary counts for header
@@ -166,6 +220,7 @@ class StudentAnnouncementsPage extends App {
         this.currentStudent = this.getCurrentStudent();
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        this.addEventListener('tab-change', this.handleTabChange.bind(this));
     }
 
     handleHeaderActions(event) {
@@ -174,6 +229,14 @@ class StudentAnnouncementsPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-announcements-info') {
             this.showAnnouncementsInfo();
+        }
+    }
+
+    handleTabChange(event) {
+        const { detail } = event;
+        if (detail && detail.value) {
+            this.activeTab = detail.value;
+            // The tab content will automatically update through the render method
         }
     }
 
@@ -344,56 +407,146 @@ class StudentAnnouncementsPage extends App {
         `;
     }
 
+    // Render content for each tab
+    renderTabContent(type, announcements) {
+        const announcementsInTab = this.getAnnouncementsByType(type);
+        
+        if (announcementsInTab.length === 0) {
+            return `
+                <div class="text-center py-12">
+                    <div class="mx-auto h-24 w-24 text-gray-300 mb-4">
+                        <i class="fas ${this.getTabIcon(type)} text-6xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No ${this.getTabLabel(type)} Announcements</h3>
+                    <p class="text-gray-500">There are no ${this.getTabLabel(type).toLowerCase()} announcements available at the moment.</p>
+                    <p class="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="space-y-6">
+                ${announcementsInTab.map((announcement, index) => this.renderAnnouncementCard(announcement, index)).join('')}
+            </div>
+        `;
+    }
+
+    // Get tab icon
+    getTabIcon(type) {
+        const icons = {
+            'general': 'fa-bullhorn',
+            'academic': 'fa-graduation-cap',
+            'events': 'fa-calendar-alt',
+            'reminders': 'fa-bell',
+            'emergency': 'fa-exclamation-triangle'
+        };
+        return icons[type] || 'fa-bullhorn';
+    }
+
+    // Get tab label
+    getTabLabel(type) {
+        const labels = {
+            'general': 'General',
+            'academic': 'Academic',
+            'events': 'Events',
+            'reminders': 'Reminders',
+            'emergency': 'Emergency'
+        };
+        return labels[type] || 'General';
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
+        const tabCounts = this.getTabCounts();
         
         return `
             ${this.renderHeader()}
-            <div class="bg-white rounded-lg shadow-lg p-4">
-                ${loading ? `
-                    <!-- Skeleton Loading -->
-                    <div class="space-y-6">
-                        <div class="animate-pulse">
-                            <div class="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-                            <div class="h-32 bg-gray-200 rounded mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                        </div>
-                        <div class="animate-pulse">
-                            <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                            <div class="h-28 bg-gray-200 rounded mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                        <div class="animate-pulse">
-                            <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                            <div class="h-36 bg-gray-200 rounded mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                        </div>
+            ${loading ? `
+                <!-- Skeleton Loading -->
+                <div class="space-y-6">
+                    <div class="animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+                        <div class="h-32 bg-gray-200 rounded mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
                     </div>
-                ` : announcements && announcements.length > 0 ? `
-                    <!-- Announcements List -->
-                    <div class="space-y-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-gray-900">Recent Announcements</h2>
-                            <div class="text-sm text-gray-500">
-                                Showing ${announcements.length} announcement${announcements.length !== 1 ? 's' : ''}
-                            </div>
-                        </div>
-                        
-                        ${announcements.map((announcement, index) => this.renderAnnouncementCard(announcement, index)).join('')}
+                    <div class="animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+                        <div class="h-28 bg-gray-200 rounded mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3"></div>
                     </div>
-                ` : `
-                    <!-- No Announcements -->
-                    <div class="text-center py-12">
-                        <div class="mx-auto h-24 w-24 text-gray-300 mb-4">
-                            <i class="fas fa-bullhorn text-6xl"></i>
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
-                        <p class="text-gray-500">There are no announcements available at the moment.</p>
-                        <p class="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                    <div class="animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+                        <div class="h-36 bg-gray-200 rounded mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
                     </div>
-                `}
-            </div>
+                </div>
+            ` : announcements && announcements.length > 0 ? `
+                <!-- Tabs Interface -->
+                <div class="rounded-xl overflow-hidden">                    
+                    <div class="pt-4">
+                        <ui-tabs>
+                            <ui-tab-list class="flex items-center justify-center">
+                                <ui-tab value="general">
+                                    <i class="fas fa-bullhorn text-blue-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">General (${tabCounts.general})</span>
+                                </ui-tab>
+                                <ui-tab value="academic">
+                                    <i class="fas fa-graduation-cap text-green-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Academic (${tabCounts.academic})</span>
+                                </ui-tab>
+                                <ui-tab value="events">
+                                    <i class="fas fa-calendar-alt text-purple-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Events (${tabCounts.events})</span>
+                                </ui-tab>
+                                <ui-tab value="reminders">
+                                    <i class="fas fa-bell text-amber-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Reminders (${tabCounts.reminders})</span>
+                                </ui-tab>
+                                <ui-tab value="emergency">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
+                                </ui-tab>
+                            </ui-tab-list>
+                            
+                            <!-- General Tab -->
+                            <ui-tab-panel value="general">
+                                ${this.renderTabContent('general', announcements)}
+                            </ui-tab-panel>
+                            
+                            <!-- Academic Tab -->
+                            <ui-tab-panel value="academic">
+                                ${this.renderTabContent('academic', announcements)}
+                            </ui-tab-panel>
+                            
+                            <!-- Events Tab -->
+                            <ui-tab-panel value="events">
+                                ${this.renderTabContent('events', announcements)}
+                            </ui-tab-panel>
+                            
+                            <!-- Reminders Tab -->
+                            <ui-tab-panel value="reminders">
+                                ${this.renderTabContent('reminders', announcements)}
+                            </ui-tab-panel>
+                            
+                            <!-- Emergency Tab -->
+                            <ui-tab-panel value="emergency">
+                                ${this.renderTabContent('emergency', announcements)}
+                            </ui-tab-panel>
+                        </ui-tabs>
+                    </div>
+                </div>
+            ` : `
+                <!-- No Announcements -->
+                <div class="text-center py-12">
+                    <div class="mx-auto h-24 w-24 text-gray-300 mb-4">
+                        <i class="fas fa-bullhorn text-6xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
+                    <p class="text-gray-500">There are no announcements available at the moment.</p>
+                    <p class="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                </div>
+            `}
         `;
     }
 }

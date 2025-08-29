@@ -30,6 +30,7 @@ class Seed {
         $this->assignStudentsToClasses();
         $this->seedGradingSystem();
         $this->seedFeeSchedules();
+        $this->seedAnnouncements();
         echo "\n✅ Database seeding completed!\n";
     }
     
@@ -153,6 +154,15 @@ class Seed {
         require_once __DIR__ . '/fee_schedule_seeder.php';
         $feeScheduleSeeder = new FeeScheduleSeeder($this->pdo);
         $feeScheduleSeeder->run();
+    }
+    
+    private function seedAnnouncements() {
+        echo "📢 Seeding announcements...\n";
+        
+        // Include the announcement seeder
+        require_once __DIR__ . '/AnnouncementSeeder.php';
+        $announcementSeeder = new announcementSeeder($this->pdo);
+        $announcementSeeder->run();
     }
     
     private function seedClassSubjects() {

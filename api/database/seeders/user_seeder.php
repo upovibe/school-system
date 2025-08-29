@@ -14,6 +14,7 @@ class UserSeeder
         
         $this->seedAdminUser();
         $this->seedTeacherUser();
+        $this->seedSecondTeacherUser();
         $this->seedStudentUser();
         $this->seedCashierUser();
         
@@ -131,6 +132,63 @@ class UserSeeder
         
         echo "✅ Seeded teacher user\n";
         echo "📧 Email: teacher@school.com\n";
+        echo "🔑 Password: teacher123\n";
+    }
+    
+    private function seedSecondTeacherUser() {
+        echo "📝 Seeding second teacher user...\n";
+        
+        // Get teacher role ID
+        $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
+        $stmt->execute(['teacher']);
+        $teacherRole = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$teacherRole) {
+            echo "❌ Teacher role not found. Please run migrations first.\n";
+            return;
+        }
+        
+        // Check if second teacher user already exists
+        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute(['john.mensah@school.com']);
+        $existingTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingTeacher) {
+            echo "⚠️  Second teacher user already exists\n";
+            return;
+        }
+        
+        $teacherUser = [
+            'name' => 'John Mensah',
+            'email' => 'john.mensah@school.com',
+            'phone' => '+1234567893',
+            'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+            'password_changed' => true,
+            'role_id' => $teacherRole['id'],
+            'status' => 'active',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        $stmt = $this->pdo->prepare('
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ');
+        
+        $stmt->execute([
+            $teacherUser['name'],
+            $teacherUser['email'],
+            $teacherUser['phone'],
+            $teacherUser['password'],
+            $teacherUser['password_changed'],
+            $teacherRole['id'],
+            $teacherUser['status'],
+            $teacherUser['created_at'],
+            $teacherUser['updated_at']
+        ]);
+        
+        echo "✅ Seeded second teacher user\n";
+        echo "📧 Email: john.mensah@school.com\n";
         echo "🔑 Password: teacher123\n";
     }
     

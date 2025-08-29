@@ -1,7 +1,7 @@
 <?php
 // api/database/seeders/AnnouncementSeeder.php - Seeder for announcements table
 
-class AnnouncementSeeder {
+class announcementSeeder {
     private $pdo;
 
     public function __construct($pdo) {
@@ -140,7 +140,7 @@ class AnnouncementSeeder {
                     'announcement_type' => 'academic',
                     'priority' => 'high',
                     'target_audience' => 'specific_class',
-                    'target_class_id' => 9,
+                    'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 1,
                     'created_by' => $adminUserId
                 ],
@@ -150,7 +150,7 @@ class AnnouncementSeeder {
                     'announcement_type' => 'academic',
                     'priority' => 'normal',
                     'target_audience' => 'specific_class',
-                    'target_class_id' => 9,
+                    'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 0,
                     'created_by' => $adminUserId
                 ],
@@ -160,7 +160,7 @@ class AnnouncementSeeder {
                     'announcement_type' => 'event',
                     'priority' => 'normal',
                     'target_audience' => 'specific_class',
-                    'target_class_id' => 9,
+                    'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 0,
                     'created_by' => $adminUserId
                 ],
@@ -172,6 +172,46 @@ class AnnouncementSeeder {
                     'target_audience' => 'all',
                     'is_pinned' => 1,
                     'created_by' => $adminUserId
+                ],
+                [
+                    'title' => 'JHS 1 Mathematics Test Schedule',
+                    'content' => 'Dear JHS 1 students, your Mathematics test has been scheduled for Friday, October 25th at 10:00 AM. Please bring your calculators and ensure you have completed all practice problems from Chapter 3. Good luck!',
+                    'announcement_type' => 'academic',
+                    'priority' => 'high',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS1ClassId(),
+                    'is_pinned' => 1,
+                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                ],
+                [
+                    'title' => 'Science Club Meeting - JHS 1 Students',
+                    'content' => 'JHS 1 students interested in joining the Science Club, we will have our first meeting this Thursday at 3:30 PM in the Science Lab. We will discuss upcoming projects and experiments. All are welcome!',
+                    'announcement_type' => 'event',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS1ClassId(),
+                    'is_pinned' => 0,
+                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                ],
+                [
+                    'title' => 'Homework Reminder - JHS 1',
+                    'content' => 'JHS 1 students: Please remember to complete your Mathematics homework (pages 45-48) and Science project proposal by tomorrow. Late submissions will not be accepted. Contact me if you have any questions.',
+                    'announcement_type' => 'reminder',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS1ClassId(),
+                    'is_pinned' => 0,
+                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                ],
+                [
+                    'title' => 'Parent Meeting - JHS 1 Progress Review',
+                    'content' => 'Important: JHS 1 parents meeting scheduled for Tuesday, October 22nd at 4:00 PM. We will review your child\'s academic progress and discuss strategies for improvement. Your attendance is crucial.',
+                    'announcement_type' => 'academic',
+                    'priority' => 'high',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS1ClassId(),
+                    'is_pinned' => 1,
+                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
                 ]
             ];
 
@@ -258,6 +298,53 @@ class AnnouncementSeeder {
         } catch (Exception $e) {
             echo "Error ensuring admin user exists: " . $e->getMessage() . "\n";
             throw $e;
+        }
+    }
+    
+    /**
+     * Get teacher user ID by email
+     */
+    private function getTeacherUserId($email) {
+        try {
+            $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                return $user['id'];
+            }
+            
+            // If teacher user doesn't exist, return admin user ID as fallback
+            echo "⚠️  Teacher user with email '{$email}' not found, using admin user as fallback\n";
+            return $this->ensureAdminUserExists();
+            
+        } catch (Exception $e) {
+            echo "Error getting teacher user ID: " . $e->getMessage() . "\n";
+            // Return admin user ID as fallback
+            return $this->ensureAdminUserExists();
+        }
+    }
+    
+    /**
+     * Get JHS 1 class ID dynamically
+     */
+    private function getJHS1ClassId() {
+        try {
+            $stmt = $this->pdo->prepare('SELECT id FROM classes WHERE name LIKE ? LIMIT 1');
+            $stmt->execute(['%JHS 1%']);
+            $class = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($class) {
+                return $class['id'];
+            }
+            
+            // If JHS 1 class doesn't exist, return null (will be filtered out)
+            echo "⚠️  JHS 1 class not found, announcements will be created without class reference\n";
+            return null;
+            
+        } catch (Exception $e) {
+            echo "Error getting JHS 1 class ID: " . $e->getMessage() . "\n";
+            return null;
         }
     }
 }

@@ -136,12 +136,12 @@ class TeacherAnnouncementsViewPage extends App {
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
                             <div class="flex items-center gap-2">
-                                <h1 class="text-2xl sm:text-3xl font-bold">All Announcements</h1>
-                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-announcements-info" title="About All Announcements">
-                                    <i class="fas fa-question-circle text-lg"></i>
-                                </button>
-                            </div>
-                            <p class="text-green-100 text-base sm:text-lg">View all school announcements and updates</p>
+                                                             <h1 class="text-2xl sm:text-3xl font-bold">Teacher Announcements</h1>
+                             <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-announcements-info" title="About Teacher Announcements">
+                                 <i class="fas fa-question-circle text-lg"></i>
+                             </button>
+                         </div>
+                         <p class="text-green-100 text-base sm:text-lg">View announcements relevant to you and your class</p>
                             ${teacher ? `<p class="text-green-200 text-sm mt-1">Teacher: ${teacher.name}</p>` : ''}
                         </div>
                         <div class="mt-4 sm:mt-0">
@@ -226,7 +226,7 @@ class TeacherAnnouncementsViewPage extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'All Announcements | School System';
+        document.title = 'Teacher Announcements | School System';
         this.currentTeacher = this.getCurrentTeacher();
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
@@ -254,36 +254,36 @@ class TeacherAnnouncementsViewPage extends App {
         const dialog = document.createElement('ui-dialog');
         dialog.setAttribute('open', '');
         dialog.innerHTML = `
-            <div slot="header" class="flex items-center">
-                <i class="fas fa-bullhorn text-green-500 mr-2"></i>
-                <span class="font-semibold">About All Announcements</span>
-            </div>
-            <div slot="content" class="space-y-4">
-                <div>
-                    <h4 class="font-semibold text-gray-900 mb-2">What are All Announcements?</h4>
-                    <p class="text-gray-700">View all school announcements including those from other teachers, administrators, and staff.</p>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">All Announcements</span>
-                        <span class="text-sm text-gray-600">View announcements from all sources</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">Class Announcements</span>
-                        <span class="text-sm text-gray-600">Specific to different classes</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">General Announcements</span>
-                        <span class="text-sm text-gray-600">For all staff and students</span>
-                    </div>
-                </div>
-                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p class="text-sm text-blue-800">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        This page shows all announcements. To manage your own announcements, use the "My Announcements" page.
-                    </p>
-                </div>
-            </div>
+                         <div slot="header" class="flex items-center">
+                 <i class="fas fa-bullhorn text-green-500 mr-2"></i>
+                 <span class="font-semibold">About Teacher Announcements</span>
+             </div>
+             <div slot="content" class="space-y-4">
+                 <div>
+                     <h4 class="font-semibold text-gray-900 mb-2">What are Teacher Announcements?</h4>
+                     <p class="text-gray-700">View announcements relevant to you as a teacher, including your own announcements and those for your class.</p>
+                 </div>
+                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                     <div class="flex justify-between">
+                         <span class="text-sm font-medium">Your Announcements</span>
+                         <span class="text-sm text-gray-600">Announcements you created</span>
+                     </div>
+                     <div class="flex justify-between">
+                         <span class="text-sm font-medium">Class Announcements</span>
+                         <span class="text-sm text-gray-600">Specific to your assigned class</span>
+                     </div>
+                     <div class="flex justify-between">
+                         <span class="text-sm font-medium">General Announcements</span>
+                         <span class="text-sm text-gray-600">For all teachers and staff</span>
+                     </div>
+                 </div>
+                 <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                     <p class="text-sm text-blue-800">
+                         <i class="fas fa-info-circle mr-1"></i>
+                         This page shows announcements relevant to you. To manage your own announcements, use the "My Announcements" page.
+                     </p>
+                 </div>
+             </div>
             <div slot="footer" class="flex justify-end">
                 <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
             </div>
@@ -307,8 +307,8 @@ class TeacherAnnouncementsViewPage extends App {
                 return;
             }
 
-            // Load all announcements data (not just teacher's own)
-            const response = await api.withToken(token).get('/announcements');
+            // Load teacher announcements data using teacher-specific endpoint
+            const response = await api.withToken(token).get('/teacher/announcements');
             const rawAnnouncements = response?.data?.data || [];
             
             // Sort announcements: pinned first, then by priority, then by date

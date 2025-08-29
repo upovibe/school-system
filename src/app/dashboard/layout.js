@@ -344,7 +344,7 @@ class DashboardLayout extends App {
                     group: 'Communication',
                     items: [
                                         { label: 'My Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements' },
-                { label: 'All Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements-view' },
+                { label: 'Teacher Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements-view' },
                     ]
                 }
             ],

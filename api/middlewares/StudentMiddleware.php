@@ -76,6 +76,28 @@ class StudentMiddleware {
                 return true;
             }
 
+            // Check if this is a student token (has student_id and role)
+            if (isset($payload['student_id']) && isset($payload['role'])) {
+                // Verify role is student
+                if ($payload['role'] !== 'student') {
+                    throw new Exception('Access denied: Student role required');
+                }
+
+                // Find student by student_id
+                $studentModel = new StudentModel($pdo);
+                $student = $studentModel->findByStudentId($payload['student_id']);
+                
+                if (!$student) {
+                    throw new Exception('Student not found');
+                }
+
+                // Add student info to request for use in controller
+                $_REQUEST['current_student'] = $student;
+                $_REQUEST['current_user_id'] = $student['user_id'] ?? null;
+                
+                return true;
+            }
+
             throw new Exception('Invalid token format: missing required fields');
 
         } catch (Exception $e) {

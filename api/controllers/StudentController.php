@@ -2149,5 +2149,78 @@ class StudentController {
         }
     }
 
+    /**
+     * Get announcements for students (student only)
+     * Students can see:
+     * 1. Announcements for all students (target_audience = 'all')
+     * 2. Announcements for students (target_audience = 'students')
+     * 3. Announcements specific to their class (target_audience = 'specific_class')
+     */
+    public function getAnnouncements() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            $student = $_REQUEST['current_student'];
+            
+            $conditions = [];
+            $params = [];
+            
+            // Add filters if provided
+            if (isset($_GET['announcement_type']) && $_GET['announcement_type'] !== '') {
+                $conditions[] = 'announcement_type = ?';
+                $params[] = $_GET['announcement_type'];
+            }
+            if (isset($_GET['priority']) && $_GET['priority'] !== '') {
+                $conditions[] = 'priority = ?';
+                $params[] = $_GET['priority'];
+            }
+            if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
+                $conditions[] = 'is_active = ?';
+                $params[] = (int) (!!$_GET['is_active']);
+            }
+            if (isset($_GET['is_pinned']) && $_GET['is_pinned'] !== '') {
+                $conditions[] = 'is_pinned = ?';
+                $params[] = (int) (!!$_GET['is_pinned']);
+            }
+            
+            // Students can see:
+            // 1. Announcements for all students
+            // 2. Announcements specifically for students
+            // 3. Announcements for their specific class
+            $studentConditions = [
+                'target_audience = "all"', // General announcements
+                'target_audience = "students"', // Student-specific announcements
+                '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
+            ];
+            $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
+            $params[] = $student['current_class_id']; // target_class_id
+            
+            $where = '';
+            if (!empty($conditions)) {
+                $where = 'WHERE ' . implode(' AND ', $conditions);
+            }
+            
+            // Get announcements with enhanced details
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcements = $announcementModel->getAllWithDetails($where, $params);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $announcements,
+                'message' => 'Announcements retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving announcements: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?> 

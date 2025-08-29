@@ -228,6 +228,9 @@ Router::put('/students/assignments/{id}/submission', 'StudentController@updateSu
 Router::get('/students/submission-history', 'StudentController@getSubmissionHistory');
 Router::get('/students/grades', 'StudentController@getGrades');
 
+// Student Announcements (student-only protected in controller) - Must come before /students/{id}
+Router::get('/students/announcements', 'StudentController@getAnnouncements');
+
 // Student Authentication Routes (public for login, student auth for others)
 Router::post('/students/login', 'StudentController@login');
 Router::post('/students/change-password', 'StudentController@changePassword');

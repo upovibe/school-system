@@ -378,52 +378,64 @@ class AdminAnnouncementsPage extends App {
         `;
     }
 
-    // Get announcements by type for preview tabs
+    // Get announcements by type for preview tabs (only current user's announcements)
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
+        const currentUserId = this.getCurrentUserId();
         
-        // Filter announcements to only show those meant for admins
-        const adminAnnouncements = announcements.filter(a => 
-            a.target_audience === 'all' || 
-            a.target_audience === 'admin'
-        );
+        // Filter to show only current user's announcements in preview tabs
+        const myAnnouncements = announcements.filter(a => a.created_by == currentUserId);
         
         switch (type) {
             case 'pinned':
-                return adminAnnouncements.filter(a => Number(a.is_pinned) === 1);
+                return myAnnouncements.filter(a => Number(a.is_pinned) === 1);
             case 'general':
-                return adminAnnouncements.filter(a => 
+                return myAnnouncements.filter(a => 
                     a.announcement_type === 'general' || 
                     !a.announcement_type || 
                     a.announcement_type === ''
                 );
             case 'academic':
-                return adminAnnouncements.filter(a => 
+                return myAnnouncements.filter(a => 
                     a.announcement_type === 'academic' || 
                     a.announcement_type === 'exam' || 
                     a.announcement_type === 'assignment' ||
                     a.announcement_type === 'grade'
                 );
             case 'events':
-                return adminAnnouncements.filter(a => 
+                return myAnnouncements.filter(a => 
                     a.announcement_type === 'event' || 
                     a.announcement_type === 'activity' || 
                     a.announcement_type === 'celebration'
                 );
             case 'reminders':
-                return adminAnnouncements.filter(a => 
+                return myAnnouncements.filter(a => 
                     a.announcement_type === 'reminder' || 
                     a.announcement_type === 'notice' || 
                     a.announcement_type === 'update'
                 );
             case 'emergency':
-                return adminAnnouncements.filter(a => 
+                return myAnnouncements.filter(a => 
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
             default:
-                return adminAnnouncements;
+                return myAnnouncements;
         }
+    }
+
+    // Get current user ID from localStorage
+    getCurrentUserId() {
+        try {
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const parsed = JSON.parse(userData);
+                return parsed.id || null;
+            }
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+        return null;
     }
 
     // Get tab counts for preview tabs
@@ -494,11 +506,8 @@ class AdminAnnouncementsPage extends App {
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
         
-        // Filter announcements to only show those meant for admins
-        const adminAnnouncements = announcements ? announcements.filter(a => 
-            a.target_audience === 'all' || 
-            a.target_audience === 'admin'
-        ) : [];
+        // As admin, show ALL announcements regardless of target audience
+        const adminAnnouncements = announcements || [];
         
         return `
             ${this.renderHeader()}
@@ -555,14 +564,14 @@ class AdminAnnouncementsPage extends App {
                         <!-- Preview Tab Panel -->
                         <ui-tab-panel value="preview">
                             <div class="space-y-6">
-                                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
-                                    <h3 class="text-lg font-semibold text-gray-900">Announcements Preview</h3>
-                                    <div class="ml-auto flex items-center space-x-4">
-                                        <div class="text-sm text-gray-500">
-                                            ${adminAnnouncements ? `${adminAnnouncements.length} announcements` : '0 announcements'}
-                                        </div>
-                                    </div>
-                                </div>
+                                                                 <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                                     <h3 class="text-lg font-semibold text-gray-900">My Announcements Preview</h3>
+                                     <div class="ml-auto flex items-center space-x-4">
+                                         <div class="text-sm text-gray-500">
+                                             ${this.getCurrentUserId() ? `${this.getAnnouncementsByType('all').length} of my announcements` : '0 of my announcements'}
+                                         </div>
+                                     </div>
+                                 </div>
                                 
                                 ${adminAnnouncements && adminAnnouncements.length > 0 ? `
                                     <!-- Preview Tabs Interface -->

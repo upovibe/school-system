@@ -3527,11 +3527,31 @@ class TeacherController {
                     }
                     
                     // Verify teacher has access to this class
-                    if ($teacher['class_id'] != $data['target_class_id']) {
+                    $hasAccess = false;
+                    
+                    // Check if teacher is a class teacher with this class assigned
+                    if ($teacher['class_id'] == $data['target_class_id']) {
+                        $hasAccess = true;
+                    } else {
+                        // Check if teacher has subject assignments in this class
+                        $stmt = $pdo->prepare("
+                            SELECT COUNT(*) as count 
+                            FROM teacher_assignments 
+                            WHERE teacher_id = ? AND class_id = ?
+                        ");
+                        $stmt->execute([$teacher['id'], $data['target_class_id']]);
+                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($result['count'] > 0) {
+                            $hasAccess = true;
+                        }
+                    }
+                    
+                    if (!$hasAccess) {
                         http_response_code(403);
                         echo json_encode([
                             'success' => false,
-                            'message' => 'Access denied. You can only target your assigned class.'
+                            'message' => 'Access denied. You can only target classes you have access to.'
                         ]);
                         return;
                     }

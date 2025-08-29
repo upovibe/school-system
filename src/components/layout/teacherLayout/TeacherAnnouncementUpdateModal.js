@@ -467,9 +467,10 @@ class TeacherAnnouncementUpdateModal extends HTMLElement {
                     hasAccess = this.teacherClass.class_id == announcementData.target_class_id;
                 } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
                     // Subject teacher can target classes where they teach
-                    hasAccess = this.teacherAssignments.some(assignment => 
-                        assignment.class_id == announcementData.target_class_id
-                    );
+                    hasAccess = this.teacherAssignments.some(assignment => {
+                        const assignmentAccess = assignment.class_id == announcementData.target_class_id;
+                        return assignmentAccess;
+                    });
                 }
                 
                 if (!hasAccess) {

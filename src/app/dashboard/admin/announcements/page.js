@@ -202,14 +202,19 @@ class AdminAnnouncementsPage extends App {
         const { detail } = event;
         const editAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
         if (editAnnouncement) {
+            // Debug: Log the announcement data being passed
+            console.log('🔍 Announcement data being passed to update modal:', editAnnouncement);
+            console.log('🔍 target_class_id:', editAnnouncement.target_class_id);
+            console.log('🔍 target_audience:', editAnnouncement.target_audience);
+            
             // Close any open modals first
             this.set('showAddModal', false);
             this.set('updateAnnouncementData', editAnnouncement);
             this.set('showUpdateModal', true);
-            setTimeout(() => {
+            setTimeout(async () => {
                 const updateModal = this.querySelector('announcement-update-modal');
                 if (updateModal) {
-                    updateModal.setAnnouncementData(editAnnouncement);
+                    await updateModal.setAnnouncementData(editAnnouncement);
                 }
             }, 0);
         }
@@ -279,6 +284,15 @@ class AdminAnnouncementsPage extends App {
             // Load announcements data
             const response = await api.withToken(token).get('/announcements');
             const rawAnnouncements = response?.data?.data || [];
+            
+            // Debug: Log the raw API response
+            console.log('🔍 Raw API response:', response?.data);
+            console.log('🔍 Raw announcements:', rawAnnouncements);
+            if (rawAnnouncements.length > 0) {
+                console.log('🔍 First announcement fields:', Object.keys(rawAnnouncements[0]));
+                console.log('🔍 First announcement target_class_id:', rawAnnouncements[0].target_class_id);
+                console.log('🔍 First announcement target_audience:', rawAnnouncements[0].target_audience);
+            }
             
             // Data loaded
             this.set('announcements', rawAnnouncements);

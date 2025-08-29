@@ -101,13 +101,18 @@ class AnnouncementUpdateModal extends HTMLElement {
     }
 
     // Set announcement data for editing
-    setAnnouncementData(announcement) {
+    async setAnnouncementData(announcement) {
+        // Debug: Log the announcement data received
+        console.log('🔍 Update modal received announcement data:', announcement);
+        console.log('🔍 target_class_id:', announcement.target_class_id);
+        console.log('🔍 target_audience:', announcement.target_audience);
+        
         this.announcementData = announcement;
-        this.populateForm();
+        await this.populateForm();
     }
 
     // Populate form with existing announcement data
-    populateForm() {
+    async populateForm() {
         if (!this.announcementData) return;
 
         const titleInput = this.querySelector('ui-input[data-field="title"]');
@@ -119,7 +124,7 @@ class AnnouncementUpdateModal extends HTMLElement {
         const isPinnedSwitch = this.querySelector('ui-switch[name="is_pinned"]');
 
         if (titleInput) titleInput.value = this.announcementData.title || '';
-        if (contentInput) contentInput.value = this.announcementData.content || '';
+        if (contentInput) contentInput.setValue(this.announcementData.content || '');
         if (targetAudienceDropdown) targetAudienceDropdown.value = this.announcementData.target_audience || 'all';
         if (announcementTypeDropdown) announcementTypeDropdown.value = this.announcementData.announcement_type || 'general';
         if (priorityDropdown) priorityDropdown.value = this.announcementData.priority || 'normal';
@@ -141,15 +146,63 @@ class AnnouncementUpdateModal extends HTMLElement {
         // Handle target class field visibility and population
         this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
         
-        // If targeting specific class, populate the class dropdown
+        // If targeting specific class, populate the class dropdown and set the correct display value
         if (this.announcementData.target_audience === 'specific_class' && this.announcementData.target_class_id) {
-            this.loadAvailableClasses().then(() => {
+            // Load classes first, then populate and set value
+            await this.loadAvailableClasses();
+            
+            // Ensure the dropdown is fully rendered before setting value
+            setTimeout(() => {
                 const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
-                if (targetClassDropdown) {
-                    targetClassDropdown.value = this.announcementData.target_class_id;
-                }
-            });
-        }
+                if (targetClassDropdown && this.availableClasses) {
+                    // First, populate the dropdown with options
+                    this.populateClassDropdown(this.availableClasses);
+                    
+                    // Then set the value - this should now display the formatted name
+                    console.log('🔍 Setting dropdown value to:', this.announcementData.target_class_id);
+                    
+                    // Try to find and select the correct option
+                    const targetOption = targetClassDropdown.querySelector(`ui-option[value="${this.announcementData.target_class_id}"]`);
+                    if (targetOption) {
+                        console.log('🔍 Found target option:', targetOption.textContent);
+                        
+                        // Set the value - this should trigger the component's internal logic
+                        targetClassDropdown.value = this.announcementData.target_class_id;
+                        
+                        // Force the component to re-render by dispatching a custom event
+                        targetClassDropdown.dispatchEvent(new CustomEvent('value-changed', {
+                            detail: { value: this.announcementData.target_class_id },
+                            bubbles: true,
+                            composed: true
+                        }));
+                        
+                        // Also try to trigger the component's attribute change callback
+                        targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
+                        
+                        console.log('🔍 Dropdown value after setting:', targetClassDropdown.value);
+                        console.log('🔍 Dropdown attribute value:', targetClassDropdown.getAttribute('value'));
+                        
+                                                 // Wait a bit and check if the display updated
+                         setTimeout(() => {
+                             const selectionElement = targetClassDropdown.shadowRoot?.querySelector('.UpoSearchDropdown__selection');
+                             if (selectionElement) {
+                                 console.log('🔍 Selection element content:', selectionElement.innerHTML);
+                             }
+                             
+                             // Now that the dropdown is fully populated and has a value, validate the form
+                             this.validateForm();
+                         }, 100);
+                     } else {
+                         console.log('❌ Target option not found for value:', this.announcementData.target_class_id);
+                     }
+                 }
+             }, 150); // Increased delay for better rendering
+         } else {
+             // If not targeting specific class, validate form immediately
+             this.validateForm();
+         }
+         
+         // Content field is now updated using setValue() method
     }
 
     // Handle target audience change to show/hide target class field
@@ -178,6 +231,7 @@ class AnnouncementUpdateModal extends HTMLElement {
             
             if (response.data.success) {
                 const classes = response.data.data || [];
+                this.availableClasses = classes; // Store for later use
                 this.populateClassDropdown(classes);
             }
         } catch (error) {
@@ -190,27 +244,47 @@ class AnnouncementUpdateModal extends HTMLElement {
             });
         }
     }
-
     // Populate the class dropdown with available classes
     populateClassDropdown(classes) {
         const classDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
         if (!classDropdown) return;
 
-        // Clear existing options except the first "Select a class..." option
-        const firstOption = classDropdown.querySelector('ui-option[value=""]');
-        classDropdown.innerHTML = '';
-        if (firstOption) {
-            classDropdown.appendChild(firstOption);
-        }
+        console.log('🔍 Populating class dropdown with classes:', classes);
 
-        // Add class options
+        // Clear existing options
+        classDropdown.innerHTML = '';
+
+        // Add default option
+        const defaultOption = document.createElement('ui-option');
+        defaultOption.setAttribute('value', '');
+        defaultOption.textContent = 'Select a class...';
+        classDropdown.appendChild(defaultOption);
+
+        // Add class options with proper formatting
         classes.forEach(classItem => {
             const option = document.createElement('ui-option');
             option.setAttribute('value', classItem.id);
-            option.textContent = `${classItem.name} Section ${classItem.section} (${classItem.academic_year_display_name || 'N/A'})`;
+            option.textContent = `${classItem.name} (${classItem.section})`;
             classDropdown.appendChild(option);
+            console.log(`🔍 Added option: value="${classItem.id}", text="${classItem.name} (${classItem.section})"`);
         });
+
+        console.log('🔍 Final dropdown HTML:', classDropdown.innerHTML);
+
+        // Add change event listener
+        if (!classDropdown._changeHandlerAdded) {
+            classDropdown.addEventListener('change', () => {
+                this.validateForm();
+            });
+            classDropdown._changeHandlerAdded = true;
+        }
     }
+
+
+    
+
+
+
 
     // Update the announcement
     async updateAnnouncement() {
@@ -424,9 +498,10 @@ class AnnouncementUpdateModal extends HTMLElement {
                     <!-- Conditional Target Class Field -->
                     <div id="target-class-field" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Class</label>
-                        <ui-search-dropdown data-field="target_class_id" value="" placeholder="Search for a class...">
-                            <ui-option value="">Select a class...</ui-option>
-                            <!-- Classes will be loaded dynamically -->
+                        <ui-search-dropdown 
+                            data-field="target_class_id" 
+                            class="w-full"
+                            placeholder="Search for a class...">
                         </ui-search-dropdown>
                     </div>
                     

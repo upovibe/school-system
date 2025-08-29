@@ -73,13 +73,14 @@ class TeacherAnnouncementsViewPage extends App {
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
-            case 'financial':
-                return announcements.filter(a => 
-                    a.announcement_type === 'financial' || 
-                    a.announcement_type === 'payment' || 
-                    a.announcement_type === 'fee' || 
-                    a.announcement_type === 'billing'
-                );
+            // Teachers don't need to see financial announcements
+            // case 'financial':
+            //     return announcements.filter(a => 
+            //         a.announcement_type === 'financial' || 
+            //         a.announcement_type === 'payment' || 
+            //         a.announcement_type === 'fee' || 
+            //         a.announcement_type === 'billing'
+            //     );
             default:
                 return announcements;
         }
@@ -94,8 +95,7 @@ class TeacherAnnouncementsViewPage extends App {
             academic: this.getAnnouncementsByType('academic').length,
             events: this.getAnnouncementsByType('events').length,
             reminders: this.getAnnouncementsByType('reminders').length,
-            emergency: this.getAnnouncementsByType('emergency').length,
-            financial: this.getAnnouncementsByType('financial').length
+            emergency: this.getAnnouncementsByType('emergency').length
         };
     }
 
@@ -451,8 +451,7 @@ class TeacherAnnouncementsViewPage extends App {
             'academic': 'fa-graduation-cap',
             'events': 'fa-calendar-alt',
             'reminders': 'fa-bell',
-            'emergency': 'fa-exclamation-triangle',
-            'financial': 'fa-dollar-sign'
+            'emergency': 'fa-exclamation-triangle'
         };
         return icons[type] || 'fa-bullhorn';
     }
@@ -465,8 +464,7 @@ class TeacherAnnouncementsViewPage extends App {
             'academic': 'Academic',
             'events': 'Events',
             'reminders': 'Reminders',
-            'emergency': 'Emergency',
-            'financial': 'Financial'
+            'emergency': 'Emergency'
         };
         return labels[type] || 'General';
     }
@@ -523,14 +521,10 @@ class TeacherAnnouncementsViewPage extends App {
                                     <i class="fas fa-bell text-amber-600 text-lg lg:text-base"></i>
                                     <span class="hidden lg:inline ml-1 font-medium">Reminders (${tabCounts.reminders})</span>
                                 </ui-tab>
-                                <ui-tab value="emergency">
-                                    <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
-                                    <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
-                                </ui-tab>
-                                <ui-tab value="financial">
-                                    <i class="fas fa-dollar-sign text-green-600 text-lg lg:text-base"></i>
-                                    <span class="hidden lg:inline ml-1 font-medium">Financial (${tabCounts.financial})</span>
-                                </ui-tab>
+                                 <ui-tab value="emergency">
+                                     <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
+                                     <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
+                                 </ui-tab>
                             </ui-tab-list>
                             
                             <!-- Pinned Tab -->
@@ -558,15 +552,10 @@ class TeacherAnnouncementsViewPage extends App {
                                 ${this.renderTabContent('reminders', announcements)}
                             </ui-tab-panel>
                             
-                            <!-- Emergency Tab -->
-                            <ui-tab-panel value="emergency">
-                                ${this.renderTabContent('emergency', announcements)}
-                            </ui-tab-panel>
-                            
-                            <!-- Financial Tab -->
-                            <ui-tab-panel value="financial">
-                                ${this.renderTabContent('financial', announcements)}
-                            </ui-tab-panel>
+                                                         <!-- Emergency Tab -->
+                             <ui-tab-panel value="emergency">
+                                 ${this.renderTabContent('emergency', announcements)}
+                             </ui-tab-panel>
                         </ui-tabs>
                     </div>
                 </div>

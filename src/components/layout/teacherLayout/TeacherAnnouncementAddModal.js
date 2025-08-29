@@ -33,14 +33,22 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         return ['open'];
     }
 
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'open' && newValue !== null) {
+            // Modal is now open, ensure dropdown displays correctly
+            if (this.isClassTeacher && this.teacherClass) {
+                setTimeout(() => {
+                    this.updateDropdownDisplay();
+                }, 50);
+            }
+        }
+    }
+
     connectedCallback() {
         this.render();
         this.setupEventListeners();
         // Load teacher's assignments when modal is connected
-        // Use setTimeout to ensure DOM is fully rendered
-        setTimeout(() => {
-            this.loadTeacherAssignments();
-        }, 0);
+        this.loadTeacherAssignments();
     }
 
     setupEventListeners() {
@@ -52,6 +60,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // Ensure dropdown displays the correct text when modal opens
+        if (this.isClassTeacher && this.teacherClass) {
+            setTimeout(() => {
+                this.updateDropdownDisplay();
+            }, 50);
+        }
     }
 
     close() {
@@ -276,6 +290,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             // Automatically select the class
             classDropdown.value = classItem.class_id;
             classDropdown.disabled = true; // Cannot change for class teacher
+            
+            // Force the dropdown to display the selected option's text
+            this.updateDropdownDisplay();
         } else if (this.teacherAssignments) {
             // For subject teacher, show all classes where they teach subjects
             classes.forEach(assignment => {
@@ -296,11 +313,26 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             // Auto-select first class if available
             if (classes.length === 1) {
                 classDropdown.value = classes[0].class_id;
+                this.updateDropdownDisplay();
             }
         }
 
         // Trigger validation
         this.validateForm();
+    }
+
+    // Update dropdown display to show the correct text
+    updateDropdownDisplay() {
+        const classDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+        if (!classDropdown) return;
+
+        if (this.isClassTeacher && this.teacherClass) {
+            // For class teacher, ensure the display shows the class name, not the ID
+            const expectedText = `${this.teacherClass.class_name} Section ${this.teacherClass.class_section} (${this.teacherClass.academic_year || 'N/A'}) - My Assigned Class`;
+            
+            // Update the placeholder to show the selected text
+            classDropdown.setAttribute('placeholder', expectedText);
+        }
     }
 
     // Save the new announcement using teacher API

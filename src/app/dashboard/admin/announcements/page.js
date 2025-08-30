@@ -199,6 +199,8 @@ class AdminAnnouncementsPage extends App {
 
     onAdd(event) {
         // Close any open modals first
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
         this.set('showAddModal', true);
     }
 

@@ -6,6 +6,7 @@ import '@/components/ui/Tabs.js';
 import '@/components/layout/adminLayout/AnnouncementAddModal.js';
 import '@/components/layout/adminLayout/AnnouncementUpdateModal.js';
 import '@/components/layout/adminLayout/AnnouncementViewModal.js';
+import '@/components/layout/adminLayout/AnnouncementDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -23,8 +24,10 @@ class AdminAnnouncementsPage extends App {
         this.showAddModal = false;
         this.showUpdateModal = false;
         this.showViewModal = false;
+        this.showDeleteDialog = false;
         this.updateAnnouncementData = null;
         this.viewAnnouncementData = null;
+        this.deleteAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -146,6 +149,7 @@ class AdminAnnouncementsPage extends App {
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-view', this.onView.bind(this));
+        this.addEventListener('table-delete', this.onDelete.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -177,6 +181,22 @@ class AdminAnnouncementsPage extends App {
             } else {
                 this.loadData();
             }
+        });
+
+        this.addEventListener('announcement-deleted', (event) => {
+            // Remove the deleted announcement from the current data
+            const deletedAnnouncement = event.detail.announcement;
+            if (deletedAnnouncement && deletedAnnouncement.id) {
+                const currentAnnouncements = this.get('announcements') || [];
+                const updatedAnnouncements = currentAnnouncements.filter(announcement => 
+                    announcement.id != deletedAnnouncement.id
+                );
+                this.set('announcements', updatedAnnouncements);
+                this.updateTableData();
+            }
+            
+            // Close the delete dialog
+            this.set('showDeleteDialog', false);
         });
     }
 
@@ -240,6 +260,27 @@ class AdminAnnouncementsPage extends App {
                 const updateModal = this.querySelector('announcement-update-modal');
                 if (updateModal) {
                     await updateModal.setAnnouncementData(editAnnouncement);
+                }
+            });
+        }
+    }
+
+    onDelete(event) {
+        const { detail } = event;
+        const deleteAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (deleteAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('showViewModal', false);
+            this.set('deleteAnnouncementData', deleteAnnouncement);
+            this.set('showDeleteDialog', true);
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(() => {
+                const deleteDialog = this.querySelector('announcement-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setAnnouncementData(deleteAnnouncement);
                 }
             });
         }
@@ -575,6 +616,7 @@ class AdminAnnouncementsPage extends App {
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
+        const showDeleteDialog = this.get('showDeleteDialog');
         
         // As admin, show ALL announcements regardless of target audience
         const adminAnnouncements = announcements || [];
@@ -732,6 +774,9 @@ class AdminAnnouncementsPage extends App {
             
             <!-- View Announcement Modal -->
             <announcement-view-modal ${showViewModal ? 'open' : ''}></announcement-view-modal>
+            
+            <!-- Delete Announcement Dialog -->
+            <announcement-delete-dialog ${showDeleteDialog ? 'open' : ''}></announcement-delete-dialog>
         `;
     }
 }

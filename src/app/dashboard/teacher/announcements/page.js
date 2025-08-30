@@ -5,6 +5,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementAddModal.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementUpdateModal.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementViewModal.js';
+import '@/components/layout/teacherLayout/TeacherAnnouncementDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -20,8 +21,10 @@ class TeacherAnnouncementsPage extends App {
         this.showAddModal = false;
         this.showUpdateModal = false;
         this.showViewModal = false;
+        this.showDeleteDialog = false;
         this.updateAnnouncementData = null;
         this.viewAnnouncementData = null;
+        this.deleteAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -144,6 +147,7 @@ class TeacherAnnouncementsPage extends App {
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-view', this.onView.bind(this));
+        this.addEventListener('table-delete', this.onDelete.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -175,6 +179,22 @@ class TeacherAnnouncementsPage extends App {
             } else {
                 this.loadData();
             }
+        });
+
+        this.addEventListener('announcement-deleted', (event) => {
+            // Remove the deleted announcement from the current data
+            const deletedAnnouncement = event.detail.announcement;
+            if (deletedAnnouncement && deletedAnnouncement.id) {
+                const currentAnnouncements = this.get('announcements') || [];
+                const updatedAnnouncements = currentAnnouncements.filter(announcement => 
+                    announcement.id != deletedAnnouncement.id
+                );
+                this.set('announcements', updatedAnnouncements);
+                this.updateTableData();
+            }
+            
+            // Close the delete dialog
+            this.set('showDeleteDialog', false);
         });
     }
 
@@ -382,12 +402,34 @@ class TeacherAnnouncementsPage extends App {
         }
     }
 
+    onDelete(event) {
+        const { detail } = event;
+        const deleteAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (deleteAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('showViewModal', false);
+            this.set('deleteAnnouncementData', deleteAnnouncement);
+            this.set('showDeleteDialog', true);
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(() => {
+                const deleteDialog = this.querySelector('teacher-announcement-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setAnnouncementData(deleteAnnouncement);
+                }
+            });
+        }
+    }
+
     render() {
         const announcements = this.get('announcements');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
         const showViewModal = this.get('showViewModal');
+        const showDeleteDialog = this.get('showDeleteDialog');
         
         return `
             ${this.renderHeader()}
@@ -442,6 +484,9 @@ class TeacherAnnouncementsPage extends App {
             
             <!-- View Announcement Modal -->
             <teacher-announcement-view-modal ${showViewModal ? 'open' : ''}></teacher-announcement-view-modal>
+            
+            <!-- Delete Announcement Dialog -->
+            <teacher-announcement-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-announcement-delete-dialog>
         `;
     }
 }

@@ -4,6 +4,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementAddModal.js';
 import '@/components/layout/teacherLayout/TeacherAnnouncementUpdateModal.js';
+import '@/components/layout/teacherLayout/TeacherAnnouncementViewModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -18,7 +19,9 @@ class TeacherAnnouncementsPage extends App {
         this.loading = false;
         this.showAddModal = false;
         this.showUpdateModal = false;
+        this.showViewModal = false;
         this.updateAnnouncementData = null;
+        this.viewAnnouncementData = null;
     }
 
     // Summary counts for header
@@ -140,6 +143,7 @@ class TeacherAnnouncementsPage extends App {
         // Add event listeners for table events
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-edit', this.onEdit.bind(this));
+        this.addEventListener('table-view', this.onView.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('announcement-saved', (event) => {
@@ -241,12 +245,18 @@ class TeacherAnnouncementsPage extends App {
             }
 
             // Load teacher announcements data using teacher-specific endpoint
-            // Use the new endpoint that only returns the teacher's own announcements
-            const response = await api.withToken(token).get('/teacher/announcements/my');
+            // Use the endpoint that returns teacher announcements (will filter by creator later)
+            const response = await api.withToken(token).get('/teacher/announcements');
             const rawAnnouncements = response?.data?.data || [];
             
+            // Filter to only show current teacher's announcements
+            const currentUserId = this.getCurrentUserId();
+            const myAnnouncements = rawAnnouncements.filter(announcement => 
+                announcement.created_by == currentUserId
+            );
+            
             // Data loaded
-            this.set('announcements', rawAnnouncements);
+            this.set('announcements', myAnnouncements);
             this.set('loading', false);
             
             // Update table data after render
@@ -292,6 +302,20 @@ class TeacherAnnouncementsPage extends App {
         });
     }
 
+    // Get current user ID from localStorage
+    getCurrentUserId() {
+        try {
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const parsed = JSON.parse(userData);
+                return parsed.id || null;
+            }
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+        return null;
+    }
+
     updateTableData() {
         const announcements = this.get('announcements');
         if (!announcements) return;
@@ -311,20 +335,44 @@ class TeacherAnnouncementsPage extends App {
         this.set('showAddModal', true);
     }
 
+    onView(event) {
+        const { detail } = event;
+        const viewAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
+        if (viewAnnouncement) {
+            // Close any open modals first
+            this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('viewAnnouncementData', viewAnnouncement);
+            this.set('showViewModal', true);
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(() => {
+                const viewModal = this.querySelector('teacher-announcement-view-modal');
+                if (viewModal) {
+                    viewModal.setAnnouncementData(viewAnnouncement);
+                }
+            });
+        }
+    }
+
     onEdit(event) {
         const { detail } = event;
         const editAnnouncement = this.get('announcements').find(announcement => announcement.id === detail.row.id);
         if (editAnnouncement) {
             // Close any open modals first
             this.set('showAddModal', false);
+            this.set('showUpdateModal', false);
+            this.set('showViewModal', false);
             this.set('updateAnnouncementData', editAnnouncement);
             this.set('showUpdateModal', true);
-            setTimeout(async () => {
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(async () => {
                 const updateModal = this.querySelector('teacher-announcement-update-modal');
                 if (updateModal) {
                     await updateModal.setAnnouncementData(editAnnouncement);
                 }
-            }, 0);
+            });
         }
     }
 
@@ -333,6 +381,7 @@ class TeacherAnnouncementsPage extends App {
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
         const showUpdateModal = this.get('showUpdateModal');
+        const showViewModal = this.get('showViewModal');
         
         return `
             ${this.renderHeader()}
@@ -384,6 +433,9 @@ class TeacherAnnouncementsPage extends App {
             
             <!-- Update Announcement Modal -->
             <teacher-announcement-update-modal ${showUpdateModal ? 'open' : ''}></teacher-announcement-update-modal>
+            
+            <!-- View Announcement Modal -->
+            <teacher-announcement-view-modal ${showViewModal ? 'open' : ''}></teacher-announcement-view-modal>
         `;
     }
 }

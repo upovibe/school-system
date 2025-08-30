@@ -331,6 +331,11 @@ class TeacherAnnouncementsPage extends App {
     }
 
     onAdd(event) {
+        // Close any open modals first
+        this.set('showUpdateModal', false);
+        this.set('showViewModal', false);
+        this.set('updateAnnouncementData', null);
+        this.set('viewAnnouncementData', null);
         // Open the add modal
         this.set('showAddModal', true);
     }
@@ -342,6 +347,7 @@ class TeacherAnnouncementsPage extends App {
             // Close any open modals first
             this.set('showAddModal', false);
             this.set('showUpdateModal', false);
+            this.set('updateAnnouncementData', null);
             this.set('viewAnnouncementData', viewAnnouncement);
             this.set('showViewModal', true);
             
@@ -361,8 +367,8 @@ class TeacherAnnouncementsPage extends App {
         if (editAnnouncement) {
             // Close any open modals first
             this.set('showAddModal', false);
-            this.set('showUpdateModal', false);
             this.set('showViewModal', false);
+            this.set('viewAnnouncementData', null);
             this.set('updateAnnouncementData', editAnnouncement);
             this.set('showUpdateModal', true);
             

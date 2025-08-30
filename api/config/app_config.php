@@ -26,3 +26,7 @@ return [
 // cd school-system; php api/index.php --help
 
 // cd school-system; php api/index.php --fresh
+
+// cd school-system; php api/index.php --migrate    # Create tables
+
+// cd school-system; php api/index.php --seed       # Add default data

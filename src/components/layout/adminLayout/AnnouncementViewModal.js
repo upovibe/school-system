@@ -187,8 +187,7 @@ class AnnouncementViewModal extends HTMLElement {
         this.innerHTML = `
             <ui-modal 
                 ${this.hasAttribute('open') ? 'open' : ''} 
-                position="right" 
-                size="lg"
+                position="right"
                 close-button="true">
                 <div slot="title">View Announcement Details</div>
                 

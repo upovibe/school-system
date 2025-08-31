@@ -216,14 +216,9 @@ class TimetableResourceAddDialog extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
                             <ui-file-upload 
                                 data-field="file"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
-                                max-size="10485760"
                                 max-files="1"
                                 class="w-full">
                             </ui-file-upload>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF (Max: 10MB)
-                            </p>
                         </div>
                     </form>
                 </div>

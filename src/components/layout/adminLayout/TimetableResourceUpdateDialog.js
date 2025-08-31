@@ -69,13 +69,59 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         this.resourceData = resource;
         this.render();
         
-        // Force update dropdowns after render to ensure values are displayed
+        // Force update dropdowns and file upload after render to ensure values are displayed
         setTimeout(() => {
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             if (classDropdown && resource?.class_id) {
                 classDropdown.value = resource.class_id.toString();
             }
-        }, 200);
+            
+            // Set the existing file in the file upload component
+            console.log('About to set existing file:', resource.attachment_file);
+            this.setExistingFile(resource.attachment_file);
+        }, 300);
+    }
+
+    // Set existing file in file upload component with retry logic
+    setExistingFile(filePath) {
+        if (!filePath) return;
+        
+        console.log('setExistingFile called with:', filePath);
+        
+        const fileUpload = this.querySelector('ui-file-upload[data-field="file"]');
+        console.log('File upload element found:', !!fileUpload);
+        
+        if (fileUpload && fileUpload.setValue && typeof fileUpload.setValue === 'function') {
+            const formattedPath = this.formatFilePath(filePath);
+            console.log('Setting formatted path:', formattedPath);
+            fileUpload.setValue(formattedPath);
+        } else {
+            console.log('File upload not ready, retrying...');
+            // Retry after a short delay if component not ready
+            setTimeout(() => this.setExistingFile(filePath), 100);
+        }
+    }
+
+    // Format file path for display in file upload component
+    formatFilePath(filePath) {
+        if (!filePath) return '';
+        
+        // If it's already a full URL, return as is
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            return filePath;
+        }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (filePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + filePath;
+        }
+        
+        // For relative paths like "uploads/timetable-resources/filename.jpg"
+        // Construct the URL by adding the base URL and /api
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + filePath;
     }
 
     // Load available classes for the dropdown
@@ -148,8 +194,12 @@ class TimetableResourceUpdateDialog extends HTMLElement {
 
             // Add file only if a new one is uploaded
             if (fileUpload && fileUpload.getFiles && fileUpload.getFiles().length > 0) {
-                const file = fileUpload.getFiles()[0];
-                formData.append('file', file);
+                const files = fileUpload.getFiles();
+                // Check if there's a new file (not an existing one)
+                const newFile = files.find(file => !file.isExisting);
+                if (newFile) {
+                    formData.append('file', newFile);
+                }
             }
 
             // Update the resource
@@ -245,21 +295,14 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Current File</label>
-                            <div class="text-sm text-gray-600 mb-2">
-                                ${resource?.attachment_file || 'No file'}
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload New File (Optional)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"
                                 class="w-full">
                             </ui-file-upload>
                             <p class="text-xs text-gray-500 mt-1">
-                                Leave empty to keep the current file
+                                Current file will be displayed above. Upload a new file to replace it.
                             </p>
                         </div>
                     </form>

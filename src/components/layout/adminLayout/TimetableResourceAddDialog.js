@@ -61,28 +61,14 @@ class TimetableResourceAddDialog extends HTMLElement {
 
             const response = await api.withToken(token).get('/classes');
             this.classes = response.data.data || [];
-            this.updateClassDropdown();
+            // Re-render to update the dropdown with classes
+            this.render();
         } catch (error) {
             console.error('❌ Error loading classes:', error);
         }
     }
 
-    // Update the class search dropdown with loaded classes
-    updateClassDropdown() {
-        const classSearchDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-        if (classSearchDropdown && this.classes.length > 0) {
-            // Clear existing options
-            classSearchDropdown.innerHTML = '';
-            
-            // Add class options
-            this.classes.forEach(cls => {
-                const option = document.createElement('ui-option');
-                option.value = cls.id;
-                option.textContent = `${cls.name} (${cls.section})`;
-                classSearchDropdown.appendChild(option);
-            });
-        }
-    }
+
 
     // Save the new timetable resource
     async saveResource() {
@@ -219,6 +205,10 @@ class TimetableResourceAddDialog extends HTMLElement {
                                 placeholder="Search and select a class"
                                 search-placeholder="Type to search classes..."
                                 class="w-full">
+                                <ui-option value="">Select a class</ui-option>
+                                ${this.classes.map(
+                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name} (${classItem.section})</ui-option>`
+                                ).join('')}
                             </ui-search-dropdown>
                         </div>
                         

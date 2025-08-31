@@ -6,6 +6,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/TimetableResourceAddDialog.js';
+import '@/components/layout/adminLayout/TimetableResourceUpdateDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -137,6 +138,23 @@ class TimetableResourcesPage extends App {
                 this.loadData();
             }
         });
+        
+        this.addEventListener('resource-updated', (event) => {
+            // Update the existing resource in the data
+            const updatedResource = event.detail.resource;
+            if (updatedResource) {
+                const currentResources = this.get('resources') || [];
+                const updatedResources = currentResources.map(resource => 
+                    resource.id === updatedResource.id ? updatedResource : resource
+                );
+                this.set('resources', updatedResources);
+                this.updateTableData();
+                // Close the update modal
+                this.set('showUpdateModal', false);
+            } else {
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -241,7 +259,12 @@ class TimetableResourcesPage extends App {
             this.closeAllModals();
             this.set('updateResourceData', editResource);
             this.set('showUpdateModal', true);
-            // TODO: Implement update modal
+            setTimeout(() => {
+                const updateModal = this.querySelector('timetable-resource-update-dialog');
+                if (updateModal) {
+                    updateModal.setResourceData(editResource);
+                }
+            }, 0);
         }
     }
 
@@ -328,6 +351,7 @@ class TimetableResourcesPage extends App {
         const resources = this.get('resources');
         const loading = this.get('loading');
         const showAddModal = this.get('showAddModal');
+        const showUpdateModal = this.get('showUpdateModal');
         
         // Prepare table data and columns for timetable resources
         const tableData = resources ? resources.map((resource, index) => ({
@@ -386,8 +410,10 @@ class TimetableResourcesPage extends App {
             <!-- Add Resource Dialog -->
             <timetable-resource-add-dialog ${showAddModal ? 'open' : ''}></timetable-resource-add-dialog>
             
+            <!-- Update Resource Dialog -->
+            <timetable-resource-update-dialog ${showUpdateModal ? 'open' : ''}></timetable-resource-update-dialog>
+            
             <!-- TODO: Add other modals and dialogs here -->
-            <!-- Update Resource Modal -->
             <!-- View Resource Modal -->
             <!-- Delete Resource Dialog -->
         `;

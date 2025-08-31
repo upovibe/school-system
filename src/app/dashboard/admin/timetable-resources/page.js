@@ -250,6 +250,8 @@ class TimetableResourcesPage extends App {
         this.loadData();
     }
 
+
+
     // Update table data without full page reload
     updateTableData() {
         const resources = this.get('resources');
@@ -260,12 +262,10 @@ class TimetableResourcesPage extends App {
             id: resource.id,
             index: index + 1,
             title: resource.title,
-            class_name: resource.class_name || 'Unknown Class',
-            class_section: resource.class_section || '',
+            class_info: this.formatClassInfo(resource.class_name, resource.class_section),
             creator_name: resource.creator_name || 'Unknown',
-            file_type: this.getFileType(resource.attachment_file),
-            created: resource.created_at,
-            updated: resource.updated_at
+            attachment_file: resource.attachment_file || 'No file',
+            created: this.formatDate(resource.created_at)
         }));
 
         // Find the table component and update its data
@@ -275,11 +275,26 @@ class TimetableResourcesPage extends App {
         }
     }
 
-    // Helper method to get file type from filename
-    getFileType(filename) {
-        if (!filename) return 'No file';
-        const extension = filename.split('.').pop()?.toUpperCase();
-        return extension || 'Unknown';
+    // Helper method to format class name and section together
+    formatClassInfo(className, classSection) {
+        if (!className) return 'Unknown Class';
+        if (!classSection) return className;
+        return `${className} (${classSection})`;
+    }
+
+    // Helper method to format dates
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return 'Invalid Date';
+        }
     }
 
     // Close all modals and dialogs
@@ -302,21 +317,18 @@ class TimetableResourcesPage extends App {
             id: resource.id,
             index: index + 1,
             title: resource.title,
-            class_name: resource.class_name || 'Unknown Class',
-            class_section: resource.class_section || '',
+            class_info: this.formatClassInfo(resource.class_name, resource.class_section),
             creator_name: resource.creator_name || 'Unknown',
-            file_type: this.getFileType(resource.attachment_file),
-            created: resource.created_at,
-            updated: resource.updated_at
+            attachment_file: resource.attachment_file || 'No file',
+            created: this.formatDate(resource.created_at)
         })) : [];
 
         const tableColumns = [
             { key: 'index', label: 'No.', html: false },
             { key: 'title', label: 'Title' },
-            { key: 'class_name', label: 'Class' },
-            { key: 'class_section', label: 'Section' },
+            { key: 'class_info', label: 'Class' },
             { key: 'creator_name', label: 'Created By' },
-            { key: 'file_type', label: 'File Type' },
+            { key: 'attachment_file', label: 'File' },
             { key: 'created', label: 'Created' }
         ];
         

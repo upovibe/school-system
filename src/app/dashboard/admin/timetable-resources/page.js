@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/layout/adminLayout/TimetableResourceAddDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -121,6 +122,21 @@ class TimetableResourcesPage extends App {
         this.addEventListener('table-edit', this.onEdit.bind(this));
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
+        
+        // Listen for success events to refresh data
+        this.addEventListener('resource-saved', (event) => {
+            // Add the new resource to the existing data
+            const newResource = event.detail.resource;
+            if (newResource) {
+                const currentResources = this.get('resources') || [];
+                this.set('resources', [...currentResources, newResource]);
+                this.updateTableData();
+                // Close the add modal
+                this.set('showAddModal', false);
+            } else {
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -311,6 +327,7 @@ class TimetableResourcesPage extends App {
     render() {
         const resources = this.get('resources');
         const loading = this.get('loading');
+        const showAddModal = this.get('showAddModal');
         
         // Prepare table data and columns for timetable resources
         const tableData = resources ? resources.map((resource, index) => ({
@@ -366,8 +383,10 @@ class TimetableResourcesPage extends App {
                 `}
             </div>
             
-            <!-- TODO: Add modals and dialogs here -->
-            <!-- Add Resource Modal -->
+            <!-- Add Resource Dialog -->
+            <timetable-resource-add-dialog ${showAddModal ? 'open' : ''}></timetable-resource-add-dialog>
+            
+            <!-- TODO: Add other modals and dialogs here -->
             <!-- Update Resource Modal -->
             <!-- View Resource Modal -->
             <!-- Delete Resource Dialog -->

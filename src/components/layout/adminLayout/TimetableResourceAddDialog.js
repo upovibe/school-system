@@ -34,14 +34,18 @@ class TimetableResourceAddDialog extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Listen for confirm button click (Save Resource)
-        this.addEventListener('confirm', () => {
-            this.saveResource();
-        });
-
-        // Listen for cancel button click
-        this.addEventListener('cancel', () => {
-            this.close();
+        // Listen for button clicks
+        this.addEventListener('click', (event) => {
+            const button = event.target.closest('ui-button[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            
+            if (action === 'save') {
+                this.saveResource();
+            } else if (action === 'cancel') {
+                this.close();
+            }
         });
     }
 
@@ -224,8 +228,8 @@ class TimetableResourceAddDialog extends HTMLElement {
                 </div>
                 
                 <div slot="footer" class="flex justify-end gap-2">
-                    <ui-button color="secondary" onclick="this.closest('ui-dialog').close()">Cancel</ui-button>
-                    <ui-button color="primary" onclick="this.saveResource()">Save Resource</ui-button>
+                    <ui-button color="secondary" data-action="cancel">Cancel</ui-button>
+                    <ui-button color="primary" data-action="save">Save Resource</ui-button>
                 </div>
             </ui-dialog>
         `;

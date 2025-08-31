@@ -136,33 +136,5 @@ class TimetableResourceModel extends BaseModel {
         }
     }
     
-    /**
-     * Search timetable resources by title or class name
-     */
-    public function search($query) {
-        try {
-            $searchTerm = "%{$query}%";
-            $stmt = $this->pdo->prepare("
-                SELECT tr.*, c.name as class_name, c.section as class_section,
-                       u.name as creator_name, u.email as creator_email
-                FROM {$this->getTableName()} tr
-                LEFT JOIN classes c ON tr.class_id = c.id
-                LEFT JOIN users u ON tr.created_by = u.id
-                WHERE tr.title LIKE ? OR c.name LIKE ? OR c.section LIKE ?
-                ORDER BY tr.created_at DESC
-            ");
-            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Apply casts to each result
-            foreach ($results as &$result) {
-                $result = $this->applyCasts($result);
-            }
-            
-            return $results;
-        } catch (PDOException $e) {
-            throw new Exception('Error searching timetable resources: ' . $e->getMessage());
-        }
-    }
 }
 ?>

@@ -361,39 +361,6 @@ class TimetableResourceController {
     }
 
     /**
-     * Search timetable resources
-     */
-    public function search() {
-        try {
-            ob_clean();
-            
-            $query = $_GET['q'] ?? '';
-            if (empty($query)) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Search query is required'
-                ], JSON_PRETTY_PRINT);
-                return;
-            }
-            
-            $resources = $this->timetableResourceModel->search($query);
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $resources,
-                'message' => 'Search completed successfully'
-            ], JSON_PRETTY_PRINT);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], JSON_PRETTY_PRINT);
-        }
-    }
-    
-    /**
      * Get timetable resources created by current user (for teachers)
      */
     public function getMyResources() {

@@ -87,7 +87,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                 class_id: classSearchDropdown ? classSearchDropdown.value : ''
             };
 
-            console.log('Resource data being sent:', resourceData); // Debug log
+            // console.log('Resource data being sent:', resourceData); // Debug log
 
             // Validate required fields
             if (!resourceData.title.trim()) {

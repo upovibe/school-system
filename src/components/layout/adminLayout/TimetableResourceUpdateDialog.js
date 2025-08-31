@@ -79,7 +79,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
             // Set the existing file in the file upload component
             console.log('About to set existing file:', resource.attachment_file);
             this.setExistingFile(resource.attachment_file);
-        }, 300);
+        }, 500);
     }
 
     // Set existing file in file upload component with retry logic
@@ -92,9 +92,16 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         console.log('File upload element found:', !!fileUpload);
         
         if (fileUpload && fileUpload.setValue && typeof fileUpload.setValue === 'function') {
-            const formattedPath = this.formatFilePath(filePath);
-            console.log('Setting formatted path:', formattedPath);
-            fileUpload.setValue(formattedPath);
+            // Check if the shadow DOM is ready by looking for the fileList element
+            if (fileUpload.shadowRoot && fileUpload.shadowRoot.querySelector('#fileList')) {
+                const formattedPath = this.formatFilePath(filePath);
+                console.log('Setting formatted path:', formattedPath);
+                fileUpload.setValue(formattedPath);
+            } else {
+                console.log('Shadow DOM not ready, retrying...');
+                // Retry after a short delay if shadow DOM not ready
+                setTimeout(() => this.setExistingFile(filePath), 100);
+            }
         } else {
             console.log('File upload not ready, retrying...');
             // Retry after a short delay if component not ready

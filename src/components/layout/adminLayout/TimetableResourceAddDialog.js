@@ -1,7 +1,7 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Input.js';
-import '@/components/ui/Dropdown.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
@@ -67,19 +67,19 @@ class TimetableResourceAddDialog extends HTMLElement {
         }
     }
 
-    // Update the class dropdown with loaded classes
+    // Update the class search dropdown with loaded classes
     updateClassDropdown() {
-        const classDropdown = this.querySelector('ui-dropdown[data-field="class_id"]');
-        if (classDropdown && this.classes.length > 0) {
+        const classSearchDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+        if (classSearchDropdown && this.classes.length > 0) {
             // Clear existing options
-            classDropdown.innerHTML = '<ui-option value="">Select a class</ui-option>';
+            classSearchDropdown.innerHTML = '';
             
             // Add class options
             this.classes.forEach(cls => {
                 const option = document.createElement('ui-option');
                 option.value = cls.id;
                 option.textContent = `${cls.name} (${cls.section})`;
-                classDropdown.appendChild(option);
+                classSearchDropdown.appendChild(option);
             });
         }
     }
@@ -89,12 +89,12 @@ class TimetableResourceAddDialog extends HTMLElement {
         try {
             // Get form data using the data-field attributes for reliable selection
             const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const classDropdown = this.querySelector('ui-dropdown[data-field="class_id"]');
+            const classSearchDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             const fileUpload = this.querySelector('ui-file-upload[data-field="file"]');
 
             const resourceData = {
                 title: titleInput ? titleInput.value : '',
-                class_id: classDropdown ? classDropdown.value : ''
+                class_id: classSearchDropdown ? classSearchDropdown.value : ''
             };
 
             console.log('Resource data being sent:', resourceData); // Debug log
@@ -214,12 +214,12 @@ class TimetableResourceAddDialog extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                            <ui-dropdown 
+                            <ui-search-dropdown 
                                 data-field="class_id"
-                                placeholder="Select a class"
+                                placeholder="Search and select a class"
+                                search-placeholder="Type to search classes..."
                                 class="w-full">
-                                <ui-option value="">Select a class</ui-option>
-                            </ui-dropdown>
+                            </ui-search-dropdown>
                         </div>
                         
                         <div>

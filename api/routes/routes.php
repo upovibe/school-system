@@ -202,6 +202,7 @@ Router::get('/teachers/students/{studentId}/assignments', 'TeacherController@get
 // File download routes
 Router::get('/uploads/assignments/attachments/{filename}', 'TeacherController@downloadAssignmentAttachment');
 Router::get('/students/download/assignments/attachments/{filename}', 'StudentController@downloadAssignmentAttachment');
+Router::get('/uploads/timetable-resources/{filename}', 'TimetableResourceController@download');
 
 // Teacher Management Routes
 Router::get('/teachers/{id}', 'TeacherController@show');
@@ -267,6 +268,16 @@ Router::put('/assignments/{id}', 'AssignmentController@update');
 Router::delete('/assignments/{id}', 'AssignmentController@destroy');
 Router::get('/assignments/{id}/submissions', 'AssignmentController@getSubmissions');
 Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentController@gradeSubmission');
+
+// Timetable Resource Management Routes (admin only for create/update/delete, public for view/download)
+Router::get('/timetable-resources', 'TimetableResourceController@index');
+Router::post('/timetable-resources', 'TimetableResourceController@store');
+Router::get('/timetable-resources/{id}', 'TimetableResourceController@show');
+Router::put('/timetable-resources/{id}', 'TimetableResourceController@update');
+Router::delete('/timetable-resources/{id}', 'TimetableResourceController@destroy');
+Router::get('/timetable-resources/{id}/download', 'TimetableResourceController@download');
+Router::get('/timetable-resources/class/{classId}', 'TimetableResourceController@getByClass');
+Router::get('/timetable-resources/my-resources', 'TimetableResourceController@getMyResources');
 
 // Teacher Assignment Management Routes (admin only)
 Router::get('/teacher-assignments', 'TeacherAssignmentController@index');

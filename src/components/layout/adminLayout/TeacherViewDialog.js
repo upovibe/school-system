@@ -172,6 +172,10 @@ class TeacherViewDialog extends HTMLElement {
                         </div>
                     `}
                 </div>
+                
+                <div slot="footer" class="flex justify-end">
+                    <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
+                </div>
             </ui-dialog>
         `;
     }

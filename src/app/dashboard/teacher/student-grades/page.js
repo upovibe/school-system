@@ -183,7 +183,51 @@ class TeacherStudentGradesPage extends App {
     this.addEventListener('student-grade-deleted', (event) => {
       const deletedId = event.detail.gradeId;
       const current = this.get('grades') || [];
-      this.set('grades', current.filter(g => g.id !== deletedId));
+      
+      // Find the deleted grade to get the student_id
+      const deletedGrade = current.find(g => g.id === deletedId);
+      
+      if (deletedGrade) {
+        // Remove the specific grade record
+        const updatedGrades = current.filter(g => g.id !== deletedId);
+        
+        // If this was the only grade for this student, convert them back to a "new" entry
+        const studentHasOtherGrades = updatedGrades.some(g => 
+          g.student_id === deletedGrade.student_id && 
+          g.id !== null && 
+          g.id !== deletedId
+        );
+        
+        if (!studentHasOtherGrades) {
+          // Convert the student back to a "new" entry (no grades yet)
+          const newEntry = {
+            id: null,
+            student_id: deletedGrade.student_id,
+            student_first_name: deletedGrade.student_first_name,
+            student_last_name: deletedGrade.student_last_name,
+            student_number: deletedGrade.student_number,
+            class_id: deletedGrade.class_id,
+            class_name: deletedGrade.class_name,
+            class_section: deletedGrade.class_section,
+            subject_id: deletedGrade.subject_id,
+            subject_name: deletedGrade.subject_name,
+            grading_period_id: deletedGrade.grading_period_id,
+            grading_period_name: deletedGrade.grading_period_name,
+            assignment_total: null,
+            exam_total: null,
+            final_percentage: null,
+            final_letter_grade: null,
+            created_at: null,
+            updated_at: null,
+            is_new: true
+          };
+          
+          updatedGrades.push(newEntry);
+        }
+        
+        this.set('grades', updatedGrades);
+      }
+      
       this.render();
       this.set('showDeleteDialog', false);
     });

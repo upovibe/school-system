@@ -71,10 +71,24 @@ class StudentAssignmentViewDialog extends HTMLElement {
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            day: 'numeric'
         });
+    }
+
+    formatDateTime(dateString) {
+        if (!dateString) return 'No date set';
+        const date = new Date(dateString);
+        const dateStr = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        const timeStr = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        return `${dateStr} at ${timeStr}`;
     }
 
     getStatusColor(status) {
@@ -197,8 +211,8 @@ class StudentAssignmentViewDialog extends HTMLElement {
                                                 <i class="fas fa-calendar text-orange-600 text-sm"></i>
                                             </div>
                                             <div>
-                                                <p class="text-xs text-gray-500 font-medium">Due Date</p>
-                                                <p class="text-sm font-semibold text-gray-800">${this.formatDate(assignment.due_date)}</p>
+                                                <p class="text-xs text-gray-500 font-medium">Due Date & Time</p>
+                                                <p class="text-sm font-semibold text-gray-800">${this.formatDateTime(assignment.due_date)}</p>
                                             </div>
                                         </div>
                                     </div>

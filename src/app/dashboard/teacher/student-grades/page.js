@@ -386,7 +386,7 @@ class TeacherStudentGradesPage extends App {
 
       // Default: preselect the first active grading period if available, otherwise first period
       if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
-        const firstActivePeriod = this.periods.find(p => p.is_active === 1);
+        const firstActivePeriod = this.periods.find(p => p.is_active === true || p.is_active === 1);
         if (firstActivePeriod) {
           const firstActivePeriodId = String(firstActivePeriod.id);
           const next = { ...this.get('filters'), grading_period_id: firstActivePeriodId };
@@ -577,7 +577,7 @@ class TeacherStudentGradesPage extends App {
 
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
     const periodOptions = (this.periods || []).map(p => {
-      const isActive = p.is_active === 1; // Check if is_active = 1
+      const isActive = p.is_active === true || p.is_active === 1; // Check if is_active is true or 1
       return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
     }).join('');
 

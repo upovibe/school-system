@@ -177,12 +177,26 @@ class TimetableResourceController {
                 return;
             }
             
+            // Handle multipart/form-data for PUT requests
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'multipart/form-data') !== false && $_SERVER['REQUEST_METHOD'] === 'PUT') {
+                $rawData = file_get_contents('php://input');
+                require_once __DIR__ . '/../core/MultipartFormParser.php';
+                MultipartFormParser::processRequest($rawData, $contentType);
+            }
+            
             // Parse multipart form data
             $data = $_POST;
             $file = $_FILES['file'] ?? null;
             
-            // Prepare update data
+            // Debug: Log what we received
+            error_log("TimetableResource Update - Received data: " . print_r($data, true));
+            error_log("TimetableResource Update - Received files: " . print_r($_FILES, true));
+            
+            // Prepare update data - always include fields that are provided, even if unchanged
             $updateData = [];
+            
+            // Always include title and class_id if they are provided in the request
             if (isset($data['title'])) {
                 $updateData['title'] = $data['title'];
             }
@@ -191,7 +205,7 @@ class TimetableResourceController {
             }
             
             // Handle file update if provided
-            if ($file) {
+            if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
                 // Delete old file
                 if ($existingResource['attachment_file']) {
                     deleteTimetableResourceFile($existingResource['attachment_file']);
@@ -211,11 +225,12 @@ class TimetableResourceController {
                 $updateData['attachment_file'] = $uploadResult['filepath'];
             }
             
+            // Check if we have any data to update
             if (empty($updateData)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'error' => 'No fields to update'
+                    'error' => 'No fields to update. Please provide title, class_id, or a new file.'
                 ], JSON_PRETTY_PRINT);
                 return;
             }

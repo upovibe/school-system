@@ -516,6 +516,7 @@ class TeacherClassPage extends App {
                                          search-placeholder="Search students..."
                                          striped
                                          print
+                                         actions="view"
                                          sortable
                                          clickable
                                          refresh

@@ -126,34 +126,27 @@ class TimetableResourcesPage extends App {
         
         // Listen for success events to refresh data
         this.addEventListener('resource-saved', (event) => {
-            // Add the new resource to the existing data
-            const newResource = event.detail.resource;
-            if (newResource) {
-                const currentResources = this.get('resources') || [];
-                this.set('resources', [...currentResources, newResource]);
-                this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
-            } else {
-                this.loadData();
-            }
+            // Close the add modal first
+            this.set('showAddModal', false);
+            
+            // Show loading state
+            this.set('loading', true);
+            
+            // Reload the full data to ensure we have complete class information
+            // This is necessary because the create response might not include full class details
+            this.loadData();
         });
         
         this.addEventListener('resource-updated', (event) => {
-            // Update the existing resource in the data
-            const updatedResource = event.detail.resource;
-            if (updatedResource) {
-                const currentResources = this.get('resources') || [];
-                const updatedResources = currentResources.map(resource => 
-                    resource.id === updatedResource.id ? updatedResource : resource
-                );
-                this.set('resources', updatedResources);
-                this.updateTableData();
-                // Close the update modal
-                this.set('showUpdateModal', false);
-            } else {
-                this.loadData();
-            }
+            // Close the update modal first
+            this.set('showUpdateModal', false);
+            
+            // Show loading state
+            this.set('loading', true);
+            
+            // Reload the full data to ensure we have complete class information
+            // This is necessary because the update response might not include full class details
+            this.loadData();
         });
     }
 

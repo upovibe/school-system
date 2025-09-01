@@ -189,9 +189,7 @@ class TimetableResourceController {
             $data = $_POST;
             $file = $_FILES['file'] ?? null;
             
-            // Debug: Log what we received
-            error_log("TimetableResource Update - Received data: " . print_r($data, true));
-            error_log("TimetableResource Update - Received files: " . print_r($_FILES, true));
+
             
             // Prepare update data - always include fields that are provided, even if unchanged
             $updateData = [];

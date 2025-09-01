@@ -217,11 +217,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                 formData.append(key, resourceData[key]);
             });
             
-            // Debug: Log what we're sending
-            console.log('Sending form data:', resourceData);
-            for (let [key, value] of formData.entries()) {
-                console.log(`FormData entry: ${key} = ${value}`);
-            }
+
 
             // Add file only if a new one is uploaded
             if (fileUpload && fileUpload.getFiles && fileUpload.getFiles().length > 0) {

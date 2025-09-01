@@ -450,15 +450,7 @@ class FileUpload extends HTMLElement {
         </div>
         
         <div class="file-icon">
-          ${isExisting ? `
-            <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
-            </svg>
-          ` : `
-            <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
-            </svg>
-          `}
+          ${this.getFileIcon(file)}
         </div>
         
         <div class="file-info">
@@ -514,6 +506,119 @@ class FileUpload extends HTMLElement {
     setTimeout(() => {
       errorDiv.remove();
     }, 5000);
+  }
+
+  // Get appropriate icon based on file type
+  getFileIcon(file) {
+    const isExisting = file.isExisting;
+    const fileType = file.type || '';
+    const fileName = file.name || '';
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    // For existing files, determine icon based on file type/extension
+    if (isExisting) {
+      // Image files
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension) || 
+          fileType.startsWith('image/')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // PDF files
+      if (extension === 'pdf' || fileType === 'application/pdf') {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Word documents
+      if (['doc', 'docx'].includes(extension) || 
+          fileType.includes('word') || fileType.includes('document')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Excel files
+      if (['xls', 'xlsx'].includes(extension) || 
+          fileType.includes('excel') || fileType.includes('spreadsheet')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // PowerPoint files
+      if (['ppt', 'pptx'].includes(extension) || 
+          fileType.includes('powerpoint') || fileType.includes('presentation')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Text files
+      if (extension === 'txt' || fileType === 'text/plain') {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Video files
+      if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'].includes(extension) || 
+          fileType.startsWith('video/')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Audio files
+      if (['mp3', 'wav', 'ogg', 'aac', 'flac'].includes(extension) || 
+          fileType.startsWith('audio/')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.5 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.5l3.883-2.793A1 1 0 019.383 3.076zM12.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-4.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Archive files
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension) || 
+          fileType.includes('archive') || fileType.includes('compressed')) {
+        return `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+          </svg>
+        `;
+      }
+      
+      // Default file icon for other types
+      return `
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+        </svg>
+      `;
+    }
+    
+    // For new files (not existing), show generic file icon
+    return `
+      <svg fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+      </svg>
+    `;
   }
 
   formatFileSize(bytes) {

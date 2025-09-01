@@ -326,13 +326,19 @@ class StudentClassPage extends App {
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="text-lg font-semibold">Timetable</div>
-                                        <button 
-                                            data-action="download-timetable"
-                                            class="text-blue-100 text-xs sm:text-sm hover:text-orange-200 transition-colors cursor-pointer underline"
-                                            title="${timetableResources && timetableResources.length > 0 ? 'Download Timetable' : 'No timetable available'}"
-                                        >
-                                            ${timetableResources && timetableResources.length > 0 ? 'Download' : 'Not available'}
-                                        </button>
+                                        ${timetableResources && timetableResources.length > 0 ? `
+                                            <button 
+                                                data-action="download-timetable"
+                                                class="text-blue-100 text-xs sm:text-sm hover:text-orange-200 transition-colors cursor-pointer underline"
+                                                title="Download Timetable"
+                                            >
+                                                Download
+                                            </button>
+                                        ` : `
+                                            <div class="text-blue-100 text-xs sm:text-sm">
+                                                Not available
+                                            </div>
+                                        `}
                                     </div>
                                 </div>
                             </div>

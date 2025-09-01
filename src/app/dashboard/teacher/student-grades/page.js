@@ -527,7 +527,12 @@ class TeacherStudentGradesPage extends App {
       const modal = this.querySelector('teacher-student-grade-add-modal');
       if (modal) {
         const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
-        const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
+        const filterData = { 
+          subject_id: filters.subject_id, 
+          grading_period_id: filters.grading_period_id, 
+          class_id: this.teacherClass?.class_id
+          // No student_id here - user will need to select from dropdown
+        };
         modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
         modal.open?.();
       }
@@ -546,7 +551,12 @@ class TeacherStudentGradesPage extends App {
           const modal = this.querySelector('teacher-student-grade-add-modal');
           if (modal) {
             const filters = this.get('filters') || {};
-            const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
+            const filterData = { 
+              subject_id: filters.subject_id, 
+              grading_period_id: filters.grading_period_id, 
+              class_id: this.teacherClass?.class_id,
+              student_id: row.student_id // Pass the student_id from the row
+            };
             modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
             modal.open?.();
           }

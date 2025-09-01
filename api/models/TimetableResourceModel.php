@@ -136,5 +136,28 @@ class TimetableResourceModel extends BaseModel {
         }
     }
     
+    /**
+     * Check if a class already has a timetable resource
+     */
+    public function classHasResource($classId, $excludeId = null) {
+        try {
+            $sql = "SELECT COUNT(*) FROM {$this->getTableName()} WHERE class_id = ?";
+            $params = [$classId];
+            
+            if ($excludeId !== null) {
+                $sql .= " AND id != ?";
+                $params[] = $excludeId;
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $count = $stmt->fetchColumn();
+            
+            return $count > 0;
+        } catch (PDOException $e) {
+            throw new Exception('Error checking if class has resource: ' . $e->getMessage());
+        }
+    }
+    
 }
 ?>

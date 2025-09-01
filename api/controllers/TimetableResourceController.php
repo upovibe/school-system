@@ -65,6 +65,16 @@ class TimetableResourceController {
                 return;
             }
             
+            // Check if class already has a timetable resource
+            if ($this->timetableResourceModel->classHasResource($data['class_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'This class already has a timetable resource. Each class can only have one timetable resource.'
+                ], JSON_PRETTY_PRINT);
+                return;
+            }
+            
             // Upload file
             $uploadResult = uploadTimetableResourceFile($file);
             if (!$uploadResult['success']) {
@@ -199,6 +209,18 @@ class TimetableResourceController {
                 $updateData['title'] = $data['title'];
             }
             if (isset($data['class_id'])) {
+                // Only validate if the class is actually being changed
+                if ($data['class_id'] != $existingResource['class_id']) {
+                    // Check if the new class already has a timetable resource (excluding current resource)
+                    if ($this->timetableResourceModel->classHasResource($data['class_id'], $id)) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'error' => 'This class already has a timetable resource. Each class can only have one timetable resource.'
+                        ], JSON_PRETTY_PRINT);
+                        return;
+                    }
+                }
                 $updateData['class_id'] = $data['class_id'];
             }
             

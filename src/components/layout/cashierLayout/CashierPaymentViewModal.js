@@ -136,7 +136,7 @@ class CashierPaymentViewModal extends HTMLElement {
           </div>
         </div>
         <div slot="footer" class="flex items-center justify-end gap-2">
-          <ui-button id="cancel-view" variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
+          <ui-button id="cancel-view" variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
           <ui-button id="print-btn" color="primary"><i class="fas fa-print mr-1"></i>Print Receipt</ui-button>
         </div>
       </ui-dialog>

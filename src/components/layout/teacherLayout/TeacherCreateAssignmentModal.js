@@ -87,16 +87,26 @@ class TeacherCreateAssignmentModal extends HTMLElement {
         const titleInput = this.querySelector('ui-input[data-field="title"]');
         const descriptionWysiwyg = this.querySelector('ui-wysiwyg[data-field="description"]');
         const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
+        const dueTimeInput = this.querySelector('ui-input[data-field="due_time"]');
         const totalPointsInput = this.querySelector('ui-input[data-field="total_points"]');
         const assignmentTypeDropdown = this.querySelector('ui-dropdown[data-field="assignment_type"]');
         const statusDropdown = this.querySelector('ui-dropdown[data-field="status"]');
         const attachmentFileUpload = this.querySelector('ui-file-upload[data-field="attachment"]');
 
+        // Combine date and time to create a proper datetime string
+        let dueDateTime = '';
+        if (dueDateInput && dueDateInput.value && dueTimeInput && dueTimeInput.value) {
+            // Create a proper datetime string that the database can parse
+            const dateStr = dueDateInput.value;
+            const timeStr = dueTimeInput.value;
+            dueDateTime = `${dateStr} ${timeStr}:00`;
+        }
+
         // Use the same approach as working admin modals - direct .value access
         const formData = {
             title: titleInput ? titleInput.value : '',
             description: descriptionWysiwyg ? descriptionWysiwyg.value : '',
-            due_date: dueDateInput ? dueDateInput.value : '',
+            due_date: dueDateTime,
             total_points: totalPointsInput ? totalPointsInput.value : '',
             assignment_type: assignmentTypeDropdown ? assignmentTypeDropdown.value : 'homework',
             status: statusDropdown ? statusDropdown.value : 'published',
@@ -154,7 +164,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             if (!due_date) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please select a due date',
+                    message: 'Please select both due date and time',
                     variant: 'error',
                     duration: 3000
                 });
@@ -202,6 +212,8 @@ class TeacherCreateAssignmentModal extends HTMLElement {
             Object.keys(formDataObj).forEach(key => {
                 formData.append(key, formDataObj[key]);
             });
+            
+
             
             // Add attachment files if selected
             if (attachmentFileUpload && attachmentFileUpload.getFiles().length > 0) {
@@ -307,18 +319,30 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             </ui-wysiwyg>
                         </div>
 
-                         <!-- Due Date and Total Points -->
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <!-- Due Date, Time and Total Points -->
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <div>
                                  <label class="block text-sm font-medium text-gray-700 mb-2">
                                      Due Date <span class="text-red-500">*</span>
                                  </label>
-                                                                   <ui-input 
-                                      type="date"
-                                      data-field="due_date"
-                                      min="${new Date().toISOString().split('T')[0]}"
-                                      required>
-                                  </ui-input>
+                                 <ui-input 
+                                     type="date"
+                                     data-field="due_date"
+                                     min="${new Date().toISOString().split('T')[0]}"
+                                     required>
+                                 </ui-input>
+                             </div>
+                             
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Due Time <span class="text-red-500">*</span>
+                                 </label>
+                                 <ui-input 
+                                     type="time"
+                                     data-field="due_time"
+                                     value="23:59"
+                                     required>
+                                 </ui-input>
                              </div>
                              
                              <div>

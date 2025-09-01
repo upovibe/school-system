@@ -135,6 +135,20 @@ class TeacherEditAssignmentModal extends HTMLElement {
             const dueDate = this.assignmentData.due_date ? new Date(this.assignmentData.due_date).toISOString().split('T')[0] : '';
             dueDateInput.value = dueDate;
         }
+        
+        // Set time field
+        const dueTimeInput = this.querySelector('[data-field="due_time"]');
+        if (dueTimeInput) {
+            // Extract time from due_date (HH:MM)
+            if (this.assignmentData.due_date) {
+                const dueDateTime = new Date(this.assignmentData.due_date);
+                const hours = dueDateTime.getHours().toString().padStart(2, '0');
+                const minutes = dueDateTime.getMinutes().toString().padStart(2, '0');
+                dueTimeInput.value = `${hours}:${minutes}`;
+            } else {
+                dueTimeInput.value = '23:59'; // Default time
+            }
+        }
         if (totalPointsInput) {
             totalPointsInput.value = this.assignmentData.total_points || '';
         }
@@ -157,10 +171,20 @@ class TeacherEditAssignmentModal extends HTMLElement {
         const titleElement = this.querySelector('[data-field="title"]');
         const descriptionElement = this.querySelector('[data-field="description"]');
         const dueDateElement = this.querySelector('[data-field="due_date"]');
+        const dueTimeElement = this.querySelector('[data-field="due_time"]');
         const totalPointsElement = this.querySelector('[data-field="total_points"]');
         const assignmentTypeElement = this.querySelector('[data-field="assignment_type"]');
         const statusElement = this.querySelector('[data-field="status"]');
         const fileUploadElement = this.querySelector('[data-field="attachment_file"]');
+
+        // Combine date and time to create a proper datetime string
+        let dueDateTime = '';
+        if (dueDateElement && dueDateElement.value && dueTimeElement && dueTimeElement.value) {
+            // Create a proper datetime string that the database can parse
+            const dateStr = dueDateElement.value;
+            const timeStr = dueTimeElement.value;
+            dueDateTime = `${dateStr} ${timeStr}:00`;
+        }
 
         // Get file data - check for new files first, then existing file
         let attachmentFile = null;
@@ -182,7 +206,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
         return {
             title: titleElement?.value || '',
             description: descriptionElement?.value || '',
-            due_date: dueDateElement?.value || '',
+            due_date: dueDateTime,
             total_points: totalPointsElement?.value || '',
             assignment_type: assignmentTypeElement?.value || 'homework',
             status: statusElement?.value || 'published',
@@ -212,7 +236,7 @@ class TeacherEditAssignmentModal extends HTMLElement {
             if (!formData.due_date) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please select a due date',
+                    message: 'Please select both due date and time',
                     variant: 'error',
                     duration: 3000
                 });
@@ -347,8 +371,8 @@ class TeacherEditAssignmentModal extends HTMLElement {
                             </ui-wysiwyg>
                         </div>
 
-                         <!-- Due Date and Total Points -->
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <!-- Due Date, Time and Total Points -->
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <div>
                                  <label class="block text-sm font-medium text-gray-700 mb-2">
                                      Due Date <span class="text-red-500">*</span>
@@ -357,6 +381,17 @@ class TeacherEditAssignmentModal extends HTMLElement {
                                      type="date"
                                      data-field="due_date"
                                      min="${new Date().toISOString().split('T')[0]}"
+                                     required>
+                                 </ui-input>
+                             </div>
+                             
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700 mb-2">
+                                     Due Time <span class="text-red-500">*</span>
+                                 </label>
+                                 <ui-input 
+                                     type="time"
+                                     data-field="due_time"
                                      required>
                                  </ui-input>
                              </div>

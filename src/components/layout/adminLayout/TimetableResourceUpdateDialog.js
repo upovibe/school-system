@@ -22,6 +22,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         super();
         this.classes = [];
         this.resourceData = null;
+        this.classesLoading = true;
     }
 
     static get observedAttributes() {
@@ -38,6 +39,13 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.loadClasses();
+        
+        // Listen for when classes finish loading to set dropdown values
+        this.addEventListener('classes-loaded', () => {
+            if (this.resourceData && !this.classesLoading) {
+                this.setClassDropdownValue();
+            }
+        });
     }
 
     setupEventListeners() {
@@ -72,10 +80,12 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         
         // Set values after render using requestAnimationFrame for better performance
         requestAnimationFrame(() => {
-            // Set class dropdown value
-            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
-            if (classDropdown && resource?.class_id) {
-                classDropdown.value = resource.class_id.toString();
+            // Set class dropdown value only after classes are loaded
+            if (!this.classesLoading) {
+                const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+                if (classDropdown && resource?.class_id) {
+                    classDropdown.value = resource.class_id.toString();
+                }
             }
             
             // Ensure file upload displays the existing file
@@ -92,6 +102,16 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                 fileUpload.setAttribute('value', formattedPath);
             }
         });
+    }
+
+    // Set class dropdown value after classes are loaded
+    setClassDropdownValue() {
+        if (this.resourceData?.class_id && !this.classesLoading) {
+            const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
+            if (classDropdown) {
+                classDropdown.value = this.resourceData.class_id.toString();
+            }
+        }
     }
 
     // Format file path for display in file upload component
@@ -121,14 +141,25 @@ class TimetableResourceUpdateDialog extends HTMLElement {
     // Load available classes for the dropdown
     async loadClasses() {
         try {
+            this.classesLoading = true;
+            this.render();
+            
             const token = localStorage.getItem('token');
             if (!token) return;
 
             const response = await api.withToken(token).get('/classes');
             this.classes = response.data.data || [];
+            this.classesLoading = false;
             this.render();
+            
+            // Dispatch event that classes are loaded
+            this.dispatchEvent(new CustomEvent('classes-loaded', {
+                detail: { classes: this.classes }
+            }));
         } catch (error) {
             console.error('❌ Error loading classes:', error);
+            this.classesLoading = false;
+            this.render();
         }
     }
 
@@ -275,17 +306,21 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                            <ui-search-dropdown 
-                                data-field="class_id"
-                                placeholder="Search and select a class"
-                                search-placeholder="Type to search classes..."
-                                value="${resource?.class_id || ''}"
-                                class="w-full">
-                                <ui-option value="">Select a class</ui-option>
-                                ${this.classes.map(
-                                    (classItem) => `<ui-option value="${classItem.id}">${classItem.name} (${classItem.section})</ui-option>`
-                                ).join('')}
-                            </ui-search-dropdown>
+                            ${this.classesLoading ? `
+                                <div class="w-full h-8 bg-gray-200 rounded-md animate-pulse"></div>
+                            ` : `
+                                <ui-search-dropdown 
+                                    data-field="class_id"
+                                    placeholder="Search and select a class"
+                                    search-placeholder="Type to search classes..."
+                                    value="${resource?.class_id || ''}"
+                                    class="w-full">
+                                    <ui-option value="">Select a class</ui-option>
+                                    ${this.classes.map(
+                                        (classItem) => `<ui-option value="${classItem.id}">${classItem.name} (${classItem.section})</ui-option>`
+                                    ).join('')}
+                                </ui-search-dropdown>
+                            `}
                         </div>
                         
                         <div>

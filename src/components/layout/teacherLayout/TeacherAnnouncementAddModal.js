@@ -522,7 +522,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 <div slot="title">Add New Announcement</div>
                 <form id="announcement-form" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
                         <ui-input 
                             data-field="title"
                             type="text" 
@@ -532,7 +532,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content <span class="text-red-500">*</span></label>
                         <ui-textarea 
                             data-field="content"
                             placeholder="Enter announcement content"
@@ -542,7 +542,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience <span class="text-red-500">*</span></label>
                         <ui-search-dropdown data-field="target_audience" value="specific_class" placeholder="Loading target audience options...">
                             <ui-option value="">Loading...</ui-option>
                             <!-- Options will be set dynamically based on teacher type -->
@@ -551,7 +551,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     
                     <!-- Target Class Field -->
                     <div id="target-class-field">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Target Class</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Target Class <span class="text-red-500">*</span></label>
                         <ui-search-dropdown data-field="target_class_id" value="" placeholder="Select class">
                             <ui-option value="">Loading...</ui-option>
                             <!-- Classes will be loaded dynamically -->
@@ -560,7 +560,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Announcement Type</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Announcement Type <span class="text-red-500">*</span></label>
                         <ui-search-dropdown data-field="announcement_type" value="general" placeholder="Search announcement type...">
                             <ui-option value="general">General</ui-option>
                             <ui-option value="academic">Academic</ui-option>
@@ -575,7 +575,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Priority <span class="text-red-500">*</span></label>
                         <ui-dropdown data-field="priority" value="normal">
                             <ui-option value="low">Low</ui-option>
                             <ui-option value="normal">Normal</ui-option>
@@ -586,7 +586,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     
                     <div class="flex items-center justify-between">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Active Status</label>
                             <ui-switch 
                                 name="is_active"
                                 checked

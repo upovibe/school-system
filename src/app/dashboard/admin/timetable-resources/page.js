@@ -8,6 +8,7 @@ import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/TimetableResourceAddDialog.js';
 import '@/components/layout/adminLayout/TimetableResourceUpdateDialog.js';
 import '@/components/layout/adminLayout/TimetableResourceViewDialog.js';
+import '@/components/layout/adminLayout/TimetableResourceDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -167,6 +168,21 @@ class TimetableResourcesPage extends App {
                 });
             }
         });
+        
+        // Listen for resource-deleted event from delete dialog
+        this.addEventListener('resource-deleted', (event) => {
+            const resourceId = event.detail.resourceId;
+            if (resourceId) {
+                // Remove the deleted resource from the local data
+                const currentResources = this.get('resources') || [];
+                const updatedResources = currentResources.filter(resource => resource.id !== resourceId);
+                this.set('resources', updatedResources);
+                
+                // Show loading state and reload data to ensure consistency
+                this.set('loading', true);
+                this.loadData();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -296,7 +312,14 @@ class TimetableResourcesPage extends App {
             this.closeAllModals();
             this.set('deleteResourceData', deleteResource);
             this.set('showDeleteDialog', true);
-            // TODO: Implement delete dialog
+            
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+                const deleteModal = this.querySelector('timetable-resource-delete-dialog');
+                if (deleteModal) {
+                    deleteModal.setResourceData(deleteResource);
+                }
+            });
         }
     }
 
@@ -434,11 +457,11 @@ class TimetableResourcesPage extends App {
              <!-- Update Resource Dialog -->
              <timetable-resource-update-dialog ${showUpdateModal ? 'open' : ''}></timetable-resource-update-dialog>
              
-             <!-- View Resource Dialog -->
+                          <!-- View Resource Dialog -->
              <timetable-resource-view-dialog ${this.get('showViewModal') ? 'open' : ''}></timetable-resource-view-dialog>
-            
-                         <!-- TODO: Add other modals and dialogs here -->
+             
              <!-- Delete Resource Dialog -->
+             <timetable-resource-delete-dialog ${this.get('showDeleteDialog') ? 'open' : ''}></timetable-resource-delete-dialog>
         `;
     }
 }

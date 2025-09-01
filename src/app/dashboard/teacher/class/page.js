@@ -126,7 +126,7 @@ class TeacherClassPage extends App {
                 this.set('classData', response.data.data);
                 
                 // Load timetable resources for the teacher's assigned class
-                if (response.data.data.class_id) {
+                if (response.data.data && response.data.data.class_id) {
                     await this.loadTimetableResources(response.data.data.class_id);
                 }
             } else {

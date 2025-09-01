@@ -1128,6 +1128,21 @@ class Table extends HTMLElement {
                 
                 return matchesSearch && matchesFilter;
             });
+            
+            // Preserve all metadata fields needed for custom actions
+            this.filteredData = this.filteredData.map(row => {
+                // Find the original row with all metadata
+                const originalRow = this.data.find(original => {
+                    // Try to match by ID first, then by student_id_meta if available
+                    if (original.id && row.id && original.id === row.id) return true;
+                    if (original.student_id_meta && row.student_id_meta && original.student_id_meta === row.student_id_meta) return true;
+                    // Fallback: match by all visible column values
+                    return this.columns.every(col => original[col.key] === row[col.key]);
+                });
+                
+                // Return the original row with all metadata preserved
+                return originalRow || row;
+            });
         }
         
         // Apply current sort to filtered data if sorting is active
@@ -1189,6 +1204,21 @@ class Table extends HTMLElement {
                 }
                 
                 return matchesSearch && matchesFilter;
+            });
+            
+            // Preserve all metadata fields needed for custom actions
+            this.filteredData = this.filteredData.map(row => {
+                // Find the original row with all metadata
+                const originalRow = this.data.find(original => {
+                    // Try to match by ID first, then by student_id_meta if available
+                    if (original.id && row.id && original.id === row.id) return true;
+                    if (original.student_id_meta && row.student_id_meta && original.student_id_meta === row.student_id_meta) return true;
+                    // Fallback: match by all visible column values
+                    return this.columns.every(col => original[col.key] === row[col.key]);
+                });
+                
+                // Return the original row with all metadata preserved
+                return originalRow || row;
             });
         }
         
@@ -1389,6 +1419,23 @@ class Table extends HTMLElement {
                                     </svg>
                                 </button>
                                 ` : ''}
+                                ${this.customActions.map(customAction => {
+                                    // Check if the custom action should be shown for this row
+                                    let shouldShow = true;
+                                    if (typeof customAction.show === 'function') {
+                                        shouldShow = customAction.show(row);
+                                    } else if (customAction.showField) {
+                                        // If a showField string is provided, use the row boolean value
+                                        try { shouldShow = !!row[customAction.showField]; } catch (_) { shouldShow = false; }
+                                    }
+                                    if (!shouldShow) return '';
+                                    
+                                    return `
+                                    <button class="upo-table-action-button custom" onclick="this.closest('ui-table').customAction(${index}, '${customAction.name}')" aria-label="${customAction.label || customAction.name}" title="${customAction.tooltip || customAction.label || customAction.name}">
+                                        ${customAction.icon ? `<i class="${customAction.icon}"></i>` : customAction.text || customAction.name}
+                                    </button>
+                                    `;
+                                }).join('')}
                             </div>
                         </td>
                     ` : ''}

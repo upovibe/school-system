@@ -253,9 +253,13 @@ class TimetableResourceUpdateDialog extends HTMLElement {
 
         } catch (error) {
             console.error('❌ Error updating timetable resource:', error);
+            
+            // Get the actual error message from the API response
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to update timetable resource';
+            
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to update timetable resource',
+                message: errorMessage,
                 variant: 'error',
                 duration: 3000
             });

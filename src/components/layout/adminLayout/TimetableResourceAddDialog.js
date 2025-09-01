@@ -171,9 +171,13 @@ class TimetableResourceAddDialog extends HTMLElement {
 
         } catch (error) {
             console.error('❌ Error creating timetable resource:', error);
+            
+            // Get the actual error message from the API response
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to create timetable resource';
+            
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to create timetable resource',
+                message: errorMessage,
                 variant: 'error',
                 duration: 3000
             });

@@ -171,26 +171,27 @@ class TimetableResourceViewDialog extends HTMLElement {
                 return;
             }
 
+            // Show loading toast
+            Toast.show({
+                title: 'Preparing Download',
+                message: 'Preparing file for download...',
+                variant: 'info',
+                duration: 2000
+            });
+
+            // For API files, we need to use the download endpoint
+            const downloadUrl = `/api/timetable-resources/${this.resourceData.id}/download`;
+            
             // Create a temporary link to download the file
-            const fileUrl = this.formatFilePath(this.resourceData.attachment_file);
             const link = document.createElement('a');
-            link.href = fileUrl;
+            link.href = downloadUrl;
             link.download = this.resourceData.attachment_file.split('/').pop() || 'download';
             link.target = '_blank';
             
-            // Add authorization header if needed
-            if (fileUrl.includes('/api/')) {
-                // For API files, we might need to handle authentication differently
-                // For now, let's try direct download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // For direct file URLs
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            // Add the link to the DOM temporarily
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
             Toast.show({
                 title: 'Download Started',

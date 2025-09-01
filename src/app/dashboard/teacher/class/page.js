@@ -21,6 +21,7 @@ class TeacherClassPage extends App {
     constructor() {
         super();
         this.classData = null;
+        this.timetableResources = [];
         this.loading = true;
         this.error = null;
         this.showStudentModal = false;
@@ -72,6 +73,8 @@ class TeacherClassPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-teacher-class-info') {
             this.showTeacherClassInfo();
+        } else if (action === 'download-timetable') {
+            this.downloadTimetable();
         }
     }
 
@@ -89,6 +92,7 @@ class TeacherClassPage extends App {
                     <div class="flex justify-between"><span class="text-sm font-medium">Class Name & Section</span><span class="text-sm text-gray-600">Homeroom identification</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Academic Year</span><span class="text-sm text-gray-600">Current academic year</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Students</span><span class="text-sm text-gray-600">Click a student row to view personal info</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Timetable</span><span class="text-sm text-gray-600">Download your class timetable</span></div>
                 </div>
             </div>
             <div slot="footer" class="flex justify-end">
@@ -120,6 +124,11 @@ class TeacherClassPage extends App {
             if (response.data && response.data.success) {
                 console.log('✅ Success! Class data:', response.data.data);
                 this.set('classData', response.data.data);
+                
+                // Load timetable resources for the teacher's assigned class
+                if (response.data.data.class_id) {
+                    await this.loadTimetableResources(response.data.data.class_id);
+                }
             } else {
                 console.log('❌ API returned success: false');
                 this.set('error', 'Failed to load class data');
@@ -151,6 +160,42 @@ class TeacherClassPage extends App {
         } finally {
             console.log('🏁 Setting loading to false');
             this.set('loading', false);
+        }
+    }
+
+    async loadTimetableResources(classId) {
+        try {
+            const response = await api.get(`/timetable-resources/class/${classId}`);
+            if (response.data && response.data.success) {
+                this.set('timetableResources', response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error loading timetable resources:', error);
+            // Don't set error for timetable resources, just log it
+        }
+    }
+
+    downloadTimetable() {
+        const resources = this.get('timetableResources');
+        if (!resources || resources.length === 0) {
+            // Show alert that no timetable is available
+            const alert = document.createElement('ui-alert');
+            alert.setAttribute('variant', 'info');
+            alert.setAttribute('title', 'No Timetable Available');
+            alert.setAttribute('message', 'No timetable resources are currently available for your class.');
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+            return;
+        }
+
+        // Get the most recent timetable resource
+        const latestResource = resources[0]; // Already sorted by created_at DESC
+        
+        if (latestResource.attachment_file) {
+            // Download the file using the same method as admin
+            const token = localStorage.getItem('token');
+            const fileUrl = `/api/uploads/timetable-resources/${latestResource.attachment_file.split('/').pop()}?token=${token}`;
+            window.open(fileUrl, '_blank');
         }
     }
 
@@ -238,6 +283,7 @@ class TeacherClassPage extends App {
         const classData = this.get('classData');
         const showStudentModal = this.get('showStudentModal');
         const showPromoteDialog = this.get('showPromoteDialog');
+        const timetableResources = this.get('timetableResources');
 
         if (loading) {
             return `<data-skeleton></data-skeleton>`;
@@ -441,24 +487,46 @@ class TeacherClassPage extends App {
                 <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100">
                     <!-- Class Header -->
                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
-                        <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                                    ${class_name}-${class_section}
-                                </h2>
-                                <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm">
-                                    <span class="flex items-center">
-                                        <i class="fas fa-calendar mr-1"></i>
-                                        ${academic_year}
-                                    </span>                                    
-                                    <span class="flex items-center">
-                                        <i class="fas fa-check-circle mr-1 text-green-500"></i>
-                                        ${status || 'Active'}
-                                    </span>
+                        <div class="flex flex-col md:flex-row items-center justify-between">
+                            <div class="flex items-start sm:items-center space-x-3 sm:space-x-4 mr-auto">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
                                 </div>
+                                <div class="min-w-0 flex-1">
+                                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                                        ${class_name}-${class_section}
+                                    </h2>
+                                    <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            ${academic_year}
+                                        </span>                                    
+                                        <span class="flex items-center">
+                                            <i class="fas fa-check-circle mr-1 text-green-500"></i>
+                                            ${status || 'Active'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Timetable Download Section -->
+                            <div class="flex flex-col items-start ml-auto space-y-2">
+                                <div class="text-sm font-medium text-gray-700">Class Timetable</div>
+                                ${timetableResources && timetableResources.length > 0 ? `
+                                    <button 
+                                        data-action="download-timetable"
+                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                        title="Download Timetable"
+                                    >
+                                        <i class="fas fa-download mr-2"></i>
+                                        Download
+                                    </button>
+                                ` : `
+                                    <div class="inline-flex items-center px-3 py-1.5 bg-gray-300 text-gray-600 text-sm font-medium rounded-lg">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        Not available
+                                    </div>
+                                `}
                             </div>
                         </div>
                     </div>

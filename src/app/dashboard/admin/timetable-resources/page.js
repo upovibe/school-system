@@ -7,6 +7,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/TimetableResourceAddDialog.js';
 import '@/components/layout/adminLayout/TimetableResourceUpdateDialog.js';
+import '@/components/layout/adminLayout/TimetableResourceViewDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -148,6 +149,24 @@ class TimetableResourcesPage extends App {
             // This is necessary because the update response might not include full class details
             this.loadData();
         });
+        
+        // Listen for switch-to-edit event from view dialog
+        this.addEventListener('switch-to-edit', (event) => {
+            const resource = event.detail.resource;
+            if (resource) {
+                this.closeAllModals();
+                this.set('updateResourceData', resource);
+                this.set('showUpdateModal', true);
+                
+                // Use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                    const updateModal = this.querySelector('timetable-resource-update-dialog');
+                    if (updateModal) {
+                        updateModal.setResourceData(resource);
+                    }
+                });
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -241,7 +260,14 @@ class TimetableResourcesPage extends App {
             this.closeAllModals();
             this.set('viewResourceData', viewResource);
             this.set('showViewModal', true);
-            // TODO: Implement view modal
+            
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+                const viewModal = this.querySelector('timetable-resource-view-dialog');
+                if (viewModal) {
+                    viewModal.setResourceData(viewResource);
+                }
+            });
         }
     }
 
@@ -402,15 +428,17 @@ class TimetableResourcesPage extends App {
                 `}
             </div>
             
-            <!-- Add Resource Dialog -->
-            <timetable-resource-add-dialog ${showAddModal ? 'open' : ''}></timetable-resource-add-dialog>
+                         <!-- Add Resource Dialog -->
+             <timetable-resource-add-dialog ${showAddModal ? 'open' : ''}></timetable-resource-add-dialog>
+             
+             <!-- Update Resource Dialog -->
+             <timetable-resource-update-dialog ${showUpdateModal ? 'open' : ''}></timetable-resource-update-dialog>
+             
+             <!-- View Resource Dialog -->
+             <timetable-resource-view-dialog ${this.get('showViewModal') ? 'open' : ''}></timetable-resource-view-dialog>
             
-            <!-- Update Resource Dialog -->
-            <timetable-resource-update-dialog ${showUpdateModal ? 'open' : ''}></timetable-resource-update-dialog>
-            
-            <!-- TODO: Add other modals and dialogs here -->
-            <!-- View Resource Modal -->
-            <!-- Delete Resource Dialog -->
+                         <!-- TODO: Add other modals and dialogs here -->
+             <!-- Delete Resource Dialog -->
         `;
     }
 }

@@ -432,8 +432,6 @@ class FileUpload extends HTMLElement {
     if (!fileList) return;
     
     fileList.innerHTML = '';
-    
-    console.log('FileUpload: Updating file list with', this.files.length, 'files:', this.files);
 
     this.files.forEach((file, index) => {
       const fileItem = document.createElement('div');

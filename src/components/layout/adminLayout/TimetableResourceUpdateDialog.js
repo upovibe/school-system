@@ -82,7 +82,6 @@ class TimetableResourceUpdateDialog extends HTMLElement {
             const fileUpload = this.querySelector('ui-file-upload[data-field="file"]');
             if (fileUpload && resource?.attachment_file) {
                 const formattedPath = this.formatFilePath(resource.attachment_file);
-                console.log('Manually setting file upload value:', formattedPath);
                 
                 // Force set the value to ensure it displays
                 if (fileUpload.setValue) {
@@ -99,11 +98,8 @@ class TimetableResourceUpdateDialog extends HTMLElement {
     formatFilePath(filePath) {
         if (!filePath) return '';
         
-        console.log('Original file path:', filePath); // Debug log
-        
         // If it's already a full URL, return as is
         if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-            console.log('Full URL detected:', filePath);
             return filePath;
         }
         
@@ -111,7 +107,6 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         if (filePath.startsWith('/')) {
             const baseUrl = window.location.origin;
             const fullUrl = baseUrl + filePath;
-            console.log('Constructed full URL:', fullUrl);
             return fullUrl;
         }
         
@@ -120,7 +115,6 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         const baseUrl = window.location.origin;
         const apiPath = '/api';
         const fullUrl = baseUrl + apiPath + '/' + filePath;
-        console.log('Constructed API URL:', fullUrl);
         return fullUrl;
     }
 

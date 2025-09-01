@@ -2184,6 +2184,8 @@ class StudentController {
                 $params[] = (int) (!!$_GET['is_pinned']);
             }
             
+
+            
             // Students can see:
             // 1. Announcements for all students
             // 2. Announcements specifically for students
@@ -2194,7 +2196,21 @@ class StudentController {
                 '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
             ];
             $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
-            $params[] = $student['current_class_id']; // target_class_id
+            
+            // Try different possible field names for class ID
+            $classId = $student['current_class_id'] ?? $student['class_id'] ?? null;
+            
+            if ($classId) {
+                $params[] = $classId; // target_class_id
+            } else {
+                // If no class ID, remove class-specific condition
+                $studentConditions = [
+                    'target_audience = "all"', // General announcements
+                    'target_audience = "students"' // Student-specific announcements
+                ];
+                $conditions = array_slice($conditions, 0, -1); // Remove the last condition
+                $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
+            }
             
             $where = '';
             if (!empty($conditions)) {
@@ -2205,6 +2221,8 @@ class StudentController {
             require_once __DIR__ . '/../models/AnnouncementModel.php';
             $announcementModel = new AnnouncementModel($this->pdo);
             $announcements = $announcementModel->getAllWithDetails($where, $params);
+            
+
             
             http_response_code(200);
             echo json_encode([

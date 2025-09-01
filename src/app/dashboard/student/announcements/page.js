@@ -25,10 +25,17 @@ class StudentAnnouncementsPage extends App {
             const userData = localStorage.getItem('userData');
             if (userData) {
                 const user = JSON.parse(userData);
+                
+                // Extract class information from profileData
+                const classId = user.profileData?.current_class_id || user.current_class_id || null;
+                const className = classId ? `Class ID: ${classId}` : 'Unknown Class';
+                
+
+                
                 return {
                     name: user.name || 'Unknown Student',
-                    class_name: user.current_class_name || 'Unknown Class',
-                    class_id: user.current_class_id || null
+                    class_name: className,
+                    class_id: classId
                 };
             }
         } catch (error) {
@@ -40,11 +47,16 @@ class StudentAnnouncementsPage extends App {
     // Get announcements by type for tabs
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
+        const currentStudent = this.getCurrentStudent();
         
         // Filter announcements to only show those meant for students
         const studentAnnouncements = announcements.filter(a => 
             a.target_audience === 'all' || 
-            a.target_audience === 'students'
+            a.target_audience === 'students' ||
+            (a.target_audience === 'specific_class' && 
+             currentStudent && 
+             currentStudent.class_id && 
+             a.target_class_id == currentStudent.class_id)
         );
         
         switch (type) {
@@ -101,11 +113,16 @@ class StudentAnnouncementsPage extends App {
     // Summary counts for header
     getHeaderCounts() {
         const announcements = this.get('announcements') || [];
+        const currentStudent = this.getCurrentStudent();
         
         // Filter announcements to only show those meant for students
         const studentAnnouncements = announcements.filter(a => 
             a.target_audience === 'all' || 
-            a.target_audience === 'students'
+            a.target_audience === 'students' ||
+            (a.target_audience === 'specific_class' && 
+             currentStudent && 
+             currentStudent.class_id && 
+             a.target_class_id == currentStudent.class_id)
         );
         
         const total = studentAnnouncements.length;
@@ -119,7 +136,10 @@ class StudentAnnouncementsPage extends App {
             const isActive = Number(announcement.is_active) === 1;
             const isPinned = Number(announcement.is_pinned) === 1;
             const isHighPriority = announcement.priority === 'high';
-            const isClassSpecific = announcement.target_audience === 'specific_class';
+            const isClassSpecific = announcement.target_audience === 'specific_class' && 
+                                  currentStudent && 
+                                  currentStudent.class_id && 
+                                  announcement.target_class_id == currentStudent.class_id;
             
             if (isActive) active += 1;
             if (isPinned) pinned += 1;

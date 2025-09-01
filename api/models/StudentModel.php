@@ -167,8 +167,10 @@ class StudentModel extends BaseModel {
     public function authenticateStudent($studentId, $password) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->getTableName()} 
-                WHERE student_id = ? AND status = 'active'
+                SELECT s.*, c.name as class_name, c.section as class_section 
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                WHERE s.student_id = ? AND s.status = 'active'
             ");
             $stmt->execute([$studentId]);
             $student = $stmt->fetch(PDO::FETCH_ASSOC);

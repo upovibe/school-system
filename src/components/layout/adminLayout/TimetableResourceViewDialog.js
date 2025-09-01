@@ -1,6 +1,7 @@
 import '@/components/ui/Dialog.js';
 import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/Badge.js';
 import api from '@/services/api.js';
 
 /**
@@ -288,102 +289,106 @@ class TimetableResourceViewDialog extends HTMLElement {
                     </div>
                 </div>
                 
-                <div slot="content" class="space-y-6">
-                    <!-- Resource Title -->
-                    <div class="bg-blue-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-blue-900 mb-2">${resource.title || 'Untitled Resource'}</h3>
-                        <p class="text-blue-700 text-sm">Resource title and description</p>
-                    </div>
-                    
-                    <!-- Class Information -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-900 mb-2">Class Information</h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Class:</span>
-                                    <span class="font-medium">${resource.class_name || 'Unknown'} (${resource.class_section || 'Unknown'})</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Class ID:</span>
-                                    <span class="font-mono text-sm">${resource.class_id || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-900 mb-2">Creator Information</h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Created By:</span>
-                                    <span class="font-medium">${resource.creator_name || 'Unknown'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Creator ID:</span>
-                                    <span class="font-mono text-sm">${resource.created_by || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- File Information -->
-                    <div class="bg-green-50 rounded-lg p-4">
-                        <h4 class="font-medium text-green-900 mb-3">File Information</h4>
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">${fileIcon}</div>
-                            <div class="flex-1">
-                                <div class="font-medium text-green-900">${fileName}</div>
-                                <div class="text-sm text-green-700">File attached to this resource</div>
-                            </div>
-                            ${resource.attachment_file ? `
-                                <ui-button 
-                                    color="primary" 
-                                    size="sm" 
-                                    data-action="download"
-                                    title="Download this file">
-                                    <i class="fas fa-download mr-1"></i>
-                                    Download
-                                </ui-button>
-                            ` : ''}
-                        </div>
-                        ${resource.attachment_file ? `
-                            <div class="mt-3 text-xs text-green-600">
-                                <strong>File Path:</strong> ${resource.attachment_file}
-                            </div>
-                        ` : ''}
-                    </div>
-                    
-                    <!-- Timestamps -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-900 mb-2">Created</h4>
-                            <div class="text-gray-700">${this.formatDate(resource.created_at)}</div>
-                        </div>
-                        
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-900 mb-2">Last Updated</h4>
-                            <div class="text-gray-700">${this.formatDate(resource.updated_at)}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Resource ID -->
-                    <div class="bg-gray-100 rounded-lg p-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Resource ID:</span>
-                            <span class="font-mono text-sm bg-white px-2 py-1 rounded">${resource.id}</span>
-                        </div>
-                    </div>
-                </div>
+                                 <div slot="content">
+                 
+                 <div>
+                     ${this.resourceData ? `
+                         <!-- Resource Header -->
+                         <div class="flex items-center gap-3 border-b pb-4">
+                             <h3 class="text-xl font-semibold text-gray-900">${resource.title || 'Untitled Resource'}</h3>
+                             <ui-badge color="success">
+                                 <i class="fas fa-file-alt mr-1"></i>
+                                 Resource
+                             </ui-badge>
+                         </div>
+
+                         <!-- Resource Information -->
+                         <div class="border-b pb-4">
+                             <div class="flex items-center gap-2 mb-3">
+                                 <i class="fas fa-info-circle text-blue-500"></i>
+                                 <h4 class="text-md font-semibold text-gray-800">Resource Information</h4>
+                             </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-chalkboard mr-1"></i>Class
+                                     </label>
+                                     <p class="text-gray-900 text-sm font-medium">${resource.class_name || 'Unknown'} (${resource.class_section || 'Unknown'})</p>
+                                 </div>
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-user mr-1"></i>Created By
+                                     </label>
+                                     <p class="text-gray-900 text-sm font-medium">${resource.creator_name || 'Unknown'}</p>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- File Information -->
+                         <div class="border-b pb-4">
+                             <div class="flex items-center gap-2 mb-3">
+                                 <i class="fas fa-file-alt text-green-500"></i>
+                                 <h4 class="text-md font-semibold text-gray-800">File Information</h4>
+                             </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-file mr-1"></i>File Name
+                                     </label>
+                                     <p class="text-gray-900 text-sm font-medium">${fileName}</p>
+                                 </div>
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-download mr-1"></i>File Type
+                                     </label>
+                                     <p class="text-gray-900 text-sm font-medium">${fileIcon} ${fileName.split('.').pop()?.toUpperCase() || 'Unknown'}</p>
+                                 </div>
+                             </div>
+                             ${resource.attachment_file ? `
+                                 <div class="mt-3 flex justify-center">
+                                     <ui-button 
+                                         color="primary" 
+                                         data-action="download"
+                                         title="Download this file">
+                                         <i class="fas fa-download mr-2"></i>
+                                         Download File
+                                     </ui-button>
+                                 </div>
+                             ` : ''}
+                         </div>
+
+                         <!-- Timestamps -->
+                         <div>
+                             <div class="flex items-center gap-2 mb-3">
+                                 <i class="fas fa-clock text-orange-500"></i>
+                                 <h4 class="text-md font-semibold text-gray-800">Timestamps</h4>
+                             </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-plus mr-1"></i>Created
+                                     </label>
+                                     <span class="text-gray-900 text-sm">${this.formatDate(resource.created_at)}</span>
+                                 </div>
+                                 <div class="bg-gray-50 p-3 rounded-lg">
+                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                         <i class="fas fa-edit mr-1"></i>Updated
+                                     </label>
+                                     <span class="text-gray-900 text-sm">${this.formatDate(resource.updated_at)}</span>
+                                 </div>
+                             </div>
+                         </div>
+                     ` : `
+                         <div class="text-center py-8">
+                             <p class="text-gray-500">No resource data available</p>
+                         </div>
+                     `}
+                 </div>
+                 </div>
                 
-                <div slot="footer" class="flex justify-end gap-2">
-                    <ui-button color="secondary" data-action="close">Close</ui-button>
-                    ${resource.attachment_file ? `
-                        <ui-button color="primary" data-action="download">
-                            <i class="fas fa-download mr-1"></i>
-                            Download File
-                        </ui-button>
-                    ` : ''}
-                </div>
+                                 <div slot="footer" class="flex justify-end gap-2">
+                     <ui-button color="secondary" data-action="close">Close</ui-button>
+                 </div>
             </ui-dialog>
         `;
     }

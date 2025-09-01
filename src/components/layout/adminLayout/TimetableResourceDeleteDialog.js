@@ -47,6 +47,7 @@ class TimetableResourceDeleteDialog extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+        this.resourceData = null;
     }
 
     // Set resource data for deletion
@@ -68,6 +69,9 @@ class TimetableResourceDeleteDialog extends HTMLElement {
                 return;
             }
 
+            // Store resource ID before deletion
+            const resourceId = this.resourceData.id;
+
             // Get auth token
             const token = localStorage.getItem('token');
             if (!token) {
@@ -81,7 +85,7 @@ class TimetableResourceDeleteDialog extends HTMLElement {
             }
 
             // Delete resource
-            const response = await api.withToken(token).delete(`/timetable-resources/${this.resourceData.id}`);
+            const response = await api.withToken(token).delete(`/timetable-resources/${resourceId}`);
             
             // Check if resource was deleted successfully
             if (response.status === 200 || response.data.success) {
@@ -95,7 +99,7 @@ class TimetableResourceDeleteDialog extends HTMLElement {
                 // Close dialog and dispatch event
                 this.close();
                 this.dispatchEvent(new CustomEvent('resource-deleted', {
-                    detail: { resourceId: this.resourceData.id },
+                    detail: { resourceId: resourceId },
                     bubbles: true,
                     composed: true
                 }));

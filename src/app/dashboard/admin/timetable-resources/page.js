@@ -178,6 +178,12 @@ class TimetableResourcesPage extends App {
                 const updatedResources = currentResources.filter(resource => resource.id !== resourceId);
                 this.set('resources', updatedResources);
                 
+                // Update the table immediately with the new data
+                this.updateTableData();
+                
+                // Close the delete dialog
+                this.set('showDeleteDialog', false);
+                
                 // Show loading state and reload data to ensure consistency
                 this.set('loading', true);
                 this.loadData();

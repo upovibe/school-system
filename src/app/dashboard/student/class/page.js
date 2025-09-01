@@ -325,16 +325,14 @@ class StudentClassPage extends App {
                                         <i class="fas fa-download text-white text-lg sm:text-xl"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">Timetable</div>
                                         <button 
                                             data-action="download-timetable"
-                                            class="text-lg font-semibold hover:text-orange-200 transition-colors cursor-pointer"
+                                            class="text-blue-100 text-xs sm:text-sm hover:text-orange-200 transition-colors cursor-pointer underline"
                                             title="${timetableResources && timetableResources.length > 0 ? 'Download Timetable' : 'No timetable available'}"
                                         >
-                                            Timetable
-                                        </button>
-                                        <div class="text-blue-100 text-xs sm:text-sm">
                                             ${timetableResources && timetableResources.length > 0 ? 'Download' : 'Not available'}
-                                        </div>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

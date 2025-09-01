@@ -17,6 +17,7 @@ class StudentClassPage extends App {
     constructor() {
         super();
         this.classData = null;
+        this.timetableResources = [];
         this.loading = true;
         this.error = null;
         this.showSubjectModal = false;
@@ -39,6 +40,8 @@ class StudentClassPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-student-class-info') {
             this.showStudentClassInfo();
+        } else if (action === 'download-timetable') {
+            this.downloadTimetable();
         }
     }
 
@@ -56,6 +59,7 @@ class StudentClassPage extends App {
                     <div class="flex justify-between"><span class="text-sm font-medium">Class & Section</span><span class="text-sm text-gray-600">Class name and section</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Academic Year</span><span class="text-sm text-gray-600">Year for the class</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Subjects</span><span class="text-sm text-gray-600">Click a row to view subject details</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Timetable</span><span class="text-sm text-gray-600">Download your class timetable</span></div>
                 </div>
             </div>
             <div slot="footer" class="flex justify-end">
@@ -81,6 +85,11 @@ class StudentClassPage extends App {
             
             if (response.data && response.data.success) {
                 this.set('classData', response.data.data);
+                
+                // Load timetable resources for the student's class
+                if (response.data.data.class?.id) {
+                    await this.loadTimetableResources(response.data.data.class.id);
+                }
             } else {
                 this.set('error', 'Failed to load class data');
             }
@@ -93,6 +102,42 @@ class StudentClassPage extends App {
             }
         } finally {
             this.set('loading', false);
+        }
+    }
+
+    async loadTimetableResources(classId) {
+        try {
+            const response = await api.get(`/timetable-resources/class/${classId}`);
+            if (response.data && response.data.success) {
+                this.set('timetableResources', response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error loading timetable resources:', error);
+            // Don't set error for timetable resources, just log it
+        }
+    }
+
+    downloadTimetable() {
+        const resources = this.get('timetableResources');
+        if (!resources || resources.length === 0) {
+            // Show alert that no timetable is available
+            const alert = document.createElement('ui-alert');
+            alert.setAttribute('variant', 'info');
+            alert.setAttribute('title', 'No Timetable Available');
+            alert.setAttribute('message', 'No timetable resources are currently available for your class.');
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+            return;
+        }
+
+        // Get the most recent timetable resource
+        const latestResource = resources[0]; // Already sorted by created_at DESC
+        
+        if (latestResource.attachment_file) {
+            // Download the file using the same method as admin
+            const token = localStorage.getItem('token');
+            const fileUrl = `/api/uploads/timetable-resources/${latestResource.attachment_file.split('/').pop()}?token=${token}`;
+            window.open(fileUrl, '_blank');
         }
     }
 
@@ -126,6 +171,7 @@ class StudentClassPage extends App {
         const classData = this.get('classData');
         const classTeacher = classData?.class_teacher || null;
         const showSubjectModal = this.get('showSubjectModal');
+        const timetableResources = this.get('timetableResources');
 
         if (loading) {
             return `
@@ -269,6 +315,26 @@ class StudentClassPage extends App {
                                     <div class="min-w-0 flex-1">
                                         <div class="text-lg font-semibold">${classInfo.academic_year}</div>
                                         <div class="text-blue-100 text-xs sm:text-sm">Academic Year</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-download text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <button 
+                                            data-action="download-timetable"
+                                            class="text-lg font-semibold hover:text-orange-200 transition-colors cursor-pointer"
+                                            title="${timetableResources && timetableResources.length > 0 ? 'Download Timetable' : 'No timetable available'}"
+                                        >
+                                            Timetable
+                                        </button>
+                                        <div class="text-blue-100 text-xs sm:text-sm">
+                                            ${timetableResources && timetableResources.length > 0 ? 'Download' : 'Not available'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

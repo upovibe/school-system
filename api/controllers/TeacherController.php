@@ -3395,6 +3395,85 @@ class TeacherController {
     }
     
     /**
+     * Get a specific announcement by ID (teacher only)
+     * Teachers can only view announcements they created or announcements relevant to their class
+     */
+    public function getAnnouncement($id) {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            TeacherMiddleware::requireTeacher($pdo);
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Get the announcement with details
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcement = $announcementModel->getWithDetails($id);
+            
+            if (!$announcement) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Announcement not found'
+                ]);
+                return;
+            }
+            
+            // Check if teacher has access to this announcement
+            $hasAccess = false;
+            
+            // Teachers can always see announcements they created
+            if ($announcement['created_by'] == $teacher['user_id']) {
+                $hasAccess = true;
+            }
+            
+            // Teachers can see general announcements
+            if ($announcement['target_audience'] === 'all' || $announcement['target_audience'] === 'teachers') {
+                $hasAccess = true;
+            }
+            
+            // Teachers can see announcements for their assigned class
+            if ($teacher['class_id'] && $announcement['target_audience'] === 'specific_class' && $announcement['target_class_id'] == $teacher['class_id']) {
+                $hasAccess = true;
+            }
+            
+            // Teachers can see announcements for classes where they teach subjects
+            if (!$hasAccess && $announcement['target_audience'] === 'specific_class' && $announcement['target_class_id']) {
+                require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+                $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+                $assignments = $teacherAssignmentModel->getByTeacherAndClass($teacher['id'], $announcement['target_class_id']);
+                
+                if (!empty($assignments)) {
+                    $hasAccess = true;
+                }
+            }
+            
+            if (!$hasAccess) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. You can only view announcements you created or announcements relevant to your class.'
+                ]);
+                return;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $announcement,
+                'message' => 'Announcement retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving announcement: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get announcements for teacher (teacher only)
      * Teachers can see announcements they created and announcements relevant to their class
      */

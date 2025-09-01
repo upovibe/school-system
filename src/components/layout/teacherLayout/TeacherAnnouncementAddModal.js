@@ -471,32 +471,48 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Get current teacher's name from localStorage
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                const teacherName = userData.name || userData.full_name || 'Unknown Teacher';
-
-                // Construct the new announcement data from response
-                const newAnnouncement = {
-                    id: response.data.data.id,
-                    title: announcementData.title,
-                    content: announcementData.content,
-                    target_audience: announcementData.target_audience,
-                    announcement_type: announcementData.announcement_type,
-                    priority: announcementData.priority,
-                    is_active: announcementData.is_active,
-                    is_pinned: announcementData.is_pinned,
-                    created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                    creator_name: teacherName
-                };
-
-                // Close modal and dispatch event
-                this.close();
-                this.dispatchEvent(new CustomEvent('announcement-saved', {
-                    detail: { announcement: newAnnouncement },
-                    bubbles: true,
-                    composed: true
-                }));
+                // Get the newly created announcement with full details from the API
+                try {
+                    const announcementResponse = await api.withToken(token).get(`/teacher/announcements/${response.data.data.id}`);
+                    if (announcementResponse.data.success) {
+                        const newAnnouncement = announcementResponse.data.data;
+                        
+                        // Close modal and dispatch event
+                        this.close();
+                        this.dispatchEvent(new CustomEvent('announcement-saved', {
+                            detail: { announcement: newAnnouncement },
+                            bubbles: true,
+                            composed: true
+                        }));
+                    } else {
+                        throw new Error('Failed to fetch announcement details');
+                    }
+                } catch (fetchError) {
+                    console.error('Error fetching announcement details:', fetchError);
+                    
+                    // Fallback: construct basic announcement data
+                    const newAnnouncement = {
+                        id: response.data.data.id,
+                        title: announcementData.title,
+                        content: announcementData.content,
+                        target_audience: announcementData.target_audience,
+                        announcement_type: announcementData.announcement_type,
+                        priority: announcementData.priority,
+                        is_active: announcementData.is_active,
+                        is_pinned: announcementData.is_pinned,
+                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                        updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                        creator_name: 'Unknown' // Will be updated when data is refreshed
+                    };
+                    
+                    // Close modal and dispatch event
+                    this.close();
+                    this.dispatchEvent(new CustomEvent('announcement-saved', {
+                        detail: { announcement: newAnnouncement },
+                        bubbles: true,
+                        composed: true
+                    }));
+                }
             } else {
                 throw new Error(response.data.message || 'Failed to create announcement');
             }

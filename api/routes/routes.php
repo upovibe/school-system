@@ -343,6 +343,7 @@ Router::get('/teacher/print/class-report', 'TeacherController@printClassReport')
 Router::post('/teacher/announcements', 'TeacherController@createAnnouncement');
 Router::get('/teacher/announcements', 'TeacherController@getMyAnnouncements');
 Router::get('/teacher/announcements/my', 'TeacherController@getMyOwnAnnouncements');
+Router::get('/teacher/announcements/{id}', 'TeacherController@getAnnouncement');
 Router::put('/teacher/announcements/{id}', 'TeacherController@updateAnnouncement');
 Router::delete('/teacher/announcements/{id}', 'TeacherController@deleteAnnouncement');
 Router::get('/teacher/announcements/stats', 'TeacherController@getAnnouncementStats');

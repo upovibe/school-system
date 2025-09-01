@@ -351,11 +351,8 @@ class AnnouncementUpdateModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Get current admin's name from localStorage
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                const adminName = userData.name || userData.full_name || 'Unknown Admin';
-
                 // Construct the updated announcement data
+                // Note: creator_name should remain the same - it's who created it, not who updated it
                 const updatedAnnouncement = {
                     ...this.announcementData,
                     title: announcementData.title,
@@ -366,8 +363,8 @@ class AnnouncementUpdateModal extends HTMLElement {
                     is_active: announcementData.is_active,
                     is_pinned: announcementData.is_pinned,
                     target_class_id: announcementData.target_class_id || null,
-                    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                    creator_name: adminName
+                    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                    // creator_name is preserved from this.announcementData
                 };
 
                 // Close modal and dispatch event

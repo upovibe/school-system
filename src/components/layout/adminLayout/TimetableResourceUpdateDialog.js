@@ -70,43 +70,58 @@ class TimetableResourceUpdateDialog extends HTMLElement {
         // Re-render the modal with the new data
         this.render();
         
-        // Set values after render (following the pattern from TeamUpdateModal)
-        setTimeout(() => {
+        // Set values after render using requestAnimationFrame for better performance
+        requestAnimationFrame(() => {
             // Set class dropdown value
             const classDropdown = this.querySelector('ui-search-dropdown[data-field="class_id"]');
             if (classDropdown && resource?.class_id) {
                 classDropdown.value = resource.class_id.toString();
             }
             
-            // Set the existing file in the file upload component
+            // Ensure file upload displays the existing file
             const fileUpload = this.querySelector('ui-file-upload[data-field="file"]');
             if (fileUpload && resource?.attachment_file) {
                 const formattedPath = this.formatFilePath(resource.attachment_file);
-                fileUpload.setValue(formattedPath);
+                console.log('Manually setting file upload value:', formattedPath);
+                
+                // Force set the value to ensure it displays
+                if (fileUpload.setValue) {
+                    fileUpload.setValue(formattedPath);
+                }
+                
+                // Also try setting the value attribute again
+                fileUpload.setAttribute('value', formattedPath);
             }
-        }, 100); // Use 100ms timeout like TeamUpdateModal
+        });
     }
 
     // Format file path for display in file upload component
     formatFilePath(filePath) {
         if (!filePath) return '';
         
+        console.log('Original file path:', filePath); // Debug log
+        
         // If it's already a full URL, return as is
         if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            console.log('Full URL detected:', filePath);
             return filePath;
         }
         
         // If it's a relative path starting with /, construct the full URL
         if (filePath.startsWith('/')) {
             const baseUrl = window.location.origin;
-            return baseUrl + filePath;
+            const fullUrl = baseUrl + filePath;
+            console.log('Constructed full URL:', fullUrl);
+            return fullUrl;
         }
         
         // For relative paths like "uploads/timetable-resources/filename.jpg"
         // Construct the URL by adding the base URL and /api
         const baseUrl = window.location.origin;
         const apiPath = '/api';
-        return baseUrl + apiPath + '/' + filePath;
+        const fullUrl = baseUrl + apiPath + '/' + filePath;
+        console.log('Constructed API URL:', fullUrl);
+        return fullUrl;
     }
 
     // Load available classes for the dropdown
@@ -284,6 +299,8 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mp3"
+                                value="${resource?.attachment_file ? this.formatFilePath(resource.attachment_file) : ''}"
                                 class="w-full">
                             </ui-file-upload>
                             <p class="text-xs text-gray-500 mt-1">

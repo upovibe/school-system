@@ -259,12 +259,14 @@ class TimetableResourcesPage extends App {
             this.closeAllModals();
             this.set('updateResourceData', editResource);
             this.set('showUpdateModal', true);
-            setTimeout(() => {
+            
+            // Use requestAnimationFrame for better performance instead of setTimeout
+            requestAnimationFrame(() => {
                 const updateModal = this.querySelector('timetable-resource-update-dialog');
                 if (updateModal) {
                     updateModal.setResourceData(editResource);
                 }
-            }, 0);
+            });
         }
     }
 

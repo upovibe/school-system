@@ -10,6 +10,15 @@ class FileUpload extends HTMLElement {
   connectedCallback() {
     this.render();
     this.setupEventListeners();
+    
+    // If there's a value attribute set, process it after the component is ready
+    const value = this.getAttribute('value');
+    if (value) {
+      // Use a small delay to ensure shadow DOM is ready
+      setTimeout(() => {
+        this.setValue(value);
+      }, 10);
+    }
   }
 
   static get observedAttributes() {
@@ -18,8 +27,14 @@ class FileUpload extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
-      if (name === 'value' && newValue) {
-        this.setValue(newValue);
+      if (name === 'value') {
+        if (newValue) {
+          this.setValue(newValue);
+        } else {
+          // Clear files if value is empty
+          this.files = [];
+          this.updateFileList();
+        }
       } else {
         this.render();
         this.setupEventListeners();
@@ -148,11 +163,12 @@ class FileUpload extends HTMLElement {
           border: 1px solid #e5e7eb;
           border-radius: 0.25rem;
           transition: all 0.2s ease;
-          width: 60px;
-          height: 60px;
+          width: 80px;
+          height: 80px;
           flex-shrink: 0;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .file-item:hover {
@@ -183,8 +199,9 @@ class FileUpload extends HTMLElement {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.625rem;
+          font-size: 0.75rem;
           max-width: 100%;
+          text-align: center;
         }
 
         .file-size {
@@ -412,7 +429,11 @@ class FileUpload extends HTMLElement {
 
   updateFileList() {
     const fileList = this.shadowRoot.querySelector('#fileList');
+    if (!fileList) return;
+    
     fileList.innerHTML = '';
+    
+    console.log('FileUpload: Updating file list with', this.files.length, 'files:', this.files);
 
     this.files.forEach((file, index) => {
       const fileItem = document.createElement('div');
@@ -544,16 +565,40 @@ class FileUpload extends HTMLElement {
       // Create file-like objects for display
       this.files = filePaths.map(path => {
         const fileName = path.split('/').pop() || path;
+        // Determine file type based on extension
+        const extension = fileName.split('.').pop()?.toLowerCase() || '';
+        let fileType = 'application/octet-stream';
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+          fileType = 'image/*';
+        } else if (['pdf'].includes(extension)) {
+          fileType = 'application/pdf';
+        } else if (['doc', 'docx'].includes(extension)) {
+          fileType = 'application/msword';
+        } else if (['xls', 'xlsx'].includes(extension)) {
+          fileType = 'application/vnd.ms-excel';
+        } else if (['ppt', 'pptx'].includes(extension)) {
+          fileType = 'application/vnd.ms-powerpoint';
+        } else if (['txt'].includes(extension)) {
+          fileType = 'text/plain';
+        }
+        
         return {
           name: fileName,
           size: 0, // We don't know the size
-          type: 'image/*',
+          type: fileType,
           path: path,
           isExisting: true // Flag to identify existing files
         };
       });
       
+      // Force update the file list display
       this.updateFileList();
+      
+      // Dispatch event to notify that files have been set
+      this.dispatchEvent(new CustomEvent('files-changed', {
+        detail: { files: this.files }
+      }));
     }
   }
 

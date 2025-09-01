@@ -44,6 +44,32 @@ class StudentAnnouncementsPage extends App {
         return null;
     }
 
+    // Format creator name with appropriate title based on role
+    formatCreatorName(announcement) {
+        if (!announcement.creator_name) {
+            return 'Unknown';
+        }
+
+        // Check role from the announcement data
+        if (announcement.creator_role === 'admin') {
+            return 'Administrator';
+        }
+
+        // For teachers, check gender from teacher data
+        if (announcement.creator_role === 'teacher') {
+            // Check if we have gender information
+            if (announcement.creator_gender === 'female') {
+                return `Madam ${announcement.creator_name}`;
+            } else {
+                // Default to male or if gender is not specified
+                return `Sir ${announcement.creator_name}`;
+            }
+        }
+
+        // Fallback for unknown roles
+        return announcement.creator_name;
+    }
+
     // Get announcements by type for tabs
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
@@ -432,7 +458,7 @@ class StudentAnnouncementsPage extends App {
                 <div class="mt-4 pt-4 border-t border-gray-200">
                     <div class="flex items-center justify-between text-sm text-gray-500">
                         <div class="text-left">
-                            <span>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></span>
+                            <span>By: <span class="font-medium text-gray-700">${this.formatCreatorName(announcement)}</span></span>
                         </div>
                         <div class="text-right">
                             <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>

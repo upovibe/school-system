@@ -17,13 +17,15 @@ class TeacherAssignmentViewDialog extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && newValue !== null) {
+        if (name === 'open' && newValue !== null && this.teacherAssignmentData) {
             this.render();
         }
     }
 
     connectedCallback() {
-        this.render();
+        if (this.teacherAssignmentData) {
+            this.render();
+        }
     }
 
     setTeacherAssignmentData(teacherAssignment) {
@@ -35,10 +37,6 @@ class TeacherAssignmentViewDialog extends HTMLElement {
         this.teacherAssignmentData = teacherAssignments;
         this.render();
         this.setupEventListeners();
-    }
-
-    connectedCallback() {
-        this.render();
     }
 
     setupEventListeners() {
@@ -88,17 +86,8 @@ class TeacherAssignmentViewDialog extends HTMLElement {
         const teacherAssignment = this.teacherAssignmentData;
         
         if (!teacherAssignment) {
-            this.innerHTML = `
-                <ui-dialog 
-                    ${this.hasAttribute('open') ? 'open' : ''} 
-                    title="View Teacher Assignment">
-                    <div slot="content">
-                        <div class="text-center py-8">
-                            <p class="text-gray-500">No data to display</p>
-                        </div>
-                    </div>
-                </ui-dialog>
-            `;
+            // Don't render anything if no data is available
+            this.innerHTML = '';
             return;
         }
 

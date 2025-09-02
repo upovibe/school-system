@@ -477,6 +477,34 @@ class StudentModel extends BaseModel {
     }
 
     /**
+     * Get student by ID with class information
+     * @param int $id The student ID
+     * @return array|false The student with class information or false if not found
+     */
+    public function findByIdWithClassInfo($id) {
+        try {
+            $query = "SELECT s.*, c.name as class_name, c.section as class_section
+                     FROM students s
+                     LEFT JOIN classes c ON s.current_class_id = c.id
+                     WHERE s.id = :id
+                     LIMIT 1";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute(['id' => $id]);
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error getting student by ID with class info: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Find student by user_id
      * @param int $userId User ID to search for
      * @return array|false Student data or false if not found

@@ -210,7 +210,7 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $student = $this->studentModel->findById($id);
+            $student = $this->studentModel->findByIdWithClassInfo($id);
             
             if (!$student) {
                 http_response_code(404);

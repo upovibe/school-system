@@ -225,6 +225,43 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                 // Check if there's a new file (not an existing one)
                 const newFile = files.find(file => !file.isExisting);
                 if (newFile) {
+                    // Validate file size (maximum 10MB)
+                    const maxSizeInBytes = 10 * 1024 * 1024; // 10MB in bytes
+                    if (newFile.size > maxSizeInBytes) {
+                        Toast.show({
+                            title: 'File Size Error',
+                            message: 'File size must not exceed 10MB',
+                            variant: 'error',
+                            duration: 3000
+                        });
+                        return;
+                    }
+
+                    // Validate file type
+                    const allowedTypes = [
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-powerpoint',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'image/jpeg',
+                        'image/jpg',
+                        'image/png',
+
+                    ];
+                    
+                    if (!allowedTypes.includes(newFile.type)) {
+                        Toast.show({
+                            title: 'File Type Error',
+                            message: 'File type not supported. Please upload PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, or PNG files only',
+                            variant: 'error',
+                            duration: 5000
+                        });
+                        return;
+                    }
+
                     formData.append('file', newFile);
                 }
             }
@@ -334,13 +371,10 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mp3"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
                                 value="${resource?.attachment_file ? this.formatFilePath(resource.attachment_file) : ''}"
                                 class="w-full">
                             </ui-file-upload>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Current file will be displayed above. Upload a new file to replace it.
-                            </p>
                         </div>
                     </form>
                 </div>

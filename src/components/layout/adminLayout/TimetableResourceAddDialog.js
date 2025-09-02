@@ -121,6 +121,46 @@ class TimetableResourceAddDialog extends HTMLElement {
                 return;
             }
 
+            // Validate file size (maximum 10MB)
+            const file = fileUpload.getFiles()[0];
+            const maxSizeInBytes = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSizeInBytes) {
+                Toast.show({
+                    title: 'File Size Error',
+                    message: 'File size must not exceed 10MB',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Validate file type
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+
+                'image/jpeg',
+                'image/jpg',
+                'image/png',
+
+
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                Toast.show({
+                    title: 'File Type Error',
+                    message: 'File type not supported. Please upload PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, or PNG files only',
+                    variant: 'error',
+                    duration: 5000
+                });
+                return;
+            }
+
             // Get the auth token
             const token = localStorage.getItem('token');
             if (!token) {
@@ -141,8 +181,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                 formData.append(key, resourceData[key]);
             });
 
-            // Add file
-            const file = fileUpload.getFiles()[0];
+            // Add file (already validated above)
             formData.append('file', file);
 
             // Create the resource
@@ -225,6 +264,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
                                 class="w-full">
                             </ui-file-upload>
                         </div>
@@ -232,7 +272,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                 </div>
                 
                 <div slot="footer" class="flex justify-end gap-2">
-                    <ui-button color="secondary" data-action="cancel">Cancel</ui-button>
+                    <ui-button color="secondary" dialog-action="cancel">Cancel</ui-button>
                     <ui-button color="primary" data-action="save">Save Resource</ui-button>
                 </div>
             </ui-dialog>

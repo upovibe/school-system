@@ -38,6 +38,24 @@ class TeacherSeeder
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
                 'status' => 'active',
                 'class_id' => null // No class assignment initially
+            ],
+            [
+                'user_id' => null, // Will be linked to user later
+                'employee_id' => 'T002',
+                'first_name' => 'John',
+                'last_name' => 'Mensah',
+                'email' => 'john.mensah@school.com',
+                'phone' => '+1234567893',
+                'address' => '456 Teacher Avenue, Accra, Ghana',
+                'date_of_birth' => '1988-07-22',
+                'gender' => 'male',
+                'qualification' => 'BSc in Mathematics',
+                'specialization' => 'Mathematics, Science',
+                'hire_date' => '2021-01-15',
+                'salary' => 7000.00,
+                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+                'status' => 'active',
+                'class_id' => 9 // JHS 1 class teacher
             ]
         ];
         

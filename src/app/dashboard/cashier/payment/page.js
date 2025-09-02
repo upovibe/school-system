@@ -57,7 +57,7 @@ class CashierPaymentsPage extends App {
               <div class="text-emerald-100 text-xs sm:text-sm">Total Payments</div>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
                 <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -172,24 +172,29 @@ class CashierPaymentsPage extends App {
     }
 
     try {
-      const [presp, iresp, sresp] = await Promise.all([
+      const [presp, iresp, sresp, cresp] = await Promise.all([
         api.withToken(token).get('/cashier/payments'),
         api.withToken(token).get('/cashier/invoices'),
         api.withToken(token).get('/cashier/students'),
+        api.withToken(token).get('/classes/active/cashier'),
       ]);
       const payments = presp?.data?.data || [];
       const invoices = iresp?.data?.data || [];
       const students = sresp?.data?.data || [];
+      const classes = cresp?.data?.data || [];
       this.set('payments', payments);
       this.set('invoices', invoices);
       this.set('students', students);
+      this.set('classes', classes);
       this.invoices = invoices;
       this.students = students;
+      this.classes = classes;
     } catch (error) {
       Toast.show({ title: 'Error', message: error.response?.data?.message || 'Failed to load payments', variant: 'error', duration: 3000 });
       this.set('payments', []);
       this.set('invoices', []);
       this.set('students', []);
+      this.set('classes', []);
     }
 
     this.set('loading', false);
@@ -291,7 +296,11 @@ class CashierPaymentsPage extends App {
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('cashier-payment-add-modal');
-      if (modal) modal.setData({ invoices: this.invoices, students: this.students });
+      if (modal) modal.setData({ 
+        invoices: this.invoices, 
+        students: this.students, 
+        classes: this.classes 
+      });
     }, 0);
   }
 
@@ -372,7 +381,7 @@ class CashierPaymentsPage extends App {
               pagination
               page-size="50"
               action
-              actions="view,delete"
+              actions="view"
               addable
               refresh
               print

@@ -15,6 +15,13 @@ class GradingPolicySeeder
         // Get existing subjects
         $subjects = $this->getSubjects();
         
+        if (empty($subjects)) {
+            echo "⚠️  No subjects found. Please run subject_seeder first.\n";
+            return;
+        }
+        
+        echo "📚 Found " . count($subjects) . " subjects for grading policies\n";
+        
         $policies = [
             // English Language - Balanced approach
             [
@@ -217,11 +224,14 @@ class GradingPolicySeeder
             ]
         ];
         
+        $successCount = 0;
         foreach ($policies as $policy) {
-            $this->seedGradingPolicy($policy);
+            if ($this->seedGradingPolicy($policy)) {
+                $successCount++;
+            }
         }
         
-        echo "📊 Total grading policies seeded: " . count($policies) . "\n";
+        echo "📊 Total grading policies seeded: " . $successCount . "\n";
     }
     
     /**
@@ -278,6 +288,12 @@ class GradingPolicySeeder
      * Seed individual grading policy
      */
     private function seedGradingPolicy($policyData) {
+        // Check if subject_id is null and handle it
+        if ($policyData['subject_id'] === null) {
+            echo "⚠️  Subject not found for '{$policyData['name']}'. Skipping grading policy.\n";
+            return false;
+        }
+        
         // Check if policy already exists for this subject
         $stmt = $this->pdo->prepare('SELECT id FROM grading_policies WHERE subject_id = ?');
         $stmt->execute([$policyData['subject_id']]);
@@ -285,13 +301,13 @@ class GradingPolicySeeder
         
         if ($existingPolicy) {
             echo "⚠️  Grading policy for subject ID {$policyData['subject_id']} already exists\n";
-            return;
+            return false; // Indicate failure
         }
         
         // Check if created_by is null and handle it
         if ($policyData['created_by'] === null) {
             echo "⚠️  No user found for created_by. Skipping grading policy {$policyData['name']}\n";
-            return;
+            return false; // Indicate failure
         }
         
         // Insert policy
@@ -310,6 +326,7 @@ class GradingPolicySeeder
         ]);
         
         echo "✅ Grading policy {$policyData['name']} seeded\n";
+        return true; // Indicate success
     }
 }
 ?>

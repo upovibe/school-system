@@ -24,13 +24,15 @@ class StudentViewDialog extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && oldValue !== newValue) {
+        if (name === 'open' && oldValue !== newValue && this.studentData) {
             this.render();
         }
     }
 
     connectedCallback() {
-        this.render();
+        if (this.studentData) {
+            this.render();
+        }
         this.setupEventListeners();
     }
 
@@ -70,6 +72,12 @@ class StudentViewDialog extends HTMLElement {
     }
 
     render() {
+        if (!this.studentData) {
+            // Don't render anything if no data is available
+            this.innerHTML = '';
+            return;
+        }
+
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
@@ -146,7 +154,7 @@ class StudentViewDialog extends HTMLElement {
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-graduation-cap mr-1"></i>Current Class
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.studentData.class_name || 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm">${this.studentData.class_name && this.studentData.class_section ? `${this.studentData.class_name}(${this.studentData.class_section})` : (this.studentData.class_name || 'N/A')}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -256,6 +264,10 @@ class StudentViewDialog extends HTMLElement {
                         </div>
                     `}
                 </div>
+                </div>
+                
+                <div slot="footer" class="flex justify-end">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
                 </div>
             </ui-dialog>
         `;

@@ -789,6 +789,82 @@ class FinanceController {
     }
 
     /**
+     * Auto-create invoice for a student if none exists for the given period
+     * Used by the enhanced payment system to create invoices on-demand
+     */
+    private function autoCreateInvoiceForStudent(int $studentId, string $academicYear, string $gradingPeriod) {
+        try {
+            // Get student details
+            $student = $this->studentModel->findById($studentId);
+            if (!$student) return null;
+
+            // Get student's current class
+            $classId = $student['current_class_id'] ?? null;
+            if (!$classId) return null;
+
+            // Check if invoice already exists for this student/period combination
+            $existingInvoice = $this->findInvoiceByStudentAndPeriod($studentId, $academicYear, $gradingPeriod);
+            if ($existingInvoice) return $existingInvoice;
+
+            // Get amount due from fee schedule
+            $amountDue = $this->deriveAmountDueFromSchedule($studentId, $academicYear, $gradingPeriod);
+            if ($amountDue === null || $amountDue <= 0) return null;
+
+            // Create invoice data
+            $invoiceData = [
+                'student_id' => $studentId,
+                'academic_year' => $academicYear,
+                'grading_period' => $gradingPeriod,
+                'amount_due' => $amountDue,
+                'amount_paid' => 0,
+                'balance' => $amountDue,
+                'status' => 'open',
+                'issue_date' => date('Y-m-d'),
+                'student_type' => $student['student_type'] ?? null,
+                'created_by' => $this->getCurrentUserIdFromToken()
+            ];
+
+            // Generate invoice number
+            $invoiceData['invoice_number'] = $this->generateInvoiceNumber();
+
+            // Create the invoice
+            $invoiceId = $this->feeInvoiceModel->create($invoiceData);
+            if (!$invoiceId) return null;
+
+            // Get the created invoice
+            $createdInvoice = $this->feeInvoiceModel->findById($invoiceId);
+            
+            // Log the auto-creation
+            $this->logAction('finance_invoice_auto_created', 'Auto-created invoice for payment', [
+                'fee_invoice_id' => $invoiceId,
+                'student_id' => $studentId,
+                'academic_year' => $academicYear,
+                'grading_period' => $gradingPeriod,
+                'amount_due' => $amountDue
+            ]);
+
+            return $createdInvoice;
+        } catch (Exception $e) {
+            error_log('Error auto-creating invoice: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Find existing invoice for student and period combination
+     */
+    private function findInvoiceByStudentAndPeriod(int $studentId, string $academicYear, string $gradingPeriod) {
+        try {
+            $sql = "SELECT * FROM fee_invoices WHERE student_id = ? AND academic_year = ? AND grading_period = ? LIMIT 1";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$studentId, $academicYear, $gradingPeriod]);
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
      * Compute amount due for a student based on current class and schedules.
      * Params: student_id (required), academic_year (optional), term (optional)
      */
@@ -985,7 +1061,8 @@ class FinanceController {
 
     /**
      * Create a payment for an invoice, then recompute the invoice totals/status and create a receipt
-     * Required: invoice_id, amount
+     * Enhanced: Automatically creates invoice if it doesn't exist for the student
+     * Required: invoice_id OR (student_id + academic_year + grading_period), amount
      * Optional: method, reference, paid_on, notes
      */
     public function storePayment() {
@@ -996,8 +1073,31 @@ class FinanceController {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
             $invoiceId = isset($data['invoice_id']) ? (int)$data['invoice_id'] : 0;
             $amount = isset($data['amount']) ? (float)$data['amount'] : 0.0;
-            if ($invoiceId <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'invoice_id is required']); return; }
+            
             if ($amount <= 0) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'amount must be greater than 0']); return; }
+
+            // Check if we have invoice_id or need to create invoice
+            if ($invoiceId <= 0) {
+                // Try to create invoice automatically if we have student details
+                if (isset($data['student_id']) && isset($data['academic_year']) && isset($data['grading_period'])) {
+                    $studentId = (int)$data['student_id'];
+                    $academicYear = (string)$data['academic_year'];
+                    $gradingPeriod = (string)$data['grading_period'];
+                    
+                    // Auto-create invoice for this student
+                    $invoice = $this->autoCreateInvoiceForStudent($studentId, $academicYear, $gradingPeriod);
+                    if (!$invoice) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'message' => 'Could not create invoice for student. Please ensure student is enrolled in a class with fee schedule.']);
+                        return;
+                    }
+                    $invoiceId = $invoice['id'];
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'Either invoice_id OR (student_id + academic_year + grading_period) is required']);
+                    return;
+                }
+            }
 
             $invoice = $this->feeInvoiceModel->findById($invoiceId);
             if (!$invoice) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'Invoice not found']); return; }

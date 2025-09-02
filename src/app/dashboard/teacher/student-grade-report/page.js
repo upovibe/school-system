@@ -52,7 +52,7 @@ class TeacherStudentGradeReportPage extends App {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -298,12 +298,19 @@ class TeacherStudentGradeReportPage extends App {
                 this.set('filters', { ...existingFilters, class_id: firstClassId });
             }
 
-            // Default: preselect the first existing grading period
-            if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
-                const firstPeriodId = String(this.periods[0].id);
-                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
-                this.set('filters', next);
-            }
+                  // Default: preselect the first active grading period if available, otherwise first period
+      if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
+        const firstActivePeriod = this.periods.find(p => p.is_active === 1);
+        if (firstActivePeriod) {
+          const firstActivePeriodId = String(firstActivePeriod.id);
+          const next = { ...this.get('filters'), grading_period_id: firstActivePeriodId };
+          this.set('filters', next);
+        } else {
+          const firstPeriodId = String(this.periods[0].id);
+          const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+          this.set('filters', next);
+        }
+      }
 
             // Default: preselect the first available student
             if (!existingFilters.student_id && this.students && this.students.length > 0) {
@@ -465,7 +472,10 @@ class TeacherStudentGradeReportPage extends App {
             ? this.classes.map(c => `<ui-option value="${c.id}">${c.name}</ui-option>`).join('')
             : '<ui-option value="" disabled>No classes assigned to you</ui-option>';
         
-        const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
+        const periodOptions = (this.periods || []).map(p => {
+      const isActive = p.is_active === 1; // Check if is_active = 1
+      return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+    }).join('');
         const studentOptions = (this.students || []).map(s => `<ui-option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</ui-option>`).join('');
 
         const filters = this.get('filters') || { class_id: '', grading_period_id: '', student_id: '' };
@@ -613,7 +623,6 @@ class TeacherStudentGradeReportPage extends App {
                         pagination
                         page-size="50"
                         refresh
-                        print
                         bordered
                         striped
                         class="w-full">

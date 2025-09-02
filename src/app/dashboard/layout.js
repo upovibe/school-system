@@ -281,11 +281,22 @@ class DashboardLayout extends App {
                         { label: 'Class Subjects', icon: 'fas fa-link', href: '/dashboard/admin/class-subjects' },
                         { label: 'Teachers', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/admin/teachers' },
                         { label: 'Subject Teachers', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
+                        { label: 'Timetable Resources', icon: 'fas fa-file-alt', href: '/dashboard/admin/timetable-resources' },
                         { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
                         { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/admin/announcements' },
                     ]
                 },
+                {
+                group: 'Finance',
+                items: [
+                    { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
+                    { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
+                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
+                    { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
+                ]
+            },
                 {
                     group: 'Management',
                     items: [
@@ -299,15 +310,6 @@ class DashboardLayout extends App {
                         { label: 'Video Gallery', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
                     ]
                 },
-                {
-                group: 'Finance',
-                items: [
-                    { label: 'Fee Schedules', icon: 'fas fa-money-bill-wave', href: '/dashboard/admin/finance/schedules' },
-                    { label: 'Invoices', icon: 'fas fa-file-invoice-dollar', href: '/dashboard/admin/finance/invoices' },
-                    { label: 'Payments', icon: 'fas fa-cash-register', href: '/dashboard/admin/finance/payments' },
-                    { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/admin/finance/receipts' },
-                ]
-            },
             {
                     group: 'Settings',
                     items: [
@@ -338,6 +340,13 @@ class DashboardLayout extends App {
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
                         { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/teacher/student-grade-report' },
                     ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                                        { label: 'My Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements' },
+                { label: 'Teacher Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/teacher/announcements-view' },
+                    ]
                 }
             ],
             student: [
@@ -355,6 +364,12 @@ class DashboardLayout extends App {
                         { label: 'Grade-Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student/grades' },
                     ]
                 },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/student/announcements' },
+                    ]
+                },
             ],
             parent: [
                 {
@@ -369,6 +384,12 @@ class DashboardLayout extends App {
                         { label: 'Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
                         { label: 'Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
                         { label: 'Messages', icon: 'fas fa-comments', href: '/dashboard/parent/messages' },
+                    ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/parent/announcements' },
                     ]
                 },
                 {
@@ -392,6 +413,12 @@ class DashboardLayout extends App {
                         { label: 'Reports', icon: 'fas fa-file-alt', href: '/dashboard/staff/reports' },
                         { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' },
                     ]
+                },
+                {
+                    group: 'Communication',
+                    items: [
+                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/staff/announcements' },
+                    ]
                 }
             ],
             cashier: [
@@ -405,9 +432,15 @@ class DashboardLayout extends App {
                        group: 'Finance Management',
                        items: [
                            { label: 'Payment Scheduler', icon: 'fas fa-calendar-alt', href: '/dashboard/cashier/payment-scheduler' },
-                           { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Payment', icon: 'fas fa-credit-card', href: '/dashboard/cashier/payment' },
+                           { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/cashier/receipts' },
+                       ]
+                   },
+                   {
+                       group: 'Communication',
+                       items: [
+                           { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/cashier/announcements' },
                        ]
                    }
                 ]
@@ -434,6 +467,7 @@ class DashboardLayout extends App {
             'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
             'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
+            'timetable-resources': 'Timetable Resources',
             'academic-years': 'Academic Year Management',
             'academic-year-records': 'Academic Year Records',
             'grading-periods': 'Grading Period Management',
@@ -446,13 +480,15 @@ class DashboardLayout extends App {
             'invoices': 'Invoices',
             'payments': 'Payments',
             'receipts': 'Receipts',
-            'class': 'My Class',
-            'class-subjects': 'My Classes & Subjects',
-                             // Cashier specific
-                 'payment-scheduler': 'Payment Scheduler',
-                 'invoices': 'Invoices',
-                 'payment': 'Payment',
-                 'receipts': 'Receipts'
+                         'class': 'My Class',
+             'class-subjects': 'My Classes & Subjects',
+             'announcements': 'Announcements',
+             'all-announcements': 'All Announcements',
+            // Cashier specific
+            'payment-scheduler': 'Payment Scheduler',
+            'invoices': 'Invoices',
+            'payment': 'Payment',
+            'receipts': 'Receipts'
         };
         return titles[lastSegment] || 'Dashboard';
     }

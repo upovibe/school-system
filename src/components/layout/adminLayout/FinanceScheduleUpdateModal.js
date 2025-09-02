@@ -57,6 +57,24 @@ class FinanceScheduleUpdateModal extends HTMLElement {
     this.render();
     this.setupEventListeners();
     this.fillForm();
+    
+    // Auto-select first active grading period if none is currently selected
+    setTimeout(() => this.autoSelectDefaultGradingPeriod(), 0);
+  }
+
+  // Auto-select the first active grading period if none is currently selected
+  autoSelectDefaultGradingPeriod() {
+    const gradingPeriodDropdown = this.querySelector('ui-search-dropdown[name="grading_period"]');
+    if (gradingPeriodDropdown && !gradingPeriodDropdown.value && this._gradingPeriods && this._gradingPeriods.length > 0) {
+      const firstActivePeriod = this._gradingPeriods.find(gp => gp.is_active === 1);
+      if (firstActivePeriod) {
+        gradingPeriodDropdown.value = firstActivePeriod.name;
+        // Update the schedule data to reflect the default selection
+        if (this._schedule) {
+          this._schedule.grading_period = firstActivePeriod.name;
+        }
+      }
+    }
   }
 
   fillForm() {
@@ -180,7 +198,7 @@ class FinanceScheduleUpdateModal extends HTMLElement {
         <div slot="title">Update Fee Schedule</div>
         <form class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
               ${(this._classes || []).map(c => `
                 <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
@@ -189,24 +207,25 @@ class FinanceScheduleUpdateModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year <span class="text-red-500">*</span></label>
               <ui-input data-field="academic_year" type="text" placeholder="Auto-populated from class" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period <span class="text-red-500">*</span></label>
               <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full">
-                ${(this._gradingPeriods || []).map(gp => `
-                  <ui-option value="${gp.name}">${gp.name}</ui-option>
-                `).join('')}
+                ${(this._gradingPeriods || []).map(gp => {
+                  const isActive = gp.is_active === 1; // Check if is_active = 1
+                  return `<ui-option value="${gp.name}" ${!isActive ? 'disabled' : ''}>${gp.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+                }).join('')}
               </ui-search-dropdown>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Total Fee</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Fee <span class="text-red-500">*</span></label>
             <ui-input data-field="total_fee" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full"></ui-input>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="student_type" placeholder="Select type" class="w-full">
               <ui-option value="Day">Day</ui-option>
               <ui-option value="Boarding">Boarding</ui-option>

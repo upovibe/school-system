@@ -41,7 +41,25 @@ class StudentGradesPage extends App {
         super.connectedCallback();
         document.title = 'My Grades | School System';
         this.bootstrap();
-        this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Single event listener for all button clicks
+        this.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            
+            if (action === 'show-student-grades-info') {
+                this.showStudentGradesInfo();
+            } else if (action === 'print-report') {
+                this.printTerminalReport();
+            } else if (action === 'apply-filters') {
+                this.loadGrades();
+            } else if (action === 'clear-filters') {
+                this.set('filters', { grading_period_id: '' });
+                this.loadGrades();
+            }
+        });
 
         // Filter interactions
         this.addEventListener('change', (e) => {
@@ -55,27 +73,9 @@ class StudentGradesPage extends App {
                 this.loadGrades();
             }
         });
-
-        // Apply/Clear filter buttons
-        this.addEventListener('click', (e) => {
-            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
-            if (action === 'apply-filters') {
-                this.loadGrades();
-            } else if (action === 'clear-filters') {
-                this.set('filters', { grading_period_id: '' });
-                this.loadGrades();
-            }
-        });
     }
 
-    handleHeaderActions(event) {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
-        const action = button.getAttribute('data-action');
-        if (action === 'show-student-grades-info') {
-            this.showStudentGradesInfo();
-        }
-    }
+
 
     showStudentGradesInfo() {
         const dialog = document.createElement('ui-dialog');
@@ -98,16 +98,90 @@ class StudentGradesPage extends App {
         document.body.appendChild(dialog);
     }
 
+    async printTerminalReport() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({ 
+                    title: 'Authentication Error', 
+                    message: 'Please log in to print your report', 
+                    variant: 'error', 
+                    duration: 3000 
+                });
+                return;
+            }
+
+            const filters = this.get('filters') || {};
+            const periodId = filters.grading_period_id;
+            
+            // Build the print URL with the selected grading period
+            let printUrl = '/api/student/print/terminal-report';
+            if (periodId) {
+                printUrl += `?grading_period_id=${periodId}`;
+            }
+
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    Toast.show({ 
+                        title: 'Print Report', 
+                        message: 'Terminal report opened in new window. Use browser print function to print.', 
+                        variant: 'success', 
+                        duration: 3000 
+                    });
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                } else {
+                    Toast.show({ 
+                        title: 'Print Error', 
+                        message: 'Please allow pop-ups to print your report', 
+                        variant: 'warning', 
+                        duration: 3000 
+                    });
+                }
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Print failed with status: ${response.status}. ${errorText}`);
+            }
+        } catch (error) {
+            Toast.show({ 
+                title: 'Print Error', 
+                message: `Failed to generate print report: ${error.message}`, 
+                variant: 'error', 
+                duration: 5000 
+            });
+        }
+    }
+
     async bootstrap() {
         try {
             this.set('loading', true);
             await this.loadSubjects();
             await this.loadGradingPeriods();
             
-            // Default: preselect the first available grading period
+            // Default: preselect the active grading period (is_active=1)
             if (this.periods && this.periods.length > 0) {
-                const firstPeriodId = String(this.periods[0].id);
-                const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+                const activePeriod = this.periods.find(p => p.is_active === 1);
+                const selectedPeriodId = activePeriod ? String(activePeriod.id) : String(this.periods[0].id);
+                const next = { ...this.get('filters'), grading_period_id: selectedPeriodId };
                 this.set('filters', next);
             }
 
@@ -271,7 +345,7 @@ class StudentGradesPage extends App {
                     </div>
                     
                     <!-- Enhanced Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -326,27 +400,43 @@ class StudentGradesPage extends App {
     }
 
     renderFilters() {
-        const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name} (${p.academic_year})</ui-option>`).join('');
+        const periodOptions = (this.periods || []).map(p => {
+            const activeLabel = p.is_active === 1 ? ' (Active)' : '';
+            const yearDisplay = p.academic_year_display_name || p.academic_year || 'N/A';
+            return `<ui-option value="${p.id}">${p.name} (${yearDisplay})${activeLabel}</ui-option>`;
+        }).join('');
 
         const filters = this.get('filters') || { grading_period_id: '' };
         const { grading_period_id } = filters;
+        
+        // Find the selected period to show if it's active
+        const selectedPeriod = this.periods.find(p => String(p.id) === String(grading_period_id));
+        const isActivePeriod = selectedPeriod && selectedPeriod.is_active === 1;
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300 my-10">
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
                     <div>
-                        <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
+                        <label class="block text-xs text-gray-600 mb-1">
+                            Grading Period
+                            ${isActivePeriod ? '<span class="ml-1 text-green-600 font-medium">(Active Period)</span>' : ''}
+                        </label>
                         <ui-search-dropdown name="grading_period_id" placeholder="All periods" class="w-full" value="${grading_period_id || ''}">
                             ${periodOptions}
                         </ui-search-dropdown>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-3">
-                    <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
+                <div class="flex justify-between gap-2 mt-3">
+                    <div>
+                        <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
                         <i class="fas fa-filter mr-1"></i> Apply Filters
                     </ui-button>
                     <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
                         <i class="fas fa-times mr-1"></i> Clear Filters
+                    </ui-button>
+                    </div>
+                    <ui-button type="button" data-action="print-report" variant="success" size="sm">
+                        <i class="fas fa-print mr-1"></i> Print Terminal Report
                     </ui-button>
                 </div>
             </div>
@@ -384,7 +474,7 @@ class StudentGradesPage extends App {
             { key: 'assign_total', label: 'Assignment Score Total' },
             { key: 'exam_total', label: 'Exam Score Total' },
             { key: 'final_pct', label: 'Final Total Score %' },
-            { key: 'final_grade', label: 'Letter' },
+            { key: 'final_grade', label: 'Grade' },
             { key: 'remarks', label: 'Remarks' },
             { key: 'updated', label: 'Updated' }
         ];
@@ -404,7 +494,6 @@ class StudentGradesPage extends App {
                         pagination
                         page-size="50"
                         refresh
-                        print
                         bordered
                         striped
                         class="w-full">

@@ -14,6 +14,7 @@ import api from '@/services/api.js';
 
 /**
  * Finance: Fee Invoices Management Page
+ * Updated: Fixed syntax errors
  */
 class FinanceInvoicesPage extends App {
   constructor() {
@@ -110,7 +111,7 @@ class FinanceInvoicesPage extends App {
               <div class="text-indigo-100 text-xs sm:text-sm">Total Invoices</div>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
                 <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -322,6 +323,17 @@ class FinanceInvoicesPage extends App {
       this.set('students', []);
     }
 
+    // Load classes for the add modal; ignore failure
+    try {
+      const classesResp = await api.withToken(token).get('/classes');
+      const classes = (classesResp.data?.data) || [];
+      this.classes = classes;
+      this.set('classes', classes);
+    } catch (_) {
+      this.classes = [];
+      this.set('classes', []);
+    }
+
     this.set('loading', false);
     // Trigger render to show the loaded data
     this.render();
@@ -412,12 +424,15 @@ class FinanceInvoicesPage extends App {
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('finance-invoice-add-modal');
-      if (modal) modal.setStudents(this.students);
+      if (modal) {
+        modal.setClasses(this.classes);
+        modal.setStudents(this.students);
+      }
     }, 0);
   }
 
   clearFilters() {
-    this.set('filters', { academic_year: '', status: '', term: '' });
+    this.set('filters', { academic_year: '', status: '', grading_period: '' });
     this.render(); // Just re-render with cleared filters
   }
 
@@ -503,7 +518,7 @@ class FinanceInvoicesPage extends App {
               pagination
               page-size="50"
               action
-              addable
+              actions="view"
               refresh
               print
               bordered

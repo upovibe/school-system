@@ -210,7 +210,7 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $student = $this->studentModel->findById($id);
+            $student = $this->studentModel->findByIdWithClassInfo($id);
             
             if (!$student) {
                 http_response_code(404);
@@ -766,7 +766,7 @@ class StudentController {
             'email' => $student['email'],
             'role' => 'student',
             'iat' => time(),
-            'exp' => time() + (24 * 60 * 60) // 24 hours
+            'exp' => time() + (60 * 60) // 1 hour
         ]);
         
         $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
@@ -851,7 +851,7 @@ class StudentController {
                 // Resolve class teacher (homeroom teacher) if any
                 $classTeacher = null;
                 try {
-                    $stmt = $pdo->prepare("SELECT first_name, last_name, gender, email FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt = $pdo->prepare("SELECT first_name, last_name, gender, email, phone FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
                     $stmt->execute([$student['class_id']]);
                     $t = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($t) {
@@ -859,6 +859,7 @@ class StudentController {
                             'name' => trim(($t['first_name'] ?? '') . ' ' . ($t['last_name'] ?? '')),
                             'gender' => $t['gender'] ?? null,
                             'email' => $t['email'] ?? null,
+                            'phone' => $t['phone'] ?? null,
                         ];
                     }
                 } catch (Exception $_) {
@@ -886,7 +887,9 @@ class StudentController {
                     if ($teacherAssignment) {
                         $subject['teacher'] = [
                             'name' => $teacherAssignment['teacher_first_name'] . ' ' . $teacherAssignment['teacher_last_name'],
-                            'gender' => $teacherAssignment['gender']
+                            'gender' => $teacherAssignment['gender'],
+                            'email' => $teacherAssignment['teacher_email'] ?? null,
+                            'phone' => $teacherAssignment['teacher_phone'] ?? null
                         ];
                     } else {
                         $subject['teacher'] = null;
@@ -1558,7 +1561,7 @@ class StudentController {
             StudentMiddleware::requireStudent($pdo);
             require_once __DIR__ . '/../models/GradingPeriodModel.php';
             $gpm = new GradingPeriodModel($pdo);
-            $periods = $gpm->findAll();
+            $periods = $gpm->getAllPeriodsWithCreator();
             http_response_code(200);
             echo json_encode(['success' => true, 'data' => $periods, 'message' => 'Grading periods retrieved successfully']);
         } catch (Exception $e) {
@@ -1594,6 +1597,158 @@ class StudentController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error retrieving class subjects: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Print terminal report for the authenticated student (student-only)
+     * Generates HTML report for the student across all subjects
+     */
+    public function printTerminalReport() {
+        try {
+            // Require student authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+            StudentMiddleware::requireStudent($pdo);
+
+            $student = $_REQUEST['current_student'];
+            $query = $_GET ?? [];
+            $periodId = isset($query['grading_period_id']) ? (int)$query['grading_period_id'] : null;
+
+            // Get student's class information
+            $classId = $student['current_class_id'] ?? null;
+            if (!$classId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Student not assigned to any class']);
+                return;
+            }
+
+            // Get class information
+            require_once __DIR__ . '/../models/ClassModel.php';
+            $classModel = new ClassModel($pdo);
+            $class = $classModel->findById($classId);
+            
+            if (!$class) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Class not found']);
+                return;
+            }
+
+            // Get class subjects
+            require_once __DIR__ . '/../models/ClassSubjectModel.php';
+            $classSubjectModel = new ClassSubjectModel($pdo);
+            $classSubjects = $classSubjectModel->getByClassId($classId);
+            
+            if (!is_array($classSubjects)) {
+                $classSubjects = [];
+            }
+
+            // Get grades for this student
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $gradeModel = new StudentGradeModel($pdo);
+            $grades = $gradeModel->getStudentGradesWithDetails((int)$student['id'], ['class_id' => $classId, 'grading_period_id' => $periodId]);
+
+            // Generate the HTML report using the existing template
+            $html = $this->generateStudentTerminalReportHTML($student, $class, $grades, $classSubjects, $periodId);
+
+            // Set content type to HTML
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: inline; filename="student_terminal_report.html"');
+            
+            echo $html;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error generating terminal report: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate student terminal report HTML using the existing template
+     */
+    private function generateStudentTerminalReportHTML($student, $class, $grades, $classSubjects, $periodId) {
+        // Get school settings
+        $schoolSettings = $this->getSchoolSettings();
+        
+        // Get grading period name
+        $gradingPeriodName = 'All Periods';
+        if ($periodId) {
+            require_once __DIR__ . '/../models/GradingPeriodModel.php';
+            $periodModel = new GradingPeriodModel($this->pdo);
+            $period = $periodModel->findById($periodId);
+            if ($period) {
+                $gradingPeriodName = $period['name'];
+            }
+        }
+        
+        // Get academic year
+        $academicYear = 'N/A';
+        if ($class['academic_year_id']) {
+            require_once __DIR__ . '/../models/AcademicYearModel.php';
+            $academicYearModel = new AcademicYearModel($this->pdo);
+            $academicYearData = $academicYearModel->findById($class['academic_year_id']);
+            if ($academicYearData) {
+                $academicYear = $academicYearData['year_code'];
+            }
+        }
+        
+        // Get class teacher information
+        $teacherName = 'No Class Teacher';
+        try {
+            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
+            $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+            
+            // Get the first teacher assignment for this class (any subject)
+            $assignments = $teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
+            
+            if (!empty($assignments)) {
+                $firstAssignment = $assignments[0];
+                $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+            }
+        } catch (Exception $e) {
+            // If there's an error, keep the default value
+            $teacherName = 'No Class Teacher';
+        }
+        
+        // Use the separate template file
+        $templatePath = __DIR__ . '/../email/templates/student_terminal_report.php';
+        
+        if (!file_exists($templatePath)) {
+            throw new Exception('Student terminal report template not found');
+        }
+        
+        // Start output buffering to capture the template output
+        ob_start();
+        
+        // Include the template with variables available
+        include $templatePath;
+        
+        // Get the captured HTML content
+        $html = ob_get_clean();
+        
+        return $html;
+    }
+
+    /**
+     * Get school settings for the report
+     */
+    private function getSchoolSettings() {
+        try {
+            require_once __DIR__ . '/../models/SettingModel.php';
+            $settingModel = new SettingModel($this->pdo);
+            $settings = $settingModel->getAllAsArray();
+            
+            return $settings;
+        } catch (Exception $e) {
+            // Return default settings if there's an error
+            return [
+                'application_name' => 'School Management System',
+                'application_tagline' => 'Excellence in Education',
+                'application_logo' => '',
+                'school_address' => 'School Address',
+                'school_phone' => 'School Phone',
+                'school_email' => 'school@example.com'
+            ];
         }
     }
 
@@ -1990,6 +2145,97 @@ class StudentController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to promote student: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get announcements for students (student only)
+     * Students can see:
+     * 1. Announcements for all students (target_audience = 'all')
+     * 2. Announcements for students (target_audience = 'students')
+     * 3. Announcements specific to their class (target_audience = 'specific_class')
+     */
+    public function getAnnouncements() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            $student = $_REQUEST['current_student'];
+            
+            $conditions = [];
+            $params = [];
+            
+            // Add filters if provided
+            if (isset($_GET['announcement_type']) && $_GET['announcement_type'] !== '') {
+                $conditions[] = 'announcement_type = ?';
+                $params[] = $_GET['announcement_type'];
+            }
+            if (isset($_GET['priority']) && $_GET['priority'] !== '') {
+                $conditions[] = 'priority = ?';
+                $params[] = $_GET['priority'];
+            }
+            if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
+                $conditions[] = 'is_active = ?';
+                $params[] = (int) (!!$_GET['is_active']);
+            }
+            if (isset($_GET['is_pinned']) && $_GET['is_pinned'] !== '') {
+                $conditions[] = 'is_pinned = ?';
+                $params[] = (int) (!!$_GET['is_pinned']);
+            }
+            
+
+            
+            // Students can see:
+            // 1. Announcements for all students
+            // 2. Announcements specifically for students
+            // 3. Announcements for their specific class
+            $studentConditions = [
+                'target_audience = "all"', // General announcements
+                'target_audience = "students"', // Student-specific announcements
+                '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
+            ];
+            $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
+            
+            // Try different possible field names for class ID
+            $classId = $student['current_class_id'] ?? $student['class_id'] ?? null;
+            
+            if ($classId) {
+                $params[] = $classId; // target_class_id
+            } else {
+                // If no class ID, remove class-specific condition
+                $studentConditions = [
+                    'target_audience = "all"', // General announcements
+                    'target_audience = "students"' // Student-specific announcements
+                ];
+                $conditions = array_slice($conditions, 0, -1); // Remove the last condition
+                $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
+            }
+            
+            $where = '';
+            if (!empty($conditions)) {
+                $where = 'WHERE ' . implode(' AND ', $conditions);
+            }
+            
+            // Get announcements with enhanced details
+            require_once __DIR__ . '/../models/AnnouncementModel.php';
+            $announcementModel = new AnnouncementModel($this->pdo);
+            $announcements = $announcementModel->getAllWithDetails($where, $params);
+            
+
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $announcements,
+                'message' => 'Announcements retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving announcements: ' . $e->getMessage()
             ]);
         }
     }

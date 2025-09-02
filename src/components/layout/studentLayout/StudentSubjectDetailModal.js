@@ -159,27 +159,51 @@ class StudentSubjectDetailModal extends HTMLElement {
                         </div>
 
                         <!-- Teacher Information -->
-                         ${this.subjectData.teacher || this.classTeacher ? `
-                             <div class="border-b pb-4">
-                                 <div class="flex items-center gap-2 mb-3">
-                                     <i class="fas fa-chalkboard-teacher text-green-500"></i>
-                                     <h4 class="text-md font-semibold text-gray-800">Teacher Information</h4>
-                                 </div>
-                                 <div class="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
-                                     <ui-avatar 
-                                         size="lg" 
-                                          src="${(this.subjectData.teacher && this.subjectData.teacher.profile_image) || ''}"
-                                          alt="${(this.subjectData.teacher?.name) || (this.classTeacher?.name) || 'Teacher'}"
-                                          name="${(this.subjectData.teacher?.name) || (this.classTeacher?.name) || 'Teacher'}">
-                                     </ui-avatar>
-                                     <div class="flex-1">
-                                         <h5 class="text-lg font-semibold text-gray-900">
-                                             ${this.getTeacherTitle((this.subjectData.teacher?.gender) || (this.classTeacher?.gender))} ${(this.subjectData.teacher?.name) || (this.classTeacher?.name)}
-                                         </h5>
-                                         ${this.subjectData.teacher?.specialization ? `<p class=\"text-gray-600 text-sm\">${this.subjectData.teacher.specialization}</p>` : (this.classTeacher?.email ? `<p class=\"text-gray-600 text-sm\">${this.classTeacher.email}</p>` : '')}
-                                     </div>
-                                 </div>
-                             </div>
+                        ${this.subjectData.teacher ? `
+                            <div class="border-b pb-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fas fa-chalkboard-teacher text-green-500"></i>
+                                    <h4 class="text-md font-semibold text-gray-800">Subject Teacher</h4>
+                                </div>
+                                <div class="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
+                                    <ui-avatar 
+                                        size="lg" 
+                                        src="${this.subjectData.teacher.profile_image || ''}"
+                                        alt="${this.subjectData.teacher.name || 'Teacher'}"
+                                        name="${this.subjectData.teacher.name || 'Teacher'}">
+                                    </ui-avatar>
+                                    <div class="flex-1">
+                                        <h5 class="text-lg font-semibold text-gray-900">
+                                            ${this.getTeacherTitle(this.subjectData.teacher.gender)} ${this.subjectData.teacher.name}
+                                        </h5>
+                                        ${this.subjectData.teacher.specialization ? `<p class="text-gray-600 text-sm"><i class="fas fa-graduation-cap mr-1"></i>${this.subjectData.teacher.specialization}</p>` : ''}
+                                        ${this.subjectData.teacher.email ? `<p class="text-gray-600 text-sm"><i class="fas fa-envelope mr-1"></i>${this.subjectData.teacher.email}</p>` : ''}
+                                        ${this.subjectData.teacher.phone ? `<p class="text-gray-600 text-sm"><i class="fas fa-phone mr-1"></i>${this.subjectData.teacher.phone}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        ` : this.classTeacher ? `
+                            <div class="border-b pb-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fas fa-chalkboard-teacher text-blue-500"></i>
+                                    <h4 class="text-md font-semibold text-gray-800">Class Teacher</h4>
+                                </div>
+                                <div class="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                                    <ui-avatar 
+                                        size="lg" 
+                                        src="${this.classTeacher.profile_image || ''}"
+                                        alt="${this.classTeacher.name || 'Class Teacher'}"
+                                        name="${this.classTeacher.name || 'Class Teacher'}">
+                                    </ui-avatar>
+                                    <div class="flex-1">
+                                        <h5 class="text-lg font-semibold text-gray-900">
+                                            ${this.getTeacherTitle(this.classTeacher.gender)} ${this.classTeacher.name}
+                                        </h5>
+                                        <p class="text-gray-600 text-sm"><i class="fas fa-envelope mr-1"></i>${this.classTeacher.email || ''}</p>
+                                        ${this.classTeacher.phone ? `<p class="text-gray-600 text-sm"><i class="fas fa-phone mr-1"></i>${this.classTeacher.phone}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
                         ` : `
                             <div class="border-b pb-4">
                                 <div class="flex items-center gap-2 mb-3">
@@ -192,6 +216,8 @@ class StudentSubjectDetailModal extends HTMLElement {
                                 </div>
                             </div>
                         `}
+
+
 
                         
                     ` : `

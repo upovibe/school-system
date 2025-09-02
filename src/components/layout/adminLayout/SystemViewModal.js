@@ -291,6 +291,10 @@ class SystemViewModal extends HTMLElement {
                         </div>
                     `}
                 </div>
+                
+                <div slot="footer" class="flex justify-end">
+                    <ui-button variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
+                </div>
             </ui-modal>
         `;
     }

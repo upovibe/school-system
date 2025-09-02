@@ -202,6 +202,7 @@ Router::get('/teachers/students/{studentId}/assignments', 'TeacherController@get
 // File download routes
 Router::get('/uploads/assignments/attachments/{filename}', 'TeacherController@downloadAssignmentAttachment');
 Router::get('/students/download/assignments/attachments/{filename}', 'StudentController@downloadAssignmentAttachment');
+Router::get('/uploads/timetable-resources/{filename}', 'TimetableResourceController@download');
 
 // Teacher Management Routes
 Router::get('/teachers/{id}', 'TeacherController@show');
@@ -227,6 +228,9 @@ Router::post('/students/assignments/{id}/submit', 'StudentController@submitAssig
 Router::put('/students/assignments/{id}/submission', 'StudentController@updateSubmission');
 Router::get('/students/submission-history', 'StudentController@getSubmissionHistory');
 Router::get('/students/grades', 'StudentController@getGrades');
+
+// Student Announcements (student-only protected in controller) - Must come before /students/{id}
+Router::get('/students/announcements', 'StudentController@getAnnouncements');
 
 // Student Authentication Routes (public for login, student auth for others)
 Router::post('/students/login', 'StudentController@login');
@@ -264,6 +268,16 @@ Router::put('/assignments/{id}', 'AssignmentController@update');
 Router::delete('/assignments/{id}', 'AssignmentController@destroy');
 Router::get('/assignments/{id}/submissions', 'AssignmentController@getSubmissions');
 Router::post('/assignments/{assignmentId}/grade/{studentId}', 'AssignmentController@gradeSubmission');
+
+// Timetable Resource Management Routes (admin only for create/update/delete, public for view/download)
+Router::get('/timetable-resources', 'TimetableResourceController@index');
+Router::post('/timetable-resources', 'TimetableResourceController@store');
+Router::get('/timetable-resources/{id}', 'TimetableResourceController@show');
+Router::put('/timetable-resources/{id}', 'TimetableResourceController@update');
+Router::delete('/timetable-resources/{id}', 'TimetableResourceController@destroy');
+Router::get('/timetable-resources/{id}/download', 'TimetableResourceController@download');
+Router::get('/timetable-resources/class/{classId}', 'TimetableResourceController@getByClass');
+Router::get('/timetable-resources/my-resources', 'TimetableResourceController@getMyResources');
 
 // Teacher Assignment Management Routes (admin only)
 Router::get('/teacher-assignments', 'TeacherAssignmentController@index');
@@ -325,11 +339,21 @@ Router::get('/teacher/classes/available-for-promotion', 'TeacherController@getAv
 Router::get('/teacher/print/student-report', 'TeacherController@printStudentReport');
 Router::get('/teacher/print/class-report', 'TeacherController@printClassReport');
 
+// Teacher Announcement Management (teacher-only protected in controller)
+Router::post('/teacher/announcements', 'TeacherController@createAnnouncement');
+Router::get('/teacher/announcements', 'TeacherController@getMyAnnouncements');
+Router::get('/teacher/announcements/my', 'TeacherController@getMyOwnAnnouncements');
+Router::get('/teacher/announcements/{id}', 'TeacherController@getAnnouncement');
+Router::put('/teacher/announcements/{id}', 'TeacherController@updateAnnouncement');
+Router::delete('/teacher/announcements/{id}', 'TeacherController@deleteAnnouncement');
+Router::get('/teacher/announcements/stats', 'TeacherController@getAnnouncementStats');
+
 // Student self-service grades (student-only protected in controller)
 Router::get('/student/my-grades', 'StudentController@listMyStudentGrades');
 Router::get('/student/my-grades/{id}', 'StudentController@showMyStudentGrade');
 Router::get('/student/grading-periods', 'StudentController@getGradingPeriods');
 Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects');
+Router::get('/student/print/terminal-report', 'StudentController@printTerminalReport');
 
 // Finance - Fee Schedules (admin only)
 Router::get('/finance/schedules', 'FinanceController@indexSchedules');
@@ -364,12 +388,24 @@ Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateR
 // Finance - Analytics (admin only)
 Router::get('/finance/monthly-income', 'FinanceController@getMonthlyIncome');
 
+// Announcement Management Routes (admin only)
+Router::get('/announcements', 'AnnouncementController@index');
+Router::post('/announcements', 'AnnouncementController@store');
+Router::get('/announcements/stats', 'AnnouncementController@getStats');
+Router::get('/announcements/available-classes', 'AnnouncementController@getAvailableClasses');
+Router::get('/announcements/{id}', 'AnnouncementController@show');
+Router::put('/announcements/{id}', 'AnnouncementController@update');
+Router::delete('/announcements/{id}', 'AnnouncementController@destroy');
+
 // Cashier - Fee Schedules (cashier only)
 Router::get('/cashier/schedules', 'CashierController@indexSchedules');
 Router::get('/cashier/schedules/{id}', 'CashierController@showSchedule');
 Router::get('/cashier/schedules/student', 'CashierController@getStudentSchedules');
 Router::get('/cashier/schedules/active', 'CashierController@getActiveSchedules');
 Router::get('/cashier/schedules/search', 'CashierController@searchSchedules');
+
+// Cashier - Helpers (must come BEFORE {id} routes to avoid conflicts)
+Router::get('/cashier/amount-due', 'CashierController@getAmountDue');
 
 // Cashier - Fee Invoices (cashier only)
 Router::get('/cashier/invoices', 'CashierController@indexInvoices');
@@ -395,3 +431,6 @@ Router::post('/cashier/receipts/{id}/regenerate', 'CashierController@regenerateR
 // Cashier - Students (cashier only)
 Router::get('/cashier/students', 'CashierController@getStudents');
 Router::get('/cashier/students/{id}', 'CashierController@showStudent');
+
+// Cashier - Announcements (cashier only)
+Router::get('/cashier/announcements', 'CashierController@getAnnouncements');

@@ -1,5 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/Button.js';
 
 class FinanceInvoiceViewModal extends HTMLElement {
   constructor() {
@@ -24,7 +25,7 @@ class FinanceInvoiceViewModal extends HTMLElement {
     const money = (v) => Number(v || 0).toFixed(2);
     const formatDate = (d) => {
       if (!d) return 'N/A';
-      try { return new Date(d).toLocaleString(); } catch { return d; }
+      try { return new Date(d).toLocaleDateString(); } catch { return d; }
     };
 
     this.innerHTML = `
@@ -103,7 +104,7 @@ class FinanceInvoiceViewModal extends HTMLElement {
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   <i class="fas fa-layer-group mr-1"></i>Term
                 </label>
-                <p class="text-gray-900 text-sm">${safe(i.term)}</p>
+                <p class="text-gray-900 text-sm">${safe(i.grading_period || i.term)}</p>
               </div>
               <div class="bg-gray-50 p-3 rounded-lg">
                 <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -148,9 +149,11 @@ class FinanceInvoiceViewModal extends HTMLElement {
             </div>
           </div>
         </div>
-        ` : `
-          <div class="text-center py-8 text-gray-500">No invoice data available</div>
-        `}
+        ` : ''}
+        
+        <div slot="footer" class="flex justify-end">
+          <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
+        </div>
       </ui-modal>
     `;
   }
@@ -158,6 +161,3 @@ class FinanceInvoiceViewModal extends HTMLElement {
 
 customElements.define('finance-invoice-view-modal', FinanceInvoiceViewModal);
 export default FinanceInvoiceViewModal;
-
-
-

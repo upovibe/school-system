@@ -238,7 +238,52 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('student-grade-deleted', (event) => {
             const deletedId = event.detail.gradeId;
             const current = this.get('grades') || [];
-            this.set('grades', current.filter(g => g.id !== deletedId));
+            
+            // Find the deleted grade to get the student_id
+            const deletedGrade = current.find(g => g.id === deletedId);
+            
+            if (deletedGrade) {
+                // Remove the specific grade record
+                const updatedGrades = current.filter(g => g.id !== deletedId);
+                
+                // If this was the only grade for this student, convert them back to a "new" entry
+                const studentHasOtherGrades = updatedGrades.some(g => 
+                    g.student_id === deletedGrade.student_id && 
+                    g.id !== null && 
+                    g.id !== deletedId
+                );
+                
+                if (!studentHasOtherGrades) {
+                    // Convert the student back to a "new" entry (no grades yet)
+                    const newEntry = {
+                        id: null,
+                        student_id: deletedGrade.student_id,
+                        student_first_name: deletedGrade.student_first_name,
+                        student_last_name: deletedGrade.student_last_name,
+                        student_number: deletedGrade.student_number,
+                        class_id: deletedGrade.class_id,
+                        class_name: deletedGrade.class_name,
+                        class_section: deletedGrade.class_section,
+                        subject_id: deletedGrade.subject_id,
+                        subject_name: deletedGrade.subject_name,
+                        subject_code: deletedGrade.subject_code,
+                        grading_period_id: deletedGrade.grading_period_id,
+                        grading_period_name: deletedGrade.grading_period_name,
+                        assignment_total: null,
+                        exam_total: null,
+                        final_percentage: null,
+                        final_letter_grade: null,
+                        created_at: null,
+                        updated_at: null,
+                        is_new: true
+                    };
+                    
+                    updatedGrades.push(newEntry);
+                }
+                
+                this.set('grades', updatedGrades);
+            }
+            
             this.render();
             this.set('showDeleteDialog', false);
         });
@@ -246,9 +291,8 @@ class StudentGradesManagementPage extends App {
         this.addEventListener('student-grade-saved', (event) => {
             const newItem = event.detail.grade;
             if (newItem) {
-                const current = this.get('grades') || [];
-                this.set('grades', [newItem, ...current]);
-                this.render();
+                // Reload the grades to ensure proper data structure and table update
+                this.loadGrades();
                 this.set('showAddModal', false);
             } else {
                 this.loadGrades();
@@ -380,10 +424,15 @@ class StudentGradesManagementPage extends App {
                         .slice(-1)[0]
                 );
                 if (lastId) {
-                    // Auto-select first grading period if available
+                    // Auto-select first active grading period if available, otherwise first period
                     let firstPeriodId = '';
                     if (this.periods && this.periods.length > 0) {
-                        firstPeriodId = String(this.periods[0].id);
+                        const firstActivePeriod = this.periods.find(p => p.is_active === 1);
+                        if (firstActivePeriod) {
+                            firstPeriodId = String(firstActivePeriod.id);
+                        } else {
+                            firstPeriodId = String(this.periods[0].id);
+                        }
                     }
                     
                     const next = { ...currentFilters, class_id: lastId, subject_id: '', grading_period_id: firstPeriodId };
@@ -810,7 +859,10 @@ class StudentGradesManagementPage extends App {
         const subjectOptions = (this.classSubjects && this.classSubjects.length > 0)
             ? this.classSubjects.map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('')
             : '<ui-option value="" disabled>No subjects assigned to this class</ui-option>';
-        const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
+        const periodOptions = (this.periods || []).map(p => {
+            const isActive = p.is_active === 1; // Check if is_active = 1
+            return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+        }).join('');
 
         const filters = this.get('filters') || { class_id: '', subject_id: '', grading_period_id: '', student_id: '' };
         const { class_id, subject_id, grading_period_id } = filters;
@@ -927,7 +979,6 @@ class StudentGradesManagementPage extends App {
                             action
                             actions="view, delete"
                             refresh
-                            print
                             bordered
                             striped
                             custom-actions='${JSON.stringify(this.getCustomActions())}'

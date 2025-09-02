@@ -103,7 +103,7 @@ class StudentModel extends BaseModel {
     public function getStudentsWithClassInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.*, c.name as class_name
+                SELECT s.*, c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 ORDER BY s.first_name ASC, s.last_name ASC
@@ -167,8 +167,10 @@ class StudentModel extends BaseModel {
     public function authenticateStudent($studentId, $password) {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->getTableName()} 
-                WHERE student_id = ? AND status = 'active'
+                SELECT s.*, c.name as class_name, c.section as class_section 
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                WHERE s.student_id = ? AND s.status = 'active'
             ");
             $stmt->execute([$studentId]);
             $student = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -475,6 +477,34 @@ class StudentModel extends BaseModel {
     }
 
     /**
+     * Get student by ID with class information
+     * @param int $id The student ID
+     * @return array|false The student with class information or false if not found
+     */
+    public function findByIdWithClassInfo($id) {
+        try {
+            $query = "SELECT s.*, c.name as class_name, c.section as class_section
+                     FROM students s
+                     LEFT JOIN classes c ON s.current_class_id = c.id
+                     WHERE s.id = :id
+                     LIMIT 1";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute(['id' => $id]);
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error getting student by ID with class info: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Find student by user_id
      * @param int $userId User ID to search for
      * @return array|false Student data or false if not found
@@ -505,7 +535,7 @@ class StudentModel extends BaseModel {
     public function getStudentsBasicInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.status, c.name as class_name
+                SELECT s.id, s.student_id, s.first_name, s.last_name, s.email, s.status, s.current_class_id, c.name as class_name
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 WHERE s.status = 'active'

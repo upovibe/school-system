@@ -73,7 +73,7 @@ class StudentManagementPage extends App {
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -522,7 +522,7 @@ class StudentManagementPage extends App {
             student_id: student.student_id || 'N/A',
             name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
             email: student.email || 'N/A',
-            class_name: student.class_name || 'N/A',
+            class_name: student.class_name && student.class_section ? `${student.class_name}(${student.class_section})` : (student.class_name || 'N/A'),
             student_type: student.student_type || 'Day',
             phone: student.phone || 'N/A',
             status: student.status === 'active' ? 'Active' : 'Inactive',
@@ -579,7 +579,7 @@ class StudentManagementPage extends App {
             student_id: student.student_id || 'N/A',
             name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
             email: student.email || 'N/A',
-            class_name: student.class_name || 'N/A',
+            class_name: student.class_name && student.class_section ? `${student.class_name}(${student.class_section})` : (student.class_name || 'N/A'),
             student_type: student.student_type || 'Day',
             phone: student.phone || 'N/A',
             status: student.status === 'active' ? 'Active' : 'Inactive',

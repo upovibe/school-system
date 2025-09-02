@@ -105,7 +105,7 @@ class TeacherStudentGradesPage extends App {
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
               <div class="flex items-center">
                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -183,7 +183,51 @@ class TeacherStudentGradesPage extends App {
     this.addEventListener('student-grade-deleted', (event) => {
       const deletedId = event.detail.gradeId;
       const current = this.get('grades') || [];
-      this.set('grades', current.filter(g => g.id !== deletedId));
+      
+      // Find the deleted grade to get the student_id
+      const deletedGrade = current.find(g => g.id === deletedId);
+      
+      if (deletedGrade) {
+        // Remove the specific grade record
+        const updatedGrades = current.filter(g => g.id !== deletedId);
+        
+        // If this was the only grade for this student, convert them back to a "new" entry
+        const studentHasOtherGrades = updatedGrades.some(g => 
+          g.student_id === deletedGrade.student_id && 
+          g.id !== null && 
+          g.id !== deletedId
+        );
+        
+        if (!studentHasOtherGrades) {
+          // Convert the student back to a "new" entry (no grades yet)
+          const newEntry = {
+            id: null,
+            student_id: deletedGrade.student_id,
+            student_first_name: deletedGrade.student_first_name,
+            student_last_name: deletedGrade.student_last_name,
+            student_number: deletedGrade.student_number,
+            class_id: deletedGrade.class_id,
+            class_name: deletedGrade.class_name,
+            class_section: deletedGrade.class_section,
+            subject_id: deletedGrade.subject_id,
+            subject_name: deletedGrade.subject_name,
+            grading_period_id: deletedGrade.grading_period_id,
+            grading_period_name: deletedGrade.grading_period_name,
+            assignment_total: null,
+            exam_total: null,
+            final_percentage: null,
+            final_letter_grade: null,
+            created_at: null,
+            updated_at: null,
+            is_new: true
+          };
+          
+          updatedGrades.push(newEntry);
+        }
+        
+        this.set('grades', updatedGrades);
+      }
+      
       this.render();
       this.set('showDeleteDialog', false);
     });
@@ -191,9 +235,8 @@ class TeacherStudentGradesPage extends App {
     this.addEventListener('student-grade-saved', (event) => {
       const newItem = event.detail.grade;
       if (newItem) {
-        const current = this.get('grades') || [];
-        this.set('grades', [newItem, ...current]);
-        this.render();
+        // Reload the grades to ensure proper data structure and table update
+        this.loadGrades();
         this.set('showAddModal', false);
       } else {
         this.loadGrades();
@@ -341,11 +384,18 @@ class TeacherStudentGradesPage extends App {
         this.set('filters', { ...existingFilters, subject_id: String(this.subjects[0].id) });
       }
 
-      // Default: preselect the first existing grading period - NOW THIS WILL WORK
+      // Default: preselect the first active grading period if available, otherwise first period
       if (!existingFilters.grading_period_id && (this.periods || []).length > 0) {
-        const firstPeriodId = String(this.periods[0].id);
-        const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
-        this.set('filters', next);
+        const firstActivePeriod = this.periods.find(p => p.is_active === true || p.is_active === 1);
+        if (firstActivePeriod) {
+          const firstActivePeriodId = String(firstActivePeriod.id);
+          const next = { ...this.get('filters'), grading_period_id: firstActivePeriodId };
+          this.set('filters', next);
+        } else {
+          const firstPeriodId = String(this.periods[0].id);
+          const next = { ...this.get('filters'), grading_period_id: firstPeriodId };
+          this.set('filters', next);
+        }
       }
 
       // Initial load if we have class
@@ -477,7 +527,12 @@ class TeacherStudentGradesPage extends App {
       const modal = this.querySelector('teacher-student-grade-add-modal');
       if (modal) {
         const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
-        const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
+        const filterData = { 
+          subject_id: filters.subject_id, 
+          grading_period_id: filters.grading_period_id, 
+          class_id: this.teacherClass?.class_id
+          // No student_id here - user will need to select from dropdown
+        };
         modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
         modal.open?.();
       }
@@ -496,7 +551,12 @@ class TeacherStudentGradesPage extends App {
           const modal = this.querySelector('teacher-student-grade-add-modal');
           if (modal) {
             const filters = this.get('filters') || {};
-            const filterData = { subject_id: filters.subject_id, grading_period_id: filters.grading_period_id, class_id: this.teacherClass?.class_id };
+            const filterData = { 
+              subject_id: filters.subject_id, 
+              grading_period_id: filters.grading_period_id, 
+              class_id: this.teacherClass?.class_id,
+              student_id: row.student_id // Pass the student_id from the row
+            };
             modal.setFilterPrefill(filterData, { subjects: this.subjects, periods: this.periods, classes: [{ id: this.teacherClass?.class_id, name: this.teacherClass?.class_name, section: this.teacherClass?.class_section }], students: this.students });
             modal.open?.();
           }
@@ -526,7 +586,10 @@ class TeacherStudentGradesPage extends App {
     }
 
     const subjectOptions = (this.subjects || []).map(s => `<ui-option value="${s.id}">${s.name}</ui-option>`).join('');
-    const periodOptions = (this.periods || []).map(p => `<ui-option value="${p.id}">${p.name}</ui-option>`).join('');
+    const periodOptions = (this.periods || []).map(p => {
+      const isActive = p.is_active === true || p.is_active === 1; // Check if is_active is true or 1
+      return `<ui-option value="${p.id}" ${!isActive ? 'disabled' : ''}>${p.name}${!isActive ? ' (Inactive)' : ''}</ui-option>`;
+    }).join('');
 
     const filters = this.get('filters') || { subject_id: '', grading_period_id: '' };
     const { subject_id, grading_period_id } = filters;
@@ -652,8 +715,8 @@ class TeacherStudentGradesPage extends App {
             pagination
             page-size="50"
             action
+            actions="view, delete"
             refresh
-            print
             bordered
             striped
             custom-actions='${JSON.stringify(this.getCustomActions())}'

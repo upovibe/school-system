@@ -21,6 +21,7 @@ class TeacherClassesSubjectsPage extends App {
     constructor() {
         super();
         this.scheduleData = null;
+        this.timetableResources = {}; // Store timetable resources for each class
         this.loading = true;
         this.error = null;
         this.showStudentModal = false;
@@ -52,6 +53,9 @@ class TeacherClassesSubjectsPage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-teacher-classes-subjects-info') {
             this.showTeacherClassesSubjectsInfo();
+        } else if (action === 'download-timetable') {
+            const classId = button.getAttribute('data-class-id');
+            this.downloadTimetable(classId);
         }
     }
 
@@ -69,6 +73,7 @@ class TeacherClassesSubjectsPage extends App {
                     <div class="flex justify-between"><span class="text-sm font-medium">Classes</span><span class="text-sm text-gray-600">Your teaching classes</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Subjects</span><span class="text-sm text-gray-600">Taught per class</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Students</span><span class="text-sm text-gray-600">View class students and details</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">Timetable</span><span class="text-sm text-gray-600">Download class timetables</span></div>
                 </div>
             </div>
             <div slot="footer" class="flex justify-end">
@@ -94,6 +99,13 @@ class TeacherClassesSubjectsPage extends App {
             
             if (response.data && response.data.success) {
                 this.set('scheduleData', response.data.data);
+                
+                // Load timetable resources for each class
+                if (response.data.data.assignments) {
+                    for (const assignment of response.data.data.assignments) {
+                        await this.loadTimetableResources(assignment.class_id);
+                    }
+                }
             } else {
                 this.set('error', 'Failed to load schedule data');
             }
@@ -106,6 +118,42 @@ class TeacherClassesSubjectsPage extends App {
             }
         } finally {
             this.set('loading', false);
+        }
+    }
+
+    async loadTimetableResources(classId) {
+        try {
+            const response = await api.get(`/timetable-resources/class/${classId}`);
+            if (response.data && response.data.success) {
+                this.set(`timetableResources.${classId}`, response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error loading timetable resources for class:', classId, error);
+            // Don't set error for timetable resources, just log it
+        }
+    }
+
+    downloadTimetable(classId) {
+        const resources = this.get(`timetableResources.${classId}`);
+        if (!resources || resources.length === 0) {
+            // Show alert that no timetable is available
+            const alert = document.createElement('ui-alert');
+            alert.setAttribute('variant', 'info');
+            alert.setAttribute('title', 'No Timetable Available');
+            alert.setAttribute('message', 'No timetable resources are currently available for this class.');
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+            return;
+        }
+
+        // Get the most recent timetable resource
+        const latestResource = resources[0]; // Already sorted by created_at DESC
+        
+        if (latestResource.attachment_file) {
+            // Download the file using the same method as admin
+            const token = localStorage.getItem('token');
+            const fileUrl = `/api/uploads/timetable-resources/${latestResource.attachment_file.split('/').pop()}?token=${token}`;
+            window.open(fileUrl, '_blank');
         }
     }
 
@@ -155,8 +203,6 @@ class TeacherClassesSubjectsPage extends App {
             this.openAssignmentModal(classId, subjectId);
         }
     }
-
-
 
     // Refresh data method
     async refreshData() {
@@ -285,18 +331,21 @@ class TeacherClassesSubjectsPage extends App {
                 </div>
 
                 <!-- Enhanced Classes and Subjects -->
-                ${assignments.map((assignment, index) => `
+                ${assignments.map((assignment, index) => {
+                    const timetableResources = this.get(`timetableResources.${assignment.class_id}`) || [];
+                    return `
                     <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl overflow-hidden border border-gray-100 my-5">
                         <!-- Class Header with Enhanced Design -->
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-5 border-b border-gray-200">
-                                <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
+                            <div class="flex flex-col md:flex-row items-center justify-between">
+                                <div class="flex items-start sm:items-center space-x-3 sm:space-x-4 mr-auto">
                                     <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-chalkboard text-white text-lg sm:text-xl"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <h2 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                                             ${assignment.class_name}-${assignment.class_section}
-                                </h2>
+                                        </h2>
                                         <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm">
                                             <span class="flex items-center">
                                                 <i class="fas fa-calendar mr-1"></i>
@@ -304,6 +353,28 @@ class TeacherClassesSubjectsPage extends App {
                                             </span>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <!-- Timetable Download Section -->
+                                <div class="flex flex-col items-start ml-auto space-y-2 mt-4 md:mt-0">
+                                    <div class="text-sm font-medium text-gray-700">Class Timetable</div>
+                                    ${timetableResources && timetableResources.length > 0 ? `
+                                        <button 
+                                            data-action="download-timetable"
+                                            data-class-id="${assignment.class_id}"
+                                            class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                            title="Download Timetable"
+                                        >
+                                            <i class="fas fa-download mr-2"></i>
+                                            Download
+                                        </button>
+                                    ` : `
+                                        <div class="inline-flex items-center px-3 py-1.5 bg-gray-300 text-gray-600 text-sm font-medium rounded-lg">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            Not available
+                                        </div>
+                                    `}
+                                </div>
                             </div>
                         </div>
 
@@ -396,7 +467,7 @@ class TeacherClassesSubjectsPage extends App {
                              </div>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
             
             <!-- Student Information Modal -->

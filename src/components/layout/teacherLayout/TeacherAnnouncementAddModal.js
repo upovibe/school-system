@@ -260,18 +260,18 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             // Class teacher can target both students and class members
             const studentsOption = document.createElement('ui-option');
             studentsOption.setAttribute('value', 'students');
-            studentsOption.textContent = 'Students Only';
+            studentsOption.textContent = 'My Class Students';
             targetAudienceDropdown.appendChild(studentsOption);
 
             const classMembersOption = document.createElement('ui-option');
             classMembersOption.setAttribute('value', 'specific_class');
-            classMembersOption.textContent = 'Class Members';
+            classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
         } else if (teacherType === 'subject') {
             // Subject teacher can only target class members (must select specific class)
             const classMembersOption = document.createElement('ui-option');
             classMembersOption.setAttribute('value', 'specific_class');
-            classMembersOption.textContent = 'Class Members';
+            classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
         }
 

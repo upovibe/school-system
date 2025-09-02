@@ -373,8 +373,8 @@ class TimetableResourceViewDialog extends HTMLElement {
                  </div>
                  </div>
                 
-                                 <div slot="footer" class="flex justify-end gap-2">
-                     <ui-button color="secondary" modal-action="cancel">Close</ui-button>
+                  <div slot="footer" class="flex justify-end gap-2">
+                     <ui-button color="secondary" dialog-action="cancel">Close</ui-button>
                  </div>
             </ui-dialog>
         `;

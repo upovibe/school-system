@@ -230,7 +230,7 @@ class CashierReceiptViewModal extends App {
           </div>
         </div>
         <div slot="footer" class="flex items-center justify-end gap-2">
-          <ui-button id="close-btn" variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
+          <ui-button id="close-btn" variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
           <ui-button id="print-btn" color="primary"><i class="fas fa-print mr-1"></i>Print</ui-button>
           <ui-button id="regen-btn" color="secondary"><i class="fas fa-sync mr-1"></i>Regenerate</ui-button>
         </div>

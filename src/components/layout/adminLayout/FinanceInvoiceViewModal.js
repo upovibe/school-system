@@ -1,5 +1,6 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Badge.js';
+import '@/components/ui/Button.js';
 
 class FinanceInvoiceViewModal extends HTMLElement {
   constructor() {
@@ -148,6 +149,7 @@ class FinanceInvoiceViewModal extends HTMLElement {
             </div>
           </div>
         </div>
+        ` : ''}
         
         <div slot="footer" class="flex justify-end">
           <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
@@ -159,6 +161,3 @@ class FinanceInvoiceViewModal extends HTMLElement {
 
 customElements.define('finance-invoice-view-modal', FinanceInvoiceViewModal);
 export default FinanceInvoiceViewModal;
-
-
-

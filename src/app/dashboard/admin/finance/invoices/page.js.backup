@@ -7,19 +7,28 @@ import '@/components/ui/Skeleton.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Button.js';
 import '@/components/layout/adminLayout/FinanceInvoiceAddModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceUpdateModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceViewModal.js';
+import '@/components/layout/adminLayout/FinanceInvoiceDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
- * Admin Finance: Fee Invoices Management Page
+ * Finance: Fee Invoices Management Page
+ * Updated: Fixed syntax errors
  */
 class FinanceInvoicesPage extends App {
   constructor() {
     super();
     this.invoices = null;
     this.students = [];
-    this.classes = [];
     this.loading = false;
     this.showAddModal = false;
+    this.showUpdateModal = false;
+    this.showViewModal = false;
+    this.showDeleteDialog = false;
+    this.updateInvoiceData = null;
+    this.viewInvoiceData = null;
+    this.deleteInvoiceData = null;
     this.filters = { academic_year: '', status: '', grading_period: '' };
   }
 
@@ -158,9 +167,10 @@ class FinanceInvoicesPage extends App {
     document.title = 'Fee Invoices | School System';
     this.loadData();
     this.addEventListener('click', this.handleHeaderActions.bind(this));
-    
-    // Event listeners for table actions - view, add, and refresh
+
     this.addEventListener('table-view', this.onView.bind(this));
+    this.addEventListener('table-edit', this.onEdit.bind(this));
+    this.addEventListener('table-delete', this.onDelete.bind(this));
     this.addEventListener('table-add', this.onAdd.bind(this));
     this.addEventListener('table-refresh', () => this.loadData());
 
@@ -169,11 +179,17 @@ class FinanceInvoicesPage extends App {
       const dd = e.target.closest('ui-search-dropdown');
       if (!dd) return;
       
+      // Only close modals if this dropdown is in the filters section (not in a modal)
       const isInFilters = dd.closest('.bg-gray-100');
       if (isInFilters) {
-        const name = dd.getAttribute('name');
-        if (!name) return;
-        
+        this.closeAllModals();
+      }
+      
+      const name = dd.getAttribute('name');
+      if (!name) return;
+      
+      // Only update filters if this dropdown is in the filters section
+      if (isInFilters) {
         const next = { ...this.get('filters'), [name]: dd.value };
         this.set('filters', next);
         
@@ -186,6 +202,7 @@ class FinanceInvoicesPage extends App {
       const clearBtn = e.target.closest('[data-action="clear-filters"]');
       if (clearBtn) {
         e.preventDefault();
+        this.closeAllModals();
         const defaults = { academic_year: '', status: '', grading_period: '' };
         this.set('filters', defaults);
         // Reset table to show all data
@@ -199,6 +216,14 @@ class FinanceInvoicesPage extends App {
       }
     });
 
+    this.addEventListener('invoice-deleted', (event) => {
+      const id = event.detail.id;
+      const current = this.get('invoices') || [];
+      this.set('invoices', current.filter((i) => String(i.id) !== String(id)));
+      this.render();
+      this.set('showDeleteDialog', false);
+    });
+
     this.addEventListener('invoice-saved', (event) => {
       const newInv = event.detail.invoice;
       if (newInv) {
@@ -207,6 +232,18 @@ class FinanceInvoicesPage extends App {
         this.set('invoices', updated);
         this.render();
         this.set('showAddModal', false);
+      } else {
+        this.loadData();
+      }
+    });
+
+    this.addEventListener('invoice-updated', (event) => {
+      const updated = event.detail.invoice;
+      if (updated) {
+        const current = this.get('invoices') || [];
+        this.set('invoices', current.map((i) => (String(i.id) === String(updated.id) ? updated : i)));
+        this.render();
+        this.set('showUpdateModal', false);
       } else {
         this.loadData();
       }
@@ -233,11 +270,11 @@ class FinanceInvoicesPage extends App {
       <div slot="content" class="space-y-4">
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
-          <p class="text-gray-700">View and track student fee invoices. Totals and balances reflect payments and receipts.</p>
+          <p class="text-gray-700">Create and track student fee invoices. Totals and balances reflect payments and receipts.</p>
         </div>
         <div class="bg-gray-50 rounded-lg p-4 space-y-3">
           <div class="flex justify-between">
-            <span class="text-sm font-medium">Academic Year & Grading Period</span>
+            <span class="text-sm font-medium">Academic Year & Term</span>
             <span class="text-sm text-gray-600">Billing period context</span>
           </div>
           <div class="flex justify-between">
@@ -266,7 +303,7 @@ class FinanceInvoicesPage extends App {
       return;
     }
 
-    // Load invoices using admin finance API
+    // Load invoices first
     try {
       const resp = await api.withToken(token).get('/finance/invoices');
       this.set('invoices', (resp.data?.data) || []);
@@ -343,67 +380,47 @@ class FinanceInvoicesPage extends App {
   onView(event) {
     const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
     if (item) {
-      // Simple view - just show the data in a dialog
-      const dialog = document.createElement('ui-dialog');
-      dialog.setAttribute('open', '');
-      dialog.innerHTML = `
-        <div slot="header" class="flex items-center">
-          <i class="fas fa-file-invoice-dollar text-indigo-500 mr-2"></i>
-          <span class="font-semibold">Invoice Details</span>
-        </div>
-        <div slot="content" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-600">Student</label>
-              <p class="text-gray-900">${this.studentDisplay(item.student_id)}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Invoice Number</label>
-              <p class="text-gray-900">${item.invoice_number || 'N/A'}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Academic Year</label>
-              <p class="text-gray-900">${item.academic_year || 'N/A'}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Grading Period</label>
-              <p class="text-gray-900">${item.grading_period || 'N/A'}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Amount Due</label>
-              <p class="text-gray-900">$${Number(item.amount_due).toFixed(2)}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Amount Paid</label>
-              <p class="text-gray-900">$${Number(item.amount_paid).toFixed(2)}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Balance</label>
-              <p class="text-gray-900">$${Number(item.balance).toFixed(2)}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Status</label>
-              <p class="text-gray-900">${(item.status || '').toString()}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Issue Date</label>
-              <p class="text-gray-900">${item.issue_date || 'N/A'}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Updated</label>
-              <p class="text-gray-900">${item.updated_at || 'N/A'}</p>
-            </div>
-          </div>
-        </div>
-        <div slot="footer" class="flex justify-end">
-          <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Close</ui-button>
-        </div>
-      `;
-      document.body.appendChild(dialog);
+      this.closeAllModals();
+      this.set('viewInvoiceData', item);
+      this.set('showViewModal', true);
+      setTimeout(() => {
+        const modal = this.querySelector('finance-invoice-view-modal');
+        if (modal) modal.setInvoiceData({ ...item, studentDisplay: this.studentDisplay(item.student_id) });
+      }, 0);
+    }
+  }
+
+  onEdit(event) {
+    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
+    if (item) {
+      this.closeAllModals();
+      this.set('updateInvoiceData', item);
+      this.set('showUpdateModal', true);
+      setTimeout(() => {
+        const modal = this.querySelector('finance-invoice-update-modal');
+        if (modal) {
+          modal.setStudents(this.students);
+          modal.setInvoiceData(item);
+        }
+      }, 0);
+    }
+  }
+
+  onDelete(event) {
+    const item = (this.get('invoices') || []).find((i) => String(i.id) === String(event.detail.row.id));
+    if (item) {
+      this.closeAllModals();
+      this.set('deleteInvoiceData', item);
+      this.set('showDeleteDialog', true);
+      setTimeout(() => {
+        const dlg = this.querySelector('finance-invoice-delete-dialog');
+        if (dlg) dlg.setInvoiceData(item);
+      }, 0);
     }
   }
 
   onAdd() {
+    this.closeAllModals();
     this.set('showAddModal', true);
     setTimeout(() => {
       const modal = this.querySelector('finance-invoice-add-modal');
@@ -414,10 +431,28 @@ class FinanceInvoicesPage extends App {
     }, 0);
   }
 
+  clearFilters() {
+    this.set('filters', { academic_year: '', status: '', grading_period: '' });
+    this.render(); // Just re-render with cleared filters
+  }
+
+  closeAllModals() {
+    this.set('showAddModal', false);
+    this.set('showUpdateModal', false);
+    this.set('showViewModal', false);
+    this.set('showDeleteDialog', false);
+    this.set('updateInvoiceData', null);
+    this.set('viewInvoiceData', null);
+    this.set('deleteInvoiceData', null);
+  }
+
   render() {
     const invoices = this.get('invoices');
     const loading = this.get('loading');
     const showAddModal = this.get('showAddModal');
+    const showUpdateModal = this.get('showUpdateModal');
+    const showViewModal = this.get('showViewModal');
+    const showDeleteDialog = this.get('showDeleteDialog');
     const filters = this.get('filters') || {};
 
     // Apply filters to get the data that should be displayed
@@ -484,7 +519,6 @@ class FinanceInvoicesPage extends App {
               page-size="50"
               action
               addable
-              actions="view"
               refresh
               print
               bordered
@@ -496,6 +530,9 @@ class FinanceInvoicesPage extends App {
       </div>
 
       <finance-invoice-add-modal ${showAddModal ? 'open' : ''}></finance-invoice-add-modal>
+      <finance-invoice-update-modal ${showUpdateModal ? 'open' : ''}></finance-invoice-update-modal>
+      <finance-invoice-view-modal ${showViewModal ? 'open' : ''}></finance-invoice-view-modal>
+      <finance-invoice-delete-dialog ${showDeleteDialog ? 'open' : ''}></finance-invoice-delete-dialog>
     `;
   }
 }

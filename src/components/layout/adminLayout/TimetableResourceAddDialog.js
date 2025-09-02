@@ -197,7 +197,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                 <div slot="content" class="space-y-4">
                     <form id="resource-form" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title <span class="text-red-500">*</span></label></label>
                             <ui-input 
                                 data-field="title"
                                 type="text" 
@@ -207,7 +207,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
                             <ui-search-dropdown 
                                 data-field="class_id"
                                 placeholder="Search and select a class"
@@ -221,7 +221,7 @@ class TimetableResourceAddDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"

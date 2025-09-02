@@ -300,7 +300,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                 <div slot="content" class="space-y-4">
                     <form id="resource-update-form" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Resource Title <span class="text-red-500">*</span></label>
                             <ui-input 
                                 data-field="title"
                                 type="text" 
@@ -311,7 +311,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
                             ${this.classesLoading ? `
                                 <div class="w-full h-8 bg-gray-200 rounded-md animate-pulse"></div>
                             ` : `
@@ -330,7 +330,7 @@ class TimetableResourceUpdateDialog extends HTMLElement {
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
                             <ui-file-upload 
                                 data-field="file"
                                 max-files="1"

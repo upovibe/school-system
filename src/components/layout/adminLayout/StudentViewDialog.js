@@ -24,13 +24,15 @@ class StudentViewDialog extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'open' && oldValue !== newValue) {
+        if (name === 'open' && oldValue !== newValue && this.studentData) {
             this.render();
         }
     }
 
     connectedCallback() {
-        this.render();
+        if (this.studentData) {
+            this.render();
+        }
         this.setupEventListeners();
     }
 
@@ -70,6 +72,12 @@ class StudentViewDialog extends HTMLElement {
     }
 
     render() {
+        if (!this.studentData) {
+            // Don't render anything if no data is available
+            this.innerHTML = '';
+            return;
+        }
+
         this.innerHTML = `
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 

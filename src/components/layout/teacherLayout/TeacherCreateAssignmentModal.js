@@ -37,32 +37,18 @@ class TeacherCreateAssignmentModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEventListeners();
-        // Initial validation state
-        this.validateForm();
     }
 
     setupEventListeners() {
+        // Listen for confirm button click (Create Assignment)
+        this.addEventListener('confirm', () => {
+            this.createAssignment();
+        });
+        
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
         });
-        
-        // Add form event listeners for real-time validation
-        this.addEventListener('input', this.onFormInputChange.bind(this));
-        this.addEventListener('change', this.onFormInputChange.bind(this));
-        
-        // Add click event listener for create button
-        this.addEventListener('click', (event) => {
-            if (event.target.matches('#create-assignment-btn')) {
-                this.createAssignment();
-            }
-        });
-    }
-
-    // Handle form input changes for real-time validation
-    onFormInputChange(event) {
-        // Validate form whenever any input changes
-        this.validateForm();
     }
 
 
@@ -132,33 +118,9 @@ class TeacherCreateAssignmentModal extends HTMLElement {
 
 
 
-    // Validate form and toggle Create button
+    // Validate form (simplified - no real-time validation)
     validateForm() {
-        try {
-            const titleInput = this.querySelector('ui-input[data-field="title"]');
-            const descriptionWysiwyg = this.querySelector('ui-wysiwyg[data-field="description"]');
-            const dueDateInput = this.querySelector('ui-input[data-field="due_date"]');
-            const dueTimeInput = this.querySelector('ui-input[data-field="due_time"]');
-            const totalPointsInput = this.querySelector('ui-input[data-field="total_points"]');
-            const createBtn = this.querySelector('#create-assignment-btn');
-            
-            const title = titleInput ? String(titleInput.value || '').trim() : '';
-            const description = descriptionWysiwyg ? String(descriptionWysiwyg.value || '').trim() : '';
-            const dueDate = dueDateInput ? dueDateInput.value : '';
-            const dueTime = dueTimeInput ? dueTimeInput.value : '';
-            const totalPoints = totalPointsInput ? totalPointsInput.value : '';
-            
-            // All fields are required
-            const isValid = !!title && !!description && !!dueDate && !!dueTime && !!totalPoints;
-            
-            if (createBtn) {
-                if (isValid) {
-                    createBtn.removeAttribute('disabled');
-                } else {
-                    createBtn.setAttribute('disabled', '');
-                }
-            }
-        } catch (_) { /* noop */ }
+        // We'll validate when submitting instead
     }
 
     // Create assignment
@@ -428,19 +390,15 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Attachment (Optional)
                             </label>
-                            <ui-file-upload 
-                                data-field="attachment"
-                                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
-                                placeholder="Upload assignment file">
-                            </ui-file-upload>
+                                                         <ui-file-upload 
+                                 data-field="attachment"
+                                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                                 placeholder="Upload assignment file">
+                             </ui-file-upload>
                         </div>
-                    </form>
+                        
 
-                    <!-- Footer with Create Button -->
-                    <div slot="footer" class="flex items-center justify-end gap-2">
-                        <ui-button variant="outline" color="secondary" modal-action="cancel">Cancel</ui-button>
-                        <ui-button id="create-assignment-btn" color="primary" disabled>Create Assignment</ui-button>
-                    </div>
+                    </form>
             </ui-modal>
         `;
     }

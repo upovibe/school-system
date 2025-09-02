@@ -363,7 +363,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                                      Assignment Type
+                                      Assignment Type <span class="text-red-500">*</span>
                                   </label>
                                   <ui-dropdown data-field="assignment_type" value="homework">
                                       <ui-option value="homework" selected>Homework</ui-option>
@@ -376,7 +376,7 @@ class TeacherCreateAssignmentModal extends HTMLElement {
                               
                               <div>
                                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                                      Status
+                                      Status <span class="text-red-500">*</span>
                                   </label>
                                   <ui-dropdown data-field="status" value="published">
                                       <ui-option value="draft">Draft</ui-option>

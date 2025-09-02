@@ -103,7 +103,7 @@ class StudentModel extends BaseModel {
     public function getStudentsWithClassInfo() {
         try {
             $stmt = $this->pdo->prepare("
-                SELECT s.*, c.name as class_name
+                SELECT s.*, c.name as class_name, c.section as class_section
                 FROM {$this->getTableName()} s
                 LEFT JOIN classes c ON s.current_class_id = c.id
                 ORDER BY s.first_name ASC, s.last_name ASC

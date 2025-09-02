@@ -547,7 +547,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
         <div slot="title">Add Fee Invoice</div>
         <form class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
               ${(this._classes || []).map(c => `
                 <ui-option value="${c.id}">${c.name}${c.section ? ' ' + c.section : ''}</ui-option>
@@ -555,7 +555,7 @@ class FinanceInvoiceAddModal extends HTMLElement {
             </ui-search-dropdown>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Student *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="student_id" placeholder="Select class first" class="w-full" disabled>
               <ui-option value="">Select a class first</ui-option>
             </ui-search-dropdown>
@@ -563,31 +563,31 @@ class FinanceInvoiceAddModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year <span class="text-red-500">*</span></label>
               <ui-input data-field="academic_year" type="text" placeholder="Auto-filled from class" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Grading Period <span class="text-red-500">*</span></label>
               <ui-input data-field="grading_period" type="text" placeholder="e.g., First Term" class="w-full" readonly></ui-input>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text sm font-medium text-gray-700 mb-1">Amount Due *</label>
+              <label class="block text sm font-medium text-gray-700 mb-1">Amount Due <span class="text-red-500">*</span></label>
               <ui-input data-field="amount_due" type="number" step="0.01" placeholder="e.g., 1500.00" class="w-full" readonly></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid <span class="text-red-500">*</span></label>
               <ui-input data-field="amount_paid" type="number" step="0.01" placeholder="0.00" class="w-full" required></ui-input>
             </div>           
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date <span class="text-red-500">*</span></label>
               <ui-input data-field="issue_date" type="date" class="w-full" max="${new Date().toISOString().split('T')[0]}"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Due Date <span class="text-red-500">*</span></label>
               <ui-input data-field="due_date" type="date" class="w-full"></ui-input>
             </div>
           </div>

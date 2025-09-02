@@ -366,20 +366,20 @@ class FinancePaymentAddModal extends HTMLElement {
         <form class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Class <span class="text-red-500">*</span></label>
               <ui-search-dropdown name="class_id" placeholder="Select class" class="w-full">
                 ${(this._classes || []).map(c => `<ui-option value="${c.id}">${c.name}${c.section ? ' (' + c.section + ')' : ''}</ui-option>`).join('')}
               </ui-search-dropdown>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Student <span class="text-red-500">*</span></label>
               <ui-search-dropdown name="student_id" placeholder="Select student" class="w-full">
                 <ui-option value="">Select class first</ui-option>
               </ui-search-dropdown>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="invoice_id" placeholder="Select invoice or leave empty to create new" class="w-full">
               <ui-option value="">No invoice selected - will create new</ui-option>
             </ui-search-dropdown>
@@ -390,16 +390,16 @@ class FinancePaymentAddModal extends HTMLElement {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount <span class="text-red-500">*</span></label>
               <ui-input data-field="amount" type="number" step="0.01" placeholder="0.00" class="w-full"></ui-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Paid On</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Paid On <span class="text-red-500">*</span></label>
               <ui-input data-field="paid_on" type="date" value="${today}" min="${today}" class="w-full"></ui-input>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Method <span class="text-red-500">*</span></label>
             <ui-search-dropdown name="method" placeholder="Select method" class="w-full">
               <ui-option value="Cash">Cash</ui-option>
               <ui-option value="Bank">Bank</ui-option>
@@ -408,11 +408,11 @@ class FinancePaymentAddModal extends HTMLElement {
             </ui-search-dropdown>
           </div>
             <div>
-               <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+               <label class="block text-sm font-medium text-gray-700 mb-1">Reference <span class="text-red-500">*</span></label>
                <ui-input data-field="reference" type="text" value="Payment reference" placeholder="e.g., Receipt #12345, Bank Transfer ID, or leave empty" class="w-full"></ui-input>
              </div>
              <div>
-               <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+               <label class="block text-sm font-medium text-gray-700 mb-1">Notes <span class="text-red-500">*</span></label>
                <ui-input data-field="notes" type="text" value="Payment received" placeholder="e.g., First term payment, Partial payment, or leave empty" class="w-full"></ui-input>
              </div>
         </form>

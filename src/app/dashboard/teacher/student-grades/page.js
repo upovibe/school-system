@@ -715,6 +715,7 @@ class TeacherStudentGradesPage extends App {
             pagination
             page-size="50"
             action
+            actions="view, delete"
             refresh
             bordered
             striped

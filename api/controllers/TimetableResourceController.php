@@ -335,13 +335,22 @@ class TimetableResourceController {
     }
 
     /**
-     * Download timetable resource file (no authentication required)
+     * Download timetable resource file
+     * Handles both ID-based and filename-based downloads
      */
-    public function download($id) {
+    public function download($idOrFilename) {
         try {
             ob_clean();
             
-            $resource = $this->timetableResourceModel->findById($id);
+            // Check if it's a filename (contains a dot) or an ID
+            if (strpos($idOrFilename, '.') !== false) {
+                // It's a filename - find resource by filename
+                $resource = $this->timetableResourceModel->findByFilename($idOrFilename);
+            } else {
+                // It's an ID - find resource by ID
+                $resource = $this->timetableResourceModel->findById($idOrFilename);
+            }
+            
             if (!$resource) {
                 http_response_code(404);
                 echo json_encode([
@@ -360,8 +369,9 @@ class TimetableResourceController {
                 return;
             }
             
-            // Download the file
-            downloadTimetableResourceFile($resource['attachment_file'], $resource['title']);
+            // Download the file - use the actual filename, not the title
+            $actualFilename = basename($resource['attachment_file']);
+            downloadTimetableResourceFile($resource['attachment_file'], $actualFilename);
             
         } catch (Exception $e) {
             http_response_code(500);

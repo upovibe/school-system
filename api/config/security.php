@@ -23,7 +23,7 @@ return [
     
     // URI validation patterns
     'uri_validation' => [
-        'pattern' => '/^[a-zA-Z0-9\/\-_]+$/',
+        'pattern' => '/^[a-zA-Z0-9\/\-_.]+$/',
         'max_length' => 255
     ],
     

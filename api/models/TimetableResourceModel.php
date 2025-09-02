@@ -159,5 +159,32 @@ class TimetableResourceModel extends BaseModel {
         }
     }
     
+    /**
+     * Find timetable resource by filename
+     */
+    public function findByFilename($filename) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT tr.*, c.name as class_name, c.section as class_section,
+                       u.name as creator_name, u.email as creator_email
+                FROM {$this->getTableName()} tr
+                LEFT JOIN classes c ON tr.class_id = c.id
+                LEFT JOIN users u ON tr.created_by = u.id
+                WHERE tr.attachment_file LIKE ?
+                LIMIT 1
+            ");
+            $stmt->execute(['%' . $filename]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error finding timetable resource by filename: ' . $e->getMessage());
+        }
+    }
+    
 }
 ?>

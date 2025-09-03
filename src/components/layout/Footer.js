@@ -268,7 +268,7 @@ class Footer extends App {
                                     School Portal
                                 </a>
                                 <a href="https://www.mailindeed.com/webmail/" class="block text-sm text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300">
-                                    Staff Email
+                                    Staff mail
                                 </a>
                             </div>
                         </div>

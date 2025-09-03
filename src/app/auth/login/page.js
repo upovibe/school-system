@@ -20,6 +20,7 @@ class LoginPage extends App {
             password: '',
             rememberMe: false
         };
+        this.schoolLogo = null;
     }
 
     connectedCallback() {
@@ -28,6 +29,9 @@ class LoginPage extends App {
         
         // Check if user is already authenticated and redirect if so
         this.checkAuthenticationAndRedirect();
+        
+        // Load school logo
+        this.loadSchoolLogo();
     }
     
     /**
@@ -52,6 +56,22 @@ class LoginPage extends App {
             // If there's an error parsing user data, clear it and show login
             localStorage.removeItem('userData');
             localStorage.removeItem('token');
+        }
+    }
+
+    /**
+     * Load school logo from settings
+     */
+    async loadSchoolLogo() {
+        try {
+            const response = await api.get('/settings/key/application_logo');
+            if (response.data.success && response.data.data.setting_value) {
+                this.schoolLogo = response.data.data.setting_value;
+                this.render(); // Re-render to show the logo
+            }
+        } catch (error) {
+            console.warn('School logo not found, using default icon');
+            // Keep schoolLogo as null to show default icon
         }
     }
 
@@ -217,7 +237,11 @@ class LoginPage extends App {
                     <!-- Logo/Icon Section -->
                     <div class="text-center mb-6">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200" onclick="window.location.href='/'">
-                            <i class="fas fa-lock text-white text-2xl"></i>
+                            ${this.schoolLogo ? 
+                                `<img src="/api/${this.schoolLogo}" alt="School Logo" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                 <i class="fas fa-lock text-white text-2xl hidden"></i>` :
+                                `<i class="fas fa-lock text-white text-2xl"></i>`
+                            }
                         </div>
                         <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
                             Welcome Back

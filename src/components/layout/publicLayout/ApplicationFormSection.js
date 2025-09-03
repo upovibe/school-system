@@ -12,6 +12,21 @@ import '@/components/common/PageLoader.js';
  * Accepts a 'settings' attribute (JSON string) for school_logo and school_name.
  */
 class ApplicationFormSection extends App {
+    constructor() {
+        super();
+        this.formData = {
+            student_first_name: '',
+            student_last_name: '',
+            parent_phone: '',
+            student_phone: '',
+            email: '',
+            grade: '',
+            father_name: '',
+            mother_name: '',
+            guardian_name: ''
+        };
+    }
+
     connectedCallback() {
         super.connectedCallback();
         this.loadDataFromProps();
@@ -231,10 +246,9 @@ class ApplicationFormSection extends App {
                     const result = await res.json();
                     if (result.success) {
                         Toast.show({ title: 'Success', message: 'Application submitted successfully!', variant: 'success', duration: 4000 });
-                        form.reset();
-                        // Reset ui-dropdown
-                        const gradeDropdown = this.querySelector('ui-dropdown[name="grade"]');
-                        if (gradeDropdown) gradeDropdown.value = '';
+                        
+                        // Clear all form fields
+                        this.clearForm();
                     } else {
                         Toast.show({ title: 'Error', message: result.error || 'Failed to submit application.', variant: 'error', duration: 4000 });
                     }
@@ -256,6 +270,43 @@ class ApplicationFormSection extends App {
         const gradeDropdown = this.querySelector('ui-dropdown[name="grade"]');
         if (gradeDropdown) data.grade = gradeDropdown.value;
         return data;
+    }
+
+    clearForm() {
+        const form = this.querySelector('form');
+        if (!form) return;
+        
+        // Reset all regular input fields
+        Array.from(form.elements).forEach(el => {
+            if (el.name && el.tagName !== 'UI-DROPDOWN') {
+                el.value = '';
+            }
+        });
+        
+        // Reset ui-dropdown
+        const gradeDropdown = this.querySelector('ui-dropdown[name="grade"]');
+        if (gradeDropdown) {
+            gradeDropdown.value = '';
+        }
+        
+        // Reset all ui-input fields explicitly
+        const uiInputs = this.querySelectorAll('ui-input');
+        uiInputs.forEach(input => {
+            input.value = '';
+        });
+        
+        // Reset form data object
+        this.formData = {
+            student_first_name: '',
+            student_last_name: '',
+            parent_phone: '',
+            student_phone: '',
+            email: '',
+            grade: '',
+            father_name: '',
+            mother_name: '',
+            guardian_name: ''
+        };
     }
 
     render() {

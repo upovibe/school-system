@@ -247,7 +247,7 @@ class TeacherAssignmentSeeder
                 'teacher_id' => 'T250811014'
             ],
             
-            // FRENCH Assignments for P1-P3 - T250811015 (Yaa Lartey) teaches French
+            // FRENCH Assignments for P1-P6 - T250811015 (Yaa Lartey) teaches French
             [
                 'class_name' => 'P 1',
                 'section' => 'A',
@@ -266,8 +266,26 @@ class TeacherAssignmentSeeder
                 'subject_code' => 'FRENCH',
                 'teacher_id' => 'T250811015'
             ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
             
-            // GHA_LANG Assignments for P1-P4 - T250811016 (Nana Nkrumah) teaches Ghanaian Language
+            // GHA_LANG Assignments for P1-P6 - T250811016 (Nana Nkrumah) teaches Ghanaian Language
             [
                 'class_name' => 'P 1',
                 'section' => 'A',
@@ -292,8 +310,20 @@ class TeacherAssignmentSeeder
                 'subject_code' => 'GHA_LANG',
                 'teacher_id' => 'T250811016'
             ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
             
-            // COMPUTING Assignments for P1-P3 - T250811013 (Aba Johnson) teaches Computing
+            // COMPUTING Assignments for P1-P6 - T250811013 (Aba Johnson) teaches Computing
             [
                 'class_name' => 'P 1',
                 'section' => 'A',
@@ -308,6 +338,24 @@ class TeacherAssignmentSeeder
             ],
             [
                 'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'P 6',
                 'section' => 'A',
                 'subject_code' => 'COMPUTING',
                 'teacher_id' => 'T250811013'
@@ -393,4 +441,4 @@ class TeacherAssignmentSeeder
         echo "✅ Assigned teacher {$teacherId} to {$className} Section {$section} - {$subjectCode}\n";
     }
 }
-?>
+?> 

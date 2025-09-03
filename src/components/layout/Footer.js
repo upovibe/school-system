@@ -226,7 +226,8 @@ class Footer extends App {
                             </nav>
                         </div>
 
-                        <!-- Contact Information -->
+                        <div class="flex flex-col gap--5">
+                            <!-- Contact Information -->
                         <div class="lg:col-span-1">
                             <h3 class="text-lg font-bold text-[${secondaryColor}] mb-4">Contact Info</h3>
                             <div class="space-y-3">
@@ -257,6 +258,17 @@ class Footer extends App {
                                     </div>
                                 ` : ''}
                             </div>
+                        </div>
+
+                        <!-- Portal -->
+                        <div class="lg:col-span-1 mt-5">
+                            <h3 class="text-lg font-bold text-[${secondaryColor}] mb-4">Portal Login</h3>
+                            <div class="space-y-3">
+                                <a href="/auth/login" class="block text-sm text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300">
+                                    Login
+                                </a>
+                            </div>
+                        </div>
                         </div>
 
                         <!-- Social Media & Apply -->

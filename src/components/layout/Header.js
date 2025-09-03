@@ -370,14 +370,10 @@
               <div class="hidden lg:flex flex-col text-sm text-[${primaryColor}] space-y-1">
                 <!-- Action Buttons - Desktop -->
                 <div class="hidden lg:flex items-center space-x-3">
-                   <a href="/public/admissions" class="inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${hoverSecondary}] focus:outline-none focus:ring-2 focus:ring-[${hoverSecondary}] focus:ring-offset-2 transition-all duration-300 text-base">
+                   <a href="/public/apply" class="inline-flex items-center justify-center px-6 py-2 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${hoverSecondary}] focus:outline-none focus:ring-2 focus:ring-[${hoverSecondary}] focus:ring-offset-2 transition-all duration-300 text-base">
                      <span class="mr-2">Apply Now</span>
                      <i class="fas fa-arrow-right-long transition-transform duration-300"></i>
                    </a>
-                  <a href="/auth/login" class="inline-flex items-center justify-center px-6 py-2 bg-[${primaryColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${accentColor}] focus:outline-none focus:ring-2 focus:ring-[${accentColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
-                    <span class="mr-2">Login</span>
-                    <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform duration-300"></i>
-                  </a>
                 </div>
               </div>
 
@@ -450,14 +446,11 @@
 
               <!-- Mobile Action Buttons -->
               <div class="flex flex-col items-center justify-center space-y-3 w-full border-b border-[${textColor}] pb-4">
-                                 <a href="/public/admissions" class="w-full inline-flex items-center justify-center px-6 py-3 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${hoverSecondary}] focus:outline-none focus:ring-2 focus:ring-[${hoverSecondary}] focus:ring-offset-2 transition-all duration-300 text-base group">
+                                 <a href="/public/apply" class="w-full inline-flex items-center justify-center px-6 py-3 bg-[${accentColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${hoverSecondary}] focus:outline-none focus:ring-2 focus:ring-[${hoverSecondary}] focus:ring-offset-2 transition-all duration-300 text-base group">
                   <span class="mr-2">Apply Now</span>
                   <i class="fas fa-arrow-right-long group-hover:translate-x-1 transition-transform duration-300"></i>
                 </a>
-                <a href="/auth/login" class="w-full inline-flex items-center justify-center px-6 py-3 bg-[${primaryColor}] text-white font-bold rounded-full shadow-lg hover:bg-[${accentColor}] focus:outline-none focus:ring-2 focus:ring-[${accentColor}] focus:ring-offset-2 transition-all duration-300 text-base group">
-                  <span class="mr-2">Login</span>
-                  <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform duration-300"></i>
-                </a>
+
               </div>
 
               <!-- Mobile Navigation -->

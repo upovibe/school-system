@@ -363,7 +363,7 @@
 
               <!-- Logo - Left side -->
               <ui-link href="/" class="flex items-center">
-                <img class="w-40 lg:w-auto max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
+                <img class="h-12 lg:h-16 w-auto" src="${this.get('logoUrl')}" alt="School Logo" />
               </ui-link>
 
               <!-- Contact Information - Hidden on mobile -->
@@ -414,7 +414,7 @@
           <div data-mobile-menu class="fixed inset-0 bg-[${primaryColor}] z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">
             <!-- Mobile Header -->
             <div class="flex items-center justify-between p-4 border-b border-[${primaryColor}]">
-              <img class="lg:w-auto w-40 max-w-none" src="${this.get('logoUrl')}" alt="School Logo" />
+              <img class="h-12 w-auto" src="${this.get('logoUrl')}" alt="School Logo" />
               <button data-mobile-toggle class="text-[${textColor}] size-8 rounded-md">
                 <i class="fas fa-times"></i>
               </button>

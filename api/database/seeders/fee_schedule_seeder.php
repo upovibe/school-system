@@ -34,25 +34,17 @@ class FeeScheduleSeeder
             return;
         }
         
-        // Just create 2 fee schedules for demonstration
+        // Create fee schedules for ALL classes
         $inserted = 0;
         
-        // Create 1 fee schedule for the first class
-        if (!empty($classes)) {
-            $firstClass = $classes[0];
-            $inserted += $this->seedClassFeeSchedules($firstClass, $academicYearId, 1); // Only create 1
-        }
-        
-        // Create 1 fee schedule for the second class (if exists)
-        if (count($classes) > 1) {
-            $secondClass = $classes[1];
-            $inserted += $this->seedClassFeeSchedules($secondClass, $academicYearId, 1); // Only create 1
+        foreach ($classes as $class) {
+            $inserted += $this->seedClassFeeSchedules($class, $academicYearId);
         }
         
         echo "📊 Total fee schedules seeded: {$inserted}\n";
     }
     
-    private function seedClassFeeSchedules($class, $academicYearId, $limit = null) {
+    private function seedClassFeeSchedules($class, $academicYearId) {
         $inserted = 0;
         
         // Get grading periods from the database
@@ -62,7 +54,7 @@ class FeeScheduleSeeder
             return 0;
         }
         
-        // Define student types
+        // Define student types - both Day and Boarding
         $studentTypes = ['Day', 'Boarding'];
         
         // Base fees for different class levels (in Ghana Cedis)
@@ -70,11 +62,6 @@ class FeeScheduleSeeder
         
         foreach ($gradingPeriods as $gradingPeriod) {
             foreach ($studentTypes as $studentType) {
-                // Check if we've reached the limit
-                if ($limit !== null && $inserted >= $limit) {
-                    break 2; // Break out of both loops
-                }
-                
                 // Calculate fee based on class level and student type
                 $totalFee = $this->calculateFee($baseFees, $studentType, $gradingPeriod['name']);
                 
@@ -86,7 +73,7 @@ class FeeScheduleSeeder
             }
         }
         
-        echo "✅ Added {$inserted} fee schedules for {$class['name']} Section {$class['section']}\n";
+        echo "✅ Added {$inserted} fee schedules for {$class['name']} Section {$class['section']} (Day & Boarding)\n";
         return $inserted;
     }
     
@@ -144,9 +131,12 @@ class FeeScheduleSeeder
             return false;
         }
         
+        // Generate notes based on grading period and student type
+        $notes = $this->generateFeeNotes($gradingPeriod, $studentType);
+        
         $stmt = $this->pdo->prepare('
-            INSERT INTO fee_schedules (class_id, academic_year, grading_period, student_type, total_fee, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())
+            INSERT INTO fee_schedules (class_id, academic_year, grading_period, student_type, total_fee, notes, is_active, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
         ');
         
         $stmt->execute([
@@ -154,7 +144,8 @@ class FeeScheduleSeeder
             $academicYear,
             $gradingPeriod,
             $studentType,
-            $totalFee
+            $totalFee,
+            $notes
         ]);
         
         return true;
@@ -193,6 +184,32 @@ class FeeScheduleSeeder
         $stmt = $this->pdo->prepare('SELECT id, name FROM grading_periods WHERE is_active = 1 ORDER BY id ASC');
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    private function generateFeeNotes($gradingPeriod, $studentType) {
+        $notes = "Tuition, library, computer lab, sports";
+        
+        // Add grading period specific note
+        switch ($gradingPeriod) {
+            case 'First Term':
+                $notes .= ", books, uniform, registration";
+                break;
+            case 'Second Term':
+                $notes .= ", assessments, projects";
+                break;
+            case 'Third Term':
+                $notes .= ", exams, reports";
+                break;
+        }
+        
+        // Add student type specific note
+        if ($studentType === 'Boarding') {
+            $notes .= ", accommodation, meals, laundry";
+        } else {
+            $notes .= ", day facilities";
+        }
+        
+        return $notes;
     }
     
     private function getClassAcademicYear($classId) {

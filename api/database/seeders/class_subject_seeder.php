@@ -31,120 +31,138 @@ class ClassSubjectSeeder
         $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $classSubjectAssignments = [
-            // Kindergarten (KG1-KG2) - Basic subjects
+            // Kindergarten (KG1-KG2) - KG-specific subjects
             'KG 1' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'LANG_LIT',      // Language & Literacy
+                'NUMERACY',      // Numeracy
+                'ENV_STUDIES',   // Environmental Studies (Our World Our People)
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PHYS_DEV',      // Physical Development, Health & Safety
+                'RME',           // Religious & Moral Education
+                'ICT'            // ICT
             ],
             
             'KG 2' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'LANG_LIT',      // Language & Literacy
+                'NUMERACY',      // Numeracy
+                'ENV_STUDIES',   // Environmental Studies (Our World Our People)
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PHYS_DEV',      // Physical Development, Health & Safety
+                'RME',           // Religious & Moral Education
+                'ICT'            // ICT
             ],
             
-            // Primary School (P1-P6) - Core subjects
+            // Primary School (P1-P6) - Primary subjects
             'P 1' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
             'P 2' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
             'P 3' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
             'P 4' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'SCIENCE',       // Science (introduced formally from Basic 4)
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
             'P 5' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'SCIENCE',       // Science
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
             'P 6' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE'          // Physical Education
+                'ENG',           // English Language
+                'GHA_LANG',      // Ghanaian Language
+                'MATH',          // Mathematics
+                'SCIENCE',       // Science
+                'OWOP',          // Our World Our People
+                'RME',           // Religious & Moral Education
+                'CREATIVE_ARTS', // Creative Arts & Design
+                'PE',            // Physical Education
+                'COMPUTING'      // Computing (ICT)
             ],
             
-            // Junior High School (JHS1-JHS3) - Core + ICT
+            // Junior High School (JHS1-JHS3) - JHS subjects
             'JHS 1' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE',         // Physical Education
-                'ICT'         // Information and Communication Technology
+                'ENG',            // English Language
+                'GHA_LANG',       // Ghanaian Language
+                'MATH',           // Mathematics
+                'INTEGRATED_SCI', // Integrated Science
+                'SOC_STUDIES',    // Social Studies
+                'RME',            // Religious & Moral Education
+                'CAREER_TECH',    // Career Technology
+                'CREATIVE_ARTS',  // Creative Arts & Design
+                'COMPUTING',      // Computing (ICT)
+                'PE',             // Physical Education
+                'FRENCH'          // French (optional)
             ],
             
             'JHS 2' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE',         // Physical Education
-                'ICT'         // Information and Communication Technology
+                'ENG',            // English Language
+                'GHA_LANG',       // Ghanaian Language
+                'MATH',           // Mathematics
+                'INTEGRATED_SCI', // Integrated Science
+                'SOC_STUDIES',    // Social Studies
+                'RME',            // Religious & Moral Education
+                'CAREER_TECH',    // Career Technology
+                'CREATIVE_ARTS',  // Creative Arts & Design
+                'COMPUTING',      // Computing (ICT)
+                'PE',             // Physical Education
+                'FRENCH'          // French (optional)
             ],
             
             'JHS 3' => [
-                'ENG',        // English Language
-                'MATH',       // Mathematics
-                'SCI',        // Integrated Science
-                'SOC',        // Social Studies
-                'RME',        // Religious and Moral Education
-                'ART',        // Creative Arts
-                'PE',         // Physical Education
-                'ICT'         // Information and Communication Technology
+                'ENG',            // English Language
+                'GHA_LANG',       // Ghanaian Language
+                'MATH',           // Mathematics
+                'INTEGRATED_SCI', // Integrated Science
+                'SOC_STUDIES',    // Social Studies
+                'RME',            // Religious & Moral Education
+                'CAREER_TECH',    // Career Technology
+                'CREATIVE_ARTS',  // Creative Arts & Design
+                'COMPUTING',      // Computing (ICT)
+                'PE',             // Physical Education
+                'FRENCH'          // French (optional)
             ]
         ];
         

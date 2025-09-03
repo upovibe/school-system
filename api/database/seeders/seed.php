@@ -202,37 +202,12 @@ class Seed {
     }
     
     private function assignStudentsToClasses() {
-        echo "👨‍🎓 Assigning students to classes...\n";
+        echo "👨‍🎓 Students already assigned to correct classes during creation...\n";
+        echo "📊 Skipping reassignment to preserve correct class distribution\n";
         
-        // Get all students
-        $stmt = $this->pdo->prepare('SELECT id, student_id, first_name, last_name FROM students WHERE status = "active"');
-        $stmt->execute();
-        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get JHS 1 classes
-        $stmt = $this->pdo->prepare('SELECT id, name, section FROM classes WHERE name = "JHS 1" AND status = "active"');
-        $stmt->execute();
-        $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        if (empty($classes)) {
-            echo "⚠️  No JHS 1 classes found for student assignment\n";
-            return;
-        }
-        
-        $classIndex = 0;
-        foreach ($students as $student) {
-            $class = $classes[$classIndex % count($classes)];
-            
-            // Update student's current class
-            $stmt = $this->pdo->prepare('UPDATE students SET current_class_id = ? WHERE id = ?');
-            $stmt->execute([$class['id'], $student['id']]);
-            
-            echo "✅ Assigned {$student['first_name']} {$student['last_name']} ({$student['student_id']}) to {$class['name']} Section {$class['section']}\n";
-            
-            $classIndex++;
-        }
-        
-        echo "📊 Total students assigned to classes: " . count($students) . "\n";
+        // This method is disabled because students are already assigned to correct classes
+        // during the student creation process. The previous implementation was overriding
+        // all students to JHS 1, which was incorrect.
     }
     
     private function seedGradingSystem() {

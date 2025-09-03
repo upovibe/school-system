@@ -34,7 +34,7 @@ class TeacherStudentPersonalInformation extends HTMLElement {
         this.addEventListener('confirm', () => {
             this.close();
         });
-        
+
         // Listen for cancel button click
         this.addEventListener('cancel', () => {
             this.close();
@@ -191,6 +191,9 @@ class TeacherStudentPersonalInformation extends HTMLElement {
                         </div>
                     `}
                 </div>
+                        <div slot="footer" class="flex justify-end">
+          <ui-button variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
+        </div>
             </ui-modal>
         `;
     }

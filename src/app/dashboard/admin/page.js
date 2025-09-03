@@ -945,7 +945,15 @@ class AdminDashboardPage extends App {
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                         <div>
+                        <div class="flex items-center gap-2">
                             <h1 class="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
+                            <button 
+                                onclick="this.closest('app-admin-dashboard-page').loadData()"
+                                class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
+                                title="Refresh data">
+                                <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
+                            </button>
+                        </div>
                             <p class="text-blue-100 text-lg mt-2">Welcome back, <!-- <span class="font-semibold">${userName}</span></p>-->
                             <p class="text-blue-100 text-sm mt-1">
                                 <i class="fas fa-calendar-alt mr-1"></i>

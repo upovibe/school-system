@@ -41,6 +41,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     this.updateDropdownDisplay();
                 }, 50);
             }
+            // Reset target audience dropdown to prevent flash
+            const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+            if (targetAudienceDropdown) {
+                targetAudienceDropdown.value = '';
+                targetAudienceDropdown.setAttribute('placeholder', 'Loading target audience options...');
+            }
         }
     }
 
@@ -60,6 +66,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // Reset target audience dropdown to prevent flash
+        const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+        if (targetAudienceDropdown) {
+            targetAudienceDropdown.value = '';
+            targetAudienceDropdown.setAttribute('placeholder', 'Loading target audience options...');
+        }
         // Ensure dropdown displays the correct text when modal opens
         if (this.isClassTeacher && this.teacherClass) {
             setTimeout(() => {
@@ -222,16 +234,22 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         if (targetAudienceDropdown) {
             if (this.isClassTeacher) {
                 // Class teacher can target their assigned class
-                targetAudienceDropdown.value = 'specific_class';
-                this.showTargetClassField();
-                this.updateHelpText('class');
                 this.updateTargetAudienceOptions('class');
+                // Set value after options are populated
+                setTimeout(() => {
+                    targetAudienceDropdown.value = 'specific_class';
+                    this.showTargetClassField();
+                    this.updateHelpText('class');
+                }, 10);
             } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
                 // Subject teacher can target classes where they teach
-                targetAudienceDropdown.value = 'specific_class';
-                this.showTargetClassField();
-                this.updateHelpText('subject');
                 this.updateTargetAudienceOptions('subject');
+                // Set value after options are populated
+                setTimeout(() => {
+                    targetAudienceDropdown.value = 'specific_class';
+                    this.showTargetClassField();
+                    this.updateHelpText('subject');
+                }, 10);
             }
         }
     }
@@ -253,8 +271,10 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
         if (!targetAudienceDropdown) return;
 
-        // Clear existing options
+        // Clear existing options and reset value
         targetAudienceDropdown.innerHTML = '';
+        targetAudienceDropdown.value = '';
+        targetAudienceDropdown.setAttribute('placeholder', 'Select target audience...');
 
         if (teacherType === 'class') {
             // Class teacher can target both students and class members
@@ -274,9 +294,6 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
         }
-
-        // Set the default value
-        targetAudienceDropdown.value = 'specific_class';
     }
 
     // Show target class field and populate with teacher's class
@@ -559,7 +576,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience <span class="text-red-500">*</span></label>
-                        <ui-search-dropdown data-field="target_audience" value="specific_class" placeholder="Loading target audience options...">
+                        <ui-search-dropdown data-field="target_audience" placeholder="Loading target audience options...">
                             <ui-option value="">Loading...</ui-option>
                             <!-- Options will be set dynamically based on teacher type -->
                         </ui-search-dropdown>

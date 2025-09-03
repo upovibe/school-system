@@ -51,13 +51,14 @@ class UserSeeder
             'password_changed' => true,
             'role_id' => $adminRole['id'],
             'status' => 'active',
+            'gender' => 'male',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
         $stmt->execute([
@@ -68,6 +69,7 @@ class UserSeeder
             $adminUser['password_changed'],
             $adminRole['id'],
             $adminUser['status'],
+            $adminUser['gender'],
             $adminUser['created_at'],
             $adminUser['updated_at']
         ]);
@@ -108,13 +110,14 @@ class UserSeeder
             'password_changed' => true,
             'role_id' => $adminRole['id'],
             'status' => 'active',
+            'gender' => 'female',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
         $stmt->execute([
@@ -125,6 +128,7 @@ class UserSeeder
             $adminUser['password_changed'],
             $adminRole['id'],
             $adminUser['status'],
+            $adminUser['gender'],
             $adminUser['created_at'],
             $adminUser['updated_at']
         ]);
@@ -167,13 +171,14 @@ class UserSeeder
             'password_changed' => true,
             'role_id' => $cashierRole['id'],
             'status' => 'active',
+            'gender' => 'female',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
         $stmt->execute([
@@ -184,6 +189,7 @@ class UserSeeder
             $cashierUser['password_changed'],
             $cashierRole['id'],
             $cashierUser['status'],
+            $cashierUser['gender'],
             $cashierUser['created_at'],
             $cashierUser['updated_at']
         ]);
@@ -224,13 +230,14 @@ class UserSeeder
             'password_changed' => true,
             'role_id' => $cashierRole['id'],
             'status' => 'active',
+            'gender' => 'male',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         
         $stmt->execute([
@@ -241,6 +248,7 @@ class UserSeeder
             $cashierUser['password_changed'],
             $cashierRole['id'],
             $cashierUser['status'],
+            $cashierUser['gender'],
             $cashierUser['created_at'],
             $cashierUser['updated_at']
         ]);

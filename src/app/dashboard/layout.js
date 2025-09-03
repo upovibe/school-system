@@ -365,6 +365,12 @@ class DashboardLayout extends App {
                     ]
                 },
                 {
+                    group: 'Finance',
+                    items: [
+                        { label: 'My Payments', icon: 'fas fa-credit-card', href: '/dashboard/student/finance' },
+                    ]
+                },
+                {
                     group: 'Communication',
                     items: [
                         { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/student/announcements' },
@@ -488,7 +494,9 @@ class DashboardLayout extends App {
             'payment-scheduler': 'Payment Scheduler',
             'invoices': 'Invoices',
             'payment': 'Payment',
-            'receipts': 'Receipts'
+            'receipts': 'Receipts',
+            // Student specific
+            'finance': 'My Payments'
         };
         return titles[lastSegment] || 'Dashboard';
     }

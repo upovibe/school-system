@@ -359,6 +359,120 @@ class TeacherAssignmentSeeder
                 'section' => 'A',
                 'subject_code' => 'COMPUTING',
                 'teacher_id' => 'T250811013'
+            ],
+            
+            // P 4 Assignments - Class Teacher (T250811008 - Kwame Appiah) teaches remaining subjects
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811008'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811008'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811008'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811008'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811008'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'SCIENCE',
+                'teacher_id' => 'T250811008'
+            ],
+            
+            // P 5 Assignments - Class Teacher (T250811009 - Afia Darko) teaches remaining subjects
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811009'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811009'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811009'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811009'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811009'
+            ],
+            [
+                'class_name' => 'P 5',
+                'section' => 'A',
+                'subject_code' => 'SCIENCE',
+                'teacher_id' => 'T250811009'
+            ],
+            
+            // P 6 Assignments - Class Teacher (T250811010 - Yaw Frimpong) teaches remaining subjects
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811010'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811010'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811010'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811010'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811010'
+            ],
+            [
+                'class_name' => 'P 6',
+                'section' => 'A',
+                'subject_code' => 'SCIENCE',
+                'teacher_id' => 'T250811010'
             ]
         ];
         

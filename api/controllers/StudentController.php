@@ -1695,15 +1695,26 @@ class StudentController {
         // Get class teacher information
         $teacherName = 'No Class Teacher';
         try {
-            require_once __DIR__ . '/../models/TeacherAssignmentModel.php';
-            $teacherAssignmentModel = new TeacherAssignmentModel($this->pdo);
+            // Get the actual class teacher (teacher assigned to this class)
+            $stmt = $this->pdo->prepare("
+                SELECT first_name, last_name, gender 
+                FROM teachers 
+                WHERE class_id = ? AND status = 'active'
+                LIMIT 1
+            ");
+            $stmt->execute([$class['id']]);
+            $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // Get the first teacher assignment for this class (any subject)
-            $assignments = $teacherAssignmentModel->getWithDetails(['class_id' => $class['id']]);
-            
-            if (!empty($assignments)) {
-                $firstAssignment = $assignments[0];
-                $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+            if ($classTeacher) {
+                // Add appropriate title based on gender
+                $title = '';
+                if (strtolower($classTeacher['gender']) === 'male') {
+                    $title = 'Sir ';
+                } elseif (strtolower($classTeacher['gender']) === 'female') {
+                    $title = 'Madam ';
+                }
+                
+                $teacherName = $title . $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
             }
         } catch (Exception $e) {
             // If there's an error, keep the default value

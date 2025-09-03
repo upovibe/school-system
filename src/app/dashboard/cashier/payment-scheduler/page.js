@@ -22,7 +22,7 @@ class CashierPaymentSchedulerPage extends App {
     this.loading = false;
     this.showViewModal = false;
     this.viewScheduleData = null;
-    this.filters = { class_id: '', academic_year: '', term: '', student_type: '' };
+    this.filters = { class_id: '', academic_year: '', grading_period: '', student_type: '' };
   }
 
   // Header counts
@@ -38,8 +38,8 @@ class CashierPaymentSchedulerPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
     }
-    if (filters.term && filters.term !== '') {
-      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    if (filters.grading_period && filters.grading_period !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.grading_period) === String(filters.grading_period));
     }
     if (filters.student_type && filters.student_type !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
@@ -144,15 +144,15 @@ class CashierPaymentSchedulerPage extends App {
     // Get unique academic years and terms from schedules data - filter out null/empty values
     const schedules = this.get('schedules') || [];
     const academicYears = [...new Set(schedules.map(s => s.academic_year).filter(year => year && year !== null && year !== ''))].sort().reverse();
-    const terms = [...new Set(schedules.map(s => s.term).filter(term => term && term !== null && term !== ''))].sort();
+    const gradingPeriods = [...new Set(schedules.map(s => s.grading_period).filter(gp => gp && gp !== null && gp !== ''))].sort();
     const studentTypes = [...new Set(schedules.map(s => s.student_type).filter(type => type && type !== null && type !== ''))].sort();
     
     const academicYearOptions = academicYears.map(year => `<ui-option value="${year}">${year}</ui-option>`).join('');
-    const termOptions = terms.map(term => `<ui-option value="${term}">${term}</ui-option>`).join('');
+    const gradingPeriodOptions = gradingPeriods.map(gp => `<ui-option value="${gp}">${gp}</ui-option>`).join('');
     const studentTypeOptions = studentTypes.map(type => `<ui-option value="${type}">${type}</ui-option>`).join('');
 
-    const filters = this.get('filters') || { class_id: '', academic_year: '', term: '', student_type: '' };
-    const { class_id, academic_year, term, student_type } = filters;
+    const filters = this.get('filters') || { class_id: '', academic_year: '', grading_period: '', student_type: '' };
+    const { class_id, academic_year, grading_period, student_type } = filters;
     
     return `
       <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
@@ -170,9 +170,9 @@ class CashierPaymentSchedulerPage extends App {
             </ui-search-dropdown>
           </div>
           <div>
-            <label class="block text-xs text-gray-600 mb-1">Term</label>
-            <ui-search-dropdown name="term" placeholder="Select term" class="w-full" value="${term || ''}">
-              ${termOptions}
+            <label class="block text-xs text-gray-600 mb-1">Grading Period</label>
+            <ui-search-dropdown name="grading_period" placeholder="Select grading period" class="w-full" value="${grading_period || ''}">
+              ${gradingPeriodOptions}
             </ui-search-dropdown>
           </div>
           <div>
@@ -229,7 +229,7 @@ class CashierPaymentSchedulerPage extends App {
       if (clearBtn) {
         e.preventDefault();
         this.closeAllModals();
-        const defaults = { class_id: '', academic_year: '', term: '', student_type: '' };
+        const defaults = { class_id: '', academic_year: '', grading_period: '', student_type: '' };
         this.set('filters', defaults);
         // Reset table to show all data
         this.render();
@@ -287,8 +287,8 @@ class CashierPaymentSchedulerPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       filteredCount = schedules.filter(s => String(s.academic_year) === String(filters.academic_year)).length;
     }
-    if (filters.term && filters.term !== '') {
-      filteredCount = schedules.filter(s => String(s.term) === String(filters.term)).length;
+    if (filters.grading_period && filters.grading_period !== '') {
+      filteredCount = schedules.filter(s => String(s.grading_period) === String(filters.grading_period)).length;
     }
     if (filters.student_type && filters.student_type !== '') {
       filteredCount = schedules.filter(s => String(s.student_type) === String(filters.student_type)).length;
@@ -406,8 +406,8 @@ class CashierPaymentSchedulerPage extends App {
     if (filters.academic_year && filters.academic_year !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.academic_year) === String(filters.academic_year));
     }
-    if (filters.term && filters.term !== '') {
-      displaySchedules = displaySchedules.filter(s => String(s.term) === String(filters.term));
+    if (filters.grading_period && filters.grading_period !== '') {
+      displaySchedules = displaySchedules.filter(s => String(s.grading_period) === String(filters.grading_period));
     }
     if (filters.student_type && filters.student_type !== '') {
       displaySchedules = displaySchedules.filter(s => String(s.student_type) === String(filters.student_type));
@@ -423,7 +423,7 @@ class CashierPaymentSchedulerPage extends App {
         index: i + 1,
         class: classDisplay,
         academic_year: s.academic_year,
-        term: s.term,
+        grading_period: s.grading_period,
         student_type: s.student_type || 'Day',
         total_fee: Number(s.total_fee).toFixed(2),
         status: (Number(s.is_active) === 1 ? 'Active' : 'Inactive'),
@@ -437,7 +437,7 @@ class CashierPaymentSchedulerPage extends App {
       { key: 'index', label: 'No.' },
       { key: 'class', label: 'Class' },
       { key: 'academic_year', label: 'Academic Year' },
-      { key: 'term', label: 'Term' },
+      { key: 'grading_period', label: 'Grading Period' },
       { key: 'student_type', label: 'Type' },
       { key: 'total_fee', label: 'Total Fee' },
       { key: 'status', label: 'Status' },

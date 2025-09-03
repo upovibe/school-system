@@ -67,7 +67,7 @@ class UserSeeder
             $adminUser['phone'],
             $adminUser['password'],
             $adminUser['password_changed'],
-            $adminRole['id'],
+            $adminUser['role_id'],
             $adminUser['status'],
             $adminUser['gender'],
             $adminUser['created_at'],

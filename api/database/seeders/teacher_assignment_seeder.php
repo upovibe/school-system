@@ -473,6 +473,108 @@ class TeacherAssignmentSeeder
                 'section' => 'A',
                 'subject_code' => 'SCIENCE',
                 'teacher_id' => 'T250811010'
+            ],
+            
+            // JHS 1-3 Assignments - Subject Teachers for specialized subjects
+            
+            // INTEGRATED_SCIENCE Assignments for JHS1-JHS3 - T250811017 (Dr. Kwame Osei)
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'INTEGRATED_SCI',
+                'teacher_id' => 'T250811017'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'INTEGRATED_SCI',
+                'teacher_id' => 'T250811017'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'INTEGRATED_SCI',
+                'teacher_id' => 'T250811017'
+            ],
+            
+            // MATHEMATICS Assignments for JHS1-JHS3 - T250811018 (Dr. Abena Kwarteng)
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811018'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811018'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811018'
+            ],
+            
+            // FRENCH Assignments for JHS1-JHS3 - T250811019 (Ama Osei)
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811019'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811019'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811019'
+            ],
+            
+            // ENGLISH Assignments for JHS1-JHS3 - T250811020 (Kwame Mensah)
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811020'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811020'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811020'
+            ],
+            
+            // GHA_LANG Assignments for JHS1-JHS3 - T250811021 (Efua Gyasi)
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811021'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811021'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811021'
             ]
         ];
         

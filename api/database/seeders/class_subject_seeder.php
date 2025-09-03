@@ -95,7 +95,8 @@ class ClassSubjectSeeder
                 'RME',           // Religious & Moral Education
                 'CREATIVE_ARTS', // Creative Arts & Design
                 'PE',            // Physical Education
-                'COMPUTING'      // Computing (ICT)
+                'COMPUTING',     // Computing (ICT)
+                'FRENCH'         // French (P4-P6)
             ],
             
             'P 5' => [
@@ -107,7 +108,8 @@ class ClassSubjectSeeder
                 'RME',           // Religious & Moral Education
                 'CREATIVE_ARTS', // Creative Arts & Design
                 'PE',            // Physical Education
-                'COMPUTING'      // Computing (ICT)
+                'COMPUTING',     // Computing (ICT)
+                'FRENCH'         // French (P4-P6)
             ],
             
             'P 6' => [
@@ -119,7 +121,8 @@ class ClassSubjectSeeder
                 'RME',           // Religious & Moral Education
                 'CREATIVE_ARTS', // Creative Arts & Design
                 'PE',            // Physical Education
-                'COMPUTING'      // Computing (ICT)
+                'COMPUTING',     // Computing (ICT)
+                'FRENCH'         // French (P4-P6)
             ],
             
             // Junior High School (JHS1-JHS3) - JHS subjects

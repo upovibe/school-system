@@ -1,6 +1,6 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
-import PageLoader from '@/components/common/PageLoader.js';
+import '@/components/ui/ContentDisplay.js';
 import store from '@/core/store.js';
 import { setDocumentTitle } from '@/utils/appSettings.js';
 
@@ -203,11 +203,10 @@ class AnnouncementsPage extends App {
                 
                 <div class="bg-white p-6 rounded-md">
                     ${pageData.content ? `
-                        <div class="content-section">
-                            <div class="content-preview text-lg leading-relaxed">
-                                ${pageData.content}
-                            </div>
-                        </div>
+                        <content-display 
+                                content="${pageData.content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                        </content-display>
                     ` : `
                         <div class="text-center py-8">
                             <p class="text-gray-500 italic">No content available</p>

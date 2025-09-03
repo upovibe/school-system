@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 import '@/components/layout/publicLayout/NewsList.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * News Section Component
@@ -155,9 +156,10 @@ class NewsSection extends App {
                     <!-- Content Container -->
                     <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 flex-1 w-full">
                         <div class="p-5 lg:p-12">
-                            <div class="content-preview text-lg leading-relaxed">
-                                ${pageData.content}
-                            </div>
+                            <content-display 
+                                content="${pageData.content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                            </content-display>
                             
                             ${window.location.pathname !== '/public/community/news' ? `
                                 <div class="mt-8">

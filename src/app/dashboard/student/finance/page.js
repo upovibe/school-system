@@ -18,11 +18,13 @@ class StudentFinancePage extends App {
         this.currentUser = null;
         this.financeData = null;
         this.summaryData = null;
+        this.activeTab = 'invoices';
         // Initialize state
         this.set('loading', true);
         this.set('currentUser', null);
         this.set('financeData', null);
         this.set('summaryData', null);
+        this.set('activeTab', 'invoices');
     }
 
     connectedCallback() {
@@ -43,13 +45,28 @@ class StudentFinancePage extends App {
             case 'show-finance-help':
                 this.showFinanceHelp();
                 break;
+            case 'switch-tab':
+                const tab = button.getAttribute('data-tab');
+                this.switchTab(tab);
+                break;
         }
     }
 
     handleTableRowClick(event) {
         const { detail } = event;
-        const invoiceId = detail.row.id;
-        this.showInvoiceDetails(invoiceId);
+        const activeTab = this.get('activeTab');
+        
+        if (activeTab === 'invoices') {
+            const invoiceId = detail.row.id;
+            this.showInvoiceDetails(invoiceId);
+        } else if (activeTab === 'payments') {
+            const paymentId = detail.row.id;
+            this.showPaymentDetails(paymentId);
+        }
+    }
+
+    switchTab(tab) {
+        this.set('activeTab', tab);
     }
 
     async loadAll() {
@@ -93,6 +110,11 @@ class StudentFinancePage extends App {
     getFilteredInvoices() {
         const financeData = this.get('financeData');
         return financeData?.invoices || [];
+    }
+
+    getFilteredPayments() {
+        const financeData = this.get('financeData');
+        return financeData?.payments || [];
     }
 
     showInvoiceDetails(invoiceId) {
@@ -316,6 +338,20 @@ class StudentFinancePage extends App {
         }));
     }
 
+    preparePaymentTableData(payments) {
+        return payments.map(payment => ({
+            id: payment.id,
+            invoice_number: payment.invoice_number,
+            amount: `₵${parseFloat(payment.amount).toFixed(2)}`,
+            amount_raw: parseFloat(payment.amount),
+            method: payment.method?.charAt(0).toUpperCase() + payment.method?.slice(1) || 'Unknown',
+            paid_on: new Date(payment.paid_on).toLocaleDateString(),
+            academic_year: payment.academic_year,
+            grading_period: payment.grading_period,
+            receipt_number: payment.receipt_number || 'N/A'
+        }));
+    }
+
     getTableColumns() {
         return [
             {
@@ -372,6 +408,55 @@ class StudentFinancePage extends App {
         ];
     }
 
+    getPaymentTableColumns() {
+        return [
+            {
+                key: 'invoice_number',
+                label: 'Invoice Number',
+                sortable: true,
+                searchable: true
+            },
+            {
+                key: 'amount',
+                label: 'Amount Paid',
+                sortable: true,
+                align: 'right',
+                render: (value, row) => {
+                    return `<span class="text-green-600 font-medium">${value}</span>`;
+                }
+            },
+            {
+                key: 'method',
+                label: 'Payment Method',
+                sortable: true,
+                searchable: true
+            },
+            {
+                key: 'paid_on',
+                label: 'Payment Date',
+                sortable: true
+            },
+            {
+                key: 'academic_year',
+                label: 'Academic Year',
+                sortable: true,
+                searchable: true
+            },
+            {
+                key: 'grading_period',
+                label: 'Term',
+                sortable: true,
+                searchable: true
+            },
+            {
+                key: 'receipt_number',
+                label: 'Receipt Number',
+                sortable: true,
+                searchable: true
+            }
+        ];
+    }
+
     getStatusBadge(status) {
         const statusConfig = {
             'paid': 'bg-green-100 text-green-800',
@@ -392,9 +477,11 @@ class StudentFinancePage extends App {
         const currentUser = this.get('currentUser');
         const financeData = this.get('financeData');
         const summaryData = this.get('summaryData');
+        const activeTab = this.get('activeTab');
         
         const userName = currentUser?.name || currentUser?.first_name + ' ' + currentUser?.last_name || 'Student';
         const filteredInvoices = this.getFilteredInvoices();
+        const filteredPayments = this.getFilteredPayments();
 
         return `
             <div class="space-y-6">
@@ -509,33 +596,92 @@ class StudentFinancePage extends App {
 
 
 
-                    <!-- Invoices Table -->
-                    <div class="bg-white shadow rounded-lg p-6">
-                        ${filteredInvoices.length > 0 ? `
-                            <ui-table 
-                                title="My Invoices"
-                                data='${JSON.stringify(this.prepareTableData(filteredInvoices))}'
-                                columns='${JSON.stringify(this.getTableColumns())}'
-                                sortable
-                                searchable
-                                search-placeholder="Search invoices..."
-                                pagination
-                                page-size="10"
-                                bordered
-                                striped
-                                print
-                                refresh
-                                clickable
-                                row-clickable="true"
-                                class="w-full">
-                            </ui-table>
-                        ` : `
-                            <div class="p-8 text-center">
-                                <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
-                                <p class="text-gray-500">You have no invoices yet.</p>
-                            </div>
-                        `}
+                    <!-- Tabbed Table -->
+                    <div class="bg-white shadow rounded-lg">
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-8 px-6 pt-6" aria-label="Tabs">
+                                <button 
+                                    class="py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                        activeTab === 'invoices' 
+                                            ? 'border-blue-500 text-blue-600' 
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }"
+                                    data-action="switch-tab"
+                                    data-tab="invoices">
+                                    <i class="fas fa-file-invoice mr-2"></i>
+                                    Invoices (${filteredInvoices.length})
+                                </button>
+                                <button 
+                                    class="py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                        activeTab === 'payments' 
+                                            ? 'border-blue-500 text-blue-600' 
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }"
+                                    data-action="switch-tab"
+                                    data-tab="payments">
+                                    <i class="fas fa-credit-card mr-2"></i>
+                                    Payment History (${filteredPayments.length})
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="p-6">
+                            ${activeTab === 'invoices' ? `
+                                ${filteredInvoices.length > 0 ? `
+                                    <ui-table 
+                                        title=""
+                                        data='${JSON.stringify(this.prepareTableData(filteredInvoices))}'
+                                        columns='${JSON.stringify(this.getTableColumns())}'
+                                        sortable
+                                        searchable
+                                        search-placeholder="Search invoices..."
+                                        pagination
+                                        page-size="10"
+                                        bordered
+                                        striped
+                                        print
+                                        refresh
+                                        clickable
+                                        row-clickable="true"
+                                        class="w-full">
+                                    </ui-table>
+                                ` : `
+                                    <div class="p-8 text-center">
+                                        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
+                                        <p class="text-gray-500">You have no invoices yet.</p>
+                                    </div>
+                                `}
+                            ` : `
+                                ${filteredPayments.length > 0 ? `
+                                    <ui-table 
+                                        title=""
+                                        data='${JSON.stringify(this.preparePaymentTableData(filteredPayments))}'
+                                        columns='${JSON.stringify(this.getPaymentTableColumns())}'
+                                        sortable
+                                        searchable
+                                        search-placeholder="Search payments..."
+                                        pagination
+                                        page-size="10"
+                                        bordered
+                                        striped
+                                        print
+                                        refresh
+                                        clickable
+                                        row-clickable="true"
+                                        class="w-full">
+                                    </ui-table>
+                                ` : `
+                                    <div class="p-8 text-center">
+                                        <i class="fas fa-credit-card text-4xl text-gray-300 mb-4"></i>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
+                                        <p class="text-gray-500">You have no payment records yet.</p>
+                                    </div>
+                                `}
+                            `}
+                        </div>
                     </div>
                 ` : `
                     <!-- Loading State -->

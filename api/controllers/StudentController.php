@@ -1757,59 +1757,6 @@ class StudentController {
      */
     public function downloadAssignmentAttachment($filename) {
         try {
-            // Require student authentication
-            global $pdo;
-            require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
-            StudentMiddleware::requireStudent($pdo);
-            
-            $student = $_REQUEST['current_student'];
-            
-            // Check for token in Authorization header or query parameter
-            $headers = getallheaders();
-            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-            $token = null;
-            
-            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                $token = $matches[1];
-            } else {
-                // Fallback: check query parameter for token (for window.open requests)
-                $token = $_GET['token'] ?? null;
-            }
-            
-            if (!$token) {
-                http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Authentication token required'
-                ]);
-                return;
-            }
-            
-            // Validate token and get student
-            require_once __DIR__ . '/../models/UserSessionModel.php';
-            $userSessionModel = new UserSessionModel($pdo);
-            $session = $userSessionModel->findActiveSession($token);
-            
-            if (!$session) {
-                http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid or expired token'
-                ]);
-                return;
-            }
-            
-            // Check if user is a student
-            $studentFromToken = $this->studentModel->findByUserId($session['user_id']);
-            if (!$studentFromToken) {
-                http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Access denied. Students only.'
-                ]);
-                return;
-            }
-
             // Sanitize filename
             $filename = basename($filename);
 

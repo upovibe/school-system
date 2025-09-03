@@ -2108,6 +2108,115 @@ class StudentController {
     }
 
     /**
+     * Get student finance records (student only)
+     * Returns invoices, payments, and receipts for the authenticated student
+     */
+    public function getFinanceRecords() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            $student = $_REQUEST['current_student'];
+            
+            $studentId = $student['id'];
+            
+            // Get optional filters
+            $filters = [
+                'academic_year' => $_GET['academic_year'] ?? null,
+                'grading_period' => $_GET['grading_period'] ?? null,
+                'status' => $_GET['status'] ?? null
+            ];
+            
+            // Remove null values from filters
+            $filters = array_filter($filters, function($value) {
+                return $value !== null;
+            });
+            
+            // Use the model to get finance records
+            require_once __DIR__ . '/../models/StudentFinanceModel.php';
+            $financeModel = new StudentFinanceModel($this->pdo);
+            $financeData = $financeModel->getFinanceRecords($studentId, $filters);
+            
+            // Prepare response data
+            $responseData = [
+                'student' => [
+                    'id' => $student['id'],
+                    'student_id' => $student['student_id'],
+                    'name' => $student['first_name'] . ' ' . $student['last_name'],
+                    'class' => $student['class_name'] ?? 'No Class',
+                    'student_type' => $student['student_type'] ?? 'Day'
+                ],
+                'summary' => $financeData['summary'],
+                'invoices' => $financeData['invoices'],
+                'payments' => $financeData['payments'],
+                'filters_applied' => $filters
+            ];
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $responseData,
+                'message' => 'Student finance records retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving finance records: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get student finance summary (student only)
+     * Returns a quick overview of financial status
+     */
+    public function getFinanceSummary() {
+        try {
+            // Require student authentication
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            $student = $_REQUEST['current_student'];
+            
+            $studentId = $student['id'];
+            
+            // Use the model to get finance summary
+            require_once __DIR__ . '/../models/StudentFinanceModel.php';
+            $financeModel = new StudentFinanceModel($this->pdo);
+            $financeData = $financeModel->getFinanceSummaryData($studentId);
+            
+            // Prepare response
+            $summaryData = [
+                'student' => [
+                    'id' => $student['id'],
+                    'student_id' => $student['student_id'],
+                    'name' => $student['first_name'] . ' ' . $student['last_name'],
+                    'class' => $student['class_name'] ?? 'No Class'
+                ],
+                'summary' => $financeData['summary'],
+                'recent_payments' => $financeData['recent_payments'],
+                'outstanding_invoices' => $financeData['outstanding_invoices'],
+                'last_updated' => date('Y-m-d H:i:s')
+            ];
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $summaryData,
+                'message' => 'Student finance summary retrieved successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving finance summary: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get announcements for students (student only)
      * Students can see:
      * 1. Announcements for all students (target_audience = 'all')

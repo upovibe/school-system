@@ -37,7 +37,8 @@ class TeacherAssignmentSeeder
         
         // Teacher assignment structure
         $assignments = [
-            // KG 1 Assignments - First teacher (T250811001) teaches all subjects including ICT, second teacher (T250811002) teaches all except ICT
+            // KG 1 Assignments - Subjects shared between two teachers
+            // T250811001 (Akosua Asante) - teaches: LANG_LIT, NUMERACY, ENV_STUDIES, ICT
             [
                 'class_name' => 'KG 1',
                 'section' => 'A',
@@ -54,24 +55,6 @@ class TeacherAssignmentSeeder
                 'class_name' => 'KG 1',
                 'section' => 'A',
                 'subject_code' => 'ENV_STUDIES',
-                'teacher_id' => 'T250811001'
-            ],
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'CREATIVE_ARTS',
-                'teacher_id' => 'T250811001'
-            ],
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'PHYS_DEV',
-                'teacher_id' => 'T250811001'
-            ],
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'RME',
                 'teacher_id' => 'T250811001'
             ],
             [
@@ -81,25 +64,7 @@ class TeacherAssignmentSeeder
                 'teacher_id' => 'T250811001'
             ],
             
-            // KG 1 Second Teacher Assignments - T250811002 teaches the same subjects
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'LANG_LIT',
-                'teacher_id' => 'T250811002'
-            ],
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'NUMERACY',
-                'teacher_id' => 'T250811002'
-            ],
-            [
-                'class_name' => 'KG 1',
-                'section' => 'A',
-                'subject_code' => 'ENV_STUDIES',
-                'teacher_id' => 'T250811002'
-            ],
+            // T250811002 (Adwoa Mensah) - teaches: CREATIVE_ARTS, PHYS_DEV, RME
             [
                 'class_name' => 'KG 1',
                 'section' => 'A',
@@ -119,7 +84,8 @@ class TeacherAssignmentSeeder
                 'teacher_id' => 'T250811002'
             ],
             
-            // KG 2 Assignments - First teacher (T250811003) teaches all subjects including ICT, second teacher (T250811004) teaches all except ICT
+            // KG 2 Assignments - Subjects shared between two teachers
+            // T250811003 (Efua Boateng) - teaches: LANG_LIT, NUMERACY, ENV_STUDIES, ICT
             [
                 'class_name' => 'KG 2',
                 'section' => 'A',
@@ -136,24 +102,6 @@ class TeacherAssignmentSeeder
                 'class_name' => 'KG 2',
                 'section' => 'A',
                 'subject_code' => 'ENV_STUDIES',
-                'teacher_id' => 'T250811003'
-            ],
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'CREATIVE_ARTS',
-                'teacher_id' => 'T250811003'
-            ],
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'PHYS_DEV',
-                'teacher_id' => 'T250811003'
-            ],
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'RME',
                 'teacher_id' => 'T250811003'
             ],
             [
@@ -163,25 +111,7 @@ class TeacherAssignmentSeeder
                 'teacher_id' => 'T250811003'
             ],
             
-            // KG 2 Second Teacher Assignments - T250811004 teaches the same subjects
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'LANG_LIT',
-                'teacher_id' => 'T250811004'
-            ],
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'NUMERACY',
-                'teacher_id' => 'T250811004'
-            ],
-            [
-                'class_name' => 'KG 2',
-                'section' => 'A',
-                'subject_code' => 'ENV_STUDIES',
-                'teacher_id' => 'T250811004'
-            ],
+            // T250811004 (Abena Adjei) - teaches: CREATIVE_ARTS, PHYS_DEV, RME
             [
                 'class_name' => 'KG 2',
                 'section' => 'A',

@@ -635,7 +635,7 @@ class StudentDashboardPage extends App {
                     <!-- Quick Actions -->
                     <div class="bg-white shadow rounded-lg p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                             <a href="/dashboard/student/class" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
                                 <i class="fas fa-chalkboard text-xl mb-2 block"></i>
                                 <div class="font-medium">My Class</div>
@@ -650,6 +650,11 @@ class StudentDashboardPage extends App {
                                 <i class="fas fa-chart-line text-xl mb-2 block"></i>
                                 <div class="font-medium">My Grades</div>
                                 <div class="text-xs opacity-90">View performance</div>
+                            </a>
+                            <a href="/dashboard/student/finance" class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                                <i class="fas fa-credit-card text-xl mb-2 block"></i>
+                                <div class="font-medium">My Payments</div>
+                                <div class="text-xs opacity-90">View fee records</div>
                             </a>
                             <a href="/dashboard/profile" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
                                 <i class="fas fa-user text-xl mb-2 block"></i>

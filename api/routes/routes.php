@@ -356,6 +356,10 @@ Router::get('/student/grading-periods', 'StudentController@getGradingPeriods');
 Router::get('/student/my-class-subjects', 'StudentController@getMyClassSubjects');
 Router::get('/student/print/terminal-report', 'StudentController@printTerminalReport');
 
+// Student finance (student-only protected in controller)
+Router::get('/student/finance/records', 'StudentController@getFinanceRecords');
+Router::get('/student/finance/summary', 'StudentController@getFinanceSummary');
+
 // Finance - Fee Schedules (admin only)
 Router::get('/finance/schedules', 'FinanceController@indexSchedules');
 Router::post('/finance/schedules', 'FinanceController@storeSchedule');

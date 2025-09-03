@@ -76,7 +76,7 @@ class StudentSeeder
             $classStudents = $this->generateStudentsForClass($class['name'], $class['id'], $currentId, $studentCount, $commonPassword, $bloodGroups, $genders, $studentTypes, $maleNames, $femaleNames, $lastNames, $cities);
             
             foreach ($classStudents as $student) {
-                $this->seedStudent($student);
+            $this->seedStudent($student);
                 $totalStudents++;
             }
             

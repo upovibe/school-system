@@ -108,6 +108,9 @@ class StudentFinanceModel {
      * Get recent payments for a student
      */
     public function getRecentPayments($studentId, $limit = 5) {
+        // Ensure limit is an integer
+        $limit = (int) $limit;
+        
         $sql = "
             SELECT 
                 p.amount,
@@ -121,11 +124,11 @@ class StudentFinanceModel {
             LEFT JOIN fee_receipts r ON p.id = r.payment_id
             WHERE p.student_id = ? AND (p.status IS NULL OR p.status != 'voided')
             ORDER BY p.paid_on DESC
-            LIMIT ?
+            LIMIT $limit
         ";
         
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$studentId, $limit]);
+        $stmt->execute([$studentId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

@@ -107,12 +107,8 @@ class RootPage extends App {
 
     async loadAllSettings() {
         try {
+            // Only fetch settings that are likely to exist on the server
             const settingsKeys = [
-                'hero_title', 'hero_subtitle',
-                'about_title', 'about_subtitle',
-                'academics_title', 'academics_subtitle',
-                'community_title', 'community_subtitle',
-                'contact_title', 'contact_subtitle',
                 'application_logo', 'contact_email', 'contact_phone',
                 'facebook_url', 'twitter_url', 'instagram_url', 'linkedin_url', 'youtube_url'
             ];
@@ -122,7 +118,12 @@ class RootPage extends App {
                     const response = await api.get(`/settings/key/${key}`);
                     return response.data.success ? { key, value: response.data.data.setting_value } : null;
                 } catch (error) {
-                    console.error(`Error fetching setting ${key}:`, error);
+                    // Only log 404 errors as warnings, not errors
+                    if (error.response?.status === 404) {
+                        console.warn(`Setting ${key} not found, using default value`);
+                    } else {
+                        console.error(`Error fetching setting ${key}:`, error);
+                    }
                     return null;
                 }
             });
@@ -134,6 +135,27 @@ class RootPage extends App {
             settingsResults.forEach(result => {
                 if (result) {
                     settingsObject[result.key] = result.value;
+                }
+            });
+
+            // Add fallback values for all settings (both missing and not fetched)
+            const fallbacks = {
+                'hero_title': 'Welcome to Our School',
+                'hero_subtitle': 'Nurturing Future Leaders',
+                'about_title': 'About Our School',
+                'about_subtitle': 'Excellence in Education',
+                'academics_title': 'Academics',
+                'academics_subtitle': 'Excellence in Education',
+                'community_title': 'Community',
+                'community_subtitle': 'Building Together',
+                'contact_title': 'Contact Us',
+                'contact_subtitle': 'Get in Touch'
+            };
+
+            // Apply fallbacks for missing settings
+            Object.keys(fallbacks).forEach(key => {
+                if (!settingsObject[key]) {
+                    settingsObject[key] = fallbacks[key];
                 }
             });
 

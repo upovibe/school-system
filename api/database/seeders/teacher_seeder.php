@@ -324,6 +324,42 @@ class TeacherSeeder
                 'password' => password_hash('teacher123', PASSWORD_DEFAULT),
                 'status' => 'active',
                 'class_id' => null // Subject teacher only
+            ],
+            [
+                'user_id' => null,
+                'employee_id' => 'T250811017',
+                'first_name' => 'Dr. Kwame',
+                'last_name' => 'Osei',
+                'email' => 'kwame.osei.science@school.com',
+                'phone' => '+233244123717',
+                'address' => '396 Science Avenue, Konongo, Ghana',
+                'date_of_birth' => '1980-12-15',
+                'gender' => 'male',
+                'qualification' => 'PhD in Chemistry',
+                'specialization' => 'Integrated Science, Chemistry, Physics',
+                'hire_date' => '2018-09-01',
+                'salary' => 9000.00,
+                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+                'status' => 'active',
+                'class_id' => null // Science subject teacher only
+            ],
+            [
+                'user_id' => null,
+                'employee_id' => 'T250811018',
+                'first_name' => 'Dr. Abena',
+                'last_name' => 'Kwarteng',
+                'email' => 'abena.kwarteng.math@school.com',
+                'phone' => '+233244123718',
+                'address' => '507 Mathematics Street, Nkawkaw, Ghana',
+                'date_of_birth' => '1982-06-08',
+                'gender' => 'female',
+                'qualification' => 'PhD in Mathematics',
+                'specialization' => 'Mathematics, Statistics, Applied Mathematics',
+                'hire_date' => '2019-01-15',
+                'salary' => 8800.00,
+                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+                'status' => 'active',
+                'class_id' => null // Mathematics subject teacher only
             ]
         ];
         

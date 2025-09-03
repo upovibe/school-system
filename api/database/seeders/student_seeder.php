@@ -171,8 +171,8 @@ class StudentSeeder
         
         // Create user account
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
         
         $fullName = $studentData['first_name'] . ' ' . $studentData['last_name'];
@@ -184,7 +184,8 @@ class StudentSeeder
             $studentData['password'],
             true, // password_changed
             $studentRole['id'],
-            'active'
+            'active',
+            $studentData['gender']
         ]);
         
         $userId = $this->pdo->lastInsertId();

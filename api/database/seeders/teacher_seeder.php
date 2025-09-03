@@ -501,8 +501,8 @@ class TeacherSeeder
         }
 
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, gender, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
 
         $fullName = $teacherData['first_name'] . ' ' . $teacherData['last_name'];
@@ -514,7 +514,8 @@ class TeacherSeeder
             $teacherData['password'],
             true, // password_changed
             $teacherRole['id'],
-            'active'
+            'active',
+            $teacherData['gender']
         ]);
 
         $userId = $this->pdo->lastInsertId();

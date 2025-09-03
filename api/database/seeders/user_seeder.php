@@ -13,10 +13,9 @@ class UserSeeder
         echo "🌱 Seeding default users...\n";
         
         $this->seedAdminUser();
-        $this->seedTeacherUser();
-        $this->seedSecondTeacherUser();
-        $this->seedStudentUser();
+        $this->seedSecondAdminUser();
         $this->seedCashierUser();
+        $this->seedSecondCashierUser();
         
         echo "✅ Default users seeded successfully!\n";
     }
@@ -78,36 +77,36 @@ class UserSeeder
         echo "🔑 Password: admin123\n";
     }
     
-    private function seedTeacherUser() {
-        echo "📝 Seeding teacher user...\n";
+    private function seedSecondAdminUser() {
+        echo "📝 Seeding second admin user...\n";
         
-        // Get teacher role ID
+        // Get admin role ID
         $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
-        $stmt->execute(['teacher']);
-        $teacherRole = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute(['admin']);
+        $adminRole = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$teacherRole) {
-            echo "❌ Teacher role not found. Please run migrations first.\n";
+        if (!$adminRole) {
+            echo "❌ Admin role not found. Please run migrations first.\n";
             return;
         }
         
-        // Check if teacher user already exists
+        // Check if second admin user already exists
         $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute(['teacher@school.com']);
-        $existingTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute(['admin2@school.com']);
+        $existingAdmin = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($existingTeacher) {
-            echo "⚠️  Teacher user already exists\n";
+        if ($existingAdmin) {
+            echo "⚠️  Second admin user already exists\n";
             return;
         }
         
-        $teacherUser = [
-            'name' => 'Teacher User',
-            'email' => 'teacher@school.com',
-            'phone' => '+1234567892',
-            'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+        $adminUser = [
+            'name' => 'Deputy Administrator',
+            'email' => 'admin2@school.com',
+            'phone' => '+1234567894',
+            'password' => password_hash('admin123', PASSWORD_DEFAULT),
             'password_changed' => true,
-            'role_id' => $teacherRole['id'],
+            'role_id' => $adminRole['id'],
             'status' => 'active',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
@@ -119,136 +118,24 @@ class UserSeeder
         ');
         
         $stmt->execute([
-            $teacherUser['name'],
-            $teacherUser['email'],
-            $teacherUser['phone'],
-            $teacherUser['password'],
-            $teacherUser['password_changed'],
-            $teacherRole['id'],
-            $teacherUser['status'],
-            $teacherUser['created_at'],
-            $teacherUser['updated_at']
+            $adminUser['name'],
+            $adminUser['email'],
+            $adminUser['phone'],
+            $adminUser['password'],
+            $adminUser['password_changed'],
+            $adminRole['id'],
+            $adminUser['status'],
+            $adminUser['created_at'],
+            $adminUser['updated_at']
         ]);
         
-        echo "✅ Seeded teacher user\n";
-        echo "📧 Email: teacher@school.com\n";
-        echo "🔑 Password: teacher123\n";
+        echo "✅ Seeded second admin user\n";
+        echo "📧 Email: admin2@school.com\n";
+        echo "🔑 Password: admin123\n";
     }
     
-    private function seedSecondTeacherUser() {
-        echo "📝 Seeding second teacher user...\n";
-        
-        // Get teacher role ID
-        $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
-        $stmt->execute(['teacher']);
-        $teacherRole = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$teacherRole) {
-            echo "❌ Teacher role not found. Please run migrations first.\n";
-            return;
-        }
-        
-        // Check if second teacher user already exists
-        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute(['john.mensah@school.com']);
-        $existingTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($existingTeacher) {
-            echo "⚠️  Second teacher user already exists\n";
-            return;
-        }
-        
-        $teacherUser = [
-            'name' => 'John Mensah',
-            'email' => 'john.mensah@school.com',
-            'phone' => '+1234567893',
-            'password' => password_hash('teacher123', PASSWORD_DEFAULT),
-            'password_changed' => true,
-            'role_id' => $teacherRole['id'],
-            'status' => 'active',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-        
-        $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ');
-        
-        $stmt->execute([
-            $teacherUser['name'],
-            $teacherUser['email'],
-            $teacherUser['phone'],
-            $teacherUser['password'],
-            $teacherUser['password_changed'],
-            $teacherRole['id'],
-            $teacherUser['status'],
-            $teacherUser['created_at'],
-            $teacherUser['updated_at']
-        ]);
-        
-        echo "✅ Seeded second teacher user\n";
-        echo "📧 Email: john.mensah@school.com\n";
-        echo "🔑 Password: teacher123\n";
-    }
-    
-    private function seedStudentUser() {
-        echo "📝 Seeding student user...\n";
-        
-        // Get student role ID
-        $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
-        $stmt->execute(['student']);
-        $studentRole = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$studentRole) {
-            echo "❌ Student role not found. Please run migrations first.\n";
-            return;
-        }
-        
-        // Check if student user already exists
-        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute(['student@school.com']);
-        $existingStudent = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($existingStudent) {
-            echo "⚠️  Student user already exists\n";
-            return;
-        }
-        
-        $studentUser = [
-            'name' => 'Student User',
-            'email' => 'student@school.com',
-            'phone' => '+1234567893',
-            'password' => password_hash('student123', PASSWORD_DEFAULT),
-            'password_changed' => true,
-            'role_id' => $studentRole['id'],
-            'status' => 'active',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-        
-        $stmt = $this->pdo->prepare('
-            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ');
-        
-        $stmt->execute([
-            $studentUser['name'],
-            $studentUser['email'],
-            $studentUser['phone'],
-            $studentUser['password'],
-            $studentUser['password_changed'],
-            $studentRole['id'],
-            $studentUser['status'],
-            $studentUser['created_at'],
-            $studentUser['updated_at']
-        ]);
-        
-        echo "✅ Seeded student user\n";
-        echo "📧 Email: student@school.com\n";
-        echo "🔑 Password: student123\n";
-    }
-    
+
+
     private function seedCashierUser() {
         echo "📝 Seeding cashier user...\n";
         
@@ -303,6 +190,63 @@ class UserSeeder
         
         echo "✅ Seeded cashier user\n";
         echo "📧 Email: cashier@school.com\n";
+        echo "🔑 Password: cashier123\n";
+    }
+    
+    private function seedSecondCashierUser() {
+        echo "📝 Seeding second cashier user...\n";
+        
+        // Get cashier role ID
+        $stmt = $this->pdo->prepare('SELECT id FROM roles WHERE name = ?');
+        $stmt->execute(['cashier']);
+        $cashierRole = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$cashierRole) {
+            echo "❌ Cashier role not found. Please run migrations first.\n";
+            return;
+        }
+        
+        // Check if second cashier user already exists
+        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute(['cashier2@school.com']);
+        $existingCashier = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingCashier) {
+            echo "⚠️  Second cashier user already exists\n";
+            return;
+        }
+        
+        $cashierUser = [
+            'name' => 'Assistant Cashier',
+            'email' => 'cashier2@school.com',
+            'phone' => '+1234567895',
+            'password' => password_hash('cashier123', PASSWORD_DEFAULT),
+            'password_changed' => true,
+            'role_id' => $cashierRole['id'],
+            'status' => 'active',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        $stmt = $this->pdo->prepare('
+            INSERT INTO users (name, email, phone, password, password_changed, role_id, status, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ');
+        
+        $stmt->execute([
+            $cashierUser['name'],
+            $cashierUser['email'],
+            $cashierUser['phone'],
+            $cashierUser['password'],
+            $cashierUser['password_changed'],
+            $cashierRole['id'],
+            $cashierUser['status'],
+            $cashierUser['created_at'],
+            $cashierUser['updated_at']
+        ]);
+        
+        echo "✅ Seeded second cashier user\n";
+        echo "📧 Email: cashier2@school.com\n";
         echo "🔑 Password: cashier123\n";
     }
 } 

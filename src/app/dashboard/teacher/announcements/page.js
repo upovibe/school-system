@@ -65,6 +65,12 @@ class TeacherAnnouncementsPage extends App {
                             <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-announcements-info" title="About Teacher Announcements">
                                 <i class="fas fa-question-circle text-lg"></i>
                             </button>
+                            <button 
+                                onclick="this.closest('app-teacher-announcements-page').loadData()"
+                                class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
+                                title="Refresh data">
+                                <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
+                            </button>
                         </div>
                         <p class="text-green-100 text-base sm:text-lg">Manage announcements you created</p>
                         </div>

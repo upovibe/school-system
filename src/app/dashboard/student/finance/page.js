@@ -553,8 +553,8 @@ class StudentFinancePage extends App {
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="text-lg font-semibold">
-                                            ${summaryData.summary.total_invoices > 0 ? 
-                                                ((summaryData.summary.paid_invoices / summaryData.summary.total_invoices) * 100).toFixed(1) : 0}%
+                                            ${summaryData.summary.total_invoiced > 0 ? 
+                                                ((summaryData.summary.total_paid / summaryData.summary.total_invoiced) * 100).toFixed(1) : 0}%
                                         </div>
                                         <div class="text-blue-100 text-xs sm:text-sm">Payment Rate</div>
                                     </div>

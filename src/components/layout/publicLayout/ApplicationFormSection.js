@@ -56,14 +56,172 @@ class ApplicationFormSection extends App {
     setupEventListeners() {
         const form = this.querySelector('form');
         if (form) {
+            // Add real-time validation for name fields
+            const firstNameInput = this.querySelector('ui-input[name="student_first_name"]');
+            const lastNameInput = this.querySelector('ui-input[name="student_last_name"]');
+            
+            if (firstNameInput) {
+                firstNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-letter characters (except spaces)
+                    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            if (lastNameInput) {
+                lastNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-letter characters (except spaces)
+                    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            // Add real-time validation for phone fields
+            const parentPhoneInput = this.querySelector('ui-input[name="parent_phone"]');
+            const studentPhoneInput = this.querySelector('ui-input[name="student_phone"]');
+            
+            if (parentPhoneInput) {
+                parentPhoneInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-digit characters
+                    const cleanValue = value.replace(/[^0-9]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            if (studentPhoneInput) {
+                studentPhoneInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-digit characters
+                    const cleanValue = value.replace(/[^0-9]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            // Add real-time validation for parent/guardian name fields
+            const fatherNameInput = this.querySelector('ui-input[name="father_name"]');
+            const motherNameInput = this.querySelector('ui-input[name="mother_name"]');
+            const guardianNameInput = this.querySelector('ui-input[name="guardian_name"]');
+            
+            if (fatherNameInput) {
+                fatherNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-letter characters (except spaces)
+                    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            if (motherNameInput) {
+                motherNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-letter characters (except spaces)
+                    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
+            if (guardianNameInput) {
+                guardianNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Remove any non-letter characters (except spaces)
+                    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+                    if (value !== cleanValue) {
+                        e.target.value = cleanValue;
+                    }
+                });
+            }
+            
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = this.getFormData();
+                
+                // Validate first name
+                if (!data.student_first_name || data.student_first_name.length < 2) {
+                    Toast.show({ title: 'Error', message: 'First name must be at least 2 characters long.', variant: 'error' });
+                    return;
+                }
+                if (!/^[a-zA-Z\s]+$/.test(data.student_first_name)) {
+                    Toast.show({ title: 'Error', message: 'First name can only contain letters and spaces.', variant: 'error' });
+                    return;
+                }
+                
+                // Validate last name
+                if (!data.student_last_name || data.student_last_name.length < 2) {
+                    Toast.show({ title: 'Error', message: 'Last name must be at least 2 characters long.', variant: 'error' });
+                    return;
+                }
+                if (!/^[a-zA-Z\s]+$/.test(data.student_last_name)) {
+                    Toast.show({ title: 'Error', message: 'Last name can only contain letters and spaces.', variant: 'error' });
+                    return;
+                }
+                
+                // Validate parent phone
+                if (!data.parent_phone || data.parent_phone.length < 10) {
+                    Toast.show({ title: 'Error', message: 'Parent phone must be at least 10 digits long.', variant: 'error' });
+                    return;
+                }
+                if (!/^[0-9]+$/.test(data.parent_phone)) {
+                    Toast.show({ title: 'Error', message: 'Parent phone can only contain numbers.', variant: 'error' });
+                    return;
+                }
+                
+                // Validate student phone (if provided)
+                if (data.student_phone && data.student_phone.length > 0) {
+                    if (data.student_phone.length < 10) {
+                        Toast.show({ title: 'Error', message: 'Student phone must be at least 10 digits long.', variant: 'error' });
+                        return;
+                    }
+                    if (!/^[0-9]+$/.test(data.student_phone)) {
+                        Toast.show({ title: 'Error', message: 'Student phone can only contain numbers.', variant: 'error' });
+                        return;
+                    }
+                }
+                
+                // Validate father's name (if provided)
+                if (data.father_name && data.father_name.length > 0) {
+                    if (!/^[a-zA-Z\s]+$/.test(data.father_name)) {
+                        Toast.show({ title: 'Error', message: 'Father\'s name can only contain letters and spaces.', variant: 'error' });
+                        return;
+                    }
+                }
+                
+                // Validate mother's name (if provided)
+                if (data.mother_name && data.mother_name.length > 0) {
+                    if (!/^[a-zA-Z\s]+$/.test(data.mother_name)) {
+                        Toast.show({ title: 'Error', message: 'Mother\'s name can only contain letters and spaces.', variant: 'error' });
+                        return;
+                    }
+                }
+                
+                // Validate guardian's name (if provided)
+                if (data.guardian_name && data.guardian_name.length > 0) {
+                    if (!/^[a-zA-Z\s]+$/.test(data.guardian_name)) {
+                        Toast.show({ title: 'Error', message: 'Guardian\'s name can only contain letters and spaces.', variant: 'error' });
+                        return;
+                    }
+                }
+                
                 // Validate grade
                 if (!data.grade) {
                     Toast.show({ title: 'Error', message: 'Please select a grade.', variant: 'error' });
                     return;
                 }
+                
                 try {
                     const res = await fetch('/api/applications', {
                         method: 'POST',
@@ -199,7 +357,7 @@ class ApplicationFormSection extends App {
                             <ui-input id="email" type="email" name="email" placeholder="Email" class="w-full" />
                         </div>
                         <div>
-                            <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                            <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">Applying Grade</label>
                             <ui-dropdown id="grade" name="grade" class="w-full" placeholder="Select Grade">
                                 ${gradeOptions.map(opt => `<ui-option value="${opt.value}">${opt.label}</ui-option>`).join('')}
                             </ui-dropdown>

@@ -15,8 +15,9 @@ class announcementSeeder {
             // Check if users exist, if not create a default admin user
             $adminUserId = $this->ensureAdminUserExists();
             
-            // Sample announcements data
+            // Sample announcements data - Focused on JHS 1-3 class teachers only
             $announcements = [
+                // General school announcements
                 [
                     'title' => 'Welcome Back to School!',
                     'content' => 'Welcome back students! We hope you had a wonderful break. The new academic year begins with exciting opportunities for learning and growth. Please ensure you have all your required materials and are ready for an amazing year ahead.',
@@ -35,105 +36,8 @@ class announcementSeeder {
                     'is_pinned' => 0,
                     'created_by' => $adminUserId
                 ],
-                [
-                    'title' => 'Sports Day Registration Open',
-                    'content' => 'Sports Day registration is now open! Students can register for various athletic events including track, field, and team sports. Registration closes on October 10th. Contact your PE teacher for more details.',
-                    'announcement_type' => 'event',
-                    'priority' => 'normal',
-                    'target_audience' => 'students',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Library Hours Extended',
-                    'content' => 'The school library will now be open until 5:00 PM on weekdays to accommodate students who need extra study time. Evening study sessions are also available on Tuesdays and Thursdays.',
-                    'announcement_type' => 'general',
-                    'priority' => 'low',
-                    'target_audience' => 'students',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Emergency Contact Update Required',
-                    'content' => 'All parents are requested to update their emergency contact information in the school portal by the end of this week. This ensures we can reach you quickly in case of any emergency.',
-                    'announcement_type' => 'reminder',
-                    'priority' => 'high',
-                    'target_audience' => 'all',
-                    'is_pinned' => 1,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Science Fair Project Guidelines',
-                    'content' => 'Science Fair project guidelines are now available. All students in grades 6-12 are required to participate. Project proposals are due by October 20th. Please review the guidelines carefully.',
-                    'announcement_type' => 'academic',
-                    'priority' => 'normal',
-                    'target_audience' => 'students',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Staff Meeting - Friday 3:00 PM',
-                    'content' => 'All teaching staff are required to attend the staff meeting this Friday at 3:00 PM in the conference room. Agenda includes curriculum updates and upcoming events planning.',
-                    'announcement_type' => 'general',
-                    'priority' => 'normal',
-                    'target_audience' => 'teachers',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Cafeteria Menu Update',
-                    'content' => 'Starting next week, the cafeteria will offer new healthy meal options including vegetarian and gluten-free choices. The updated menu is available on the school website.',
-                    'announcement_type' => 'general',
-                    'priority' => 'low',
-                    'target_audience' => 'all',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Financial Report Due - Cashiers',
-                    'content' => 'All cashiers are reminded that monthly financial reports are due by the 5th of each month. Please ensure all transactions are properly recorded and reconciled.',
-                    'announcement_type' => 'reminder',
-                    'priority' => 'normal',
-                    'target_audience' => 'cashier',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'System Maintenance Notice',
-                    'content' => 'Scheduled system maintenance will occur this weekend from 2:00 AM to 6:00 AM. During this time, the school portal may be temporarily unavailable. We apologize for any inconvenience.',
-                    'announcement_type' => 'general',
-                    'priority' => 'normal',
-                    'target_audience' => 'admin',
-                    'is_pinned' => 1,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Fee Payment Deadline Extended',
-                    'content' => 'The deadline for first term fee payments has been extended to October 30th. Please ensure all payments are made through the cashier\'s office or online portal. Late payments will incur additional charges.',
-                    'announcement_type' => 'financial',
-                    'priority' => 'high',
-                    'target_audience' => 'all',
-                    'is_pinned' => 1,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'New Payment Methods Available',
-                    'content' => 'We now accept mobile money payments (MTN, Vodafone, AirtelTigo) for all school fees and charges. This provides a convenient way for parents to make payments without visiting the cashier\'s office.',
-                    'announcement_type' => 'payment',
-                    'priority' => 'normal',
-                    'target_audience' => 'cashier',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Billing System Update',
-                    'content' => 'The school billing system will be updated this weekend. All cashiers should complete their daily reconciliations by Friday evening. The new system will provide better reporting and tracking capabilities.',
-                    'announcement_type' => 'billing',
-                    'priority' => 'normal',
-                    'target_audience' => 'cashier',
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
+                
+                // JHS 1 Class Teacher Announcements (Ama Serwaa - T250811011)
                 [
                     'title' => 'JHS 1 Class Meeting - Parents Only',
                     'content' => 'Important class meeting for JHS 1 parents on Friday, October 20th at 4:00 PM in the JHS 1 classroom. We will discuss academic progress, upcoming exams, and class activities. Attendance is mandatory.',
@@ -142,36 +46,7 @@ class announcementSeeder {
                     'target_audience' => 'specific_class',
                     'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 1,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'JHS 1 Science Project Due Date',
-                    'content' => 'JHS 1 students: Your science project presentations are scheduled for November 15th. Please ensure all projects are completed and ready for demonstration. Contact your science teacher for any questions.',
-                    'announcement_type' => 'academic',
-                    'priority' => 'normal',
-                    'target_audience' => 'specific_class',
-                    'target_class_id' => $this->getJHS1ClassId(),
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'JHS 1 Field Trip to Science Museum',
-                    'content' => 'JHS 1 students will have an educational field trip to the Science Museum on November 10th. Permission slips must be returned by October 25th. Cost: $5 per student. Contact your class teacher for details.',
-                    'announcement_type' => 'event',
-                    'priority' => 'normal',
-                    'target_audience' => 'specific_class',
-                    'target_class_id' => $this->getJHS1ClassId(),
-                    'is_pinned' => 0,
-                    'created_by' => $adminUserId
-                ],
-                [
-                    'title' => 'Fee Structure Update for 2024',
-                    'content' => 'The school fee structure for the 2024 academic year has been updated. New rates will be effective from January 2024. Detailed breakdown is available at the cashier\'s office. Contact the administration for any clarifications.',
-                    'announcement_type' => 'fee',
-                    'priority' => 'high',
-                    'target_audience' => 'all',
-                    'is_pinned' => 1,
-                    'created_by' => $adminUserId
+                    'created_by' => $this->getTeacherUserId('akua.gyasi@school.com')
                 ],
                 [
                     'title' => 'JHS 1 Mathematics Test Schedule',
@@ -181,17 +56,7 @@ class announcementSeeder {
                     'target_audience' => 'specific_class',
                     'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 1,
-                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
-                ],
-                [
-                    'title' => 'Science Club Meeting - JHS 1 Students',
-                    'content' => 'JHS 1 students interested in joining the Science Club, we will have our first meeting this Thursday at 3:30 PM in the Science Lab. We will discuss upcoming projects and experiments. All are welcome!',
-                    'announcement_type' => 'event',
-                    'priority' => 'normal',
-                    'target_audience' => 'specific_class',
-                    'target_class_id' => $this->getJHS1ClassId(),
-                    'is_pinned' => 0,
-                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                    'created_by' => $this->getTeacherUserId('akua.gyasi@school.com')
                 ],
                 [
                     'title' => 'Homework Reminder - JHS 1',
@@ -201,17 +66,51 @@ class announcementSeeder {
                     'target_audience' => 'specific_class',
                     'target_class_id' => $this->getJHS1ClassId(),
                     'is_pinned' => 0,
-                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                    'created_by' => $this->getTeacherUserId('akua.gyasi@school.com')
                 ],
+                
+                // JHS 2 Class Teacher Announcements (Kwaku Mensah - T250811012)
                 [
-                    'title' => 'Parent Meeting - JHS 1 Progress Review',
-                    'content' => 'Important: JHS 1 parents meeting scheduled for Tuesday, October 22nd at 4:00 PM. We will review your child\'s academic progress and discuss strategies for improvement. Your attendance is crucial.',
+                    'title' => 'JHS 2 Parent Meeting - Progress Review',
+                    'content' => 'Important: JHS 2 parents meeting scheduled for Tuesday, October 22nd at 4:00 PM. We will review your child\'s academic progress and discuss strategies for improvement. Your attendance is crucial.',
                     'announcement_type' => 'academic',
                     'priority' => 'high',
                     'target_audience' => 'specific_class',
-                    'target_class_id' => $this->getJHS1ClassId(),
+                    'target_class_id' => $this->getJHS2ClassId(),
                     'is_pinned' => 1,
-                    'created_by' => $this->getTeacherUserId('john.mensah@school.com')
+                    'created_by' => $this->getTeacherUserId('kojo.hammond@school.com')
+                ],
+                [
+                    'title' => 'JHS 2 Science Project Due Date',
+                    'content' => 'JHS 2 students: Your science project presentations are scheduled for November 15th. Please ensure all projects are completed and ready for demonstration. Contact your science teacher for any questions.',
+                    'announcement_type' => 'academic',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS2ClassId(),
+                    'is_pinned' => 0,
+                    'created_by' => $this->getTeacherUserId('kojo.hammond@school.com')
+                ],
+                
+                // JHS 3 Class Teacher Announcements (Aba Johnson - T250811013)
+                [
+                    'title' => 'JHS 3 Final Exam Preparation',
+                    'content' => 'JHS 3 students: Your final exams are approaching. Please ensure you are attending all revision classes and completing your study guides. Contact me if you need any additional support.',
+                    'announcement_type' => 'academic',
+                    'priority' => 'high',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS3ClassId(),
+                    'is_pinned' => 1,
+                    'created_by' => $this->getTeacherUserId('aba.johnson@school.com')
+                ],
+                [
+                    'title' => 'JHS 3 Field Trip to Science Museum',
+                    'content' => 'JHS 3 students will have an educational field trip to the Science Museum on November 10th. Permission slips must be returned by October 25th. Cost: $5 per student. Contact your class teacher for details.',
+                    'announcement_type' => 'event',
+                    'priority' => 'normal',
+                    'target_audience' => 'specific_class',
+                    'target_class_id' => $this->getJHS3ClassId(),
+                    'is_pinned' => 0,
+                    'created_by' => $this->getTeacherUserId('aba.johnson@school.com')
                 ]
             ];
 
@@ -344,6 +243,52 @@ class announcementSeeder {
             
         } catch (Exception $e) {
             echo "Error getting JHS 1 class ID: " . $e->getMessage() . "\n";
+            return null;
+        }
+    }
+    
+    /**
+     * Get JHS 2 class ID dynamically
+     */
+    private function getJHS2ClassId() {
+        try {
+            $stmt = $this->pdo->prepare('SELECT id FROM classes WHERE name LIKE ? LIMIT 1');
+            $stmt->execute(['%JHS 2%']);
+            $class = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($class) {
+                return $class['id'];
+            }
+            
+            // If JHS 2 class doesn't exist, return null (will be filtered out)
+            echo "⚠️  JHS 2 class not found, announcements will be created without class reference\n";
+            return null;
+            
+        } catch (Exception $e) {
+            echo "Error getting JHS 2 class ID: " . $e->getMessage() . "\n";
+            return null;
+        }
+    }
+    
+    /**
+     * Get JHS 3 class ID dynamically
+     */
+    private function getJHS3ClassId() {
+        try {
+            $stmt = $this->pdo->prepare('SELECT id FROM classes WHERE name LIKE ? LIMIT 1');
+            $stmt->execute(['%JHS 3%']);
+            $class = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($class) {
+                return $class['id'];
+            }
+            
+            // If JHS 3 class doesn't exist, return null (will be filtered out)
+            echo "⚠️  JHS 3 class not found, announcements will be created without class reference\n";
+            return null;
+            
+        } catch (Exception $e) {
+            echo "Error getting JHS 3 class ID: " . $e->getMessage() . "\n";
             return null;
         }
     }

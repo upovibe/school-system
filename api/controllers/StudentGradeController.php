@@ -355,7 +355,7 @@ class StudentGradeController {
                 'grading_period_id' => $periodId
             ]);
 
-            // Get teacher for class report (Subject Teacher first, then Class Teacher as fallback)
+            // Get teacher for class report (Subject Teacher first, then Class Teacher as fallback) with gender-based title
             $teacherName = 'No Teacher Assigned';
             
             // First, try to get the Subject Teacher (teacher assigned to teach this subject in this class)
@@ -365,7 +365,19 @@ class StudentGradeController {
                     if (!empty($assignments)) {
                         $firstAssignment = $assignments[0];
                         if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
-                            $teacherName = $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
+                            // Get teacher gender for title
+                            $stmt = $this->pdo->prepare("SELECT gender FROM teachers WHERE employee_id = ? AND status = 'active' LIMIT 1");
+                            $stmt->execute([$firstAssignment['teacher_employee_id']]);
+                            $teacherData = $stmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            $title = '';
+                            if ($teacherData && strtolower($teacherData['gender']) === 'male') {
+                                $title = 'Sir ';
+                            } elseif ($teacherData && strtolower($teacherData['gender']) === 'female') {
+                                $title = 'Madam ';
+                            }
+                            
+                            $teacherName = $title . $firstAssignment['teacher_first_name'] . ' ' . $firstAssignment['teacher_last_name'];
                         }
                     }
                 } catch (Exception $e) {
@@ -376,11 +388,19 @@ class StudentGradeController {
             // If no Subject Teacher, try to get the Class Teacher as fallback
             if ($teacherName === 'No Teacher Assigned') {
                 try {
-                    $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                    $stmt = $this->pdo->prepare("SELECT first_name, last_name, gender FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
                     $stmt->execute([$classId]);
                     $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($classTeacher) {
-                        $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                        // Add appropriate title based on gender
+                        $title = '';
+                        if (strtolower($classTeacher['gender']) === 'male') {
+                            $title = 'Sir ';
+                        } elseif (strtolower($classTeacher['gender']) === 'female') {
+                            $title = 'Madam ';
+                        }
+                        
+                        $teacherName = $title . $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
                     }
                 } catch (Exception $e) {
                     // Keep default "No Teacher Assigned"
@@ -471,16 +491,24 @@ class StudentGradeController {
                 $classSubjects = [];
             }
 
-            // Get class teacher information (Class Teacher from teachers table)
+            // Get class teacher information (Class Teacher from teachers table) with gender-based title
             $teacherName = 'No Teacher Assigned';
             
             // Get the Class Teacher (main teacher assigned to this class)
             try {
-                $stmt = $this->pdo->prepare("SELECT first_name, last_name FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
+                $stmt = $this->pdo->prepare("SELECT first_name, last_name, gender FROM teachers WHERE class_id = ? AND status = 'active' LIMIT 1");
                 $stmt->execute([$class['id']]);
                 $classTeacher = $stmt->fetch(PDO::FETCH_ASSOC);
                 if ($classTeacher) {
-                    $teacherName = $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
+                    // Add appropriate title based on gender
+                    $title = '';
+                    if (strtolower($classTeacher['gender']) === 'male') {
+                        $title = 'Sir ';
+                    } elseif (strtolower($classTeacher['gender']) === 'female') {
+                        $title = 'Madam ';
+                    }
+                    
+                    $teacherName = $title . $classTeacher['first_name'] . ' ' . $classTeacher['last_name'];
                 }
             } catch (Exception $e) {
                 // Keep default "No Teacher Assigned"

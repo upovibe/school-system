@@ -134,7 +134,7 @@ class TeacherDashboardPage extends App {
       user.username ||
       user.email ||
       user.displayName
-    )) || 'Teacher';
+    )) || null;
     const className = teacherClass?.class_name || teacherClass?.name || '';
     const classSection = teacherClass?.class_section || teacherClass?.section || '';
     const students = Array.isArray(teacherClass?.students) ? teacherClass.students : [];
@@ -151,7 +151,9 @@ class TeacherDashboardPage extends App {
                   <i class="fas fa-question-circle text-lg"></i>
                 </button>
               </div>
-              <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${teacherName}.</p>
+              <p class="text-blue-100 text-base sm:text-lg"></p>
+                Welcome back, ${(loading || !teacherName) ? '<span class="inline-block h-4 bg-white/30 rounded animate-pulse w-32"></span>' : teacherName}.
+              </p>
               <p class="text-blue-100 text-sm mt-1">
                 <i class="fas fa-calendar-alt mr-1"></i>
                 ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

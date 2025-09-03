@@ -333,6 +333,12 @@ class StudentGradesPage extends App {
                                 <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-student-grades-info" title="About My Grades">
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
+                                <button 
+                                    onclick="this.closest('app-student-grades-page').loadGrades()"
+                                    class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
+                                    title="Refresh data">
+                                    <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
+                                </button>
                             </div>
                             <p class="text-blue-100 text-base sm:text-lg">Track your academic performance across all subjects</p>
                         </div>

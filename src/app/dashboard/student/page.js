@@ -458,7 +458,7 @@ class StudentDashboardPage extends App {
             currentUser.username ||
             currentUser.email ||
             currentUser.displayName
-        )) || 'Student';
+        )) || null;
         const classInfo = classData?.class || {};
         const gradeStats = this.calculateGradeStats();
         const assignmentStats = this.calculateAssignmentStats();
@@ -477,7 +477,9 @@ class StudentDashboardPage extends App {
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Welcome back, ${userName}! Here's your academic overview.</p>
+                            <p class="text-blue-100 text-base sm:text-lg">
+                                Welcome back, ${(loading || !userName) ? '<span class="inline-block h-4 bg-white/30 rounded animate-pulse w-32"></span>' : userName}! Here's your academic overview.
+                            </p>
                             <p class="text-blue-100 text-sm mt-1">
                                 <i class="fas fa-calendar-alt mr-1"></i>
                                 ${new Date().toLocaleDateString('en-US', { 

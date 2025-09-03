@@ -337,18 +337,6 @@ class CashierAnnouncementsPage extends App {
                         </div>
                     </div>
                     
-                    // <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                    //     <div class="flex items-center">
-                    //         <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    //             <i class="fas fa-cash-register text-white text-lg sm:text-xl"></i>
-                    //         </div>
-                    //         <div class="min-w-0 flex-1">
-                    //             <div class="text-xl sm:text-2xl font-bold">${c.cashierSpecific}</div>
-                    //             <div class="text-green-100 text-xs sm:text-sm">Cashier-Specific</div>
-                    //         </div>
-                    //     </div>
-                    // </div>
-                    
                     <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                         <div class="flex items-center">
                             <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">

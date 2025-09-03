@@ -2098,6 +2098,51 @@ class TeacherController {
     }
 
     /**
+     * Download student submission file (teacher only)
+     */
+    public function downloadSubmissionFile($filename) {
+        try {
+            // Sanitize filename
+            $filename = basename($filename);
+
+            // Define the file path
+            $filePath = __DIR__ . '/../uploads/assignments/submissions/' . $filename;
+
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'File not found'
+                ]);
+                return;
+            }
+
+            // Get file info
+            $fileInfo = pathinfo($filePath);
+
+            // Set headers to force download instead of displaying in browser
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . filesize($filePath));
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            // Output file content
+            readfile($filePath);
+            exit;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error downloading file: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Download assignment attachment (teacher only)
      */
     public function downloadAssignmentAttachment($filename) {

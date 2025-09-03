@@ -201,6 +201,7 @@ Router::get('/teachers/students/{studentId}/assignments', 'TeacherController@get
 
 // File download routes
 Router::get('/uploads/assignments/attachments/{filename}', 'TeacherController@downloadAssignmentAttachment');
+Router::get('/uploads/assignments/submissions/{filename}', 'TeacherController@downloadSubmissionFile');
 Router::get('/students/download/assignments/attachments/{filename}', 'StudentController@downloadAssignmentAttachment');
 Router::get('/uploads/timetable-resources/{filename}', 'TimetableResourceController@download');
 

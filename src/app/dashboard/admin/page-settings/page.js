@@ -342,9 +342,9 @@ class PageSettingsPage extends App {
             { key: 'name', label: 'Name' },
             { key: 'title', label: 'Title' },
             // { key: 'slug', label: 'Slug', html: false },
-            { key: 'category', label: 'Category' },
-            { key: 'status', label: 'Status' },
-            { key: 'sort_order', label: 'Sort Order', html: false },
+            // { key: 'category', label: 'Category' },
+            // { key: 'status', label: 'Status' },
+            // { key: 'sort_order', label: 'Sort Order', html: false },
             // { key: 'created', label: 'Created' },
             { key: 'updated', label: 'Updated' }
         ];

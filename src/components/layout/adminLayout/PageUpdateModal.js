@@ -226,7 +226,7 @@ class PageUpdateModal extends HTMLElement {
                                 class="w-full">
                             </ui-input>
                         </div>
-                        <div>
+                        <div class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <ui-dropdown 
                                 data-field="category"
@@ -289,7 +289,7 @@ class PageUpdateModal extends HTMLElement {
                             </ui-file-upload>
                         </div>
                         
-                        <div>
+                        <div class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                             <ui-radio-group 
                                 data-field="status"
@@ -302,7 +302,7 @@ class PageUpdateModal extends HTMLElement {
                             </ui-radio-group>
                         </div>
                         
-                        <div>
+                        <div class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                             <ui-input 
                                 data-field="sort-order"

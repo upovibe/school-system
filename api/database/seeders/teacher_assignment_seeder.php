@@ -575,6 +575,104 @@ class TeacherAssignmentSeeder
                 'section' => 'A',
                 'subject_code' => 'GHA_LANG',
                 'teacher_id' => 'T250811021'
+            ],
+            
+            // JHS 1-3 Assignments - Class Teachers teach remaining subjects
+            
+            // JHS 1 Assignments - Class Teacher (T250811011 - Ama Serwaa) teaches remaining subjects
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'CAREER_TECH',
+                'teacher_id' => 'T250811011'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811011'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811011'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811011'
+            ],
+            [
+                'class_name' => 'JHS 1',
+                'section' => 'A',
+                'subject_code' => 'SOC_STUDIES',
+                'teacher_id' => 'T250811011'
+            ],
+            
+            // JHS 2 Assignments - Class Teacher (T250811012 - Kwaku Mensah) teaches remaining subjects
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'CAREER_TECH',
+                'teacher_id' => 'T250811012'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811012'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811012'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811012'
+            ],
+            [
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'SOC_STUDIES',
+                'teacher_id' => 'T250811012'
+            ],
+            
+            // JHS 3 Assignments - Class Teacher (T250811013 - Aba Johnson) teaches remaining subjects
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'CAREER_TECH',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'SOC_STUDIES',
+                'teacher_id' => 'T250811013'
             ]
         ];
         

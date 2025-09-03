@@ -129,6 +129,102 @@ class TeacherAssignmentSeeder
                 'section' => 'A',
                 'subject_code' => 'RME',
                 'teacher_id' => 'T250811004'
+            ],
+            
+            // P 1 Assignments - Class Teacher (T250811005) teaches all subjects except CREATIVE_ARTS, GHA_LANG, COMPUTING
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811005'
+            ],
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811005'
+            ],
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811005'
+            ],
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811005'
+            ],
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811005'
+            ],
+            
+            // P 2 Assignments - Class Teacher (T250811006) teaches all subjects except CREATIVE_ARTS, GHA_LANG, COMPUTING
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811006'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811006'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811006'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811006'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811006'
+            ],
+            
+            // P 3 Assignments - Class Teacher (T250811007) teaches all subjects except CREATIVE_ARTS, GHA_LANG, COMPUTING
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'ENG',
+                'teacher_id' => 'T250811007'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'MATH',
+                'teacher_id' => 'T250811007'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'OWOP',
+                'teacher_id' => 'T250811007'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'RME',
+                'teacher_id' => 'T250811007'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'PE',
+                'teacher_id' => 'T250811007'
             ]
         ];
         

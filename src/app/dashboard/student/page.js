@@ -16,6 +16,7 @@ class StudentDashboardPage extends App {
         this.classData = null;
         this.gradesData = null;
         this.assignmentsData = null;
+        this.financeData = null;
         
         // Initialize state properly
         this.set('loading', true);
@@ -23,6 +24,7 @@ class StudentDashboardPage extends App {
         this.set('classData', null);
         this.set('gradesData', null);
         this.set('assignmentsData', null);
+        this.set('financeData', null);
     }
 
     connectedCallback() {
@@ -40,14 +42,17 @@ class StudentDashboardPage extends App {
          
          const action = button.getAttribute('data-action');
          
-         switch (action) {
-             case 'show-level-info':
-                 this.showLevelInfo();
-                 break;
-             case 'show-academic-info':
-                 this.showAcademicInfo();
-                 break;
-         }
+                 switch (action) {
+            case 'show-level-info':
+                this.showLevelInfo();
+                break;
+            case 'show-academic-info':
+                this.showAcademicInfo();
+                break;
+            case 'show-finance-info':
+                this.showFinanceInfo();
+                break;
+        }
     }
 
     async loadAll() {
@@ -74,8 +79,9 @@ class StudentDashboardPage extends App {
             requests.push(api.withToken(token).get('/students/current-class').catch(() => null));
             requests.push(api.withToken(token).get('/student/my-grades').catch(() => ({ data: { data: [] } })));
             requests.push(api.withToken(token).get('/students/my-assignments').catch(() => ({ data: { data: [] } })));
+            requests.push(api.withToken(token).get('/student/finance/summary').catch(() => ({ data: { data: null } })));
 
-            const [userResp, classResp, gradesResp, assignmentsResp] = await Promise.all(requests);
+            const [userResp, classResp, gradesResp, assignmentsResp, financeResp] = await Promise.all(requests);
 
             if (userResp?.data) {
                 this.set('currentUser', userResp.data);
@@ -91,6 +97,7 @@ class StudentDashboardPage extends App {
 
             this.set('gradesData', gradesResp?.data?.data || []);
             this.set('assignmentsData', assignmentsResp?.data?.data || []);
+            this.set('financeData', financeResp?.data?.data || null);
         } finally {
             this.set('loading', false);
         }
@@ -245,6 +252,35 @@ class StudentDashboardPage extends App {
         };
         
         return stats;
+    }
+
+    calculateFinanceStats() {
+        const financeData = this.get('financeData');
+        
+        if (!financeData?.summary) {
+            return {
+                total_invoiced: 0,
+                total_paid: 0,
+                total_outstanding: 0,
+                payment_rate: 0,
+                total_invoices: 0,
+                paid_invoices: 0,
+                outstanding_invoices: 0
+            };
+        }
+
+        const summary = financeData.summary;
+        
+        return {
+            total_invoiced: summary.total_invoiced || 0,
+            total_paid: summary.total_paid || 0,
+            total_outstanding: summary.total_outstanding || 0,
+            payment_rate: summary.total_invoiced > 0 ? 
+                ((summary.total_paid / summary.total_invoiced) * 100) : 0,
+            total_invoices: summary.total_invoices || 0,
+            paid_invoices: summary.paid_invoices || 0,
+            outstanding_invoices: summary.outstanding_invoices || 0
+        };
     }
 
     getAchievements() {
@@ -447,6 +483,53 @@ class StudentDashboardPage extends App {
          document.body.appendChild(dialog);
     }
 
+    showFinanceInfo() {
+        const dialog = document.createElement('ui-dialog');
+        dialog.setAttribute('open', '');
+        dialog.innerHTML = `
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-credit-card text-emerald-500 mr-2"></i>
+                <span class="font-semibold">Financial Status</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Understanding Your Financial Metrics</h4>
+                    <p class="text-gray-600 mb-3">Your financial status shows your payment progress and outstanding balances. Here's what each metric means:</p>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium">Payment Rate:</span>
+                            <span class="text-sm text-gray-600">Percentage of total fees paid</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium">Total Paid:</span>
+                            <span class="text-sm text-green-600">Amount you've paid so far</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium">Outstanding:</span>
+                            <span class="text-sm text-red-600">Amount still owed</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium">Paid Invoices:</span>
+                            <span class="text-sm text-green-600">Number of fully paid invoices</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <p class="text-sm text-emerald-800">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            <strong>Tip:</strong> Keep your payment rate high by paying invoices on time to maintain good financial standing!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div slot="footer" class="flex justify-end">
+                <ui-button variant="primary" onclick="this.closest('ui-dialog').close()">Got it!</ui-button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+    }
+
     render() {
         const loading = this.get('loading');
         const currentUser = this.get('currentUser');
@@ -462,6 +545,7 @@ class StudentDashboardPage extends App {
         const classInfo = classData?.class || {};
         const gradeStats = this.calculateGradeStats();
         const assignmentStats = this.calculateAssignmentStats();
+        const financeStats = this.calculateFinanceStats();
         const achievements = this.getAchievements();
         const levelData = this.getLevelAndXP();
 
@@ -516,7 +600,7 @@ class StudentDashboardPage extends App {
 
                 ${!loading ? `
                     <!-- Gamification Section -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                         <!-- Level & XP Card -->
                         <div class="bg-white shadow rounded-lg p-6 border-l-4 border-yellow-500">
                             <div class="flex items-center mb-4">
@@ -602,6 +686,36 @@ class StudentDashboardPage extends App {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Financial Status Card -->
+                        <div class="bg-white shadow rounded-lg p-6 border-l-4 border-emerald-500">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 rounded-full bg-emerald-100 text-emerald-600 size-10 min-w-10 flex items-center justify-center">
+                                    <i class="fas fa-credit-card text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Financial Status</p>
+                                    <p class="text-2xl font-bold text-gray-900">${financeStats.payment_rate.toFixed(1)}%</p>
+                                </div>
+                                <button class="ml-auto text-gray-400 hover:text-gray-600 transition-colors" data-action="show-finance-info">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Total Paid</span>
+                                    <span class="font-medium text-green-600">₵${financeStats.total_paid.toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Outstanding</span>
+                                    <span class="font-medium text-red-600">₵${financeStats.total_outstanding.toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Paid Invoices</span>
+                                    <span class="font-medium text-emerald-600">${financeStats.paid_invoices}/${financeStats.total_invoices}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Achievements Section -->
@@ -666,7 +780,8 @@ class StudentDashboardPage extends App {
                  ` : `
                     <div class="space-y-6">
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                            <ui-skeleton class="h-40 w-full"></ui-skeleton>
                             <ui-skeleton class="h-40 w-full"></ui-skeleton>
                             <ui-skeleton class="h-40 w-full"></ui-skeleton>
                             <ui-skeleton class="h-40 w-full"></ui-skeleton>

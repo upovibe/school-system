@@ -71,6 +71,12 @@ class CashierPaymentSchedulerPage extends App {
                 <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-cashier-schedules-info" title="About Payment Scheduler">
                   <i class="fas fa-question-circle text-lg"></i>
                 </button>
+                <button 
+                  onclick="this.closest('app-cashier-payment-scheduler-page').loadData()"
+                  class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
+                  title="Refresh data">
+                  <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
+                </button>
               </div>
               <p class="text-blue-100 text-base sm:text-lg">View class fee schedules for payment processing</p>
             </div>

@@ -47,15 +47,18 @@ class ClassAssignmentSeeder
         
         // Teacher specialization mapping
         $teacherSpecializations = [
-            'T001' => ['MATH_JHS'], // Sarah Johnson - Mathematics
-            'T002' => ['SCI_JHS'],  // Michael Chen - Science
-            'T003' => ['ENG_JHS'],  // Emily Rodriguez - English
-            'T004' => ['ICT'],      // David Osei - ICT
-            'T005' => ['SOC_JHS']   // Grace Mensah - Social Studies
+            'T250811017' => ['INTEGRATED_SCI'], // Dr. Kwame Osei - Integrated Science
+            'T250811018' => ['MATH'],           // Dr. Abena Kwarteng - Mathematics
+            'T250811019' => ['FRENCH'],         // Ama Osei - French
+            'T250811020' => ['ENG'],            // Kwame Mensah - English
+            'T250811021' => ['GHA_LANG'],       // Efua Gyasi - Ghanaian Language
+            'T250811013' => ['COMPUTING', 'SOC_STUDIES'], // Aba Johnson - Computing & Social Studies (JHS 3)
+            'T250811011' => ['SOC_STUDIES'],    // Ama Serwaa - Social Studies (JHS 1)
+            'T250811012' => ['SOC_STUDIES']     // Kwaku Mensah - Social Studies (JHS 2)
         ];
         
         $assignments = [
-            // Mathematics Assignments (Sarah Johnson - T001)
+            // Mathematics Assignments (Dr. Abena Kwarteng - T250811018)
             [
                 'title' => 'Algebra Chapter 5 Practice Problems',
                 'description' => 'Complete exercises 1-20 from textbook pages 45-50. Show all your work and calculations.',
@@ -64,10 +67,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'homework',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T001',
+                'teacher_employee_id' => 'T250811018',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'MATH_JHS'
+                'subject_code' => 'MATH'
             ],
             [
                 'title' => 'Geometry Quiz - Triangles and Circles',
@@ -77,10 +80,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'quiz',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T001',
-                'class_name' => 'JHS 1',
+                'teacher_employee_id' => 'T250811018',
+                'class_name' => 'JHS 2',
                 'section' => 'A',
-                'subject_code' => 'MATH_JHS'
+                'subject_code' => 'MATH'
             ],
             [
                 'title' => 'Mathematics Project - Real-world Applications',
@@ -90,13 +93,13 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'project',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T001',
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'MATH_JHS'
+                'teacher_employee_id' => 'T250811018',
+                'class_name' => 'JHS 3',
+                'section' => 'A',
+                'subject_code' => 'MATH'
             ],
             
-            // Science Assignments (Michael Chen - T002)
+            // Integrated Science Assignments (Dr. Kwame Osei - T250811017)
             [
                 'title' => 'Laboratory Report - Acid-Base Titration',
                 'description' => 'Write a comprehensive lab report on the acid-base titration experiment conducted in class. Include methodology, results, and conclusion.',
@@ -105,10 +108,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'other',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T002',
+                'teacher_employee_id' => 'T250811017',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'SCI_JHS'
+                'subject_code' => 'INTEGRATED_SCI'
             ],
             [
                 'title' => 'Science Quiz - Matter and Energy',
@@ -118,10 +121,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'quiz',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T002',
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'SCI_JHS'
+                'teacher_employee_id' => 'T250811017',
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'INTEGRATED_SCI'
             ],
             [
                 'title' => 'Science Project - Environmental Impact',
@@ -131,13 +134,13 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'project',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T002',
-                'class_name' => 'JHS 2',
+                'teacher_employee_id' => 'T250811017',
+                'class_name' => 'JHS 3',
                 'section' => 'A',
-                'subject_code' => 'SCI_JHS'
+                'subject_code' => 'INTEGRATED_SCI'
             ],
             
-            // English Assignments (Emily Rodriguez - T003)
+            // English Assignments (Kwame Mensah - T250811020)
             [
                 'title' => 'Essay Writing - Shakespeare Analysis',
                 'description' => 'Write a 1000-word essay analyzing the themes in Macbeth. Focus on ambition and its consequences.',
@@ -146,10 +149,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'other',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T003',
+                'teacher_employee_id' => 'T250811020',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'ENG_JHS'
+                'subject_code' => 'ENG'
             ],
             [
                 'title' => 'Creative Writing - Short Story',
@@ -159,10 +162,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'other',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T003',
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'ENG_JHS'
+                'teacher_employee_id' => 'T250811020',
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'ENG'
             ],
             [
                 'title' => 'Grammar Quiz - Parts of Speech',
@@ -172,13 +175,13 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'quiz',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T003',
-                'class_name' => 'JHS 2',
+                'teacher_employee_id' => 'T250811020',
+                'class_name' => 'JHS 3',
                 'section' => 'A',
-                'subject_code' => 'ENG_JHS'
+                'subject_code' => 'ENG'
             ],
             
-            // ICT Assignments (David Osei - T004)
+            // Computing Assignments (Aba Johnson - T250811013)
             [
                 'title' => 'Programming Project - Simple Calculator',
                 'description' => 'Create a simple calculator program using Python. Include basic arithmetic operations and error handling.',
@@ -187,26 +190,26 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'project',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T004',
+                'teacher_employee_id' => 'T250811013',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'ICT'
+                'subject_code' => 'COMPUTING'
             ],
             [
-                'title' => 'ICT Quiz - Computer Hardware',
+                'title' => 'Computing Quiz - Computer Hardware',
                 'description' => 'Complete the quiz on computer hardware components. Identify parts and their functions.',
                 'due_date' => '2025-02-08 23:59:00',
                 'total_points' => 40.00,
                 'assignment_type' => 'quiz',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T004',
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'ICT'
+                'teacher_employee_id' => 'T250811013',
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING'
             ],
             
-            // Social Studies Assignments (Grace Mensah - T005)
+            // Social Studies Assignments (Class Teachers)
             [
                 'title' => 'Research Paper - Ghanaian History',
                 'description' => 'Write a research paper on a significant event in Ghanaian history. Include primary and secondary sources.',
@@ -215,10 +218,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'other',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T005',
+                'teacher_employee_id' => 'T250811011',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
-                'subject_code' => 'SOC_JHS'
+                'subject_code' => 'SOC_STUDIES'
             ],
             [
                 'title' => 'Social Studies Quiz - Government Structure',
@@ -228,10 +231,10 @@ class ClassAssignmentSeeder
                 'assignment_type' => 'quiz',
                 'status' => 'published',
                 'attachment_file' => null,
-                'teacher_employee_id' => 'T005',
-                'class_name' => 'JHS 1',
-                'section' => 'B',
-                'subject_code' => 'SOC_JHS'
+                'teacher_employee_id' => 'T250811012',
+                'class_name' => 'JHS 2',
+                'section' => 'A',
+                'subject_code' => 'SOC_STUDIES'
             ]
         ];
         
@@ -364,7 +367,7 @@ class ClassAssignmentSeeder
             // Sample submissions for different assignments
             [
                 'assignment_title' => 'Algebra Chapter 5 Practice Problems',
-                'student_code' => 'S001',
+                'student_code' => 'STU250811134',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I completed all the problems. Here are my answers for exercises 1-20. I found problems 7 and 12 challenging but managed to solve them.',
@@ -376,7 +379,7 @@ class ClassAssignmentSeeder
             ],
             [
                 'assignment_title' => 'Algebra Chapter 5 Practice Problems',
-                'student_code' => 'S002',
+                'student_code' => 'STU250811135',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I found this assignment challenging but completed it. I struggled with problem 15 but got help from my study group.',
@@ -388,7 +391,7 @@ class ClassAssignmentSeeder
             ],
             [
                 'assignment_title' => 'Laboratory Report - Acid-Base Titration',
-                'student_code' => 'S003',
+                'student_code' => 'STU250811136',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I conducted the acid-base titration experiment and recorded all observations. The endpoint was reached at 25.3mL of NaOH.',
@@ -400,7 +403,7 @@ class ClassAssignmentSeeder
             ],
             [
                 'assignment_title' => 'Essay Writing - Shakespeare Analysis',
-                'student_code' => 'S001',
+                'student_code' => 'STU250811137',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I wrote a comprehensive essay analyzing the themes of ambition and power in Macbeth. The essay explores how unchecked ambition leads to destruction.',
@@ -412,7 +415,7 @@ class ClassAssignmentSeeder
             ],
             [
                 'assignment_title' => 'Programming Project - Simple Calculator',
-                'student_code' => 'S002',
+                'student_code' => 'STU250811138',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I created a calculator program in Python with basic arithmetic operations. The program includes input validation and error handling.',
@@ -424,7 +427,7 @@ class ClassAssignmentSeeder
             ],
             [
                 'assignment_title' => 'Research Paper - Ghanaian History',
-                'student_code' => 'S003',
+                'student_code' => 'STU250811139',
                 'class_name' => 'JHS 1',
                 'section' => 'A',
                 'submission_text' => 'I researched the independence movement in Ghana and wrote about the role of Kwame Nkrumah in achieving independence.',

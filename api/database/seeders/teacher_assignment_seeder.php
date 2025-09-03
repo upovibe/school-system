@@ -225,6 +225,92 @@ class TeacherAssignmentSeeder
                 'section' => 'A',
                 'subject_code' => 'PE',
                 'teacher_id' => 'T250811007'
+            ],
+            
+            // CREATIVE_ARTS Assignments for P1-P3 - T250811014 (Kweku Kwarteng) teaches Creative Arts
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811014'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811014'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'CREATIVE_ARTS',
+                'teacher_id' => 'T250811014'
+            ],
+            
+            // FRENCH Assignments for P1-P3 - T250811015 (Yaa Lartey) teaches French
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'FRENCH',
+                'teacher_id' => 'T250811015'
+            ],
+            
+            // GHA_LANG Assignments for P1-P4 - T250811016 (Nana Nkrumah) teaches Ghanaian Language
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
+            [
+                'class_name' => 'P 4',
+                'section' => 'A',
+                'subject_code' => 'GHA_LANG',
+                'teacher_id' => 'T250811016'
+            ],
+            
+            // COMPUTING Assignments for P1-P3 - T250811013 (Aba Johnson) teaches Computing
+            [
+                'class_name' => 'P 1',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'P 2',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
+            ],
+            [
+                'class_name' => 'P 3',
+                'section' => 'A',
+                'subject_code' => 'COMPUTING',
+                'teacher_id' => 'T250811013'
             ]
         ];
         

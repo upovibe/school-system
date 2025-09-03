@@ -317,10 +317,10 @@
                   ${link.subLinks ? `<i class="fas fa-chevron-down ml-1 text-xs transition-transform group-hover:rotate-180"></i>` : ''}
                 </ui-link>
                                  ${link.subLinks ? `
-                   <div class="absolute top-full left-0 mt-4 w-48 bg-[${backgroundColor}] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50 border border-[${textColor}]">
+                   <div class="absolute top-full left-0 mt-4 w-48 bg-[${primaryColor}] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out z-50 border border-[${primaryColor}]/50">
                      <div class="py-2">
                        ${link.subLinks.map(subLink => `
-                         <ui-link href="${subLink.href}" class="block px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] hover:bg-[${hoverSecondary}] transition-all duration-200 text-sm border-b border-transparent hover:border-[${accentColor}] ${isActive(subLink.href) ? 'active-link' : ''}">
+                         <ui-link href="${subLink.href}" class="block font-semibold  px-4 py-2 text-[${textColor}] hover:text-[${accentColor}] transition-all duration-200 text-sm border-b border-transparent hover:border-[${accentColor}] ${isActive(subLink.href) ? 'active-link' : ''}">
                            ${subLink.label}
                          </ui-link>
                        `).join('')}

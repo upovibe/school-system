@@ -30,40 +30,162 @@ class StudentGradeSeeder
             return;
         }
         
-        // Sample grades for demonstration
+        // Sample grades for JHS 1, 2, and 3 students
         $sampleGrades = [
-            // Student 1 (Student User) - JHS 1 - Just a few subjects
+            // JHS 1 Students - Mathematics
             [
-                'student_id' => $this->getStudentId('S001'),
+                'student_id' => $this->getStudentId('STU250811133'), // Akosua Nkrumah
                 'class_id' => $this->getClassId('JHS 1', 'A'),
                 'subject_id' => $this->getSubjectId('Mathematics'),
                 'grading_period_id' => $periods[0]['id'], // First Term
                 'grading_policy_id' => $this->getPolicyId('Mathematics'),
-                'assignment_total' => 60.0, // Out of 70 max
+                'assignment_total' => 65.0, // Out of 70 max
+                'exam_total' => 28.0, // Out of 30 max
+                'remarks' => 'Excellent performance in both assignments and exams',
+                'created_by' => $this->getAdminUserId()
+            ],
+            [
+                'student_id' => $this->getStudentId('STU250811134'), // Akua Hammond
+                'class_id' => $this->getClassId('JHS 1', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 58.0, // Out of 70 max
                 'exam_total' => 25.0, // Out of 30 max
                 'remarks' => 'Good performance in assignments, needs improvement in exam techniques',
                 'created_by' => $this->getAdminUserId()
             ],
             [
-                'student_id' => $this->getStudentId('S001'),
+                'student_id' => $this->getStudentId('STU250811135'), // Afia Johnson
+                'class_id' => $this->getClassId('JHS 1', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 62.0, // Out of 70 max
+                'exam_total' => 26.0, // Out of 30 max
+                'remarks' => 'Strong mathematical foundation, consistent performance',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 1 Students - English Language
+            [
+                'student_id' => $this->getStudentId('STU250811133'), // Akosua Nkrumah
                 'class_id' => $this->getClassId('JHS 1', 'A'),
                 'subject_id' => $this->getSubjectId('English Language'),
                 'grading_period_id' => $periods[0]['id'],
                 'grading_policy_id' => $this->getPolicyId('English Language'),
                 'assignment_total' => 55.0, // Out of 60 max
                 'exam_total' => 35.0, // Out of 40 max
-                'remarks' => 'Excellent performance in both assignments and exams',
+                'remarks' => 'Excellent writing skills and comprehension',
                 'created_by' => $this->getAdminUserId()
             ],
             [
-                'student_id' => $this->getStudentId('S001'),
+                'student_id' => $this->getStudentId('STU250811134'), // Akua Hammond
+                'class_id' => $this->getClassId('JHS 1', 'A'),
+                'subject_id' => $this->getSubjectId('English Language'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('English Language'),
+                'assignment_total' => 52.0, // Out of 60 max
+                'exam_total' => 32.0, // Out of 40 max
+                'remarks' => 'Good progress in reading comprehension',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 1 Students - Integrated Science
+            [
+                'student_id' => $this->getStudentId('STU250811135'), // Afia Johnson
+                'class_id' => $this->getClassId('JHS 1', 'A'),
+                'subject_id' => $this->getSubjectId('Integrated Science'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Integrated Science'),
+                'assignment_total' => 58.0, // Out of 65 max
+                'exam_total' => 32.0, // Out of 35 max
+                'remarks' => 'Strong practical skills demonstrated',
+                'created_by' => $this->getAdminUserId()
+            ],
+            [
+                'student_id' => $this->getStudentId('STU250811136'), // Ama Darko
                 'class_id' => $this->getClassId('JHS 1', 'A'),
                 'subject_id' => $this->getSubjectId('Integrated Science'),
                 'grading_period_id' => $periods[0]['id'],
                 'grading_policy_id' => $this->getPolicyId('Integrated Science'),
                 'assignment_total' => 55.0, // Out of 65 max
                 'exam_total' => 30.0, // Out of 35 max
-                'remarks' => 'Strong practical skills demonstrated',
+                'remarks' => 'Good understanding of scientific concepts',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 2 Students - Mathematics
+            [
+                'student_id' => $this->getStudentId('STU250811151'), // Akua Hammond
+                'class_id' => $this->getClassId('JHS 2', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 68.0, // Out of 70 max
+                'exam_total' => 29.0, // Out of 30 max
+                'remarks' => 'Outstanding performance in advanced mathematics',
+                'created_by' => $this->getAdminUserId()
+            ],
+            [
+                'student_id' => $this->getStudentId('STU250811152'), // Kwame Boateng
+                'class_id' => $this->getClassId('JHS 2', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 60.0, // Out of 70 max
+                'exam_total' => 27.0, // Out of 30 max
+                'remarks' => 'Good problem-solving skills, consistent effort',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 2 Students - English Language
+            [
+                'student_id' => $this->getStudentId('STU250811153'), // Akosua Lartey
+                'class_id' => $this->getClassId('JHS 2', 'A'),
+                'subject_id' => $this->getSubjectId('English Language'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('English Language'),
+                'assignment_total' => 57.0, // Out of 60 max
+                'exam_total' => 36.0, // Out of 40 max
+                'remarks' => 'Excellent communication skills and vocabulary',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 3 Students - Mathematics
+            [
+                'student_id' => $this->getStudentId('STU250811171'), // Afia Adjei
+                'class_id' => $this->getClassId('JHS 3', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 69.0, // Out of 70 max
+                'exam_total' => 30.0, // Out of 30 max
+                'remarks' => 'Exceptional mathematical ability, ready for advanced studies',
+                'created_by' => $this->getAdminUserId()
+            ],
+            [
+                'student_id' => $this->getStudentId('STU250811172'), // Kweku Appiah
+                'class_id' => $this->getClassId('JHS 3', 'A'),
+                'subject_id' => $this->getSubjectId('Mathematics'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Mathematics'),
+                'assignment_total' => 64.0, // Out of 70 max
+                'exam_total' => 28.0, // Out of 30 max
+                'remarks' => 'Strong analytical skills, good preparation for final exams',
+                'created_by' => $this->getAdminUserId()
+            ],
+            
+            // JHS 3 Students - Integrated Science
+            [
+                'student_id' => $this->getStudentId('STU250811173'), // Yaw Owusu
+                'class_id' => $this->getClassId('JHS 3', 'A'),
+                'subject_id' => $this->getSubjectId('Integrated Science'),
+                'grading_period_id' => $periods[0]['id'],
+                'grading_policy_id' => $this->getPolicyId('Integrated Science'),
+                'assignment_total' => 62.0, // Out of 65 max
+                'exam_total' => 33.0, // Out of 35 max
+                'remarks' => 'Excellent scientific reasoning and practical application',
                 'created_by' => $this->getAdminUserId()
             ]
         ];

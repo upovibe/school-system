@@ -3254,7 +3254,7 @@ class TeacherController {
                     if (isset($firstAssignment['teacher_first_name']) && isset($firstAssignment['teacher_last_name'])) {
                         // Get teacher gender for title
                         $stmt = $this->pdo->prepare("SELECT gender FROM teachers WHERE employee_id = ? AND status = 'active' LIMIT 1");
-                        $stmt->execute([$firstAssignment['teacher_employee_id']]);
+                        $stmt->execute([$firstAssignment['employee_id']]);
                         $teacherData = $stmt->fetch(PDO::FETCH_ASSOC);
                         
                         $title = '';

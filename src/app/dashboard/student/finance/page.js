@@ -18,14 +18,11 @@ class StudentFinancePage extends App {
         this.currentUser = null;
         this.financeData = null;
         this.summaryData = null;
-        this.selectedFilter = 'all';
-        
         // Initialize state
         this.set('loading', true);
         this.set('currentUser', null);
         this.set('financeData', null);
         this.set('summaryData', null);
-        this.set('selectedFilter', 'all');
     }
 
     connectedCallback() {
@@ -33,6 +30,7 @@ class StudentFinancePage extends App {
         document.title = 'My Payments | Student Dashboard';
         this.loadAll();
         this.addEventListener('click', this.handleButtonClick.bind(this));
+        this.addEventListener('table-row-click', this.handleTableRowClick.bind(this));
     }
 
     handleButtonClick(event) {
@@ -42,27 +40,16 @@ class StudentFinancePage extends App {
         const action = button.getAttribute('data-action');
         
         switch (action) {
-            case 'filter-all':
-                this.filterData('all');
-                break;
-            case 'filter-paid':
-                this.filterData('paid');
-                break;
-            case 'filter-pending':
-                this.filterData('open');
-                break;
-            case 'show-invoice-details':
-                const invoiceId = button.getAttribute('data-invoice-id');
-                this.showInvoiceDetails(invoiceId);
-                break;
-            case 'show-payment-details':
-                const paymentId = button.getAttribute('data-payment-id');
-                this.showPaymentDetails(paymentId);
-                break;
             case 'show-finance-help':
                 this.showFinanceHelp();
                 break;
         }
+    }
+
+    handleTableRowClick(event) {
+        const { detail } = event;
+        const invoiceId = detail.row.id;
+        this.showInvoiceDetails(invoiceId);
     }
 
     async loadAll() {
@@ -103,25 +90,9 @@ class StudentFinancePage extends App {
         }
     }
 
-    filterData(filter) {
-        this.set('selectedFilter', filter);
-        // The render method will handle filtering
-    }
-
     getFilteredInvoices() {
         const financeData = this.get('financeData');
-        const filter = this.get('selectedFilter');
-        
-        if (!financeData?.invoices) return [];
-        
-        switch (filter) {
-            case 'paid':
-                return financeData.invoices.filter(invoice => invoice.status === 'paid');
-            case 'open':
-                return financeData.invoices.filter(invoice => invoice.status === 'open');
-            default:
-                return financeData.invoices;
-        }
+        return financeData?.invoices || [];
     }
 
     showInvoiceDetails(invoiceId) {
@@ -341,8 +312,7 @@ class StudentFinancePage extends App {
             balance: `₵${parseFloat(invoice.balance).toFixed(2)}`,
             balance_raw: parseFloat(invoice.balance),
             status: invoice.status,
-            status_badge: this.getStatusBadge(invoice.status),
-            actions: this.getActionButtons(invoice.id)
+            status_badge: this.getStatusBadge(invoice.status)
         }));
     }
 
@@ -398,12 +368,6 @@ class StudentFinancePage extends App {
                 label: 'Status',
                 sortable: true,
                 align: 'center'
-            },
-            {
-                key: 'actions',
-                label: 'Actions',
-                align: 'center',
-                sortable: false
             }
         ];
     }
@@ -421,203 +385,135 @@ class StudentFinancePage extends App {
         </span>`;
     }
 
-    getActionButtons(invoiceId) {
-        return `
-            <ui-button 
-                size="sm" 
-                variant="outline" 
-                color="primary"
-                data-action="show-invoice-details" 
-                data-invoice-id="${invoiceId}">
-                <i class="fas fa-eye mr-1"></i> View
-            </ui-button>
-        `;
-    }
+
 
     render() {
         const loading = this.get('loading');
         const currentUser = this.get('currentUser');
         const financeData = this.get('financeData');
         const summaryData = this.get('summaryData');
-        const selectedFilter = this.get('selectedFilter');
         
         const userName = currentUser?.name || currentUser?.first_name + ' ' + currentUser?.last_name || 'Student';
         const filteredInvoices = this.getFilteredInvoices();
 
         return `
             <div class="space-y-6">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between">
+                <!-- Enhanced Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
                             <div class="flex items-center gap-2">
-                                <h1 class="text-2xl font-bold">My Payments</h1>
-                                <button class="text-white/90 hover:text-white transition-colors" data-action="show-finance-help" title="Payment Help">
+                                <h1 class="text-2xl sm:text-3xl font-bold">My Payments</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-finance-help" title="Payment Help">
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 mt-1">Track your school fees and payment history</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Track your school fees and payment history</p>
                         </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold">
-                                ${loading ? '...' : (summaryData?.summary?.total_invoices || 0)}
+                        <div class="mt-4 sm:mt-0">
+                            <div class="text-right">
+                                <div class="text-sm sm:text-base font-semibold">Total Invoices</div>
+                                <div class="text-2xl sm:text-3xl font-bold">
+                                    ${loading ? '...' : (summaryData?.summary?.total_invoices || 0)}
+                                </div>
                             </div>
-                            <div class="text-blue-100 text-sm">Total Invoices</div>
                         </div>
                     </div>
+                    
+                    ${!loading && summaryData ? `
+                        <!-- Enhanced Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-file-invoice text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">₵${summaryData.summary.total_invoiced.toFixed(2)}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Total Invoiced</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-check-circle text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">₵${summaryData.summary.total_paid.toFixed(2)}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Total Paid</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center ${summaryData.summary.total_outstanding > 0 ? 'bg-red-500' : 'bg-gray-500'} rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">₵${summaryData.summary.total_outstanding.toFixed(2)}</div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Outstanding</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="flex items-center">
+                                    <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-percentage text-white text-lg sm:text-xl"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-lg font-semibold">
+                                            ${summaryData.summary.total_invoices > 0 ? 
+                                                ((summaryData.summary.paid_invoices / summaryData.summary.total_invoices) * 100).toFixed(1) : 0}%
+                                        </div>
+                                        <div class="text-blue-100 text-xs sm:text-sm">Payment Rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <!-- Loading State for Header Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="animate-pulse">
+                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2"></div>
+                                    <div class="h-4 bg-white bg-opacity-20 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="animate-pulse">
+                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2"></div>
+                                    <div class="h-4 bg-white bg-opacity-20 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="animate-pulse">
+                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2"></div>
+                                    <div class="h-4 bg-white bg-opacity-20 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                                <div class="animate-pulse">
+                                    <div class="h-6 bg-white bg-opacity-30 rounded mb-2"></div>
+                                    <div class="h-4 bg-white bg-opacity-20 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `}
                 </div>
 
                 ${!loading && summaryData ? `
-                    <!-- Financial Metrics -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Total Invoiced -->
-                        <div class="bg-white shadow rounded-lg p-6 border-l-4 border-blue-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
-                                    <i class="fas fa-file-invoice text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Total Invoiced</p>
-                                    <p class="text-2xl font-bold text-gray-900">₵${summaryData.summary.total_invoiced.toFixed(2)}</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Total Paid -->
-                        <div class="bg-white shadow rounded-lg p-6 border-l-4 border-green-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
-                                    <i class="fas fa-check-circle text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Total Paid</p>
-                                    <p class="text-2xl font-bold text-green-600">₵${summaryData.summary.total_paid.toFixed(2)}</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Outstanding Balance -->
-                        <div class="bg-white shadow rounded-lg p-6 border-l-4 ${summaryData.summary.total_outstanding > 0 ? 'border-red-500' : 'border-gray-500'}">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full ${summaryData.summary.total_outstanding > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} mr-4">
-                                    <i class="fas fa-exclamation-triangle text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Outstanding</p>
-                                    <p class="text-2xl font-bold ${summaryData.summary.total_outstanding > 0 ? 'text-red-600' : 'text-gray-900'}">
-                                        ₵${summaryData.summary.total_outstanding.toFixed(2)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Payment Rate -->
-                        <div class="bg-white shadow rounded-lg p-6 border-l-4 border-purple-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
-                                    <i class="fas fa-percentage text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Payment Rate</p>
-                                    <p class="text-2xl font-bold text-purple-600">
-                                        ${summaryData.summary.total_invoices > 0 ? 
-                                            ((summaryData.summary.paid_invoices / summaryData.summary.total_invoices) * 100).toFixed(1) : 0}%
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Payments -->
-                    ${summaryData.recent_payments?.length > 0 ? `
-                        <div class="bg-white shadow rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-history mr-2 text-green-500"></i>
-                                Recent Payments
-                            </h3>
-                            <div class="space-y-3">
-                                ${summaryData.recent_payments.map(payment => `
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                                         onclick="this.closest('app-student-finance-page').querySelector('[data-action=show-payment-details][data-payment-id=\"${payment.id}\"]')?.click()">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                                <i class="fas fa-credit-card text-green-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-medium text-gray-900">₵${parseFloat(payment.amount).toFixed(2)}</p>
-                                                <p class="text-sm text-gray-500">${payment.academic_year} - ${payment.grading_period}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-sm text-gray-900">${new Date(payment.paid_on).toLocaleDateString()}</p>
-                                            <p class="text-xs text-gray-500 capitalize">${payment.method}</p>
-                                        </div>
-                                        <button class="hidden" data-action="show-payment-details" data-payment-id="${payment.id}"></button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- Outstanding Invoices -->
-                    ${summaryData.outstanding_invoices?.length > 0 ? `
-                        <div class="bg-white shadow rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
-                                Outstanding Payments
-                            </h3>
-                            <div class="space-y-3">
-                                ${summaryData.outstanding_invoices.map(invoice => `
-                                    <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-                                                <i class="fas fa-file-invoice text-yellow-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-medium text-gray-900">${invoice.invoice_number}</p>
-                                                <p class="text-sm text-gray-500">${invoice.academic_year} - ${invoice.grading_period}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold text-red-600">₵${parseFloat(invoice.balance).toFixed(2)}</p>
-                                            <p class="text-xs text-gray-500">
-                                                Due: ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- All Invoices -->
-                    <div class="bg-white shadow rounded-lg">
-                        <div class="p-6 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">
-                                    <i class="fas fa-list mr-2 text-blue-500"></i>
-                                    All Invoices
-                                </h3>
-                                <div class="flex space-x-2">
-                                    <button class="px-3 py-1 text-sm rounded-md transition-colors ${selectedFilter === 'all' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}"
-                                            data-action="filter-all">
-                                        All
-                                    </button>
-                                    <button class="px-3 py-1 text-sm rounded-md transition-colors ${selectedFilter === 'paid' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'}"
-                                            data-action="filter-paid">
-                                        Paid
-                                    </button>
-                                    <button class="px-3 py-1 text-sm rounded-md transition-colors ${selectedFilter === 'open' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-600 hover:bg-gray-100'}"
-                                            data-action="filter-pending">
-                                        Pending
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
+                    <!-- Invoices Table -->
+                    <div class="bg-white shadow rounded-lg p-6">
                         ${filteredInvoices.length > 0 ? `
                             <ui-table 
-                                title=""
+                                title="My Invoices"
                                 data='${JSON.stringify(this.prepareTableData(filteredInvoices))}'
                                 columns='${JSON.stringify(this.getTableColumns())}'
                                 sortable
@@ -627,17 +523,17 @@ class StudentFinancePage extends App {
                                 page-size="10"
                                 bordered
                                 striped
+                                print
+                                refresh
+                                clickable
+                                row-clickable="true"
                                 class="w-full">
                             </ui-table>
                         ` : `
                             <div class="p-8 text-center">
                                 <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
-                                <p class="text-gray-500">
-                                    ${selectedFilter === 'all' ? 'You have no invoices yet.' : 
-                                      selectedFilter === 'paid' ? 'You have no paid invoices.' : 
-                                      'You have no pending invoices.'}
-                                </p>
+                                <p class="text-gray-500">You have no invoices yet.</p>
                             </div>
                         `}
                     </div>

@@ -35,17 +35,23 @@ class TeacherAnnouncementAddModal extends HTMLElement {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'open' && newValue !== null) {
+            // Reset to skeleton state when modal opens
+            const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+            const skeleton = this.querySelector('#target-audience-skeleton');
+            
+            if (targetAudienceDropdown && skeleton) {
+                // Show skeleton and hide dropdown
+                skeleton.classList.remove('hidden');
+                targetAudienceDropdown.classList.add('hidden');
+                targetAudienceDropdown.value = '';
+                targetAudienceDropdown.innerHTML = '';
+            }
+            
             // Modal is now open, ensure dropdown displays correctly
             if (this.isClassTeacher && this.teacherClass) {
                 setTimeout(() => {
                     this.updateDropdownDisplay();
                 }, 50);
-            }
-            // Reset target audience dropdown to prevent flash
-            const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
-            if (targetAudienceDropdown) {
-                targetAudienceDropdown.value = '';
-                targetAudienceDropdown.setAttribute('placeholder', 'Loading target audience options...');
             }
         }
     }
@@ -66,18 +72,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
-        // Reset target audience dropdown to prevent flash
-        const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
-        if (targetAudienceDropdown) {
-            targetAudienceDropdown.value = '';
-            targetAudienceDropdown.setAttribute('placeholder', 'Loading target audience options...');
-        }
-        // Ensure dropdown displays the correct text when modal opens
-        if (this.isClassTeacher && this.teacherClass) {
-            setTimeout(() => {
-                this.updateDropdownDisplay();
-            }, 50);
-        }
+        // The attributeChangedCallback will handle the skeleton reset
     }
 
     close() {
@@ -235,21 +230,21 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             if (this.isClassTeacher) {
                 // Class teacher can target their assigned class
                 this.updateTargetAudienceOptions('class');
-                // Set value after options are populated
+                // Set value after dropdown is shown and options are populated
                 setTimeout(() => {
                     targetAudienceDropdown.value = 'specific_class';
                     this.showTargetClassField();
                     this.updateHelpText('class');
-                }, 10);
+                }, 150); // Longer delay to ensure dropdown is fully rendered
             } else if (this.teacherAssignments && this.teacherAssignments.length > 0) {
                 // Subject teacher can target classes where they teach
                 this.updateTargetAudienceOptions('subject');
-                // Set value after options are populated
+                // Set value after dropdown is shown and options are populated
                 setTimeout(() => {
                     targetAudienceDropdown.value = 'specific_class';
                     this.showTargetClassField();
                     this.updateHelpText('subject');
-                }, 10);
+                }, 150); // Longer delay to ensure dropdown is fully rendered
             }
         }
     }
@@ -269,6 +264,8 @@ class TeacherAnnouncementAddModal extends HTMLElement {
     // Update target audience options based on teacher type
     updateTargetAudienceOptions(teacherType) {
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
+        const skeleton = this.querySelector('#target-audience-skeleton');
+        
         if (!targetAudienceDropdown) return;
 
         // Clear existing options and reset value
@@ -294,6 +291,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
         }
+
+        // Hide skeleton and show dropdown after a small delay to ensure proper rendering
+        setTimeout(() => {
+            if (skeleton) skeleton.classList.add('hidden');
+            targetAudienceDropdown.classList.remove('hidden');
+        }, 100);
     }
 
     // Show target class field and populate with teacher's class
@@ -576,10 +579,16 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Audience <span class="text-red-500">*</span></label>
-                        <ui-search-dropdown data-field="target_audience" placeholder="Loading target audience options...">
-                            <ui-option value="">Loading...</ui-option>
-                            <!-- Options will be set dynamically based on teacher type -->
-                        </ui-search-dropdown>
+                        <div id="target-audience-container">
+                            <!-- Skeleton will be shown initially -->
+                            <div id="target-audience-skeleton" class="animate-pulse">
+                                <div class="h-10 bg-gray-200 rounded-md"></div>
+                            </div>
+                            <!-- Actual dropdown (hidden initially) -->
+                            <ui-search-dropdown data-field="target_audience" placeholder="Select target audience..." class="hidden">
+                                <!-- Options will be set dynamically based on teacher type -->
+                            </ui-search-dropdown>
+                        </div>
                     </div>
                     
                     <!-- Target Class Field -->

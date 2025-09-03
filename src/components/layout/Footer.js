@@ -265,7 +265,10 @@ class Footer extends App {
                             <h3 class="text-lg font-bold text-[${secondaryColor}] mb-4">Portal Login</h3>
                             <div class="space-y-3">
                                 <a href="/auth/login" class="block text-sm text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300">
-                                    Login
+                                    Student Portal
+                                </a>
+                                <a href="https://www.mailindeed.com/webmail/" class="block text-sm text-[${textColor}] hover:text-[${accentColor}] transition-colors duration-300">
+                                    Staff Email
                                 </a>
                             </div>
                         </div>

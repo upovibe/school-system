@@ -65,11 +65,25 @@ class UserController {
                 return;
             }
             
-            // Auto-generate a secure password
-            $generatedPassword = $this->generateSecurePassword();
-            
-            // Hash the generated password
-            $data['password'] = password_hash($generatedPassword, PASSWORD_DEFAULT);
+            // Check if password is provided, otherwise auto-generate
+            if (isset($data['password']) && !empty(trim($data['password']))) {
+                // Validate provided password
+                $providedPassword = trim($data['password']);
+                if (strlen($providedPassword) < 8) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Password must be at least 8 characters long'], JSON_PRETTY_PRINT);
+                    return;
+                }
+                
+                // Use provided password
+                $data['password'] = password_hash($providedPassword, PASSWORD_DEFAULT);
+                $passwordSource = 'provided';
+            } else {
+                // Auto-generate a secure password
+                $generatedPassword = $this->generateSecurePassword();
+                $data['password'] = password_hash($generatedPassword, PASSWORD_DEFAULT);
+                $passwordSource = 'generated';
+            }
             
             // Set default role if not provided
             if (!isset($data['role_id'])) {
@@ -86,7 +100,7 @@ class UserController {
             // Log user creation
             $this->logModel->logAction($id, 'user_created', 'New user created', $data);
             
-            // Send welcome email with generated password
+            // Send welcome email with password
             try {
                 require_once __DIR__ . '/../core/EmailService.php';
                 $emailService = new EmailService();
@@ -94,12 +108,15 @@ class UserController {
                 // Get login URL from environment or use default
                 $loginUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:8000/auth/login';
                 
-                // Send the welcome email with generated password
+                // Determine which password to send
+                $passwordToSend = ($passwordSource === 'provided') ? $providedPassword : $generatedPassword;
+                
+                // Send the welcome email with password
                 $emailSent = $emailService->sendUserCreatedEmail(
                     $data['email'],
                     $data['name'],
                     $data['email'],
-                    $generatedPassword,
+                    $passwordToSend,
                     $loginUrl
                 );
                 
@@ -118,7 +135,8 @@ class UserController {
                 'id' => $id, 
                 'message' => 'User created successfully. Welcome email sent with login credentials.',
                 'email_sent' => true,
-                'email' => $data['email']
+                'email' => $data['email'],
+                'password_source' => $passwordSource
             ], JSON_PRETTY_PRINT);
         } catch (Exception $e) {
             http_response_code(500);

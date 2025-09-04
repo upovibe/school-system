@@ -99,11 +99,13 @@ class UserAddDialog extends HTMLElement {
             const nameInput = this.querySelector('#user-name-input');
             const emailInput = this.querySelector('#user-email-input');
             const roleDropdown = this.querySelector('#user-role-dropdown');
+            const passwordInput = this.querySelector('#user-password-input');
             
             const userData = {
                 name: nameInput ? nameInput.value : '',
                 email: emailInput ? emailInput.value : '',
-                role_id: roleDropdown ? roleDropdown.value : ''
+                role_id: roleDropdown ? roleDropdown.value : '',
+                password: passwordInput ? passwordInput.value : ''
             };
 
             // Validate required fields
@@ -159,6 +161,19 @@ class UserAddDialog extends HTMLElement {
                     duration: 3000
                 });
                 return;
+            }
+
+            // Validate password if provided
+            if (userData.password && userData.password.trim().length > 0) {
+                if (userData.password.trim().length < 8) {
+                    Toast.show({
+                        title: 'Validation Error',
+                        message: 'Password must be at least 8 characters long',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
             }
 
             // Get auth token
@@ -233,11 +248,18 @@ class UserAddDialog extends HTMLElement {
             const nameInput = this.querySelector('#user-name-input');
             const emailInput = this.querySelector('#user-email-input');
             const roleDropdown = this.querySelector('#user-role-dropdown');
+            const passwordInput = this.querySelector('#user-password-input');
             const saveBtn = this.querySelector('#save-user-btn');
             const emailVal = String(emailInput?.value || '').trim();
+            const passwordVal = String(passwordInput?.value || '').trim();
+            
+            // Check if password is valid (either empty or at least 8 characters)
+            const passwordValid = !passwordVal || passwordVal.length >= 8;
+            
             const allFilled = !!String(nameInput?.value || '').trim() &&
                 !!emailVal && this.isValidEmail(emailVal) &&
-                !!String(roleDropdown?.value || '').trim();
+                !!String(roleDropdown?.value || '').trim() &&
+                passwordValid;
             if (saveBtn) {
                 if (allFilled) saveBtn.removeAttribute('disabled');
                 else saveBtn.setAttribute('disabled', '');
@@ -250,6 +272,7 @@ class UserAddDialog extends HTMLElement {
         const nameInput = this.querySelector('#user-name-input');
         const emailInput = this.querySelector('#user-email-input');
         const roleDropdown = this.querySelector('#user-role-dropdown');
+        const passwordInput = this.querySelector('#user-password-input');
         const saveBtn = this.querySelector('#save-user-btn');
         if (nameInput) {
             nameInput.addEventListener('input', () => this.validateForm());
@@ -261,6 +284,10 @@ class UserAddDialog extends HTMLElement {
         }
         if (roleDropdown) {
             roleDropdown.addEventListener('change', () => this.validateForm());
+        }
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => this.validateForm());
+            passwordInput.addEventListener('change', () => this.validateForm());
         }
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveUser());
         this.validateForm();
@@ -314,6 +341,20 @@ class UserAddDialog extends HTMLElement {
                                 required>
                             </ui-input>
                         </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                            <ui-input 
+                                id="user-password-input"
+                                type="password" 
+                                name="password"
+                                placeholder="Enter password"
+                                minlength="8">
+                            </ui-input>
+                            <p class="text-xs text-gray-500 mt-1">
+                               Enter a custom password (min 8 characters)
+                            </p>
+                        </div>
                     </form>
                     
                     <!-- Information Notice -->
@@ -327,7 +368,7 @@ class UserAddDialog extends HTMLElement {
                                 <ul class="text-sm text-blue-700 space-y-1">
                                     <li class="flex items-start">
                                         <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
-                                        A secure password will be auto-generated and sent to the user's email
+                                        If no password is provided, a secure password will be auto-generated
                                     </li>
                                     <li class="flex items-start">
                                         <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>

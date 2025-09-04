@@ -36,6 +36,9 @@ class UsersPage extends App {
         this.editUserData = null;
         this.viewUserData = null;
         this.deleteUserData = null;
+        this.activeTab = 'all';
+        // Initialize state
+        this.set('activeTab', 'all');
     }
 
     connectedCallback() {
@@ -43,6 +46,7 @@ class UsersPage extends App {
         document.title = 'Users Management | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        this.addEventListener('click', this.handleTabClick.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -120,6 +124,17 @@ class UsersPage extends App {
         }
     }
 
+    handleTabClick(event) {
+        const button = event.target.closest('button[data-tab]');
+        if (!button) return;
+        const tab = button.getAttribute('data-tab');
+        this.switchTab(tab);
+    }
+
+    switchTab(tab) {
+        this.set('activeTab', tab);
+    }
+
     showUsersInfo() {
         const dialog = document.createElement('ui-dialog');
         dialog.setAttribute('open', '');
@@ -162,6 +177,32 @@ class UsersPage extends App {
         const inactive = users.filter(u => (u?.status?.toString?.().toLowerCase?.() === 'inactive') || u?.is_active === false).length;
         const roleSet = new Set(users.map(u => (u?.role || 'N/A')));
         return { total, active, inactive, roles: roleSet.size };
+    }
+
+    getFilteredUsers() {
+        const users = this.get('users') || [];
+        const activeTab = this.get('activeTab');
+        
+        if (activeTab === 'all') {
+            return users;
+        }
+        
+        return users.filter(user => {
+            const role = (user?.role || '').toLowerCase();
+            return role === activeTab;
+        });
+    }
+
+    getRoleCounts() {
+        const users = this.get('users') || [];
+        const counts = {
+            all: users.length,
+            admin: users.filter(u => (u?.role || '').toLowerCase() === 'admin').length,
+            teacher: users.filter(u => (u?.role || '').toLowerCase() === 'teacher').length,
+            student: users.filter(u => (u?.role || '').toLowerCase() === 'student').length,
+            cashier: users.filter(u => (u?.role || '').toLowerCase() === 'cashier').length
+        };
+        return counts;
     }
 
     renderHeader() {
@@ -337,11 +378,11 @@ class UsersPage extends App {
 
     // Update table data without full page reload
     updateTableData() {
-        const users = this.get('users');
-        if (!users) return;
+        const filteredUsers = this.getFilteredUsers();
+        if (!filteredUsers) return;
 
         // Prepare table data
-        const tableData = users.map((user, index) => ({
+        const tableData = filteredUsers.map((user, index) => ({
             id: user.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             name: user.name,
@@ -377,8 +418,12 @@ class UsersPage extends App {
         const showEditDialog = this.get('showEditDialog');
         const showViewModal = this.get('showViewModal');
         const showDeleteDialog = this.get('showDeleteDialog');
+        const activeTab = this.get('activeTab');
         
-        const tableData = users ? users.map((user, index) => ({
+        const filteredUsers = this.getFilteredUsers();
+        const roleCounts = this.getRoleCounts();
+        
+        const tableData = filteredUsers ? filteredUsers.map((user, index) => ({
             id: user.id, // Keep ID for internal use
             index: index + 1, // Add index number for display
             name: user.name,
@@ -401,35 +446,114 @@ class UsersPage extends App {
         
         return `
             ${this.renderHeader()}
-            <div class="bg-white rounded-lg shadow-lg p-4">
+            <div class="bg-white rounded-lg shadow-lg">
                 ${loading ? `
                     <!-- Simple Skeleton Loading -->
-                    <div class="space-y-4">
+                    <div class="p-4 space-y-4">
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
                         <ui-skeleton class="h-24 w-full"></ui-skeleton>
                     </div>
                 ` : `
-                    <!-- Users Table Section -->
-                    <div class="mb-8">
-                        <ui-table 
-                            title="Users"
-                            data='${JSON.stringify(tableData)}'
-                            columns='${JSON.stringify(tableColumns)}'
-                            sortable
-                            searchable
-                            search-placeholder="Search users..."
-                            pagination
-                            page-size="50"
-                            action
-                            addable
-                            actions="view, edit"
-                            refresh
-                            print
-                            bordered
-                            striped
-                            class="w-full">
-                        </ui-table>
+                    <!-- Tab Navigation -->
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-4 lg:space-x-8 px-4 lg:px-6 pt-6" aria-label="Tabs">
+                            <button 
+                                class="py-2 px-2 lg:px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    activeTab === 'all' 
+                                        ? 'border-blue-500 text-blue-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }"
+                                data-tab="all"
+                                title="All Users (${roleCounts.all})">
+                                <i class="fas fa-users ${roleCounts.all > 0 ? 'mr-0 lg:mr-2' : 'mr-0 lg:mr-2'}"></i>
+                                <span class="hidden lg:inline">All Users (${roleCounts.all})</span>
+                                <span class="lg:hidden text-xs">${roleCounts.all}</span>
+                            </button>
+                            <button 
+                                class="py-2 px-2 lg:px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    activeTab === 'admin' 
+                                        ? 'border-blue-500 text-blue-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }"
+                                data-tab="admin"
+                                title="Admins (${roleCounts.admin})">
+                                <i class="fas fa-user-shield ${roleCounts.admin > 0 ? 'mr-0 lg:mr-2' : 'mr-0 lg:mr-2'}"></i>
+                                <span class="hidden lg:inline">Admins (${roleCounts.admin})</span>
+                                <span class="lg:hidden text-xs">${roleCounts.admin}</span>
+                            </button>
+                            <button 
+                                class="py-2 px-2 lg:px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    activeTab === 'teacher' 
+                                        ? 'border-blue-500 text-blue-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }"
+                                data-tab="teacher"
+                                title="Teachers (${roleCounts.teacher})">
+                                <i class="fas fa-chalkboard-teacher ${roleCounts.teacher > 0 ? 'mr-0 lg:mr-2' : 'mr-0 lg:mr-2'}"></i>
+                                <span class="hidden lg:inline">Teachers (${roleCounts.teacher})</span>
+                                <span class="lg:hidden text-xs">${roleCounts.teacher}</span>
+                            </button>
+                            <button 
+                                class="py-2 px-2 lg:px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    activeTab === 'student' 
+                                        ? 'border-blue-500 text-blue-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }"
+                                data-tab="student"
+                                title="Students (${roleCounts.student})">
+                                <i class="fas fa-graduation-cap ${roleCounts.student > 0 ? 'mr-0 lg:mr-2' : 'mr-0 lg:mr-2'}"></i>
+                                <span class="hidden lg:inline">Students (${roleCounts.student})</span>
+                                <span class="lg:hidden text-xs">${roleCounts.student}</span>
+                            </button>
+                            <button 
+                                class="py-2 px-2 lg:px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    activeTab === 'cashier' 
+                                        ? 'border-blue-500 text-blue-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }"
+                                data-tab="cashier"
+                                title="Cashiers (${roleCounts.cashier})">
+                                <i class="fas fa-cash-register ${roleCounts.cashier > 0 ? 'mr-0 lg:mr-2' : 'mr-0 lg:mr-2'}"></i>
+                                <span class="hidden lg:inline">Cashiers (${roleCounts.cashier})</span>
+                                <span class="lg:hidden text-xs">${roleCounts.cashier}</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="p-6">
+                        ${filteredUsers.length > 0 ? `
+                            <ui-table 
+                                title="Users"
+                                data='${JSON.stringify(tableData)}'
+                                columns='${JSON.stringify(tableColumns)}'
+                                sortable
+                                searchable
+                                search-placeholder="Search users..."
+                                pagination
+                                page-size="50"
+                                action
+                                addable
+                                actions="view, edit"
+                                refresh
+                                print
+                                bordered
+                                striped
+                                class="w-full">
+                            </ui-table>
+                        ` : `
+                            <div class="p-8 text-center">
+                                <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                                <p class="text-gray-500">
+                                    ${activeTab === 'all' 
+                                        ? 'No users have been created yet.' 
+                                        : `No ${activeTab}s found in the system.`
+                                    }
+                                </p>
+                            </div>
+                        `}
                     </div>
                 `}
             </div>

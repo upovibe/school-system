@@ -65,25 +65,24 @@ class UserController {
                 return;
             }
             
-            // Check if password is provided, otherwise auto-generate
-            if (isset($data['password']) && !empty(trim($data['password']))) {
-                // Validate provided password
-                $providedPassword = trim($data['password']);
-                if (strlen($providedPassword) < 8) {
-                    http_response_code(400);
-                    echo json_encode(['error' => 'Password must be at least 8 characters long'], JSON_PRETTY_PRINT);
-                    return;
-                }
-                
-                // Use provided password
-                $data['password'] = password_hash($providedPassword, PASSWORD_DEFAULT);
-                $passwordSource = 'provided';
-            } else {
-                // Auto-generate a secure password
-                $generatedPassword = $this->generateSecurePassword();
-                $data['password'] = password_hash($generatedPassword, PASSWORD_DEFAULT);
-                $passwordSource = 'generated';
+            // Validate required password field
+            if (!isset($data['password']) || empty(trim($data['password']))) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Password is required'], JSON_PRETTY_PRINT);
+                return;
             }
+            
+            // Validate password length
+            $providedPassword = trim($data['password']);
+            if (strlen($providedPassword) < 8) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Password must be at least 8 characters long'], JSON_PRETTY_PRINT);
+                return;
+            }
+            
+            // Use provided password
+            $data['password'] = password_hash($providedPassword, PASSWORD_DEFAULT);
+            $passwordSource = 'provided';
             
             // Set default role if not provided
             if (!isset($data['role_id'])) {
@@ -108,8 +107,8 @@ class UserController {
                 // Get login URL from environment or use default
                 $loginUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:8000/auth/login';
                 
-                // Determine which password to send
-                $passwordToSend = ($passwordSource === 'provided') ? $providedPassword : $generatedPassword;
+                // Send the provided password
+                $passwordToSend = $providedPassword;
                 
                 // Send the welcome email with password
                 $emailSent = $emailService->sendUserCreatedEmail(

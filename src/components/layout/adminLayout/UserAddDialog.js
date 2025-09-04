@@ -163,17 +163,25 @@ class UserAddDialog extends HTMLElement {
                 return;
             }
 
-            // Validate password if provided
-            if (userData.password && userData.password.trim().length > 0) {
-                if (userData.password.trim().length < 8) {
-                    Toast.show({
-                        title: 'Validation Error',
-                        message: 'Password must be at least 8 characters long',
-                        variant: 'error',
-                        duration: 3000
-                    });
-                    return;
-                }
+            // Validate required password field
+            if (!userData.password?.trim()) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Password is required',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (userData.password.trim().length < 8) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Password must be at least 8 characters long',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
             }
 
             // Get auth token
@@ -253,8 +261,8 @@ class UserAddDialog extends HTMLElement {
             const emailVal = String(emailInput?.value || '').trim();
             const passwordVal = String(passwordInput?.value || '').trim();
             
-            // Check if password is valid (either empty or at least 8 characters)
-            const passwordValid = !passwordVal || passwordVal.length >= 8;
+            // Password is now required and must be at least 8 characters
+            const passwordValid = passwordVal.length >= 8;
             
             const allFilled = !!String(nameInput?.value || '').trim() &&
                 !!emailVal && this.isValidEmail(emailVal) &&
@@ -352,7 +360,7 @@ class UserAddDialog extends HTMLElement {
                                 minlength="8">
                             </ui-input>
                             <p class="text-xs text-gray-500 mt-1">
-                               Enter a custom password (min 8 characters)
+                               Password must be at least 8 characters long
                             </p>
                         </div>
                     </form>
@@ -368,11 +376,7 @@ class UserAddDialog extends HTMLElement {
                                 <ul class="text-sm text-blue-700 space-y-1">
                                     <li class="flex items-start">
                                         <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
-                                        If no password is provided, a secure password will be auto-generated
-                                    </li>
-                                    <li class="flex items-start">
-                                        <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>
-                                        The user will receive a welcome email with login credentials
+                                        The user will receive a welcome email with the provided password
                                     </li>
                                     <li class="flex items-start">
                                         <i class="fas fa-check text-blue-500 text-xs mt-1 mr-2"></i>

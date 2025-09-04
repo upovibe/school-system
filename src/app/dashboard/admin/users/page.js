@@ -45,8 +45,7 @@ class UsersPage extends App {
         super.connectedCallback();
         document.title = 'Users Management | School System';
         this.loadData();
-        this.addEventListener('click', this.handleHeaderActions.bind(this));
-        this.addEventListener('click', this.handleTabClick.bind(this));
+        this.addEventListener('click', this.handleClick.bind(this));
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -115,24 +114,40 @@ class UsersPage extends App {
         });
     }
 
-    handleHeaderActions(event) {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
-        const action = button.getAttribute('data-action');
-        if (action === 'show-users-info') {
-            this.showUsersInfo();
-        }
-    }
 
-    handleTabClick(event) {
-        const button = event.target.closest('button[data-tab]');
-        if (!button) return;
-        const tab = button.getAttribute('data-tab');
-        this.switchTab(tab);
+    handleClick(event) {
+        // Check if click is inside tab navigation area
+        const tabNavigation = event.target.closest('nav[aria-label="Tabs"]');
+        if (tabNavigation) {
+            // Handle tab clicks
+            const tabButton = event.target.closest('button[data-tab]');
+            if (tabButton) {
+                event.stopPropagation();
+                event.preventDefault();
+                const tab = tabButton.getAttribute('data-tab');
+                this.switchTab(tab);
+                return;
+            }
+            // If it's inside tab nav but not a tab button, still prevent propagation
+            event.stopPropagation();
+            return;
+        }
+
+        // Handle header action buttons
+        const actionButton = event.target.closest('button[data-action]');
+        if (actionButton) {
+            const action = actionButton.getAttribute('data-action');
+            if (action === 'show-users-info') {
+                this.showUsersInfo();
+            }
+            return;
+        }
     }
 
     switchTab(tab) {
         this.set('activeTab', tab);
+        // Close all modals when switching tabs to prevent unwanted modal openings
+        this.closeAllModals();
     }
 
     showUsersInfo() {

@@ -21,11 +21,11 @@ return [
     'app_url' => 'http://localhost:8000',
 ]; 
 
-// cd school-system; php -S localhost:8000
+// cd school-system; php -S localhost:8000           # Run server
 
-// cd school-system; php api/index.php --help
+// cd school-system; php api/index.php --help       # Show help
 
-// cd school-system; php api/index.php --fresh
+// cd school-system; php api/index.php --fresh    # Drop tables, create tables, add default data
 
 // cd school-system; php api/index.php --migrate    # Create tables
 

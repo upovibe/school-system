@@ -27,21 +27,34 @@ class VideoGallerySettingsModal extends HTMLElement {
         this.setupEventListeners();
     }
 
+    disconnectedCallback() {
+        // Clean up event listeners to prevent duplicates
+        this.removeEventListener('confirm', this.saveVideoGallery);
+        this.removeEventListener('cancel', this.close);
+        this.removeEventListener('click', this.handleClick);
+    }
+
     setupEventListeners() {
+        // Remove existing listeners first to prevent duplicates
+        this.removeEventListener('confirm', this.saveVideoGallery);
+        this.removeEventListener('cancel', this.close);
+        this.removeEventListener('click', this.handleClick);
+
         this.addEventListener('confirm', this.saveVideoGallery);
         this.addEventListener('cancel', () => this.close());
+        this.addEventListener('click', this.handleClick);
+    }
 
-        this.addEventListener('click', (e) => {
-            if (e.target.closest('[data-action="add-video-link"]')) {
-                e.preventDefault();
-                this.addVideoLink();
-            }
-            if (e.target.closest('[data-action="remove-video-link"]')) {
-                e.preventDefault();
-                const index = parseInt(e.target.closest('[data-action="remove-video-link"]').dataset.index, 10);
-                this.removeVideoLink(index);
-            }
-        });
+    handleClick = (e) => {
+        if (e.target.closest('[data-action="add-video-link"]')) {
+            e.preventDefault();
+            this.addVideoLink();
+        }
+        if (e.target.closest('[data-action="remove-video-link"]')) {
+            e.preventDefault();
+            const index = parseInt(e.target.closest('[data-action="remove-video-link"]').dataset.index, 10);
+            this.removeVideoLink(index);
+        }
     }
 
     open() {
@@ -207,7 +220,7 @@ class VideoGallerySettingsModal extends HTMLElement {
                 </form>
             </ui-modal>
         `;
-        this.setupEventListeners(); // Re-attach listeners after render
+        // Don't re-attach listeners here as they're already attached in connectedCallback
     }
 }
 

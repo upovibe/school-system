@@ -14,18 +14,21 @@ class ContactSectionAlt extends App {
     constructor() {
         super();
         this.set('loading', false);
-        this.set('formData', {
+        this.formValues = {
             name: '',
             email: '',
             subject: '',
             message: ''
-        });
+        };
     }
 
     connectedCallback() {
         super.connectedCallback();
         this.loadDataFromProps();
         this.setupEventListeners();
+        
+        // Set initial form validation state
+        setTimeout(() => this.validateForm(), 100);
     }
 
     loadDataFromProps() {
@@ -79,45 +82,69 @@ class ContactSectionAlt extends App {
     }
 
     setupEventListeners() {
-        this.addEventListener('input', (e) => {
-            const input = e.target;
-            const field = input.name;
-            if (field) {
-                const formData = this.get('formData') || {
-                    name: '',
-                    email: '',
-                    subject: '',
-                    message: ''
-                };
-                formData[field] = input.value;
-                this.set('formData', { ...formData });
-            }
-        });
-
         this.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleSubmit();
         });
+
+        // Capture form values in real-time and validate form
+        this.addEventListener('input', (e) => {
+            if (e.target.id === 'name' || e.target.name === 'name') {
+                this.formValues.name = e.target.value;
+            } else if (e.target.id === 'email' || e.target.name === 'email') {
+                this.formValues.email = e.target.value;
+            } else if (e.target.id === 'subject' || e.target.name === 'subject') {
+                this.formValues.subject = e.target.value;
+            } else if (e.target.id === 'message' || e.target.name === 'message') {
+                this.formValues.message = e.target.value;
+            }
+            
+            // Validate form and update button state
+            this.validateForm();
+        });
+    }
+
+    validateForm() {
+        // Check if all required fields have values
+        const isFormValid = this.formValues.name.trim() !== '' && 
+                           this.formValues.email.trim() !== '' && 
+                           this.formValues.message.trim() !== '';
+        
+        // Find the submit button and enable/disable it
+        const submitButton = this.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = !isFormValid;
+            
+            // Update button appearance based on state
+            if (isFormValid) {
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitButton.classList.add('hover:opacity-90', 'hover:-translate-y-1', 'hover:scale-105', 'hover:shadow-xl');
+            } else {
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                submitButton.classList.remove('hover:opacity-90', 'hover:-translate-y-1', 'hover:scale-105', 'hover:shadow-xl');
+            }
+        }
     }
 
     async handleSubmit() {
         try {
             this.set('loading', true);
             
-            const formData = this.get('formData') || {
-                name: '',
-                email: '',
-                subject: '',
-                message: ''
+            // Use the captured form values
+            const formData = {
+                name: this.formValues.name.trim(),
+                email: this.formValues.email.trim(),
+                subject: this.formValues.subject.trim(),
+                message: this.formValues.message.trim()
             };
             
-            // Basic validation
+            // Validate required fields
             if (!formData.name || !formData.email || !formData.message) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please fill in all required fields',
+                    message: 'Please fill in all required fields (Name, Email, and Message)',
                     variant: 'error',
-                    duration: 3000
+                    duration: 4000
                 });
                 return;
             }
@@ -129,35 +156,54 @@ class ContactSectionAlt extends App {
                     title: 'Validation Error',
                     message: 'Please enter a valid email address',
                     variant: 'error',
-                    duration: 3000
+                    duration: 4000
                 });
                 return;
             }
-
-            // Here you would typically send the form data to your API
-            // For now, we'll just show a success message
-            console.log('Contact form data:', formData);
             
-            Toast.show({
-                title: 'Success',
-                message: 'Thank you for your message! We\'ll get back to you soon.',
-                variant: 'success',
-                duration: 5000
+            // Send to API
+            const response = await fetch('/api/contact/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
             });
 
-            // Reset form
-            this.set('formData', {
-                name: '',
-                email: '',
-                subject: '',
-                message: ''
-            });
+            const result = await response.json();
 
-            // Reset form inputs
-            const inputs = this.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
-                input.value = '';
-            });
+            if (response.ok && result.success) {
+                Toast.show({
+                    title: 'Success',
+                    message: result.message || 'Thank you for your message! We\'ll get back to you soon.',
+                    variant: 'success',
+                    duration: 5000
+                });
+
+                // Reset form inputs and captured values
+                const nameInput = this.querySelector('input#name');
+                const emailInput = this.querySelector('input#email');
+                const subjectInput = this.querySelector('input#subject');
+                const messageInput = this.querySelector('ui-textarea[name="message"]');
+                
+                if (nameInput) nameInput.value = '';
+                if (emailInput) emailInput.value = '';
+                if (subjectInput) subjectInput.value = '';
+                if (messageInput) messageInput.value = '';
+                
+                // Reset captured values
+                this.formValues = {
+                    name: '',
+                    email: '',
+                    subject: '',
+                    message: ''
+                };
+                
+                // Re-validate form to update button state
+                this.validateForm();
+            } else {
+                throw new Error(result.message || 'Failed to send message');
+            }
 
         } catch (error) {
             console.error('Error submitting contact form:', error);
@@ -165,7 +211,7 @@ class ContactSectionAlt extends App {
                 title: 'Error',
                 message: 'Failed to send message. Please try again.',
                 variant: 'error',
-                duration: 3000
+                duration: 4000
             });
         } finally {
             this.set('loading', false);
@@ -217,12 +263,6 @@ class ContactSectionAlt extends App {
     }
 
     render() {
-        const formData = this.get('formData') || {
-            name: '',
-            email: '',
-            subject: '',
-            message: ''
-        };
         const loading = this.get('loading');
         
         // Get colors from state
@@ -358,7 +398,6 @@ class ContactSectionAlt extends App {
                                             type="text"
                                             id="name"
                                             name="name"
-                                            value="${formData.name}"
                                             placeholder="Enter your full name"
                                             required>
                                         </ui-input>
@@ -373,7 +412,6 @@ class ContactSectionAlt extends App {
                                             type="email"
                                             id="email"
                                             name="email"
-                                            value="${formData.email}"
                                             placeholder="Enter your email address"
                                             required>
                                         </ui-input>
@@ -388,7 +426,6 @@ class ContactSectionAlt extends App {
                                             type="text"
                                             id="subject"
                                             name="subject"
-                                            value="${formData.subject}"
                                             placeholder="Enter message subject">
                                         </ui-input>
                                     </div>
@@ -403,14 +440,14 @@ class ContactSectionAlt extends App {
                                             name="message"
                                             rows="5"
                                             placeholder="Enter your message"
-                                            required>${formData.message}</ui-textarea>
+                                            required></ui-textarea>
                                     </div>
                                     
                                     <!-- Submit Button -->
                                     <button
                                         type="submit"
-                                        disabled="${loading}"
-                                        class="w-full bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] text-white font-semibold py-3 px-6 rounded-lg hover:from-[${primaryColor}] hover:to-[${accentColor}] transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                        disabled
+                                        class="w-full bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform shadow-lg opacity-50 cursor-not-allowed">
                                         ${loading ? `
                                             <div class="flex items-center justify-center gap-2">
                                                 <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

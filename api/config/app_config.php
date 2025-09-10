@@ -8,12 +8,12 @@ return [
         'pass' => '',          // Change to your DB password
     ],
     'mail' => [
-        'host' => 'smtp.gmail.com',
+        'host' => 'mboxhosting.com',
         'port' => 465,
         'encryption' => 'ssl',
-        'username' => 'uzorpromise11@gmail.com',
-        'password' => 'yuwr xfnm bqrg fjof',
-        'from_address' => 'noreply@schoolsystem.com',
+        'username' => 'info@piwcfranklincitytn.org',
+        'password' => 'Piwc@FC2025',
+        'from_address' => 'info@piwcfranklincitytn.org',
         'from_name' => 'School System',
     ],
     'client_url' => 'http://localhost:8000',
@@ -30,3 +30,5 @@ return [
 // cd school-system; php api/index.php --migrate    # Create tables
 
 // cd school-system; php api/index.php --seed       # Add default data
+
+// cd school-system; php api/index.php --email:test@example.com   # Test email

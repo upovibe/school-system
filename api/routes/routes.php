@@ -10,6 +10,9 @@ Router::post('/auth/refresh', 'AuthController@refresh');
 Router::post('/auth/forgot-password', 'AuthController@forgotPassword');
 Router::post('/auth/reset-password', 'AuthController@resetPassword');
 
+// Contact form routes (public - no middleware needed)
+Router::post('/contact/submit', 'ContactController@submit');
+
 // User management routes (protected - require authentication)
 // Note: Middleware will be called inside controllers using:
 // AuthMiddleware::requireAuth($pdo);

@@ -59,6 +59,12 @@ return [
         'subject' => 'New Application Submitted - School System',
         'template' => 'application-notification',
         'variables' => ['applicantName', 'applicantNumber', 'grade', 'schoolName', 'applicantEmail', 'parentPhone']
+    ],
+    
+    'contact-form' => [
+        'subject' => 'New Contact Form Submission - School System',
+        'template' => 'contact-form',
+        'variables' => ['name', 'email', 'phone', 'message', 'submissionDate']
     ]
 ]; 
 

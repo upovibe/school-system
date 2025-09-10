@@ -1,18 +1,3 @@
-<?php
-/**
- * Contact Form Email Template
- * 
- * Template for contact form submission notifications
- */
-
-$name = $variables['name'] ?? 'Unknown';
-$email = $variables['email'] ?? 'Unknown';
-$phone = $variables['phone'] ?? 'Not provided';
-$message = $variables['message'] ?? 'No message provided';
-$submissionDate = $variables['submissionDate'] ?? date('F j, Y \a\t g:i A');
-$subject = $variables['subject'] ?? 'No subject';
-
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,13 +15,13 @@ $subject = $variables['subject'] ?? 'No subject';
             background-color: #f8f9fa;
         }
         .container {
-            background: white;
+            background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
             color: white;
             padding: 30px;
             text-align: center;
@@ -54,152 +39,87 @@ $subject = $variables['subject'] ?? 'No subject';
         .content {
             padding: 30px;
         }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .info-item {
-            background: #f8f9fa;
+        .field {
+            margin-bottom: 20px;
             padding: 15px;
+            background-color: #f8f9fa;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #3b82f6;
         }
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-        .info-label {
+        .field-label {
             font-weight: 600;
-            color: #555;
+            color: #1e40af;
+            margin-bottom: 5px;
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
         }
-        .info-value {
-            color: #333;
+        .field-value {
+            color: #374151;
             font-size: 16px;
+            word-wrap: break-word;
         }
-        .message-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
+        .message-field {
+            background-color: #f0f9ff;
+            border-left-color: #0ea5e9;
         }
-        .message-section h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 18px;
-        }
-        .message-content {
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid #e9ecef;
+        .message-field .field-value {
             white-space: pre-wrap;
-            font-size: 15px;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         .footer {
-            background: #f8f9fa;
+            background-color: #f8f9fa;
             padding: 20px 30px;
             text-align: center;
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid #e5e7eb;
         }
         .footer p {
             margin: 0;
-            color: #666;
+            color: #6b7280;
             font-size: 14px;
         }
-        .school-info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
+        .timestamp {
+            background-color: #fef3c7;
+            border-left-color: #f59e0b;
+            color: #92400e;
         }
-        .school-info h3 {
-            margin: 0 0 10px 0;
-            color: #1976d2;
-            font-size: 18px;
-        }
-        .school-info p {
-            margin: 0;
-            color: #555;
-            font-size: 14px;
-        }
-        @media (max-width: 600px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            .info-item.full-width {
-                grid-column: 1;
-            }
+        .timestamp .field-label {
+            color: #92400e;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <h1>📧 New Contact Form Submission</h1>
-            <p>Someone has contacted your school through the website</p>
+            <p>School System Website</p>
         </div>
         
-        <!-- Content -->
         <div class="content">
-            <!-- School Info -->
-            <div class="school-info">
-                <h3>🏫 School System Contact Form</h3>
-                <p>This message was submitted through your school's contact form</p>
+            <div class="field">
+                <div class="field-label">Name</div>
+                <div class="field-value"><?php echo htmlspecialchars($name ?? 'Not provided'); ?></div>
             </div>
             
-            <!-- Contact Information -->
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Name</div>
-                    <div class="info-value"><?php echo htmlspecialchars($name); ?></div>
-                </div>
-                
-                <div class="info-item">
-                    <div class="info-label">Email</div>
-                    <div class="info-value">
-                        <a href="mailto:<?php echo htmlspecialchars($email); ?>" style="color: #667eea; text-decoration: none;">
-                            <?php echo htmlspecialchars($email); ?>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="info-item">
-                    <div class="info-label">Phone</div>
-                    <div class="info-value"><?php echo htmlspecialchars($phone); ?></div>
-                </div>
-                
-                <div class="info-item">
-                    <div class="info-label">Submitted</div>
-                    <div class="info-value"><?php echo htmlspecialchars($submissionDate); ?></div>
-                </div>
-                
-                <?php if (!empty($subject)): ?>
-                <div class="info-item full-width">
-                    <div class="info-label">Subject</div>
-                    <div class="info-value"><?php echo htmlspecialchars($subject); ?></div>
-                </div>
-                <?php endif; ?>
+            <div class="field">
+                <div class="field-label">Email Address</div>
+                <div class="field-value"><?php echo htmlspecialchars($email ?? 'Not provided'); ?></div>
             </div>
             
-            <!-- Message -->
-            <div class="message-section">
-                <h3>💬 Message</h3>
-                <div class="message-content"><?php echo htmlspecialchars($message); ?></div>
+            <div class="field message-field">
+                <div class="field-label">Message</div>
+                <div class="field-value"><?php echo htmlspecialchars($message ?? 'No message provided'); ?></div>
+            </div>
+            
+            <div class="field timestamp">
+                <div class="field-label">Submitted On</div>
+                <div class="field-value"><?php echo htmlspecialchars($submissionDate ?? date('F j, Y \a\t g:i A')); ?></div>
             </div>
         </div>
         
-        <!-- Footer -->
         <div class="footer">
-            <p>This email was automatically generated by your school's contact form system.</p>
-            <p>Please respond directly to the sender using the email address provided above.</p>
+            <p>This message was sent from the School System contact form on the website.</p>
+            <p>Please respond directly to the sender's email address: <strong><?php echo htmlspecialchars($email ?? 'N/A'); ?></strong></p>
         </div>
     </div>
 </body>

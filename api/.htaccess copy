@@ -25,13 +25,7 @@ Header always set Access-Control-Allow-Credentials "true"
 # Route all timetable resource requests through PHP (handles both filename and ID-based downloads)
 RewriteRule ^uploads/timetable-resources/(.*)$ index.php [QSA,L]
 
-# Route assignment downloads through PHP (for authentication)
-RewriteRule ^uploads/assignments/(.*)$ index.php [QSA,L]
-
-# Route assignment submission files through PHP (for authentication)
-RewriteRule ^uploads/assignments/submissions/(.*)$ index.php [QSA,L]
-
-# Allow direct access to other uploaded files (settings, pages, etc.)
+# Allow direct access to uploaded files (settings, pages, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^uploads/(.*)$ index.php [QSA,L]
 

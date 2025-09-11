@@ -1470,5 +1470,71 @@ class CashierController {
         }
     }
 
+    /**
+     * Get monthly income data for cashier dashboard (cashier only)
+     * Similar to admin version but accessible to cashiers
+     */
+    public function getMonthlyIncome() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            // Get current year or from query parameter
+            $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+            
+            // Query to get monthly income totals
+            $sql = "SELECT 
+                        MONTH(paid_on) as month,
+                        SUM(amount) as total_income
+                    FROM fee_payments 
+                    WHERE YEAR(paid_on) = ? 
+                    AND (status IS NULL OR status <> 'voided')
+                    GROUP BY MONTH(paid_on) 
+                    ORDER BY month ASC";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$year]);
+            $monthlyData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Initialize all months with 0 income
+            $monthlyIncome = array_fill(1, 12, 0);
+            
+            // Fill in actual data
+            foreach ($monthlyData as $data) {
+                $month = (int)$data['month'];
+                $monthlyIncome[$month] = (float)$data['total_income'];
+            }
+            
+            // Convert to array with month names
+            $monthNames = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 
+                5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
+                9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
+            ];
+            
+            $formattedData = [];
+            foreach ($monthlyIncome as $month => $income) {
+                $formattedData[] = [
+                    'month' => $monthNames[$month],
+                    'income' => $income
+                ];
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $formattedData,
+                'year' => $year,
+                'message' => 'Monthly income data retrieved successfully for cashier'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving monthly income: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?>

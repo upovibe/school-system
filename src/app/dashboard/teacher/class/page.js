@@ -111,6 +111,9 @@ class TeacherClassPage extends App {
             if (response.data && response.data.success) {
                 this.set('classData', response.data.data);
                 
+                // Store class data in localStorage for dialog access
+                localStorage.setItem('teacherClassData', JSON.stringify(response.data.data));
+                
                 // Load timetable resources for the teacher's assigned class
                 if (response.data.data && response.data.data.class_id) {
                     await this.loadTimetableResources(response.data.data.class_id);

@@ -149,6 +149,23 @@ class PromoteStudentDialog extends HTMLElement {
         this.render();
     }
 
+    // Get class data from parent component
+    getParentClassData() {
+        // Try to find the parent teacher class page component
+        const parentPage = this.closest('app-teacher-class-page');
+        if (parentPage && parentPage.get) {
+            return parentPage.get('classData');
+        }
+        
+        // Fallback: try to get from global state or localStorage
+        try {
+            const stored = localStorage.getItem('teacherClassData');
+            return stored ? JSON.parse(stored) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     // Handle promotion
     async handlePromote() {
         try {
@@ -241,12 +258,16 @@ class PromoteStudentDialog extends HTMLElement {
             return;
         }
 
-        const { first_name, last_name, student_id, class_name, class_section } = this.studentData;
+        const { first_name, last_name, student_id } = this.studentData;
         const studentName = `${first_name || ''} ${last_name || ''}`.trim() || 'Unknown Student';
-        const currentClass = class_name || 'No Class Assigned';
-        const currentClassSection = class_section || '';
-        const currentClassDisplay = currentClassSection ? `${currentClass} (${currentClassSection})` : currentClass;
         const studentId = student_id || 'N/A';
+        
+        // Get class information from the parent component (teacher's class data)
+        const classData = this.getParentClassData();
+        const currentClass = classData?.class_name || 'No Class Assigned';
+        const currentClassSection = classData?.class_section || '';
+        const currentClassDisplay = currentClassSection ? `${currentClass} (${currentClassSection})` : currentClass;
+        
         const academicYearName = this.currentAcademicYear ? (this.currentAcademicYear.display_name || this.currentAcademicYear.year_code) : 'Loading...';
         const gradingPeriodName = this.currentGradingPeriod ? this.currentGradingPeriod.name : 'Loading...';
         

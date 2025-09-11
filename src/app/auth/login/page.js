@@ -120,7 +120,7 @@ class LoginPage extends App {
         } catch (error) {
             Toast.show({
                 title: 'Login Failed',
-                message: error.response?.data?.error || 'An error occurred during login',
+                message: error.response?.data?.error || 'Invalid email or password',
                 variant: 'error',
                 duration: 3000
             });

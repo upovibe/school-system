@@ -824,7 +824,7 @@ class AdminDashboardPage extends App {
                                         return [
                                             `Expected Collection: ₵${value.toLocaleString()}`,
                                             `Students: ${studentCount}`,
-                                            `Collection Rate: ${rate}%`
+                                            `Target: 100%`
                                         ];
                                     } else {
                                         return [

@@ -463,37 +463,49 @@ class CashierPage extends App {
       
       const data = this.collectionRateData || [];
       const labels = data.map(item => `${item.class_name} (${item.class_section})`);
-      const rates = data.map(item => item.collection_rate);
+      const expectedCollection = data.map(item => item.expected_collection || 0);
+      const actualCollection = data.map(item => item.actual_collection || 0);
       const students = data.map(item => item.total_students);
       
       this.charts.collectionRate = new Chart(collectionRateCtx, {
         type: 'bar',
         data: {
           labels: labels,
-          datasets: [{
-            label: 'Collection Rate (%)',
-            data: rates,
-            backgroundColor: rates.map(rate => {
-              if (rate >= 90) return 'rgba(34, 197, 94, 0.7)'; // Green for 90%+
-              if (rate >= 70) return 'rgba(251, 191, 36, 0.7)'; // Yellow for 70-89%
-              return 'rgba(239, 68, 68, 0.7)'; // Red for <70%
-            }),
-            borderColor: rates.map(rate => {
-              if (rate >= 90) return 'rgba(34, 197, 94, 1)';
-              if (rate >= 70) return 'rgba(251, 191, 36, 1)';
-              return 'rgba(239, 68, 68, 1)';
-            }),
-            borderWidth: 2,
-            borderRadius: 8,
-            borderSkipped: false
-          }]
+          datasets: [
+            {
+              label: 'Expected Collection (₵)',
+              data: expectedCollection,
+              backgroundColor: 'rgba(59, 130, 246, 0.7)', // Blue
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false
+            },
+            {
+              label: 'Actual Collection (₵)',
+              data: actualCollection,
+              backgroundColor: 'rgba(34, 197, 94, 0.7)', // Green
+              borderColor: 'rgba(34, 197, 94, 1)',
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false
+            }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20,
+                font: {
+                  size: 12
+                }
+              }
             },
             tooltip: {
               backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -504,14 +516,23 @@ class CashierPage extends App {
               callbacks: {
                 label: function(context) {
                   const dataIndex = context.dataIndex;
-                  const rate = context.parsed.y;
+                  const value = context.parsed.y;
                   const studentCount = students[dataIndex];
-                  return [
-                    `Collection Rate: ${rate}%`,
-                    `Students: ${studentCount}`,
-                    `Amount Due: ₵${data[dataIndex].total_due.toLocaleString()}`,
-                    `Amount Collected: ₵${data[dataIndex].total_collected.toLocaleString()}`
-                  ];
+                  const rate = data[dataIndex].collection_rate || 0;
+                  
+                  if (context.datasetIndex === 0) {
+                    return [
+                      `Expected Collection: ₵${value.toLocaleString()}`,
+                      `Students: ${studentCount}`,
+                      `Collection Rate: ${rate}%`
+                    ];
+                  } else {
+                    return [
+                      `Actual Collection: ₵${value.toLocaleString()}`,
+                      `Students: ${studentCount}`,
+                      `Collection Rate: ${rate}%`
+                    ];
+                  }
                 }
               }
             }
@@ -519,13 +540,12 @@ class CashierPage extends App {
           scales: {
             y: {
               beginAtZero: true,
-              max: 100,
               grid: {
                 color: 'rgba(0, 0, 0, 0.1)'
               },
               ticks: {
                 callback: function(value) {
-                  return value + '%';
+                  return '₵' + value.toLocaleString();
                 },
                 font: {
                   size: 12

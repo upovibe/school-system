@@ -1685,11 +1685,11 @@ class FinanceController {
                     c.section as class_section,
                     fs.student_type,
                     COUNT(DISTINCT s.id) as total_students,
-                    COALESCE(SUM(fs.amount), 0) as total_due,
-                    COALESCE(SUM(fp.amount), 0) as total_collected,
+                    COALESCE(COUNT(DISTINCT s.id) * fs.amount, 0) as expected_collection,
+                    COALESCE(SUM(fp.amount), 0) as actual_collection,
                     CASE 
-                        WHEN COALESCE(SUM(fs.amount), 0) > 0 
-                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / SUM(fs.amount)) * 100, 2)
+                        WHEN COALESCE(COUNT(DISTINCT s.id) * fs.amount, 0) > 0 
+                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / (COUNT(DISTINCT s.id) * fs.amount)) * 100, 2)
                         ELSE 0 
                     END as collection_rate
                 FROM classes c
@@ -1699,13 +1699,16 @@ class FinanceController {
                     AND fs.grading_period_id = COALESCE(?, fs.grading_period_id)
                     AND (s.student_type = fs.student_type OR fs.student_type = 'all')
                 LEFT JOIN fee_invoices fi ON fi.student_id = s.id 
-                    AND fi.academic_year = fs.academic_year
+                    AND fi.academic_year = (
+                        SELECT ay.year_code FROM academic_years ay WHERE ay.id = fs.academic_year_id
+                    )
                     AND fi.grading_period = (
                         SELECT gp.name FROM grading_periods gp WHERE gp.id = fs.grading_period_id
                     )
                 LEFT JOIN fee_payments fp ON fp.invoice_id = fi.id 
                     AND (fp.status IS NULL OR fp.status <> 'voided')
                 WHERE c.deleted_at IS NULL
+                AND fs.id IS NOT NULL
             ";
 
             $params = [$academicYearId, $gradingPeriodId];
@@ -1736,29 +1739,29 @@ class FinanceController {
                         'class_name' => $row['class_name'],
                         'class_section' => $row['class_section'],
                         'total_students' => 0,
-                        'total_due' => 0,
-                        'total_collected' => 0,
+                        'expected_collection' => 0,
+                        'actual_collection' => 0,
                         'collection_rate' => 0,
                         'student_types' => []
                     ];
                 }
 
                 $collectionRates[$classKey]['total_students'] += $row['total_students'];
-                $collectionRates[$classKey]['total_due'] += $row['total_due'];
-                $collectionRates[$classKey]['total_collected'] += $row['total_collected'];
+                $collectionRates[$classKey]['expected_collection'] += $row['expected_collection'];
+                $collectionRates[$classKey]['actual_collection'] += $row['actual_collection'];
                 $collectionRates[$classKey]['student_types'][] = [
                     'type' => $row['student_type'],
                     'students' => $row['total_students'],
-                    'due' => $row['total_due'],
-                    'collected' => $row['total_collected'],
+                    'expected' => $row['expected_collection'],
+                    'actual' => $row['actual_collection'],
                     'rate' => $row['collection_rate']
                 ];
             }
 
             // Calculate overall collection rate for each class
             foreach ($collectionRates as &$class) {
-                if ($class['total_due'] > 0) {
-                    $class['collection_rate'] = round(($class['total_collected'] / $class['total_due']) * 100, 2);
+                if ($class['expected_collection'] > 0) {
+                    $class['collection_rate'] = round(($class['actual_collection'] / $class['expected_collection']) * 100, 2);
                 }
             }
 
@@ -1766,13 +1769,13 @@ class FinanceController {
             $summary = [
                 'total_classes' => count($collectionRates),
                 'total_students' => array_sum(array_column($collectionRates, 'total_students')),
-                'total_due' => array_sum(array_column($collectionRates, 'total_due')),
-                'total_collected' => array_sum(array_column($collectionRates, 'total_collected')),
+                'expected_collection' => array_sum(array_column($collectionRates, 'expected_collection')),
+                'actual_collection' => array_sum(array_column($collectionRates, 'actual_collection')),
                 'overall_collection_rate' => 0
             ];
 
-            if ($summary['total_due'] > 0) {
-                $summary['overall_collection_rate'] = round(($summary['total_collected'] / $summary['total_due']) * 100, 2);
+            if ($summary['expected_collection'] > 0) {
+                $summary['overall_collection_rate'] = round(($summary['actual_collection'] / $summary['expected_collection']) * 100, 2);
             }
 
             http_response_code(200);

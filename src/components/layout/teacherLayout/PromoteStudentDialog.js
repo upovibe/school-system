@@ -166,6 +166,18 @@ class PromoteStudentDialog extends HTMLElement {
         }
     }
 
+    // Show user-friendly grade validation error
+    showGradeValidationError(validationDetails) {
+        const missingCount = validationDetails.missing_grades?.length || 0;
+        
+        Toast.show({
+            title: 'Cannot Promote Student',
+            message: `Student is missing grades for ${missingCount} subject/period combinations. Please ensure all grades are recorded before promoting.`,
+            variant: 'error',
+            duration: 5000
+        });
+    }
+
     // Handle promotion
     async handlePromote() {
         try {
@@ -236,6 +248,12 @@ class PromoteStudentDialog extends HTMLElement {
                 // Close dialog after dispatching event
                 this.close();
             } else {
+                // Handle grade validation errors with user-friendly message
+                if (result.validation_details) {
+                    this.showGradeValidationError(result.validation_details);
+                    return;
+                }
+                
                 throw new Error(result.message || 'Failed to promote student');
             }
             

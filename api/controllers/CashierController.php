@@ -1684,5 +1684,51 @@ class CashierController {
         }
     }
 
+    public function getClasses() {
+        try {
+            $sql = "SELECT id, name, section, status, created_at FROM classes ORDER BY name, section";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $classes,
+                'message' => 'Classes retrieved successfully for cashier'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error in getClasses: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving classes: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getGradingPeriods() {
+        try {
+            $sql = "SELECT id, name, start_date, end_date, is_active, created_at FROM grading_periods ORDER BY start_date";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $periods = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $periods,
+                'message' => 'Grading periods retrieved successfully for cashier'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error in getGradingPeriods: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving grading periods: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?>

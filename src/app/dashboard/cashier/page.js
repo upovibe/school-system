@@ -1,6 +1,7 @@
 import App from '@/core/App.js';
 import api from '@/services/api.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/ui/SearchDropdown.js';
 
 class CashierPage extends App {
   constructor() {
@@ -14,6 +15,10 @@ class CashierPage extends App {
     this.userName = 'Cashier';
     this.charts = {};
     this.monthlyIncomeData = null;
+    this.collectionRateData = null;
+    this.collectionRateSummary = null;
+    this.classes = [];
+    this.gradingPeriods = [];
   }
 
   connectedCallback() {
@@ -195,9 +200,10 @@ class CashierPage extends App {
 
   async loadClasses(token) {
     try {
-      const response = await api.withToken(token).get('/classes');
+      const response = await api.withToken(token).get('/cashier/classes');
       if (response?.data?.success && response.data.data) {
         this.classes = response.data.data;
+        console.log('✅ Classes loaded for cashier:', this.classes);
       } else {
         console.warn('⚠️ No classes data available');
         this.classes = [];
@@ -210,9 +216,10 @@ class CashierPage extends App {
 
   async loadGradingPeriods(token) {
     try {
-      const response = await api.withToken(token).get('/grading-periods');
+      const response = await api.withToken(token).get('/cashier/grading-periods');
       if (response?.data?.success && response.data.data) {
         this.gradingPeriods = response.data.data;
+        console.log('✅ Grading periods loaded for cashier:', this.gradingPeriods);
       } else {
         console.warn('⚠️ No grading periods data available');
         this.gradingPeriods = [];
@@ -581,11 +588,13 @@ class CashierPage extends App {
 
   generateClassOptions() {
     const classes = this.classes || [];
+    console.log('🔍 Generating class options for cashier, classes:', classes);
     let options = '<option value="">All Classes</option>';
     classes.forEach(cls => {
       const displayName = cls.section ? `${cls.name} (${cls.section})` : cls.name;
       options += `<option value="${cls.id}">${displayName}</option>`;
     });
+    console.log('🔍 Generated class options:', options);
     return options;
   }
 

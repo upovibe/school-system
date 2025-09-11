@@ -445,5 +445,9 @@ Router::get('/cashier/monthly-income', 'CashierController@getMonthlyIncome');
 Router::get('/cashier/collection-rate', 'CashierController@getCollectionRate');
 Router::get('/cashier/students/{id}', 'CashierController@showStudent');
 
+// Cashier - Data Access (cashier only)
+Router::get('/cashier/classes', 'CashierController@getClasses');
+Router::get('/cashier/grading-periods', 'CashierController@getGradingPeriods');
+
 // Cashier - Announcements (cashier only)
 Router::get('/cashier/announcements', 'CashierController@getAnnouncements');

@@ -89,6 +89,28 @@ class CashierPage extends App {
     }
   }
 
+  setupClassSelector() {
+    // Setup class selector for collection rate
+    const classSelector = this.querySelector('#cashierCollectionClassSelector');
+    if (classSelector) {
+      classSelector.addEventListener('change', (e) => {
+        const selectedClassId = e.target.value;
+        this.loadCollectionRateForClass(selectedClassId);
+      });
+    }
+  }
+
+  setupPeriodSelector() {
+    // Setup grading period selector for collection rate
+    const periodSelector = this.querySelector('#cashierCollectionPeriodSelector');
+    if (periodSelector) {
+      periodSelector.addEventListener('change', (e) => {
+        const selectedPeriodId = e.detail.value;
+        this.loadCollectionRateForPeriod(selectedPeriodId);
+      });
+    }
+  }
+
   setupMonthlyIncomeTabListeners() {
     // Setup monthly income chart tab switching
     const monthlyIncomeTabButtons = this.querySelectorAll('[data-cashier-monthly-income-tab]');
@@ -145,6 +167,68 @@ class CashierPage extends App {
     }
   }
 
+  async loadCollectionRate(token, gradingPeriodId = null, classId = null) {
+    try {
+      let url = '/cashier/collection-rate?';
+      const params = new URLSearchParams();
+      
+      if (gradingPeriodId) params.append('grading_period_id', gradingPeriodId);
+      if (classId) params.append('class_id', classId);
+      
+      url += params.toString();
+      
+      const response = await api.withToken(token).get(url);
+      if (response?.data?.success && response.data.data) {
+        this.collectionRateData = response.data.data;
+        this.collectionRateSummary = response.data.summary;
+      } else {
+        console.warn('⚠️ No collection rate data available');
+        this.collectionRateData = [];
+        this.collectionRateSummary = null;
+      }
+    } catch (error) {
+      console.error('❌ Error loading collection rate data:', error);
+      this.collectionRateData = [];
+      this.collectionRateSummary = null;
+    }
+  }
+
+  async loadClasses(token) {
+    try {
+      const response = await api.withToken(token).get('/classes');
+      if (response?.data?.success && response.data.data) {
+        this.classes = response.data.data;
+      } else {
+        console.warn('⚠️ No classes data available');
+        this.classes = [];
+      }
+    } catch (error) {
+      console.error('❌ Error loading classes:', error);
+      this.classes = [];
+    }
+  }
+
+  async loadGradingPeriods(token) {
+    try {
+      const response = await api.withToken(token).get('/grading-periods');
+      if (response?.data?.success && response.data.data) {
+        this.gradingPeriods = response.data.data;
+      } else {
+        console.warn('⚠️ No grading periods data available');
+        this.gradingPeriods = [];
+      }
+    } catch (error) {
+      console.error('❌ Error loading grading periods:', error);
+      this.gradingPeriods = [];
+    }
+  }
+
+  getActiveGradingPeriodId() {
+    const periods = this.gradingPeriods || [];
+    const activePeriod = periods.find(period => period.is_active === 1);
+    return activePeriod ? activePeriod.id : null;
+  }
+
   async loadMonthlyIncomeForYear(year) {
     try {
       const token = localStorage.getItem('token');
@@ -159,6 +243,34 @@ class CashierPage extends App {
     }
   }
 
+  async loadCollectionRateForClass(classId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await this.loadCollectionRate(token, null, classId);
+      
+      // Refresh the collection rate chart
+      this.refreshCollectionRateChart();
+    } catch (error) {
+      console.error('❌ Error loading collection rate data for class:', error);
+    }
+  }
+
+  async loadCollectionRateForPeriod(gradingPeriodId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await this.loadCollectionRate(token, gradingPeriodId, null);
+      
+      // Refresh the collection rate chart
+      this.refreshCollectionRateChart();
+    } catch (error) {
+      console.error('❌ Error loading collection rate data for period:', error);
+    }
+  }
+
   refreshMonthlyIncomeChart() {
     if (this.charts.monthlyIncome) {
       this.charts.monthlyIncome.destroy();
@@ -168,6 +280,13 @@ class CashierPage extends App {
     }
     this.createMonthlyIncomeChart();
     this.createMonthlyIncomeBarChart();
+  }
+
+  refreshCollectionRateChart() {
+    if (this.charts.collectionRate) {
+      this.charts.collectionRate.destroy();
+    }
+    this.createCollectionRateChart();
   }
 
   createMonthlyIncomeChart() {
@@ -334,6 +453,102 @@ class CashierPage extends App {
     }
   }
 
+  createCollectionRateChart() {
+    // Collection Rate Bar Chart
+    const collectionRateCtx = this.querySelector('#cashierCollectionRateChart');
+    if (collectionRateCtx && typeof Chart !== 'undefined') {
+      if (this.charts.collectionRate) {
+        this.charts.collectionRate.destroy();
+      }
+      
+      const data = this.collectionRateData || [];
+      const labels = data.map(item => `${item.class_name} (${item.class_section})`);
+      const rates = data.map(item => item.collection_rate);
+      const students = data.map(item => item.total_students);
+      
+      this.charts.collectionRate = new Chart(collectionRateCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Collection Rate (%)',
+            data: rates,
+            backgroundColor: rates.map(rate => {
+              if (rate >= 90) return 'rgba(34, 197, 94, 0.7)'; // Green for 90%+
+              if (rate >= 70) return 'rgba(251, 191, 36, 0.7)'; // Yellow for 70-89%
+              return 'rgba(239, 68, 68, 0.7)'; // Red for <70%
+            }),
+            borderColor: rates.map(rate => {
+              if (rate >= 90) return 'rgba(34, 197, 94, 1)';
+              if (rate >= 70) return 'rgba(251, 191, 36, 1)';
+              return 'rgba(239, 68, 68, 1)';
+            }),
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: 'white',
+              bodyColor: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  const dataIndex = context.dataIndex;
+                  const rate = context.parsed.y;
+                  const studentCount = students[dataIndex];
+                  return [
+                    `Collection Rate: ${rate}%`,
+                    `Students: ${studentCount}`,
+                    `Amount Due: ₵${data[dataIndex].total_due.toLocaleString()}`,
+                    `Amount Collected: ₵${data[dataIndex].total_collected.toLocaleString()}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                },
+                font: {
+                  size: 12
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  size: 10
+                },
+                maxRotation: 45
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
   generateYearOptions() {
     const currentYear = new Date().getFullYear();
     let options = '';
@@ -344,12 +559,38 @@ class CashierPage extends App {
     return options;
   }
 
+  generateClassOptions() {
+    const classes = this.classes || [];
+    let options = '<option value="">All Classes</option>';
+    classes.forEach(cls => {
+      const displayName = cls.section ? `${cls.name} (${cls.section})` : cls.name;
+      options += `<option value="${cls.id}">${displayName}</option>`;
+    });
+    return options;
+  }
+
+  generateGradingPeriodOptions() {
+    const periods = this.gradingPeriods || [];
+    let options = '';
+    periods.forEach(period => {
+      const isActive = period.is_active === 1;
+      const statusText = isActive ? ' (Active)' : ' (Inactive)';
+      const disabledAttr = !isActive ? ' disabled' : '';
+      const selectedAttr = isActive ? ' selected' : '';
+      options += `<ui-option value="${period.id}"${disabledAttr}${selectedAttr}>${period.name}${statusText}</ui-option>`;
+    });
+    return options;
+  }
+
   refreshCharts() {
     // Wait a bit for the DOM to update, then refresh charts
     setTimeout(() => {
       this.createMonthlyIncomeChart();
       this.createMonthlyIncomeBarChart();
+      this.createCollectionRateChart();
       this.setupYearSelector();
+      this.setupClassSelector();
+      this.setupPeriodSelector();
       this.setupMonthlyIncomeTabListeners();
     }, 200);
   }
@@ -378,6 +619,16 @@ class CashierPage extends App {
 
       // Load monthly income data
       await this.loadMonthlyIncome(token);
+      
+      // Load collection rate data for active grading period
+      const activePeriodId = this.getActiveGradingPeriodId();
+      await this.loadCollectionRate(token, activePeriodId);
+      
+      // Load classes data
+      await this.loadClasses(token);
+      
+      // Load grading periods data
+      await this.loadGradingPeriods(token);
 
       // Fetch financial data
       const [invoicesResp, paymentsResp, receiptsResp, studentsResp] = await Promise.all([
@@ -707,6 +958,59 @@ class CashierPage extends App {
               </div>
             </div>
             <div class="relative" style="height: 300px;">
+              <ui-skeleton class="h-full w-full"></ui-skeleton>
+            </div>
+          </div>
+        `}
+
+        <!-- Collection Rate Chart -->
+        ${!loading ? `
+          <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+                  <i class="fas fa-percentage text-white text-sm"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Class:</label>
+                  <select id="cashierCollectionClassSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    ${this.generateClassOptions()}
+                  </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Grading Period:</label>
+                  <ui-search-dropdown 
+                    id="cashierCollectionPeriodSelector" 
+                    name="grading_period_id" 
+                    placeholder="Select grading period" 
+                    class="w-48"
+                    value="${this.getActiveGradingPeriodId() || ''}">
+                    ${this.generateGradingPeriodOptions()}
+                  </ui-search-dropdown>
+                </div>
+              </div>
+            </div>
+            <div class="relative" style="height: 400px;">
+              <canvas id="cashierCollectionRateChart"></canvas>
+            </div>
+            <div class="mt-4 text-center">
+              <p class="text-sm text-gray-600">Collection rates by class considering student types (border/day)</p>
+            </div>
+          </div>
+        ` : `
+          <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+                  <i class="fas fa-percentage text-white text-sm"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
+              </div>
+            </div>
+            <div class="relative" style="height: 400px;">
               <ui-skeleton class="h-full w-full"></ui-skeleton>
             </div>
           </div>

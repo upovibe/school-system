@@ -395,6 +395,7 @@ Router::post('/finance/receipts/{id}/regenerate', 'FinanceController@regenerateR
 
 // Finance - Analytics (admin only)
 Router::get('/finance/monthly-income', 'FinanceController@getMonthlyIncome');
+Router::get('/finance/collection-rate', 'FinanceController@getCollectionRate');
 
 // Announcement Management Routes (admin only)
 Router::get('/announcements', 'AnnouncementController@index');
@@ -441,6 +442,7 @@ Router::get('/cashier/students', 'CashierController@getStudents');
 
 // Cashier - Analytics (cashier only)
 Router::get('/cashier/monthly-income', 'CashierController@getMonthlyIncome');
+Router::get('/cashier/collection-rate', 'CashierController@getCollectionRate');
 Router::get('/cashier/students/{id}', 'CashierController@showStudent');
 
 // Cashier - Announcements (cashier only)

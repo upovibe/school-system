@@ -1536,5 +1536,138 @@ class CashierController {
         }
     }
 
+    /**
+     * Get collection rate by class and grading period (cashier only)
+     * Calculates collection rate considering student types (border/day) and fee schedules
+     */
+    public function getCollectionRate() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            // Get parameters
+            $academicYearId = isset($_GET['academic_year_id']) ? (int)$_GET['academic_year_id'] : null;
+            $gradingPeriodId = isset($_GET['grading_period_id']) ? (int)$_GET['grading_period_id'] : null;
+            $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : null;
+
+            // Build the query to get collection rates by class
+            $sql = "
+                SELECT 
+                    c.id as class_id,
+                    c.name as class_name,
+                    c.section as class_section,
+                    fs.student_type,
+                    COUNT(DISTINCT s.id) as total_students,
+                    COALESCE(SUM(fs.amount), 0) as total_due,
+                    COALESCE(SUM(fp.amount), 0) as total_collected,
+                    CASE 
+                        WHEN COALESCE(SUM(fs.amount), 0) > 0 
+                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / SUM(fs.amount)) * 100, 2)
+                        ELSE 0 
+                    END as collection_rate
+                FROM classes c
+                LEFT JOIN students s ON s.current_class_id = c.id
+                LEFT JOIN fee_schedules fs ON fs.class_id = c.id 
+                    AND fs.academic_year_id = COALESCE(?, fs.academic_year_id)
+                    AND fs.grading_period_id = COALESCE(?, fs.grading_period_id)
+                    AND (s.student_type = fs.student_type OR fs.student_type = 'all')
+                LEFT JOIN fee_invoices fi ON fi.student_id = s.id 
+                    AND fi.academic_year = fs.academic_year
+                    AND fi.grading_period = (
+                        SELECT gp.name FROM grading_periods gp WHERE gp.id = fs.grading_period_id
+                    )
+                LEFT JOIN fee_payments fp ON fp.invoice_id = fi.id 
+                    AND (fp.status IS NULL OR fp.status <> 'voided')
+                WHERE c.deleted_at IS NULL
+            ";
+
+            $params = [$academicYearId, $gradingPeriodId];
+
+            if ($classId) {
+                $sql .= " AND c.id = ?";
+                $params[] = $classId;
+            }
+
+            $sql .= "
+                GROUP BY c.id, c.name, c.section, fs.student_type
+                HAVING total_students > 0
+                ORDER BY c.name, c.section, fs.student_type
+            ";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Process results to group by class
+            $collectionRates = [];
+            foreach ($results as $row) {
+                $classKey = $row['class_id'];
+                
+                if (!isset($collectionRates[$classKey])) {
+                    $collectionRates[$classKey] = [
+                        'class_id' => $row['class_id'],
+                        'class_name' => $row['class_name'],
+                        'class_section' => $row['class_section'],
+                        'total_students' => 0,
+                        'total_due' => 0,
+                        'total_collected' => 0,
+                        'collection_rate' => 0,
+                        'student_types' => []
+                    ];
+                }
+
+                $collectionRates[$classKey]['total_students'] += $row['total_students'];
+                $collectionRates[$classKey]['total_due'] += $row['total_due'];
+                $collectionRates[$classKey]['total_collected'] += $row['total_collected'];
+                $collectionRates[$classKey]['student_types'][] = [
+                    'type' => $row['student_type'],
+                    'students' => $row['total_students'],
+                    'due' => $row['total_due'],
+                    'collected' => $row['total_collected'],
+                    'rate' => $row['collection_rate']
+                ];
+            }
+
+            // Calculate overall collection rate for each class
+            foreach ($collectionRates as &$class) {
+                if ($class['total_due'] > 0) {
+                    $class['collection_rate'] = round(($class['total_collected'] / $class['total_due']) * 100, 2);
+                }
+            }
+
+            // Get summary statistics
+            $summary = [
+                'total_classes' => count($collectionRates),
+                'total_students' => array_sum(array_column($collectionRates, 'total_students')),
+                'total_due' => array_sum(array_column($collectionRates, 'total_due')),
+                'total_collected' => array_sum(array_column($collectionRates, 'total_collected')),
+                'overall_collection_rate' => 0
+            ];
+
+            if ($summary['total_due'] > 0) {
+                $summary['overall_collection_rate'] = round(($summary['total_collected'] / $summary['total_due']) * 100, 2);
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => array_values($collectionRates),
+                'summary' => $summary,
+                'filters' => [
+                    'academic_year_id' => $academicYearId,
+                    'grading_period_id' => $gradingPeriodId,
+                    'class_id' => $classId
+                ],
+                'message' => 'Collection rate data retrieved successfully for cashier'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving collection rate: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?>

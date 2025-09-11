@@ -660,6 +660,12 @@ class CashierPage extends App {
                 <h3 class="text-lg font-semibold text-gray-900">Monthly Income Trends</h3>
               </div>
               <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Year:</label>
+                  <select id="cashierIncomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    ${this.generateYearOptions()}
+                  </select>
+                </div>
                 <!-- Tab Navigation -->
                 <div class="flex bg-gray-100 rounded-lg p-1">
                   <button 
@@ -672,12 +678,6 @@ class CashierPage extends App {
                       class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
                       Bar
                   </button>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Year:</label>
-                  <select id="cashierIncomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                    ${this.generateYearOptions()}
-                  </select>
                 </div>
               </div>
             </div>

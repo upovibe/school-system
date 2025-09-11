@@ -13,6 +13,8 @@ class PromoteStudentDialog extends HTMLElement {
         this.studentData = null;
         this.classes = [];
         this.selectedClassId = '';
+        this.currentAcademicYear = null;
+        this.currentGradingPeriod = null;
     }
 
     static get observedAttributes() {
@@ -24,6 +26,8 @@ class PromoteStudentDialog extends HTMLElement {
             this.render();
             if (this.hasAttribute('open')) {
                 this.loadClasses();
+                this.loadCurrentAcademicYear();
+                this.loadCurrentGradingPeriod();
             }
         }
     }
@@ -64,6 +68,8 @@ class PromoteStudentDialog extends HTMLElement {
         this.removeAttribute('open');
         this.selectedClassId = '';
         this.studentData = null;
+        this.currentAcademicYear = null;
+        this.currentGradingPeriod = null;
     }
 
     // Load available classes for promotion
@@ -102,6 +108,42 @@ class PromoteStudentDialog extends HTMLElement {
                 variant: 'error',
                 duration: 3000
             });
+        }
+    }
+
+    // Load current academic year
+    async loadCurrentAcademicYear() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/academic-years/current');
+            
+            if (response.data && response.data.success) {
+                this.currentAcademicYear = response.data.data;
+                this.render();
+            }
+        } catch (error) {
+            console.error('Error loading current academic year:', error);
+        }
+    }
+
+    // Load current grading period
+    async loadCurrentGradingPeriod() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/grading-periods');
+            
+            if (response.data && response.data.success) {
+                // Find the active grading period
+                const periods = response.data.data || [];
+                this.currentGradingPeriod = periods.find(period => period.is_active) || periods[0];
+                this.render();
+            }
+        } catch (error) {
+            console.error('Error loading current grading period:', error);
         }
     }
 
@@ -213,6 +255,8 @@ class PromoteStudentDialog extends HTMLElement {
         const studentName = `${first_name || ''} ${last_name || ''}`.trim() || 'Unknown Student';
         const currentClass = class_name || 'No Class Assigned';
         const studentId = student_id || 'N/A';
+        const academicYearName = this.currentAcademicYear ? (this.currentAcademicYear.display_name || this.currentAcademicYear.year_code) : 'Loading...';
+        const gradingPeriodName = this.currentGradingPeriod ? this.currentGradingPeriod.name : 'Loading...';
         
         this.innerHTML = `
             <ui-dialog 
@@ -246,6 +290,14 @@ class PromoteStudentDialog extends HTMLElement {
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Current Class:</span>
                             <span class="text-sm text-gray-900 font-semibold">${currentClass}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">Academic Year:</span>
+                            <span class="text-sm text-gray-900 font-semibold">${academicYearName}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">Current Grading Period:</span>
+                            <span class="text-sm text-gray-900 font-semibold">${gradingPeriodName}</span>
                         </div>
                     </div>
 

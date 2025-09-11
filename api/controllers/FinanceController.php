@@ -1704,28 +1704,26 @@ class FinanceController {
                     fs.student_type,
                     COUNT(DISTINCT s.id) as total_students,
                     COALESCE(COUNT(DISTINCT s.id) * fs.total_fee, 0) as expected_collection,
-                    COALESCE(SUM(DISTINCT fp.amount), 0) as actual_collection,
+                    COALESCE(SUM(fp.amount), 0) as actual_collection,
                     CASE 
                         WHEN COALESCE(COUNT(DISTINCT s.id) * fs.total_fee, 0) > 0 
-                        THEN ROUND((COALESCE(SUM(DISTINCT fp.amount), 0) / (COUNT(DISTINCT s.id) * fs.total_fee)) * 100, 2)
+                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / (COUNT(DISTINCT s.id) * fs.total_fee)) * 100, 2)
                         ELSE 0 
                     END as collection_rate
                 FROM classes c
                 INNER JOIN students s ON s.current_class_id = c.id AND s.status = 'active'
                 INNER JOIN fee_schedules fs ON fs.class_id = c.id 
-                    AND fs.academic_year = COALESCE(?, fs.academic_year)
                     AND fs.grading_period = COALESCE(?, fs.grading_period)
                     AND (s.student_type = fs.student_type OR fs.student_type = 'all')
                 LEFT JOIN fee_invoices fi ON fi.student_id = s.id 
-                    AND fi.academic_year = fs.academic_year
-                    AND fi.grading_period = fs.grading_period
+                    AND fi.academic_year = COALESCE(?, fi.academic_year)
+                    AND fi.grading_period = COALESCE(?, fi.grading_period)
                 LEFT JOIN fee_payments fp ON fp.invoice_id = fi.id 
-                    AND fp.student_id = s.id
                     AND (fp.status IS NULL OR fp.status != 'voided')
                 WHERE fs.id IS NOT NULL
             ";
 
-            $params = [$academicYearName, $gradingPeriodName];
+            $params = [$gradingPeriodName, $academicYearName, $gradingPeriodName];
 
             if ($classId) {
                 $sql .= " AND c.id = ?";
@@ -1812,6 +1810,7 @@ class FinanceController {
             ]);
         }
     }
+
 }
 
 

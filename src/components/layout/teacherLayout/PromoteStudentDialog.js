@@ -169,10 +169,12 @@ class PromoteStudentDialog extends HTMLElement {
     // Show user-friendly grade validation error
     showGradeValidationError(validationDetails) {
         const missingCount = validationDetails.missing_grades?.length || 0;
+        const totalSubjects = validationDetails.total_subjects || 0;
+        const totalPeriods = validationDetails.total_periods || 0;
         
         Toast.show({
             title: 'Cannot Promote Student',
-            message: `Student is missing grades for ${missingCount} subject/period combinations. Please ensure all grades are recorded before promoting.`,
+            message: `Student is missing grades for ${totalSubjects} subjects across ${totalPeriods} grading periods (${missingCount} missing entries). Please record all grades before promoting.`,
             variant: 'error',
             duration: 5000
         });

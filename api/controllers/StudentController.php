@@ -1745,17 +1745,40 @@ class StudentController {
      */
     private function getSchoolSettings() {
         try {
+            // Load config for URLs
+            $config = require __DIR__ . '/../config/app_config.php';
+            
             require_once __DIR__ . '/../models/SettingModel.php';
             $settingModel = new SettingModel($this->pdo);
             $settings = $settingModel->getAllAsArray();
             
-            return $settings;
+            // Construct full logo URL if logo exists
+            $logoUrl = null;
+            if (!empty($settings['application_logo'])) {
+                // If the logo path doesn't start with 'api/', add it
+                $logoPath = $settings['application_logo'];
+                if (strpos($logoPath, 'api/') !== 0) {
+                    $logoPath = 'api/' . $logoPath;
+                }
+                $logoUrl = $config['app_url'] . '/' . $logoPath;
+            }
+            
+            return [
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'application_logo' => $logoUrl,
+                'school_address' => $settings['school_address'] ?? 'School Address',
+                'school_phone' => $settings['school_phone'] ?? 'School Phone',
+                'school_email' => $settings['school_email'] ?? 'school@example.com',
+                'app_url' => $config['app_url'],
+                'api_url' => $config['api_url']
+            ];
         } catch (Exception $e) {
             // Return default settings if there's an error
             return [
                 'application_name' => 'School Management System',
                 'application_tagline' => 'Excellence in Education',
-                'application_logo' => '',
+                'application_logo' => null,
                 'school_address' => 'School Address',
                 'school_phone' => 'School Phone',
                 'school_email' => 'school@example.com'

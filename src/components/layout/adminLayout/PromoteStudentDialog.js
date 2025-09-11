@@ -251,9 +251,11 @@ class PromoteStudentDialog extends HTMLElement {
             return;
         }
 
-        const { first_name, last_name, student_id, class_name } = this.studentData;
+        const { first_name, last_name, student_id, class_name, class_section } = this.studentData;
         const studentName = `${first_name || ''} ${last_name || ''}`.trim() || 'Unknown Student';
         const currentClass = class_name || 'No Class Assigned';
+        const currentClassSection = class_section || '';
+        const currentClassDisplay = currentClassSection ? `${currentClass} (${currentClassSection})` : currentClass;
         const studentId = student_id || 'N/A';
         const academicYearName = this.currentAcademicYear ? (this.currentAcademicYear.display_name || this.currentAcademicYear.year_code) : 'Loading...';
         const gradingPeriodName = this.currentGradingPeriod ? this.currentGradingPeriod.name : 'Loading...';
@@ -289,7 +291,7 @@ class PromoteStudentDialog extends HTMLElement {
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Current Class:</span>
-                            <span class="text-sm text-gray-900 font-semibold">${currentClass}</span>
+                            <span class="text-sm text-gray-900 font-semibold">${currentClassDisplay}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-700">Academic Year:</span>

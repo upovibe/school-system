@@ -2035,6 +2035,51 @@ class StudentController {
                 return;
             }
             
+            // Validate that student has complete grades before promotion
+            require_once __DIR__ . '/../models/StudentGradeModel.php';
+            $studentGradeModel = new StudentGradeModel($pdo);
+            
+            // Get current academic year ID
+            $academicYearSql = "SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $stmt = $pdo->prepare($academicYearSql);
+            $stmt->execute();
+            $currentAcademicYear = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$currentAcademicYear) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No current academic year found. Cannot validate grades for promotion.'
+                ]);
+                return;
+            }
+            
+            // Check if student has complete grades
+            $gradeValidation = $studentGradeModel->hasCompleteGradesForPromotion(
+                $studentId, 
+                $student['current_class_id'], 
+                $currentAcademicYear['id']
+            );
+            
+            if (!$gradeValidation['has_complete_grades']) {
+                // Format missing grades for display
+                $missingGradesText = '';
+                if (!empty($gradeValidation['missing_grades'])) {
+                    $missingGradesText = "\n\nMissing grades for:\n";
+                    foreach ($gradeValidation['missing_grades'] as $missing) {
+                        $missingGradesText .= "• {$missing['subject_name']} ({$missing['subject_code']}) - {$missing['grading_period_name']}\n";
+                    }
+                }
+                
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => "Cannot promote student: {$gradeValidation['message']}{$missingGradesText}",
+                    'validation_details' => $gradeValidation
+                ]);
+                return;
+            }
+            
             // Get current class info for logging
             $currentClass = null;
             if ($student['current_class_id']) {

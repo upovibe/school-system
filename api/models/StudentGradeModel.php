@@ -264,6 +264,105 @@ class StudentGradeModel extends BaseModel {
     }
 
     /**
+     * Check if student has complete grades for all subjects in their class across all grading periods
+     * This is used for promotion validation
+     */
+    public function hasCompleteGradesForPromotion($studentId, $classId, $academicYearId = null) {
+        try {
+            // Get all subjects for the student's current class
+            $classSubjectsSql = "
+                SELECT DISTINCT cs.subject_id, s.name as subject_name, s.code as subject_code
+                FROM class_subjects cs
+                LEFT JOIN subjects s ON cs.subject_id = s.id
+                WHERE cs.class_id = ?
+                ORDER BY s.name ASC
+            ";
+            $stmt = $this->pdo->prepare($classSubjectsSql);
+            $stmt->execute([$classId]);
+            $classSubjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($classSubjects)) {
+                return [
+                    'has_complete_grades' => false,
+                    'message' => 'No subjects found for this class',
+                    'missing_grades' => []
+                ];
+            }
+            
+            // Get all grading periods for the academic year
+            $gradingPeriodsSql = "
+                SELECT id, name, start_date, end_date
+                FROM grading_periods 
+                WHERE academic_year_id = ?
+                ORDER BY start_date ASC
+            ";
+            $stmt = $this->pdo->prepare($gradingPeriodsSql);
+            $stmt->execute([$academicYearId]);
+            $gradingPeriods = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($gradingPeriods)) {
+                return [
+                    'has_complete_grades' => false,
+                    'message' => 'No grading periods found for this academic year',
+                    'missing_grades' => []
+                ];
+            }
+            
+            // Check for missing grades
+            $missingGrades = [];
+            
+            foreach ($classSubjects as $subject) {
+                foreach ($gradingPeriods as $period) {
+                    // Check if grade exists for this student, subject, and period
+                    $gradeExistsSql = "
+                        SELECT id, final_percentage, final_letter_grade
+                        FROM student_grades 
+                        WHERE student_id = ? 
+                        AND class_id = ? 
+                        AND subject_id = ? 
+                        AND grading_period_id = ?
+                    ";
+                    $stmt = $this->pdo->prepare($gradeExistsSql);
+                    $stmt->execute([$studentId, $classId, $subject['subject_id'], $period['id']]);
+                    $grade = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if (!$grade) {
+                        $missingGrades[] = [
+                            'subject_id' => $subject['subject_id'],
+                            'subject_name' => $subject['subject_name'],
+                            'subject_code' => $subject['subject_code'],
+                            'grading_period_id' => $period['id'],
+                            'grading_period_name' => $period['name'],
+                            'period_dates' => $period['start_date'] . ' to ' . $period['end_date']
+                        ];
+                    }
+                }
+            }
+            
+            $hasCompleteGrades = empty($missingGrades);
+            
+            return [
+                'has_complete_grades' => $hasCompleteGrades,
+                'message' => $hasCompleteGrades 
+                    ? 'Student has complete grades for all subjects and grading periods' 
+                    : 'Student is missing grades for some subjects and grading periods',
+                'missing_grades' => $missingGrades,
+                'total_subjects' => count($classSubjects),
+                'total_periods' => count($gradingPeriods),
+                'expected_total_grades' => count($classSubjects) * count($gradingPeriods),
+                'actual_grades_count' => (count($classSubjects) * count($gradingPeriods)) - count($missingGrades)
+            ];
+            
+        } catch (Exception $e) {
+            return [
+                'has_complete_grades' => false,
+                'message' => 'Error checking grades: ' . $e->getMessage(),
+                'missing_grades' => []
+            ];
+        }
+    }
+
+    /**
      * Get grade by student, subject, and period
      */
     public function getGradeByStudentSubjectPeriod($studentId, $subjectId, $gradingPeriodId) {

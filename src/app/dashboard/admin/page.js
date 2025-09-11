@@ -107,6 +107,15 @@ class AdminDashboardPage extends App {
              });
          });
 
+         // Setup monthly income chart tab switching
+         const monthlyIncomeTabButtons = this.querySelectorAll('[data-monthly-income-tab]');
+         monthlyIncomeTabButtons.forEach(button => {
+             button.addEventListener('click', (e) => {
+                 const targetTab = e.target.getAttribute('data-monthly-income-tab');
+                 this.switchMonthlyIncomeTab(targetTab);
+             });
+         });
+
          // Setup year selector for monthly income
          const yearSelector = this.querySelector('#incomeYearSelector');
          if (yearSelector) {
@@ -170,6 +179,34 @@ class AdminDashboardPage extends App {
          if (activeButton) {
              activeButton.classList.remove('text-gray-600');
              activeButton.classList.add('bg-white', 'text-pink-600', 'shadow-sm');
+         }
+     }
+
+     switchMonthlyIncomeTab(activeTab) {
+         // Hide all monthly income chart containers
+         const chartContainers = this.querySelectorAll('[data-monthly-income-chart]');
+         chartContainers.forEach(container => {
+             container.style.display = 'none';
+         });
+
+         // Show the active chart container
+         const activeContainer = this.querySelector(`[data-monthly-income-chart="${activeTab}"]`);
+         if (activeContainer) {
+             activeContainer.style.display = 'block';
+         }
+
+         // Update button styles
+         const tabButtons = this.querySelectorAll('[data-monthly-income-tab]');
+         tabButtons.forEach(button => {
+             button.classList.remove('bg-white', 'text-purple-600', 'shadow-sm');
+             button.classList.add('text-gray-600');
+         });
+
+         // Highlight active button
+         const activeButton = this.querySelector(`[data-monthly-income-tab="${activeTab}"]`);
+         if (activeButton) {
+             activeButton.classList.remove('text-gray-600');
+             activeButton.classList.add('bg-white', 'text-purple-600', 'shadow-sm');
          }
      }
 
@@ -391,6 +428,9 @@ class AdminDashboardPage extends App {
          
          // Create gender statistics charts
          this.createGenderCharts();
+         
+         // Create monthly income bar chart
+         this.createMonthlyIncomeBarChart();
      }
      
      createGenderCharts() {
@@ -616,7 +656,84 @@ class AdminDashboardPage extends App {
          
 
      }
- 
+
+     createMonthlyIncomeBarChart() {
+        // Monthly Income Bar Chart
+        const monthlyIncomeBarCtx = this.querySelector('#monthlyIncomeBarChart');
+        if (monthlyIncomeBarCtx && typeof Chart !== 'undefined') {
+            if (this.charts.monthlyIncomeBar) {
+                this.charts.monthlyIncomeBar.destroy();
+            }
+            
+            // Use real data from API or fallback to sample data
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlyIncome = this.monthlyIncomeData || months.map(() => Math.floor(Math.random() * 50000) + 10000);
+            
+            this.charts.monthlyIncomeBar = new Chart(monthlyIncomeBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Income',
+                        data: monthlyIncome,
+                        backgroundColor: 'rgba(147, 51, 234, 0.7)',
+                        borderColor: 'rgba(147, 51, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Income: ₵${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₵' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+     }
+
      async loadStats() {
         try {
             this.set('loading', true);
@@ -851,6 +968,7 @@ class AdminDashboardPage extends App {
          setTimeout(() => {
              this.createFinanceCharts();
              this.createGenderCharts();
+             this.createMonthlyIncomeBarChart();
              this.setupTabListeners();
          }, 200);
      }
@@ -900,7 +1018,11 @@ class AdminDashboardPage extends App {
         if (this.charts.monthlyIncome) {
             this.charts.monthlyIncome.destroy();
         }
+        if (this.charts.monthlyIncomeBar) {
+            this.charts.monthlyIncomeBar.destroy();
+        }
         this.createFinanceCharts();
+        this.createMonthlyIncomeBarChart();
     }
 
     async loadUserData() {
@@ -1498,7 +1620,7 @@ class AdminDashboardPage extends App {
                                 </div>
                             </div>
 
-                                                         <!-- Monthly Income Line Chart -->
+                                                         <!-- Monthly Income Chart -->
                              <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
                                  <div class="flex items-center justify-between mb-4">
                                      <div class="flex items-center">
@@ -1507,16 +1629,39 @@ class AdminDashboardPage extends App {
                                          </div>
                                          <h3 class="text-lg font-semibold text-gray-900">Monthly Income</h3>
                                      </div>
-                                     <div class="flex items-center space-x-2">
-                                         <label class="text-sm text-gray-600">Year:</label>
-                                         <select id="incomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                             ${this.generateYearOptions()}
-                                         </select>
+                                     <div class="flex items-center space-x-4">
+                                         <!-- Tab Navigation -->
+                                         <div class="flex bg-gray-100 rounded-lg p-1">
+                                             <button 
+                                                 data-monthly-income-tab="line"
+                                                 class="px-3 py-1.5 text-sm font-medium text-purple-600 bg-white rounded-md shadow-sm transition-all duration-200">
+                                                 Line
+                                             </button>
+                                             <button 
+                                                 data-monthly-income-tab="bar"
+                                                 class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
+                                                 Bar
+                                             </button>
+                                         </div>
+                                         <div class="flex items-center space-x-2">
+                                             <label class="text-sm text-gray-600">Year:</label>
+                                             <select id="incomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                                 ${this.generateYearOptions()}
+                                             </select>
+                                         </div>
                                      </div>
                                  </div>
-                                 <div class="relative" style="height: 300px;">
+                                 
+                                 <!-- Line Chart Tab -->
+                                 <div data-monthly-income-chart="line" class="relative" style="height: 300px;">
                                      <canvas id="monthlyIncomeChart"></canvas>
                                  </div>
+                                 
+                                 <!-- Bar Chart Tab -->
+                                 <div data-monthly-income-chart="bar" class="relative" style="height: 300px; display: none;">
+                                     <canvas id="monthlyIncomeBarChart"></canvas>
+                                 </div>
+                                 
                                  <div class="mt-4 text-center">
                                      <p class="text-sm text-gray-600">Income trends over the selected year</p>
                                  </div>

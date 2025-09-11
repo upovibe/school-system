@@ -89,6 +89,45 @@ class CashierPage extends App {
     }
   }
 
+  setupMonthlyIncomeTabListeners() {
+    // Setup monthly income chart tab switching
+    const monthlyIncomeTabButtons = this.querySelectorAll('[data-cashier-monthly-income-tab]');
+    monthlyIncomeTabButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const targetTab = e.target.getAttribute('data-cashier-monthly-income-tab');
+        this.switchCashierMonthlyIncomeTab(targetTab);
+      });
+    });
+  }
+
+  switchCashierMonthlyIncomeTab(activeTab) {
+    // Hide all monthly income chart containers
+    const chartContainers = this.querySelectorAll('[data-cashier-monthly-income-chart]');
+    chartContainers.forEach(container => {
+      container.style.display = 'none';
+    });
+
+    // Show the active chart container
+    const activeContainer = this.querySelector(`[data-cashier-monthly-income-chart="${activeTab}"]`);
+    if (activeContainer) {
+      activeContainer.style.display = 'block';
+    }
+
+    // Update button styles
+    const tabButtons = this.querySelectorAll('[data-cashier-monthly-income-tab]');
+    tabButtons.forEach(button => {
+      button.classList.remove('bg-white', 'text-green-600', 'shadow-sm');
+      button.classList.add('text-gray-600');
+    });
+
+    // Highlight active button
+    const activeButton = this.querySelector(`[data-cashier-monthly-income-tab="${activeTab}"]`);
+    if (activeButton) {
+      activeButton.classList.remove('text-gray-600');
+      activeButton.classList.add('bg-white', 'text-green-600', 'shadow-sm');
+    }
+  }
+
   async loadMonthlyIncome(token, year = null) {
     try {
       const url = year ? `/cashier/monthly-income?year=${year}` : '/cashier/monthly-income';
@@ -124,7 +163,11 @@ class CashierPage extends App {
     if (this.charts.monthlyIncome) {
       this.charts.monthlyIncome.destroy();
     }
+    if (this.charts.monthlyIncomeBar) {
+      this.charts.monthlyIncomeBar.destroy();
+    }
     this.createMonthlyIncomeChart();
+    this.createMonthlyIncomeBarChart();
   }
 
   createMonthlyIncomeChart() {
@@ -214,6 +257,83 @@ class CashierPage extends App {
     }
   }
 
+  createMonthlyIncomeBarChart() {
+    // Monthly Income Bar Chart
+    const monthlyIncomeBarCtx = this.querySelector('#cashierMonthlyIncomeBarChart');
+    if (monthlyIncomeBarCtx && typeof Chart !== 'undefined') {
+      if (this.charts.monthlyIncomeBar) {
+        this.charts.monthlyIncomeBar.destroy();
+      }
+      
+      // Use real data from API or fallback to sample data
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthlyIncome = this.monthlyIncomeData || months.map(() => Math.floor(Math.random() * 50000) + 10000);
+      
+      this.charts.monthlyIncomeBar = new Chart(monthlyIncomeBarCtx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Monthly Income',
+            data: monthlyIncome,
+            backgroundColor: 'rgba(34, 197, 94, 0.7)', // green color for cashier theme
+            borderColor: 'rgba(34, 197, 94, 1)',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: 'white',
+              bodyColor: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  return `Income: ₵${context.parsed.y.toLocaleString()}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return '₵' + value.toLocaleString();
+                },
+                font: {
+                  size: 12
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  size: 12
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
   generateYearOptions() {
     const currentYear = new Date().getFullYear();
     let options = '';
@@ -228,7 +348,9 @@ class CashierPage extends App {
     // Wait a bit for the DOM to update, then refresh charts
     setTimeout(() => {
       this.createMonthlyIncomeChart();
+      this.createMonthlyIncomeBarChart();
       this.setupYearSelector();
+      this.setupMonthlyIncomeTabListeners();
     }, 200);
   }
 
@@ -537,16 +659,39 @@ class CashierPage extends App {
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900">Monthly Income Trends</h3>
               </div>
-              <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-600">Year:</label>
-                <select id="cashierIncomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                  ${this.generateYearOptions()}
-                </select>
+              <div class="flex items-center space-x-4">
+                <!-- Tab Navigation -->
+                <div class="flex bg-gray-100 rounded-lg p-1">
+                  <button 
+                      data-cashier-monthly-income-tab="line"
+                      class="px-3 py-1.5 text-sm font-medium text-green-600 bg-white rounded-md shadow-sm transition-all duration-200">
+                      Line
+                  </button>
+                  <button 
+                      data-cashier-monthly-income-tab="bar"
+                      class="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-md transition-all duration-200">
+                      Bar
+                  </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Year:</label>
+                  <select id="cashierIncomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    ${this.generateYearOptions()}
+                  </select>
+                </div>
               </div>
             </div>
-            <div class="relative" style="height: 300px;">
+            
+            <!-- Line Chart Tab -->
+            <div data-cashier-monthly-income-chart="line" class="relative" style="height: 300px;">
               <canvas id="cashierMonthlyIncomeChart"></canvas>
             </div>
+            
+            <!-- Bar Chart Tab -->
+            <div data-cashier-monthly-income-chart="bar" class="relative" style="height: 300px; display: none;">
+              <canvas id="cashierMonthlyIncomeBarChart"></canvas>
+            </div>
+            
             <div class="mt-4 text-center">
               <p class="text-sm text-gray-600">Income trends over the selected year</p>
             </div>

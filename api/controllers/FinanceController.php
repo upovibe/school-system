@@ -1677,6 +1677,24 @@ class FinanceController {
             $gradingPeriodId = isset($_GET['grading_period_id']) ? (int)$_GET['grading_period_id'] : null;
             $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : null;
 
+            // Get academic year and grading period names for filtering
+            $academicYearName = null;
+            $gradingPeriodName = null;
+            
+            if ($academicYearId) {
+                $stmt = $this->pdo->prepare("SELECT year_code FROM academic_years WHERE id = ?");
+                $stmt->execute([$academicYearId]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $academicYearName = $result ? $result['year_code'] : null;
+            }
+            
+            if ($gradingPeriodId) {
+                $stmt = $this->pdo->prepare("SELECT name FROM grading_periods WHERE id = ?");
+                $stmt->execute([$gradingPeriodId]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $gradingPeriodName = $result ? $result['name'] : null;
+            }
+
             // Build the query to get collection rates by class
             $sql = "
                 SELECT 
@@ -1685,33 +1703,28 @@ class FinanceController {
                     c.section as class_section,
                     fs.student_type,
                     COUNT(DISTINCT s.id) as total_students,
-                    COALESCE(COUNT(DISTINCT s.id) * fs.amount, 0) as expected_collection,
+                    COALESCE(COUNT(DISTINCT s.id) * fs.total_fee, 0) as expected_collection,
                     COALESCE(SUM(fp.amount), 0) as actual_collection,
                     CASE 
-                        WHEN COALESCE(COUNT(DISTINCT s.id) * fs.amount, 0) > 0 
-                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / (COUNT(DISTINCT s.id) * fs.amount)) * 100, 2)
+                        WHEN COALESCE(COUNT(DISTINCT s.id) * fs.total_fee, 0) > 0 
+                        THEN ROUND((COALESCE(SUM(fp.amount), 0) / (COUNT(DISTINCT s.id) * fs.total_fee)) * 100, 2)
                         ELSE 0 
                     END as collection_rate
                 FROM classes c
                 LEFT JOIN students s ON s.current_class_id = c.id
                 LEFT JOIN fee_schedules fs ON fs.class_id = c.id 
-                    AND fs.academic_year_id = COALESCE(?, fs.academic_year_id)
-                    AND fs.grading_period_id = COALESCE(?, fs.grading_period_id)
+                    AND fs.academic_year = COALESCE(?, fs.academic_year)
+                    AND fs.grading_period = COALESCE(?, fs.grading_period)
                     AND (s.student_type = fs.student_type OR fs.student_type = 'all')
                 LEFT JOIN fee_invoices fi ON fi.student_id = s.id 
-                    AND fi.academic_year = (
-                        SELECT ay.year_code FROM academic_years ay WHERE ay.id = fs.academic_year_id
-                    )
-                    AND fi.grading_period = (
-                        SELECT gp.name FROM grading_periods gp WHERE gp.id = fs.grading_period_id
-                    )
+                    AND fi.academic_year = fs.academic_year
+                    AND fi.grading_period = fs.grading_period
                 LEFT JOIN fee_payments fp ON fp.invoice_id = fi.id 
                     AND (fp.status IS NULL OR fp.status <> 'voided')
-                WHERE c.deleted_at IS NULL
-                AND fs.id IS NOT NULL
+                WHERE fs.id IS NOT NULL
             ";
 
-            $params = [$academicYearId, $gradingPeriodId];
+            $params = [$academicYearName, $gradingPeriodName];
 
             if ($classId) {
                 $sql .= " AND c.id = ?";
@@ -1719,7 +1732,7 @@ class FinanceController {
             }
 
             $sql .= "
-                GROUP BY c.id, c.name, c.section, fs.student_type
+                GROUP BY c.id, c.name, c.section, fs.student_type, fs.total_fee
                 HAVING total_students > 0
                 ORDER BY c.name, c.section, fs.student_type
             ";

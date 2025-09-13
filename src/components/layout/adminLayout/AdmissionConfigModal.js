@@ -487,7 +487,14 @@ class AdmissionConfigModal extends HTMLElement {
             'date_of_birth': 'Date of Birth',
             'place_of_birth': 'Place of Birth',
             'nationality': 'Nationality',
-            'religion': 'Religion/Denomination'
+            'religion': 'Religion/Denomination',
+            'parent_full_name': 'Parent/Guardian Full Name',
+            'relationship': 'Relationship to Student',
+            'phone_number': 'Phone Number',
+            'email': 'Email Address',
+            'occupation': 'Occupation',
+            'residential_address': 'Residential Address',
+            'emergency_contact': 'Emergency Contact'
         };
         return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -502,7 +509,14 @@ class AdmissionConfigModal extends HTMLElement {
             'date_of_birth': 'date',
             'place_of_birth': 'text',
             'nationality': 'text',
-            'religion': 'text'
+            'religion': 'text',
+            'parent_full_name': 'text',
+            'relationship': 'select',
+            'phone_number': 'tel',
+            'email': 'email',
+            'occupation': 'text',
+            'residential_address': 'textarea',
+            'emergency_contact': 'text'
         };
         return types[fieldName] || 'text';
     }
@@ -806,6 +820,57 @@ class AdmissionConfigModal extends HTMLElement {
                                     ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'religion') ? 'checked' : ''}
                                     data-field="student_info_fields"
                                     data-field-name="religion">
+                                </ui-checkbox>
+                            </div>
+                        </div>
+
+                        <!-- Section B: Parent/Guardian Information -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-users mr-2 text-green-600"></i>Section B: Parent/Guardian Information
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="Parent/Guardian Name" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'parent_full_name') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="parent_full_name">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Relationship" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'relationship') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="relationship">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Phone Number" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'phone_number') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="phone_number">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Email Address" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'email') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="email">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Occupation" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'occupation') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="occupation">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Residential Address" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'residential_address') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="residential_address">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Emergency Contact" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'emergency_contact') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="emergency_contact">
                                 </ui-checkbox>
                             </div>
                         </div>

@@ -260,6 +260,21 @@ class AdmissionConfigModal extends HTMLElement {
                 }
             }
         }
+        
+        // Show/hide Academic Programme checkbox based on SHS selection
+        const academicProgrammeCheckbox = this.querySelector('[data-field-name="academic_programme"]');
+        if (academicProgrammeCheckbox) {
+            if (enabledLevels.includes('shs')) {
+                academicProgrammeCheckbox.style.display = '';
+            } else {
+                academicProgrammeCheckbox.style.display = 'none';
+                // Uncheck Academic Programme if SHS is not enabled
+                if (academicProgrammeCheckbox.hasAttribute('checked')) {
+                    academicProgrammeCheckbox.removeAttribute('checked');
+                    this.handleFormFieldToggle(academicProgrammeCheckbox);
+                }
+            }
+        }
     }
 
     // Generate level classes dynamically based on enabled levels
@@ -514,7 +529,11 @@ class AdmissionConfigModal extends HTMLElement {
             'last_class_completed': 'Last Class Completed',
             'report_card': 'Report Card Upload',
             'bece_results': 'BECE Results',
-            'transfer_letter': 'Transfer Letter'
+            'transfer_letter': 'Transfer Letter',
+            'level_applying': 'Level Applying For',
+            'class_applying': 'Class Applying For',
+            'academic_programme': 'Academic Programme',
+            'school_type': 'School Type'
         };
         return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -541,7 +560,11 @@ class AdmissionConfigModal extends HTMLElement {
             'last_class_completed': 'text',
             'report_card': 'file',
             'bece_results': 'file',
-            'transfer_letter': 'file'
+            'transfer_letter': 'file',
+            'level_applying': 'select',
+            'class_applying': 'select',
+            'academic_programme': 'select',
+            'school_type': 'select'
         };
         return types[fieldName] || 'text';
     }
@@ -663,124 +686,6 @@ class AdmissionConfigModal extends HTMLElement {
                                 </ui-input>
                                 <p class="text-xs text-gray-500 mt-1">Per day limit</p>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- School Setup Configuration -->
-                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm border border-green-200 p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-school text-green-600 mr-2"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">School Setup</h3>
-                        </div>
-                        
-                        <!-- School Types -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                <i class="fas fa-building mr-1"></i>School Types (Applicant Selection Options)
-                            </label>
-                            <div class="space-y-2">
-                                <ui-checkbox 
-                                    label="Day School" 
-                                    ${this.configData.school_types && this.configData.school_types.includes('day') ? 'checked' : ''}
-                                    data-field="school_types"
-                                    data-value="day">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Boarding School" 
-                                    ${this.configData.school_types && this.configData.school_types.includes('boarding') ? 'checked' : ''}
-                                    data-field="school_types"
-                                    data-value="boarding">
-                                </ui-checkbox>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-2">Select which school type options applicants can choose from</p>
-                        </div>
-                        
-                        <!-- Enabled Levels -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                <i class="fas fa-graduation-cap mr-1"></i>Enabled Levels
-                            </label>
-                            <div class="grid grid-cols-2 gap-2">
-                                <ui-checkbox 
-                                    label="Creche" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('creche') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="creche">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Nursery" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('nursery') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="nursery">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Kindergarten (KG)" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('kg') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="kg">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Primary" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('primary') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="primary">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Junior High School (JHS)" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('jhs') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="jhs">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Senior High School (SHS)" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? 'checked' : ''}
-                                    data-field="enabled_levels"
-                                    data-value="shs">
-                                </ui-checkbox>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-2">Select which educational levels your school offers</p>
-                        </div>
-                    </div>
-
-                    <!-- Level Classes Configuration -->
-                    <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-layer-group text-purple-600 mr-2"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Level Classes Configuration</h3>
-                        </div>
-                        
-                        <div class="space-y-4" id="level-classes-container">
-                            <!-- Classes will be dynamically generated here -->
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">Configure classes for each enabled level</p>
-                    </div>
-
-                    <!-- SHS Programmes Configuration -->
-                    <div id="shs-programmes-section" class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg shadow-sm border border-orange-200 p-6 hidden">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-book-open text-orange-600 mr-2"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">SHS Programmes Configuration</h3>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                <i class="fas fa-list mr-1"></i>Available Programmes
-                            </label>
-                            <div class="space-y-2" id="shs-programmes-container">
-                                <!-- Programmes will be dynamically generated here -->
-                            </div>
-                            <div class="flex justify-end mt-2">
-                                <ui-button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    data-action="add-programme"
-                                    class="px-3">
-                                    <i class="fas fa-plus mr-1"></i>
-                                    Add Programme
-                                </ui-button>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1">These programmes will appear as options for SHS applicants</p>
                         </div>
                     </div>
 
@@ -938,6 +843,158 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field-name="transfer_letter">
                                 </ui-checkbox>
                             </div>
+                        </div>
+
+                        <!-- Section D: Admission Details -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-clipboard-list mr-2 text-red-600"></i>Section D: Admission Details
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="Level Applying For" 
+                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'level_applying') ? 'checked' : ''}
+                                    data-field="admission_details_fields"
+                                    data-field-name="level_applying">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Class Applying For" 
+                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'class_applying') ? 'checked' : ''}
+                                    data-field="admission_details_fields"
+                                    data-field-name="class_applying">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Academic Programme" 
+                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'academic_programme') ? 'checked' : ''}
+                                    data-field="admission_details_fields"
+                                    data-field-name="academic_programme"
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="School Type" 
+                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'school_type') ? 'checked' : ''}
+                                    data-field="admission_details_fields"
+                                    data-field-name="school_type">
+                                </ui-checkbox>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- School Setup Configuration -->
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm border border-green-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-school text-green-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">School Setup</h3>
+                        </div>
+                        
+                        <!-- School Types -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-building mr-1"></i>School Types (Applicant Selection Options)
+                            </label>
+                            <div class="space-y-2">
+                                <ui-checkbox 
+                                    label="Day School" 
+                                    ${this.configData.school_types && this.configData.school_types.includes('day') ? 'checked' : ''}
+                                    data-field="school_types"
+                                    data-value="day">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Boarding School" 
+                                    ${this.configData.school_types && this.configData.school_types.includes('boarding') ? 'checked' : ''}
+                                    data-field="school_types"
+                                    data-value="boarding">
+                                </ui-checkbox>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Select which school type options applicants can choose from</p>
+                        </div>
+                        
+                        <!-- Enabled Levels -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-graduation-cap mr-1"></i>Enabled Levels
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <ui-checkbox 
+                                    label="Creche" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('creche') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="creche">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Nursery" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('nursery') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="nursery">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Kindergarten (KG)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('kg') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="kg">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Primary" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('primary') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="primary">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Junior High School (JHS)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('jhs') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="jhs">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Senior High School (SHS)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="shs">
+                                </ui-checkbox>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Select which educational levels your school offers</p>
+                        </div>
+                    </div>
+
+                    <!-- Level Classes Configuration -->
+                    <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-layer-group text-purple-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Level Classes Configuration</h3>
+                        </div>
+                        
+                        <div class="space-y-4" id="level-classes-container">
+                            <!-- Classes will be dynamically generated here -->
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Configure classes for each enabled level</p>
+                    </div>
+
+                    <!-- SHS Programmes Configuration -->
+                    <div id="shs-programmes-section" class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg shadow-sm border border-orange-200 p-6 hidden">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-book-open text-orange-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">SHS Programmes Configuration</h3>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-list mr-1"></i>Available Programmes
+                            </label>
+                            <div class="space-y-2" id="shs-programmes-container">
+                                <!-- Programmes will be dynamically generated here -->
+                            </div>
+                            <div class="flex justify-end mt-2">
+                                <ui-button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-action="add-programme"
+                                    class="px-3">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Add Programme
+                                </ui-button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">These programmes will appear as options for SHS applicants</p>
                         </div>
                     </div>
 

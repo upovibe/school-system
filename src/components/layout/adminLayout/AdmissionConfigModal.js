@@ -68,6 +68,21 @@ class AdmissionConfigModal extends HTMLElement {
         this.addEventListener('input', (event) => {
             this.handleFormChange(event);
         });
+
+        // Add click handlers for class management
+        this.addEventListener('click', (event) => {
+            if (event.target.closest('[data-action="add-class"]')) {
+                event.preventDefault();
+                const level = event.target.closest('[data-action="add-class"]').dataset.level;
+                this.addClass(level);
+            }
+            if (event.target.closest('[data-action="remove-class"]')) {
+                event.preventDefault();
+                const level = event.target.closest('[data-action="remove-class"]').dataset.level;
+                const index = parseInt(event.target.closest('[data-action="remove-class"]').dataset.index, 10);
+                this.removeClass(level, index);
+            }
+        });
     }
 
     open() {
@@ -90,10 +105,26 @@ class AdmissionConfigModal extends HTMLElement {
             // Then try to load admission config
             const response = await api.withToken(token).get('/admission/config');
             if (response.data.success && response.data.data) {
-                this.configData = { ...this.configData, ...response.data.data };
+                const data = response.data.data;
+                
+                // Parse JSON fields that come as strings from the API
+                this.configData = {
+                    ...this.configData,
+                    ...data,
+                    enabled_levels: data.enabled_levels ? (typeof data.enabled_levels === 'string' ? JSON.parse(data.enabled_levels) : data.enabled_levels) : [],
+                    level_classes: data.level_classes ? (typeof data.level_classes === 'string' ? JSON.parse(data.level_classes) : data.level_classes) : {},
+                    shs_programmes: data.shs_programmes ? (typeof data.shs_programmes === 'string' ? JSON.parse(data.shs_programmes) : data.shs_programmes) : [],
+                    school_types: data.school_types ? (typeof data.school_types === 'string' ? JSON.parse(data.school_types) : data.school_types) : [],
+                    required_documents: data.required_documents ? (typeof data.required_documents === 'string' ? JSON.parse(data.required_documents) : data.required_documents) : []
+                };
             }
             
             this.render();
+            
+            // Update visibility after rendering
+            setTimeout(() => {
+                this.updateLevelSectionsVisibility();
+            }, 100);
         } catch (error) {
             console.error('❌ Error loading admission config:', error);
         }
@@ -156,6 +187,9 @@ class AdmissionConfigModal extends HTMLElement {
                     this.configData.required_documents = this.configData.required_documents.filter(doc => doc !== checkboxValue);
                 }
             }
+            
+            // Update visibility of class sections and SHS programmes
+            this.updateLevelSectionsVisibility();
         } else if (name === 'enabled_levels') {
             // Handle level checkboxes
             const levels = Array.from(this.querySelectorAll('input[name="enabled_levels"]:checked'))
@@ -166,6 +200,17 @@ class AdmissionConfigModal extends HTMLElement {
             const documents = Array.from(this.querySelectorAll('input[name="required_documents"]:checked'))
                 .map(input => input.value);
             this.configData.required_documents = documents;
+        } else if (event.target.hasAttribute('data-level') && event.target.hasAttribute('data-class-index')) {
+            // Handle individual class input changes
+            this.syncClassesFromDOM();
+        } else if (event.target.hasAttribute('data-field')) {
+            // Handle SHS programmes inputs
+            const field = event.target.getAttribute('data-field');
+            
+            if (field === 'shs_programmes') {
+                const programmes = value.split(',').map(prog => prog.trim()).filter(prog => prog);
+                this.configData.shs_programmes = programmes;
+            }
         } else if (name && name in this.configData) {
             if (type === 'checkbox') {
                 this.configData[name] = checked;
@@ -177,9 +222,155 @@ class AdmissionConfigModal extends HTMLElement {
         }
     }
 
+    // Update visibility of level sections based on enabled levels
+    updateLevelSectionsVisibility() {
+        const enabledLevels = this.configData.enabled_levels || [];
+        
+        // Generate level classes dynamically
+        this.generateLevelClasses();
+        
+        // Show/hide SHS programmes section
+        const shsProgrammesSection = this.querySelector('#shs-programmes-section');
+        if (shsProgrammesSection) {
+            shsProgrammesSection.classList.toggle('hidden', !enabledLevels.includes('shs'));
+        }
+    }
+
+    // Generate level classes dynamically based on enabled levels
+    generateLevelClasses() {
+        const enabledLevels = this.configData.enabled_levels || [];
+        const levelClasses = this.configData.level_classes || {};
+        const container = this.querySelector('#level-classes-container');
+        
+        console.log('🔍 Debug - Enabled levels:', enabledLevels);
+        console.log('🔍 Debug - Level classes:', levelClasses);
+        console.log('🔍 Debug - Container:', container);
+        
+        if (!container) {
+            console.log('❌ No container found');
+            return;
+        }
+        
+        if (!enabledLevels || enabledLevels.length === 0) {
+            console.log('❌ No enabled levels, using defaults for testing');
+            // For testing, let's use some default levels
+            this.configData.enabled_levels = ['primary', 'jhs', 'shs'];
+            this.generateLevelClasses();
+            return;
+        }
+        
+        // Level display names
+        const levelInfo = {
+            'primary': 'Primary Classes',
+            'jhs': 'JHS Classes', 
+            'shs': 'SHS Classes',
+            'creche': 'Creche Classes',
+            'nursery': 'Nursery Classes',
+            'kg': 'KG Classes'
+        };
+        
+        let html = '';
+        
+        enabledLevels.forEach(level => {
+            const levelName = levelInfo[level] || `${level.toUpperCase()} Classes`;
+            let classes = levelClasses[level] || [];
+            
+            // Ensure we have at least one empty class input
+            if (!classes || classes.length === 0) {
+                classes = [''];
+            }
+            
+            html += `
+                <div id="${level}-classes" class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        <i class="fas fa-graduation-cap mr-1"></i>${levelName}
+                    </label>
+                    <div class="space-y-2" id="${level}-classes-container">
+                        ${classes.map((className, index) => `
+                            <div class="flex gap-2 items-center">
+                                <div class="flex-1">
+                                    <ui-input
+                                        type="text"
+                                        placeholder="Enter class name (e.g., P1, JHS1, SHS1)"
+                                        value="${className}"
+                                        data-level="${level}"
+                                        data-class-index="${index}"
+                                        class="w-full">
+                                    </ui-input>
+                                </div>
+                                ${classes.length > 1 ? `
+                                    <ui-button
+                                        type="button"
+                                        variant="danger-outline"
+                                        size="sm"
+                                        data-action="remove-class"
+                                        data-level="${level}"
+                                        data-index="${index}"
+                                        class="px-3">
+                                        <i class="fas fa-trash"></i>
+                                    </ui-button>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-end mt-2">
+                        <ui-button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            data-action="add-class"
+                            data-level="${level}"
+                            class="px-3">
+                            <i class="fas fa-plus mr-1"></i>
+                            Add Class
+                        </ui-button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    // Add a new class to a level
+    addClass(level) {
+        if (!this.configData.level_classes) {
+            this.configData.level_classes = {};
+        }
+        if (!this.configData.level_classes[level]) {
+            this.configData.level_classes[level] = [''];
+        }
+        this.configData.level_classes[level].push('');
+        this.generateLevelClasses();
+    }
+
+    // Remove a class from a level
+    removeClass(level, index) {
+        if (this.configData.level_classes && this.configData.level_classes[level] && this.configData.level_classes[level].length > 1) {
+            this.configData.level_classes[level].splice(index, 1);
+            this.generateLevelClasses();
+        }
+    }
+
+    // Sync class data from DOM inputs
+    syncClassesFromDOM() {
+        if (!this.configData.level_classes) {
+            this.configData.level_classes = {};
+        }
+
+        const enabledLevels = this.configData.enabled_levels || [];
+        enabledLevels.forEach(level => {
+            const classInputs = this.querySelectorAll(`input[data-level="${level}"]`);
+            this.configData.level_classes[level] = Array.from(classInputs).map(input => input.value || '');
+        });
+    }
+
     // Save the configuration
     async saveConfig() {
         try {
+            // Sync classes from DOM before saving
+            this.syncClassesFromDOM();
+            
             const token = localStorage.getItem('token');
             if (!token) {
                 Toast.show({
@@ -238,7 +429,7 @@ class AdmissionConfigModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Admission Configuration</div>
                 
-                < id="admission-config-form" class="space-y-6">
+                <form id="admission-config-form" class="space-y-6">
                     <!-- Basic Configuration -->
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
                         <div class="flex items-center mb-4">
@@ -366,6 +557,41 @@ class AdmissionConfigModal extends HTMLElement {
                                 </ui-checkbox>
                             </div>
                             <p class="text-xs text-gray-500 mt-2">Select which educational levels your school offers</p>
+                        </div>
+                    </div>
+
+                    <!-- Level Classes Configuration -->
+                    <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-layer-group text-purple-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Level Classes Configuration</h3>
+                        </div>
+                        
+                        <div class="space-y-4" id="level-classes-container">
+                            <!-- Classes will be dynamically generated here -->
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Configure classes for each enabled level</p>
+                    </div>
+
+                    <!-- SHS Programmes Configuration -->
+                    <div id="shs-programmes-section" class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg shadow-sm border border-orange-200 p-6 hidden">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-book-open text-orange-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">SHS Programmes Configuration</h3>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-list mr-1"></i>Available Programmes
+                            </label>
+                            <ui-input 
+                                type="text" 
+                                placeholder="Enter programmes separated by commas (e.g., General Science, Business, Arts, Technical, Home Economics)"
+                                value="${this.configData.shs_programmes ? this.configData.shs_programmes.join(', ') : ''}"
+                                data-field="shs_programmes"
+                                class="w-full">
+                            </ui-input>
+                            <p class="text-xs text-gray-500 mt-1">These programmes will appear as options for SHS applicants</p>
                         </div>
                     </div>
 

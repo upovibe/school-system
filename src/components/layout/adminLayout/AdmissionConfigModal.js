@@ -91,6 +91,10 @@ class AdmissionConfigModal extends HTMLElement {
                 const index = parseInt(event.target.closest('[data-action="remove-programme"]').dataset.index, 10);
                 this.removeProgramme(index);
             }
+            if (event.target.closest('[data-field]') && event.target.closest('[data-field-name]')) {
+                event.preventDefault();
+                this.handleFormFieldToggle(event.target);
+            }
         });
     }
 
@@ -433,6 +437,76 @@ class AdmissionConfigModal extends HTMLElement {
         this.configData.shs_programmes = Array.from(programmeInputs).map(input => input.value || '');
     }
 
+    // Check if a field is enabled in the form field configuration
+    isFieldEnabled(section, fieldName) {
+        const fields = this.configData[section];
+        if (!fields || !Array.isArray(fields)) return false;
+        
+        const field = fields.find(f => f.name === fieldName);
+        return field && field.enabled === true;
+    }
+
+    // Handle form field toggle (enable/disable)
+    handleFormFieldToggle(checkbox) {
+        const section = checkbox.getAttribute('data-field');
+        const fieldName = checkbox.getAttribute('data-field-name');
+        const isChecked = checkbox.hasAttribute('checked');
+        
+        if (!this.configData[section]) {
+            this.configData[section] = [];
+        }
+        
+        // Find the field in the section
+        let field = this.configData[section].find(f => f.name === fieldName);
+        
+        if (!field) {
+            // Create a new field configuration
+            field = {
+                name: fieldName,
+                label: this.getFieldLabel(fieldName),
+                required: false,
+                enabled: false,
+                type: this.getFieldType(fieldName)
+            };
+            this.configData[section].push(field);
+        }
+        
+        // Toggle the enabled state
+        field.enabled = isChecked;
+        
+        console.log(`🔧 Field ${fieldName} in ${section} is now ${isChecked ? 'enabled' : 'disabled'}`);
+    }
+
+    // Get field label for a field name
+    getFieldLabel(fieldName) {
+        const labels = {
+            'first_name': 'First Name',
+            'middle_name': 'Middle Name',
+            'last_name': 'Last Name',
+            'gender': 'Gender',
+            'date_of_birth': 'Date of Birth',
+            'place_of_birth': 'Place of Birth',
+            'nationality': 'Nationality',
+            'religion': 'Religion/Denomination'
+        };
+        return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Get field type for a field name
+    getFieldType(fieldName) {
+        const types = {
+            'first_name': 'text',
+            'middle_name': 'text',
+            'last_name': 'text',
+            'gender': 'select',
+            'date_of_birth': 'date',
+            'place_of_birth': 'text',
+            'nationality': 'text',
+            'religion': 'text'
+        };
+        return types[fieldName] || 'text';
+    }
+
     // Save the configuration
     async saveConfig() {
         try {
@@ -668,6 +742,72 @@ class AdmissionConfigModal extends HTMLElement {
                                 </ui-button>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">These programmes will appear as options for SHS applicants</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Field Configuration - Student Information -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg shadow-sm border border-indigo-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-cogs text-indigo-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Form Field Configuration</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-6">Configure which fields appear on the admission form for applicants</p>
+                        
+                        <!-- Section A: Student Information -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-user mr-2 text-blue-600"></i>Section A: Student Information
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="First Name" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'first_name') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="first_name">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Middle Name" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'middle_name') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="middle_name">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Last Name" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'last_name') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="last_name">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Gender" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'gender') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="gender">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Date of Birth" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'date_of_birth') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="date_of_birth">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Place of Birth" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'place_of_birth') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="place_of_birth">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Nationality" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'nationality') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="nationality">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Religion" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'religion') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="religion">
+                                </ui-checkbox>
+                            </div>
                         </div>
                     </div>
 

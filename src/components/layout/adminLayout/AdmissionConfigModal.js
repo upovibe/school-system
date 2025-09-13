@@ -23,6 +23,8 @@ class AdmissionConfigModal extends HTMLElement {
     constructor() {
         super();
         this.configData = {
+            academic_year_id: null,
+            academic_year_name: '',
             admission_status: 'open',
             max_applications_per_ip_per_day: 3,
             enabled_levels: ['primary', 'jhs', 'shs'],
@@ -82,14 +84,44 @@ class AdmissionConfigModal extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
+            // Load current academic year first
+            await this.loadCurrentAcademicYear();
+
+            // Then try to load admission config
             const response = await api.withToken(token).get('/admission/config');
             if (response.data.success && response.data.data) {
                 this.configData = { ...this.configData, ...response.data.data };
-                this.render();
             }
+            
+            this.render();
         } catch (error) {
             console.error('❌ Error loading admission config:', error);
         }
+    }
+
+    // Load current academic year
+    async loadCurrentAcademicYear() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                this.configData.academic_year_name = 'No Authentication';
+                this.render();
+                return;
+            }
+
+            const response = await api.withToken(token).get('/academic-years/current');
+            if (response.data && response.data.success) {
+                const yearData = response.data.data;
+                this.configData.academic_year_name = `${yearData.year_code || 'Unknown'} ${yearData.display_name ? `(${yearData.display_name})` : ''}`;
+                this.configData.academic_year_id = yearData.id;
+            } else {
+                this.configData.academic_year_name = 'No Current Year';
+            }
+        } catch (error) {
+            console.error('❌ Error loading current academic year:', error);
+            this.configData.academic_year_name = 'Error Loading Year';
+        }
+        this.render();
     }
 
     // Handle form changes
@@ -178,26 +210,49 @@ class AdmissionConfigModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Admission Configuration</div>
                 
-                <form id="admission-config-form" class="space-y-6">
-                    <!-- Admission Status -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium text-gray-900">Admission Status</h4>
-                                    <p class="text-sm text-gray-600">Control whether new applications are being accepted</p>
-                                </div>
-                                <ui-switch 
-                                    name="admission_status"
-                                    ${this.configData.admission_status === 'open' ? 'checked' : ''}
-                                    class="w-full">
-                                    <span slot="label">Open for Applications</span>
-                                </ui-switch>
+                <form id="admission-config-form" class="space-y-6"></form>
+                    <!-- Basic Configuration -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-cog text-blue-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Basic Configuration</h3>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <!-- Academic Year (Read-only) -->
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Academic Year
+                                </label>
+                                <ui-input 
+                                    type="text" 
+                                    value="${this.configData.academic_year_name || 'Loading...'}"
+                                    readonly
+                                    class="w-full bg-gray-50">
+                                </ui-input>
+                                <p class="text-xs text-gray-500 mt-1">Current active academic year</p>
                             </div>
                             
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Max Applications per IP per Day</label>
+                            <!-- Admission Status -->
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-toggle-on mr-1"></i>Admission Status
+                                </label>
+                                <div class="flex items-center space-x-3">
+                                    <ui-switch 
+                                        name="admission_status"
+                                        ${this.configData.admission_status === 'open' ? 'checked' : ''}
+                                        class="w-full">
+                                        <span slot="label">${this.configData.admission_status === 'open' ? 'Open' : 'Closed'}</span>
+                                    </ui-switch>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Control new applications</p>
+                            </div>
+                            
+                            <!-- Max Applications per IP -->
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-shield-alt mr-1"></i>Max Applications per IP
+                                </label>
                                 <ui-input 
                                     name="max_applications_per_ip_per_day"
                                     type="number" 
@@ -205,6 +260,7 @@ class AdmissionConfigModal extends HTMLElement {
                                     value="${this.configData.max_applications_per_ip_per_day}"
                                     class="w-full">
                                 </ui-input>
+                                <p class="text-xs text-gray-500 mt-1">Per day limit</p>
                             </div>
                         </div>
                     </div>

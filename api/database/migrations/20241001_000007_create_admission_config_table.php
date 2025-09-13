@@ -35,9 +35,6 @@ class Migration_20241001000007_create_admission_config_table {
                 -- Document Requirements
                 required_documents JSON,
                 
-                -- Email Templates
-                email_templates JSON,
-                
                 -- Additional Settings
                 health_info_enabled BOOLEAN DEFAULT FALSE,
                 parent_email_required BOOLEAN DEFAULT FALSE,
@@ -107,9 +104,12 @@ class Migration_20241001000007_create_admission_config_table {
         ]);
         
         $healthInfoFields = json_encode([
-            ['name' => 'medical_conditions', 'label' => 'Medical Conditions/Allergies', 'required' => false, 'enabled' => false, 'type' => 'textarea'],
+            ['name' => 'blood_group', 'label' => 'Blood Group', 'required' => false, 'enabled' => false, 'type' => 'select', 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']],
+            ['name' => 'allergies', 'label' => 'Allergies', 'required' => false, 'enabled' => false, 'type' => 'select_multiple', 'options' => ['None', 'Food Allergies', 'Drug Allergies', 'Environmental Allergies', 'Latex', 'Other'], 'allow_other' => true],
+            ['name' => 'medical_conditions', 'label' => 'Medical Conditions', 'required' => false, 'enabled' => false, 'type' => 'select_multiple', 'options' => ['None', 'Asthma', 'Diabetes', 'Epilepsy', 'Heart Condition', 'Other'], 'allow_other' => true],
             ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file'],
-            ['name' => 'health_insurance', 'label' => 'Health Insurance Information', 'required' => false, 'enabled' => false, 'type' => 'text']
+            ['name' => 'health_insurance', 'label' => 'Health Insurance Information', 'required' => false, 'enabled' => false, 'type' => 'text'],
+            ['name' => 'emergency_medication', 'label' => 'Emergency Medication Required', 'required' => false, 'enabled' => false, 'type' => 'textarea']
         ]);
         
         $documentUploadFields = json_encode([
@@ -128,20 +128,6 @@ class Migration_20241001000007_create_admission_config_table {
             ['name' => 'BECE Results', 'required' => true, 'levels' => ['shs']],
             ['name' => 'Immunization Card', 'required' => true, 'levels' => ['primary']]
         ]);
-        $emailTemplates = json_encode([
-            'auto_response' => [
-                'subject' => 'Application Received - Our School',
-                'body' => "Dear {student_name},\n\nThank you for your application to Our School. We have received your application for {level_applied} and will review it shortly.\n\nApplication Number: {application_number}\n\nWe will contact you soon with further details.\n\nBest regards,\nAdmissions Team"
-            ],
-            'approval' => [
-                'subject' => 'Application Approved - Our School',
-                'body' => "Dear {student_name},\n\nCongratulations! Your application to Our School has been approved.\n\nApplication Number: {application_number}\nLevel: {level_applied}\n\nPlease contact the school for next steps.\n\nBest regards,\nAdmissions Team"
-            ],
-            'rejection' => [
-                'subject' => 'Application Update - Our School',
-                'body' => "Dear {student_name},\n\nThank you for your interest in Our School. After careful consideration, we are unable to offer you a place at this time.\n\nApplication Number: {application_number}\n\nWe wish you all the best in your educational journey.\n\nBest regards,\nAdmissions Team"
-            ]
-        ]);
 
         // Get the current academic year ID
         $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1");
@@ -150,9 +136,9 @@ class Migration_20241001000007_create_admission_config_table {
 
         $stmt = $this->pdo->prepare("
             INSERT INTO admission_config (
-                academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents, email_templates,
+                academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
                 student_info_fields, parent_guardian_fields, academic_background_fields, admission_details_fields, health_info_fields, document_upload_fields
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $academicYearId,
@@ -161,7 +147,6 @@ class Migration_20241001000007_create_admission_config_table {
             $levelClasses,
             $shsProgrammes,
             $requiredDocuments,
-            $emailTemplates,
             $studentInfoFields,
             $parentGuardianFields,
             $academicBackgroundFields,

@@ -6,6 +6,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/layout/adminLayout/ApplicationViewModal.js';
+import '@/components/layout/adminLayout/AdmissionConfigModal.js';
 import api from '@/services/api.js';
 
 /**
@@ -20,6 +21,7 @@ class ApplicationsPage extends App {
         this.loading = false;
         this.showViewModal = false;
         this.viewApplicationData = null;
+        this.showConfigModal = false;
     }
 
     getHeaderCounts() {
@@ -176,8 +178,13 @@ class ApplicationsPage extends App {
     }
 
     showSettings() {
-        // Placeholder for settings functionality
-        console.log('Settings clicked');
+        this.set('showConfigModal', true);
+        setTimeout(() => {
+            const configModal = this.querySelector('admission-config-modal');
+            if (configModal) {
+                configModal.open();
+            }
+        }, 0);
     }
 
     async loadData() {
@@ -233,6 +240,7 @@ class ApplicationsPage extends App {
         const applications = this.get('applications');
         const loading = this.get('loading');
         const showViewModal = this.get('showViewModal');
+        const showConfigModal = this.get('showConfigModal');
         const tableData = applications ? applications.map((app, index) => ({
             id: app.id,
             index: index + 1,
@@ -287,6 +295,7 @@ class ApplicationsPage extends App {
                 `}
             </div>
             <application-view-modal ${showViewModal ? 'open' : ''}></application-view-modal>
+            <admission-config-modal ${showConfigModal ? 'open' : ''}></admission-config-modal>
         `;
     }
 }

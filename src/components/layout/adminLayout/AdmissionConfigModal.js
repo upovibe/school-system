@@ -69,6 +69,14 @@ class AdmissionConfigModal extends HTMLElement {
             this.handleFormChange(event);
         });
 
+        // Listen for ui-checkbox change events
+        this.addEventListener('change', (event) => {
+            if (event.target.tagName === 'UI-CHECKBOX' && event.target.hasAttribute('data-field') && event.target.hasAttribute('data-field-name')) {
+                console.log('🔧 UI-Checkbox change event detected:', event.target.getAttribute('data-field-name'));
+                this.handleFormFieldToggle(event.target);
+            }
+        });
+
         // Add click handlers for class management
         this.addEventListener('click', (event) => {
             if (event.target.closest('[data-action="add-class"]')) {
@@ -91,9 +99,11 @@ class AdmissionConfigModal extends HTMLElement {
                 const index = parseInt(event.target.closest('[data-action="remove-programme"]').dataset.index, 10);
                 this.removeProgramme(index);
             }
-            if (event.target.closest('[data-field]') && event.target.closest('[data-field-name]')) {
+            // Handle form field checkboxes - check for ui-checkbox with data-field and data-field-name
+            const formFieldCheckbox = event.target.closest('ui-checkbox[data-field][data-field-name]');
+            if (formFieldCheckbox) {
                 event.preventDefault();
-                this.handleFormFieldToggle(event.target);
+                this.handleFormFieldToggle(formFieldCheckbox);
             }
         });
     }
@@ -535,7 +545,9 @@ class AdmissionConfigModal extends HTMLElement {
     handleFormFieldToggle(checkbox) {
         const section = checkbox.getAttribute('data-field');
         const fieldName = checkbox.getAttribute('data-field-name');
-        const isChecked = checkbox.hasAttribute('checked');
+        const isCurrentlyChecked = checkbox.hasAttribute('checked');
+        
+        console.log(`🔧 Toggling field: ${fieldName} in ${section}, currently checked: ${isCurrentlyChecked}`);
         
         if (!this.configData[section]) {
             this.configData[section] = [];
@@ -554,12 +566,20 @@ class AdmissionConfigModal extends HTMLElement {
                 type: this.getFieldType(fieldName)
             };
             this.configData[section].push(field);
+            console.log(`🔧 Created new field config for ${fieldName}`);
         }
         
-        // Toggle the enabled state
-        field.enabled = isChecked;
+        // Toggle the enabled state (opposite of current state)
+        field.enabled = !isCurrentlyChecked;
         
-        console.log(`🔧 Field ${fieldName} in ${section} is now ${isChecked ? 'enabled' : 'disabled'}`);
+        // Update the checkbox visual state
+        if (field.enabled) {
+            checkbox.setAttribute('checked', '');
+        } else {
+            checkbox.removeAttribute('checked');
+        }
+        
+        console.log(`🔧 Field ${fieldName} in ${section} is now ${field.enabled ? 'enabled' : 'disabled'}`);
         
         // Update conditional visibility after toggling form fields
         this.updateConditionalVisibility();

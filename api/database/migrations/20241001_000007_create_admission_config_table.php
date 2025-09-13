@@ -1,0 +1,178 @@
+<?php
+// api/database/migrations/20241001_000007_create_admission_config_table.php
+
+class Migration_20241001000007_create_admission_config_table {
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function up() {
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS admission_config (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                
+                -- Basic Configuration
+                academic_year_id INT NOT NULL,
+                admission_status ENUM('open', 'closed') DEFAULT 'open',
+                max_applications_per_ip_per_day INT DEFAULT 3,
+                
+                -- School Setup
+                enabled_levels JSON,
+                level_classes JSON,
+                shs_programmes JSON,
+                school_types JSON,
+                
+                -- Form Field Configuration (Sections A-F)
+                student_info_fields JSON,
+                parent_guardian_fields JSON,
+                academic_background_fields JSON,
+                admission_details_fields JSON,
+                health_info_fields JSON,
+                document_upload_fields JSON,
+                
+                -- Document Requirements
+                required_documents JSON,
+                
+                -- Email Templates
+                email_templates JSON,
+                
+                -- Additional Settings
+                health_info_enabled BOOLEAN DEFAULT FALSE,
+                parent_email_required BOOLEAN DEFAULT FALSE,
+                parent_occupation_required BOOLEAN DEFAULT FALSE,
+                
+                -- Timestamps
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                
+                -- Constraints & Indexes
+                FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT,
+                INDEX idx_academic_year_id (academic_year_id),
+                INDEX idx_admission_status (admission_status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        // Insert default config (sample)
+        $enabledLevels = json_encode(['primary', 'jhs', 'shs']);
+        $levelClasses = json_encode([
+            'primary' => ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+            'jhs' => ['JHS1', 'JHS2', 'JHS3'],
+            'shs' => ['SHS1', 'SHS2', 'SHS3']
+        ]);
+        $shsProgrammes = json_encode(['General Science', 'Business', 'Arts', 'Technical', 'Home Economics']);
+        $schoolTypes = json_encode([
+            ['value' => 'day', 'label' => 'Day Student'],
+            ['value' => 'boarding', 'label' => 'Boarding Student'],
+            ['value' => 'day_boarding', 'label' => 'Day & Boarding Student']
+        ]);
+        
+        // Form field configurations
+        $studentInfoFields = json_encode([
+            ['name' => 'first_name', 'label' => 'First Name', 'required' => true, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'middle_name', 'label' => 'Middle Name', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'last_name', 'label' => 'Last Name', 'required' => true, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'gender', 'label' => 'Gender', 'required' => true, 'enabled' => true, 'type' => 'select', 'options' => ['male', 'female']],
+            ['name' => 'date_of_birth', 'label' => 'Date of Birth', 'required' => true, 'enabled' => true, 'type' => 'date'],
+            ['name' => 'place_of_birth', 'label' => 'Place of Birth', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'nationality', 'label' => 'Nationality', 'required' => true, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'religion', 'label' => 'Religion/Denomination', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'passport_photo', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file']
+        ]);
+        
+        $parentGuardianFields = json_encode([
+            ['name' => 'parent_full_name', 'label' => 'Parent/Guardian Full Name', 'required' => true, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'relationship', 'label' => 'Relationship to Student', 'required' => true, 'enabled' => true, 'type' => 'select', 'options' => ['Father', 'Mother', 'Guardian', 'Other']],
+            ['name' => 'phone_number', 'label' => 'Phone Number', 'required' => true, 'enabled' => true, 'type' => 'tel'],
+            ['name' => 'email', 'label' => 'Email Address', 'required' => false, 'enabled' => true, 'type' => 'email'],
+            ['name' => 'occupation', 'label' => 'Occupation', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'residential_address', 'label' => 'Residential Address', 'required' => true, 'enabled' => true, 'type' => 'textarea'],
+            ['name' => 'emergency_contact', 'label' => 'Emergency Contact', 'required' => true, 'enabled' => true, 'type' => 'text']
+        ]);
+        
+        $academicBackgroundFields = json_encode([
+            ['name' => 'previous_school', 'label' => 'Previous School Attended', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'last_class_completed', 'label' => 'Last Class Completed', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'report_card', 'label' => 'Report Card Upload', 'required' => false, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'bece_results', 'label' => 'BECE Results', 'required' => false, 'enabled' => true, 'type' => 'file', 'for_levels' => ['shs']],
+            ['name' => 'transfer_letter', 'label' => 'Transfer Letter', 'required' => false, 'enabled' => true, 'type' => 'file']
+        ]);
+        
+        $admissionDetailsFields = json_encode([
+            ['name' => 'level_applying', 'label' => 'Level Applying For', 'required' => true, 'enabled' => true, 'type' => 'select'],
+            ['name' => 'class_applying', 'label' => 'Class Applying For', 'required' => true, 'enabled' => true, 'type' => 'select'],
+            ['name' => 'academic_programme', 'label' => 'Academic Programme', 'required' => false, 'enabled' => true, 'type' => 'select', 'for_levels' => ['shs']],
+            ['name' => 'school_type', 'label' => 'School Type', 'required' => true, 'enabled' => true, 'type' => 'select']
+        ]);
+        
+        $healthInfoFields = json_encode([
+            ['name' => 'medical_conditions', 'label' => 'Medical Conditions/Allergies', 'required' => false, 'enabled' => false, 'type' => 'textarea'],
+            ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file'],
+            ['name' => 'health_insurance', 'label' => 'Health Insurance Information', 'required' => false, 'enabled' => false, 'type' => 'text']
+        ]);
+        
+        $documentUploadFields = json_encode([
+            ['name' => 'birth_certificate', 'label' => 'Birth Certificate', 'required' => true, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'passport_photo_doc', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'report_card_doc', 'label' => 'Report Card', 'required' => false, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'transfer_letter_doc', 'label' => 'Transfer Letter', 'required' => false, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'bece_results_doc', 'label' => 'BECE Results Slip', 'required' => false, 'enabled' => true, 'type' => 'file', 'for_levels' => ['shs']],
+            ['name' => 'immunization_card_doc', 'label' => 'Immunization Card', 'required' => false, 'enabled' => true, 'type' => 'file']
+        ]);
+        $requiredDocuments = json_encode([
+            ['name' => 'Birth Certificate', 'required' => true, 'levels' => ['primary', 'jhs', 'shs']],
+            ['name' => 'Passport Photo', 'required' => true, 'levels' => ['primary', 'jhs', 'shs']],
+            ['name' => 'Report Card', 'required' => false, 'levels' => ['primary', 'jhs']],
+            ['name' => 'Transfer Letter', 'required' => false, 'levels' => ['jhs', 'shs']],
+            ['name' => 'BECE Results', 'required' => true, 'levels' => ['shs']],
+            ['name' => 'Immunization Card', 'required' => true, 'levels' => ['primary']]
+        ]);
+        $emailTemplates = json_encode([
+            'auto_response' => [
+                'subject' => 'Application Received - Our School',
+                'body' => "Dear {student_name},\n\nThank you for your application to Our School. We have received your application for {level_applied} and will review it shortly.\n\nApplication Number: {application_number}\n\nWe will contact you soon with further details.\n\nBest regards,\nAdmissions Team"
+            ],
+            'approval' => [
+                'subject' => 'Application Approved - Our School',
+                'body' => "Dear {student_name},\n\nCongratulations! Your application to Our School has been approved.\n\nApplication Number: {application_number}\nLevel: {level_applied}\n\nPlease contact the school for next steps.\n\nBest regards,\nAdmissions Team"
+            ],
+            'rejection' => [
+                'subject' => 'Application Update - Our School',
+                'body' => "Dear {student_name},\n\nThank you for your interest in Our School. After careful consideration, we are unable to offer you a place at this time.\n\nApplication Number: {application_number}\n\nWe wish you all the best in your educational journey.\n\nBest regards,\nAdmissions Team"
+            ]
+        ]);
+
+        // Get the current academic year ID
+        $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1");
+        $currentYear = $currentYearStmt->fetch(PDO::FETCH_ASSOC);
+        $academicYearId = $currentYear ? $currentYear['id'] : 1; // Default to 1 if no current year
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO admission_config (
+                academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents, email_templates,
+                student_info_fields, parent_guardian_fields, academic_background_fields, admission_details_fields, health_info_fields, document_upload_fields
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $academicYearId,
+            $schoolTypes,
+            $enabledLevels,
+            $levelClasses,
+            $shsProgrammes,
+            $requiredDocuments,
+            $emailTemplates,
+            $studentInfoFields,
+            $parentGuardianFields,
+            $academicBackgroundFields,
+            $admissionDetailsFields,
+            $healthInfoFields,
+            $documentUploadFields
+        ]);
+    }
+
+    public function down() {
+        $this->pdo->exec("DROP TABLE IF EXISTS admission_config");
+    }
+}
+?>

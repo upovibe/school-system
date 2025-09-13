@@ -126,6 +126,23 @@ Router::delete('/teams/{id}', 'TeamController@destroy');
 Router::get('/applications', 'ApplicationController@index');
 Router::get('/applications/{id}', 'ApplicationController@show');
 Router::post('/applications', 'ApplicationController@store');
+Router::put('/applications/{id}/status', 'ApplicationController@updateStatus');
+Router::get('/applications/statistics', 'ApplicationController@getStatistics');
+
+// Admission Configuration (public for form display)
+Router::get('/admission/config', 'ApplicationController@getConfig');
+
+// Admission Configuration Management (admin only)
+Router::get('/admission-configs', 'AdmissionConfigController@index');
+Router::post('/admission-configs', 'AdmissionConfigController@store');
+Router::get('/admission-configs/current', 'AdmissionConfigController@getCurrent');
+Router::get('/admission-configs/year/{id}', 'AdmissionConfigController@getByYear');
+Router::get('/admission-configs/{id}', 'AdmissionConfigController@show');
+Router::put('/admission-configs/{id}', 'AdmissionConfigController@update');
+Router::put('/admission-configs/{id}/form-fields', 'AdmissionConfigController@updateFormFields');
+Router::put('/admission-configs/{id}/toggle-status', 'AdmissionConfigController@toggleStatus');
+Router::delete('/admission-configs/{id}', 'AdmissionConfigController@destroy');
+Router::get('/admission-configs/statistics', 'AdmissionConfigController@getStatistics');
 
 // Subject Management Routes (admin only for create/update/delete, public for getActive)
 Router::get('/subjects', 'SubjectController@index');

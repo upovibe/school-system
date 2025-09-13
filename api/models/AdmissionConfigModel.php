@@ -203,5 +203,52 @@ class AdmissionConfigModel extends BaseModel {
         }
         return false;
     }
+
+    /**
+     * Get admission configuration statistics
+     */
+    public function getStatistics() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    COUNT(*) as total_configs,
+                    SUM(CASE WHEN admission_status = 'open' THEN 1 ELSE 0 END) as open_configs,
+                    SUM(CASE WHEN admission_status = 'closed' THEN 1 ELSE 0 END) as closed_configs
+                FROM admission_config
+            ");
+            $stmt->execute();
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Get application counts by status
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    status,
+                    COUNT(*) as count
+                FROM applications 
+                GROUP BY status
+            ");
+            $stmt->execute();
+            $applicationStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get applications by level
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    level_applying_for,
+                    COUNT(*) as count
+                FROM applications 
+                GROUP BY level_applying_for
+            ");
+            $stmt->execute();
+            $levelStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'config_stats' => $stats,
+                'application_stats' => $applicationStats,
+                'level_stats' => $levelStats
+            ];
+        } catch (Exception $e) {
+            throw new Exception('Error retrieving statistics: ' . $e->getMessage());
+        }
+    }
 }
 ?>

@@ -4,31 +4,63 @@
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../models/ApplicationModel.php';
+require_once __DIR__ . '/../models/AdmissionConfigModel.php';
 require_once __DIR__ . '/../core/EmailService.php';
 
 class ApplicationController {
     private $pdo;
     private $model;
+    private $admissionConfigModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->model = new ApplicationModel($pdo);
+        $this->admissionConfigModel = new AdmissionConfigModel($pdo);
     }
 
     /**
      * Store a new guest application (POST /applications)
      */
     public function store() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $required = ['student_first_name', 'student_last_name', 'grade'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
+        try {
+            // Check if admission is open
+            $config = $this->admissionConfigModel->getCurrentConfig();
+            if (!$config || $config['admission_status'] !== 'open') {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Admission is currently closed'
+                ]);
                 return;
             }
-        }
-        try {
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Get required fields from configuration
+            $requiredFields = $this->getRequiredFields($config);
+            foreach ($requiredFields as $field) {
+                if (empty($data[$field])) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => "Missing required field: $field"
+                    ]);
+                    return;
+                }
+            }
+
+            // Validate IP limit
+            if (!$this->model->checkIPLimit($_SERVER['REMOTE_ADDR'] ?? '')) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Too many applications from this IP address. Please try again later.'
+                ]);
+                return;
+            }
+
+            // Add academic year ID to data
+            $data['academic_year_id'] = $config['academic_year_id'];
             $id = $this->model->create($data);
             // Fetch the created application (to get applicant_number)
             $application = (new ApplicationModel($this->pdo))->findById($id);
@@ -146,5 +178,183 @@ class ApplicationController {
         // Fallback to mail.php config
         $mailConfig = require __DIR__ . '/../config/mail.php';
         return $mailConfig['from']['address'] ?? null;
+    }
+
+    /**
+     * Get required fields from admission configuration
+     */
+    private function getRequiredFields($config) {
+        $requiredFields = [];
+        
+        // Check student info fields
+        if (isset($config['student_info_fields'])) {
+            foreach ($config['student_info_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        // Check parent/guardian fields
+        if (isset($config['parent_guardian_fields'])) {
+            foreach ($config['parent_guardian_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        // Check academic background fields
+        if (isset($config['academic_background_fields'])) {
+            foreach ($config['academic_background_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        // Check admission details fields
+        if (isset($config['admission_details_fields'])) {
+            foreach ($config['admission_details_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        // Check health info fields
+        if (isset($config['health_info_fields'])) {
+            foreach ($config['health_info_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        // Check document upload fields
+        if (isset($config['document_upload_fields'])) {
+            foreach ($config['document_upload_fields'] as $field) {
+                if ($field['required'] && $field['enabled']) {
+                    $requiredFields[] = $field['name'];
+                }
+            }
+        }
+        
+        return $requiredFields;
+    }
+
+    /**
+     * Get admission configuration for public form (GET /admission/config)
+     */
+    public function getConfig() {
+        try {
+            $config = $this->admissionConfigModel->getCurrentConfig();
+            
+            if (!$config) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Admission configuration not found'
+                ]);
+                return;
+            }
+
+            // Return only public configuration (no sensitive data)
+            $publicConfig = [
+                'admission_status' => $config['admission_status'],
+                'enabled_levels' => $config['enabled_levels'],
+                'level_classes' => $config['level_classes'],
+                'shs_programmes' => $config['shs_programmes'],
+                'school_types' => $config['school_types'],
+                'required_documents' => $config['required_documents'],
+                'student_info_fields' => $config['student_info_fields'],
+                'parent_guardian_fields' => $config['parent_guardian_fields'],
+                'academic_background_fields' => $config['academic_background_fields'],
+                'admission_details_fields' => $config['admission_details_fields'],
+                'health_info_fields' => $config['health_info_fields'],
+                'document_upload_fields' => $config['document_upload_fields']
+            ];
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $publicConfig,
+                'message' => 'Admission configuration retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving admission configuration: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update application status (admin only)
+     */
+    public function updateStatus($id) {
+        try {
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (empty($data['status'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Status is required'
+                ]);
+                return;
+            }
+
+            $validStatuses = ['pending', 'under_review', 'accepted', 'rejected', 'waitlisted'];
+            if (!in_array($data['status'], $validStatuses)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid status. Must be one of: ' . implode(', ', $validStatuses)
+                ]);
+                return;
+            }
+
+            $this->model->updateStatus($id, $data['status'], $data['notes'] ?? null);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Application status updated successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error updating application status: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get application statistics (admin only)
+     */
+    public function getStatistics() {
+        try {
+            RoleMiddleware::requireAdmin($this->pdo);
+            
+            $stats = $this->model->getStatistics();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $stats,
+                'message' => 'Application statistics retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving application statistics: ' . $e->getMessage()
+            ]);
+        }
     }
 } 

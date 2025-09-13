@@ -36,9 +36,7 @@ class Migration_20241001000007createadmissionconfigtable {
                 required_documents JSON,
                 
                 -- Additional Settings
-                health_info_enabled BOOLEAN DEFAULT FALSE,
-                parent_email_required BOOLEAN DEFAULT FALSE,
-                parent_occupation_required BOOLEAN DEFAULT FALSE,
+                -- (All settings now controlled via JSON field configurations)
                 
                 -- Timestamps
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

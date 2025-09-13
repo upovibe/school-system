@@ -22,9 +22,6 @@ class AdmissionConfigModel extends BaseModel {
         'admission_details_fields',
         'health_info_fields',
         'document_upload_fields',
-        'health_info_enabled',
-        'parent_email_required',
-        'parent_occupation_required'
     ];
 
     // Fields that should be cast to specific types
@@ -40,9 +37,6 @@ class AdmissionConfigModel extends BaseModel {
         'admission_details_fields' => 'json',
         'health_info_fields' => 'json',
         'document_upload_fields' => 'json',
-        'health_info_enabled' => 'boolean',
-        'parent_email_required' => 'boolean',
-        'parent_occupation_required' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -174,6 +168,40 @@ class AdmissionConfigModel extends BaseModel {
         }
         
         return true;
+    }
+
+    /**
+     * Check if health info is enabled (based on health_info_fields JSON)
+     */
+    public function isHealthInfoEnabled() {
+        $healthFields = $this->health_info_fields ?? [];
+        return !empty($healthFields) && is_array($healthFields);
+    }
+
+    /**
+     * Check if parent email is required (based on parent_guardian_fields JSON)
+     */
+    public function isParentEmailRequired() {
+        $parentFields = $this->parent_guardian_fields ?? [];
+        foreach ($parentFields as $field) {
+            if (isset($field['name']) && $field['name'] === 'email' && isset($field['required'])) {
+                return $field['required'] === true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if parent occupation is required (based on parent_guardian_fields JSON)
+     */
+    public function isParentOccupationRequired() {
+        $parentFields = $this->parent_guardian_fields ?? [];
+        foreach ($parentFields as $field) {
+            if (isset($field['name']) && $field['name'] === 'occupation' && isset($field['required'])) {
+                return $field['required'] === true;
+            }
+        }
+        return false;
     }
 }
 ?>

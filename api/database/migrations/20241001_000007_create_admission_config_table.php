@@ -57,11 +57,7 @@ class Migration_20241001000007createadmissionconfigtable {
             'shs' => ['SHS1', 'SHS2', 'SHS3']
         ]);
         $shsProgrammes = json_encode(['General Science', 'Business', 'Arts', 'Technical', 'Home Economics']);
-        $schoolTypes = json_encode([
-            ['value' => 'day', 'label' => 'Day Student'],
-            ['value' => 'boarding', 'label' => 'Boarding Student'],
-            ['value' => 'day_boarding', 'label' => 'Day & Boarding Student']
-        ]);
+        $schoolTypes = json_encode(['day', 'boarding']);
         
         // Form field configurations
         $studentInfoFields = json_encode([

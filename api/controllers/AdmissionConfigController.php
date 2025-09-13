@@ -162,7 +162,7 @@ class AdmissionConfigController {
                     'shs' => ['SHS1', 'SHS2', 'SHS3']
                 ],
                 'shs_programmes' => ['Science', 'Business', 'Arts', 'General Arts'],
-                'school_types' => ['Day', 'Boarding', 'Day/Boarding'],
+                'school_types' => ['day', 'boarding'],
                 'required_documents' => ['birth_certificate', 'passport_photo', 'report_card'],
                 'student_info_fields' => $this->getDefaultStudentInfoFields(),
                 'parent_guardian_fields' => $this->getDefaultParentGuardianFields(),
@@ -664,7 +664,7 @@ class AdmissionConfigController {
                 'type' => 'select',
                 'required' => true,
                 'enabled' => true,
-                'options' => ['Day', 'Boarding', 'Day/Boarding'],
+                'options' => ['day', 'boarding'],
                 'for_levels' => ['all']
             ]
         ];

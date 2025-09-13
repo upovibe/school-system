@@ -128,7 +128,35 @@ class AdmissionConfigModal extends HTMLElement {
     handleFormChange(event) {
         const { name, value, type, checked } = event.target;
         
-        if (name === 'enabled_levels') {
+        // Handle ui-checkbox components
+        if (event.target.tagName === 'UI-CHECKBOX') {
+            const field = event.target.getAttribute('data-field');
+            const checkboxValue = event.target.getAttribute('data-value');
+            const isChecked = event.target.hasAttribute('checked');
+            
+            if (field === 'enabled_levels') {
+                if (!this.configData.enabled_levels) this.configData.enabled_levels = [];
+                if (isChecked && !this.configData.enabled_levels.includes(checkboxValue)) {
+                    this.configData.enabled_levels.push(checkboxValue);
+                } else if (!isChecked && this.configData.enabled_levels.includes(checkboxValue)) {
+                    this.configData.enabled_levels = this.configData.enabled_levels.filter(level => level !== checkboxValue);
+                }
+            } else if (field === 'school_types') {
+                if (!this.configData.school_types) this.configData.school_types = [];
+                if (isChecked && !this.configData.school_types.includes(checkboxValue)) {
+                    this.configData.school_types.push(checkboxValue);
+                } else if (!isChecked && this.configData.school_types.includes(checkboxValue)) {
+                    this.configData.school_types = this.configData.school_types.filter(type => type !== checkboxValue);
+                }
+            } else if (field === 'required_documents') {
+                if (!this.configData.required_documents) this.configData.required_documents = [];
+                if (isChecked && !this.configData.required_documents.includes(checkboxValue)) {
+                    this.configData.required_documents.push(checkboxValue);
+                } else if (!isChecked && this.configData.required_documents.includes(checkboxValue)) {
+                    this.configData.required_documents = this.configData.required_documents.filter(doc => doc !== checkboxValue);
+                }
+            }
+        } else if (name === 'enabled_levels') {
             // Handle level checkboxes
             const levels = Array.from(this.querySelectorAll('input[name="enabled_levels"]:checked'))
                 .map(input => input.value);
@@ -210,7 +238,7 @@ class AdmissionConfigModal extends HTMLElement {
                 close-button="true">
                 <div slot="title">Admission Configuration</div>
                 
-                <form id="admission-config-form" class="space-y-6"></form>
+                < id="admission-config-form" class="space-y-6">
                     <!-- Basic Configuration -->
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
                         <div class="flex items-center mb-4">
@@ -265,46 +293,79 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                     </div>
 
-                    <!-- Enabled Levels -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Enabled Levels</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="creche" 
-                                    ${this.configData.enabled_levels.includes('creche') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">Creche</span>
+                    <!-- School Setup Configuration -->
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm border border-green-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-school text-green-600 mr-2"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">School Setup</h3>
+                        </div>
+                        
+                        <!-- School Types -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-building mr-1"></i>School Types (Applicant Selection Options)
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="nursery" 
-                                    ${this.configData.enabled_levels.includes('nursery') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">Nursery</span>
+                            <div class="space-y-2">
+                                <ui-checkbox 
+                                    label="Day School" 
+                                    ${this.configData.school_types && this.configData.school_types.includes('day') ? 'checked' : ''}
+                                    data-field="school_types"
+                                    data-value="day">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Boarding School" 
+                                    ${this.configData.school_types && this.configData.school_types.includes('boarding') ? 'checked' : ''}
+                                    data-field="school_types"
+                                    data-value="boarding">
+                                </ui-checkbox>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Select which school type options applicants can choose from</p>
+                        </div>
+                        
+                        <!-- Enabled Levels -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-graduation-cap mr-1"></i>Enabled Levels
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="kg" 
-                                    ${this.configData.enabled_levels.includes('kg') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">KG</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="primary" 
-                                    ${this.configData.enabled_levels.includes('primary') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">Primary</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="jhs" 
-                                    ${this.configData.enabled_levels.includes('jhs') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">JHS</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="enabled_levels" value="shs" 
-                                    ${this.configData.enabled_levels.includes('shs') ? 'checked' : ''}
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700">SHS</span>
-                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <ui-checkbox 
+                                    label="Creche" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('creche') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="creche">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Nursery" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('nursery') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="nursery">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Kindergarten (KG)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('kg') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="kg">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Primary" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('primary') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="primary">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Junior High School (JHS)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('jhs') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="jhs">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Senior High School (SHS)" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? 'checked' : ''}
+                                    data-field="enabled_levels"
+                                    data-value="shs">
+                                </ui-checkbox>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Select which educational levels your school offers</p>
                         </div>
                     </div>
 

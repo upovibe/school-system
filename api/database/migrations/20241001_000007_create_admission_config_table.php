@@ -1,7 +1,7 @@
 <?php
 // api/database/migrations/20241001_000007_create_admission_config_table.php
 
-class Migration_20241001000007_create_admission_config_table {
+class Migration_20241001000007createadmissionconfigtable {
     private $pdo;
 
     public function __construct($pdo) {
@@ -129,31 +129,34 @@ class Migration_20241001000007_create_admission_config_table {
             ['name' => 'Immunization Card', 'required' => true, 'levels' => ['primary']]
         ]);
 
-        // Get the current academic year ID
-        $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1");
+        // Get the current active academic year ID
+        $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 AND is_active = 1 LIMIT 1");
         $currentYear = $currentYearStmt->fetch(PDO::FETCH_ASSOC);
-        $academicYearId = $currentYear ? $currentYear['id'] : 1; // Default to 1 if no current year
+        $academicYearId = $currentYear ? $currentYear['id'] : null;
 
-        $stmt = $this->pdo->prepare("
-            INSERT INTO admission_config (
-                academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
-                student_info_fields, parent_guardian_fields, academic_background_fields, admission_details_fields, health_info_fields, document_upload_fields
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $academicYearId,
-            $schoolTypes,
-            $enabledLevels,
-            $levelClasses,
-            $shsProgrammes,
-            $requiredDocuments,
-            $studentInfoFields,
-            $parentGuardianFields,
-            $academicBackgroundFields,
-            $admissionDetailsFields,
-            $healthInfoFields,
-            $documentUploadFields
-        ]);
+        // Only insert config if there's an active academic year
+        if ($academicYearId) {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO admission_config (
+                    academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
+                    student_info_fields, parent_guardian_fields, academic_background_fields, admission_details_fields, health_info_fields, document_upload_fields
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $academicYearId,
+                $schoolTypes,
+                $enabledLevels,
+                $levelClasses,
+                $shsProgrammes,
+                $requiredDocuments,
+                $studentInfoFields,
+                $parentGuardianFields,
+                $academicBackgroundFields,
+                $admissionDetailsFields,
+                $healthInfoFields,
+                $documentUploadFields
+            ]);
+        }
     }
 
     public function down() {

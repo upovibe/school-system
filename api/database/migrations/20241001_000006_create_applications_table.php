@@ -50,7 +50,7 @@ class Migration_20241001000006createapplicationstable {
                 health_info JSON DEFAULT NULL,
                 
                 -- Section F: Document Uploads (JSON)
-                uploaded_documents JSON DEFAULT '[]',
+                uploaded_documents JSON,
                 
                 -- Application Management
                 status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
@@ -59,7 +59,7 @@ class Migration_20241001000006createapplicationstable {
                 reviewed_at TIMESTAMP NULL DEFAULT NULL,
                 
                 -- Additional Data & Tracking
-                additional_data JSON DEFAULT '{}',
+                additional_data JSON,
                 applicant_ip VARCHAR(45) DEFAULT NULL,
                 
                 -- Timestamps

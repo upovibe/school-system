@@ -304,6 +304,7 @@ class DashboardLayout extends App {
                         { label: 'Users', icon: 'fas fa-users', href: '/dashboard/admin/users' },
                         { label: 'Teams', icon: 'fas fa-user-friends', href: '/dashboard/admin/teams' },
                         { label: 'Applications', icon: 'fas fa-file-signature', href: '/dashboard/admin/applications' },
+                        { label: 'Admission Config', icon: 'fas fa-cog', href: '/dashboard/admin/admission-config' },
                         { label: 'Events', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                         { label: 'News', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
                         { label: 'Gallery', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
@@ -480,6 +481,7 @@ class DashboardLayout extends App {
             'grading-policies': 'Grading Policy Management',
             'student-grades': 'Student Grades Management',
             'student-grade-report': 'Student Grade Report',
+            'admission-config': 'Admission Configuration',
             // Finance
             'finance': 'Finance',
             'schedules': 'Fee Schedules',

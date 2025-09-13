@@ -1328,7 +1328,7 @@ class AdminDashboardPage extends App {
         )) || 'Admin';
         
         return `
-            <div class="space-y-8 p-6">
+            <div class="space-y-8">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -1399,11 +1399,11 @@ class AdminDashboardPage extends App {
                     </div>
                 ` : `
                     <!-- Academic Management Section -->
-                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-8">
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-4">
                         <div class="flex items-center mb-6">
-                            <div class="w-1 h-8 bg-blue-500 rounded-full mr-4"></div>
-                            <h2 class="text-2xl font-bold text-blue-900">Academic Management</h2>
-                            <div class="ml-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-full border border-blue-200">
+                            <div class="w-1 h-8 bg-blue-500 rounded-full mr-4 flex-shrink-0"></div>
+                            <h2 class="text-2xl font-bold text-blue-900 truncate">Academic Management</h2>
+                            <div class="ml-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-full border border-blue-200 flex-shrink-0">
                                 ${stats.subjects + stats.classes + stats.teachers + stats.students} Total
                             </div>
                         </div>
@@ -1516,11 +1516,11 @@ class AdminDashboardPage extends App {
                     </div>
 
                     <!-- Gender Statistics Section -->
-                    <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200 p-8">
+                    <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200 p-4">
                         <div class="flex items-center mb-6">
-                            <div class="w-1 h-8 bg-pink-500 rounded-full mr-4"></div>
-                            <h2 class="text-2xl font-bold text-pink-900">Gender Statistics</h2>
-                            <div class="ml-4 px-4 py-2 bg-pink-100 text-pink-800 text-sm font-medium rounded-full border border-pink-200">
+                            <div class="w-1 h-8 bg-pink-500 rounded-full mr-4 flex-shrink-0"></div>
+                            <h2 class="text-2xl font-bold text-pink-900 truncate">Gender Statistics</h2>
+                            <div class="ml-4 px-4 py-2 bg-pink-100 text-pink-800 text-sm font-medium rounded-full border border-pink-200 flex-shrink-0">
                                 ${stats.studentGenderStats.male + stats.studentGenderStats.female + stats.teacherGenderStats.male + stats.teacherGenderStats.female} Total
                             </div>
                         </div>
@@ -1528,15 +1528,15 @@ class AdminDashboardPage extends App {
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <!-- Student Gender Chart -->
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
-                                <div class="flex items-center justify-between mb-4">
+                                <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
                                     <div class="flex items-center">
                                         <div class="size-8 min-w-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
                                             <i class="fas fa-user-graduate text-white text-sm"></i>
                                         </div>
-                                        <h3 class="text-lg font-semibold text-gray-900">Student Gender Distribution</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 truncate">Student Gender Distribution</h3>
                                     </div>
                                     <!-- Tab Navigation -->
-                                    <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <div class="flex bg-gray-100 rounded-lg p-1 w-fit justify-center items-center ml-auto">
                                         <button 
                                             data-gender-tab="doughnut"
                                             data-target="student"
@@ -1578,15 +1578,15 @@ class AdminDashboardPage extends App {
                             
                             <!-- Teacher Gender Chart -->
                             <div class="bg-white rounded-xl shadow-lg border border-pink-200 p-6">
-                                <div class="flex items-center justify-between mb-4">
+                                <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
                                     <div class="flex items-center">
                                         <div class="size-8 min-w-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
                                             <i class="fas fa-chalkboard-teacher text-white text-sm"></i>
                                         </div>
-                                        <h3 class="text-lg font-semibold text-gray-900">Teacher Gender Distribution</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 truncate">Teacher Gender Distribution</h3>
                                     </div>
                                     <!-- Tab Navigation -->
-                                    <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <div class="flex bg-gray-100 rounded-lg p-1 w-fit justify-center items-center ml-auto">
                                         <button 
                                             data-gender-tab="doughnut"
                                             data-target="teacher"
@@ -1629,11 +1629,11 @@ class AdminDashboardPage extends App {
                     </div>
 
                     <!-- General Management Section -->
-                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-8">
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4">
                         <div class="flex items-center mb-6">
-                            <div class="w-1 h-8 bg-green-500 rounded-full mr-4"></div>
-                            <h2 class="text-2xl font-bold text-green-900">General Management</h2>
-                            <div class="ml-4 px-4 py-2 bg-green-100 text-green-800 text-sm font-medium rounded-full border border-green-200">
+                            <div class="w-1 h-8 bg-green-500 rounded-full mr-4 flex-shrink-0"></div>
+                            <h2 class="text-2xl font-bold text-green-900 truncate">General Management</h2>
+                            <div class="ml-4 px-4 py-2 bg-green-100 text-green-800 text-sm font-medium rounded-full border border-green-200 flex-shrink-0">
                                 ${stats.users + stats.teams + stats.applications + stats.events} Total
                             </div>
                         </div>
@@ -1642,7 +1642,7 @@ class AdminDashboardPage extends App {
                             <!-- Users Card -->
                             <div class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-users text-blue-600 text-xl"></i>
                                     </div>
                                     <div class="ml-4">
@@ -1655,7 +1655,7 @@ class AdminDashboardPage extends App {
                             <!-- Teams Card -->
                             <div class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-user-tie text-green-600 text-xl"></i>
                                     </div>
                                     <div class="ml-4">
@@ -1668,7 +1668,7 @@ class AdminDashboardPage extends App {
                             <!-- Applications Card -->
                             <div class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-file-alt text-purple-600 text-xl"></i>
                                     </div>
                                     <div class="ml-4">
@@ -1681,7 +1681,7 @@ class AdminDashboardPage extends App {
                             <!-- Events Card -->
                             <div class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-calendar-alt text-red-600 text-xl"></i>
                                     </div>
                                     <div class="ml-4">
@@ -1697,7 +1697,7 @@ class AdminDashboardPage extends App {
                             <!-- Galleries Card -->
                             <div class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-images text-pink-600 text-xl"></i>
                                     </div>
                                     <div class="ml-4">
@@ -1749,11 +1749,11 @@ class AdminDashboardPage extends App {
                     </div>
 
                     <!-- Finance Section -->
-                    <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-8">
+                    <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-4">
                         <div class="flex items-center mb-6">
-                            <div class="w-1 h-8 bg-purple-500 rounded-full mr-4"></div>
-                            <h2 class="text-2xl font-bold text-purple-900">Finance Management</h2>
-                            <div class="ml-4 px-4 py-2 bg-purple-100 text-purple-800 text-sm font-medium rounded-full border border-purple-200">
+                            <div class="w-1 h-8 bg-purple-500 rounded-full mr-4 flex-shrink-0"></div>
+                            <h2 class="text-2xl font-bold text-purple-900 truncate">Finance Management</h2>
+                            <div class="ml-4 px-4 py-2 bg-purple-100 text-purple-800 text-sm font-medium rounded-full border border-purple-200 flex-shrink-0">
                                 ${stats.feeSchedules + stats.invoices + stats.payments + stats.receipts} Total
                             </div>
                         </div>
@@ -1849,15 +1849,15 @@ class AdminDashboardPage extends App {
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <!-- Finance Overview & Metrics (Tabbed) -->
                             <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
-                                <div class="flex items-center justify-between mb-4">
+                                <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
                                     <div class="flex items-center">
                                         <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                                             <i class="fas fa-chart-pie text-white text-sm"></i>
                                         </div>
-                                        <h3 class="text-lg font-semibold text-gray-900">Finance Analytics</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 truncate">Finance Analytics</h3>
                                     </div>
                                     <!-- Tab Navigation -->
-                                    <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <div class="flex bg-gray-100 rounded-lg p-1 w-fit justify-center items-center ml-auto">
                                         <button 
                                             data-tab="overview"
                                             class="px-3 py-1.5 text-sm font-medium text-purple-600 bg-white rounded-md shadow-sm transition-all duration-200">
@@ -1886,16 +1886,16 @@ class AdminDashboardPage extends App {
                                 </div>
                             </div>
 
-                                                         <!-- Monthly Income Chart -->
+                           <!-- Monthly Income Chart -->
                              <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
-                                 <div class="flex items-center justify-between mb-4">
+                                 <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
                                      <div class="flex items-center">
                                          <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                                              <i class="fas fa-chart-line text-white text-sm"></i>
                                          </div>
-                                         <h3 class="text-lg font-semibold text-gray-900">Monthly Income</h3>
+                                         <h3 class="text-lg font-semibold text-gray-900 truncate">Monthly Income</h3>
                                      </div>
-                                     <div class="flex items-center space-x-4">
+                                     <div class="flex items-center justify-end  space-x-4 w-full md:w-fit ml-auto">
                                          <div class="flex items-center space-x-2">
                                              <label class="text-sm text-gray-600">Year:</label>
                                              <select id="incomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -1903,7 +1903,7 @@ class AdminDashboardPage extends App {
                                              </select>
                                          </div>
                                          <!-- Tab Navigation -->
-                                         <div class="flex bg-gray-100 rounded-lg p-1">
+                                         <div class="flex w-fit justify-center items-center ml-auto bg-gray-100 rounded-lg p-1">
                                              <button 
                                                  data-monthly-income-tab="line"
                                                  class="px-3 py-1.5 text-sm font-medium text-purple-600 bg-white rounded-md shadow-sm transition-all duration-200">
@@ -1937,22 +1937,22 @@ class AdminDashboardPage extends App {
 
                     <!-- Collection Rate Chart -->
                     <div class="bg-white rounded-xl shadow-lg border border-purple-200 p-6">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
                             <div class="flex items-center">
                                 <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                                     <i class="fas fa-percentage text-white text-sm"></i>
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
                             </div>
-                            <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-4 w-full justify-end md:w-fit ml-auto">
                                 <div class="flex items-center space-x-2">
-                                    <label class="text-sm text-gray-600">Class:</label>
+                                    <label class="text-sm text-gray-600 hidden lg:block">Class:</label>
                                     <select id="collectionClassSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
                                         ${this.generateClassOptions()}
                                     </select>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <label class="text-sm text-gray-600">Grading Period:</label>
+                                    <label class="text-sm text-gray-600 hidden lg:block">Grading Period:</label>
                                     <ui-search-dropdown 
                                         id="collectionPeriodSelector" 
                                         name="grading_period_id" 
@@ -1975,12 +1975,12 @@ class AdminDashboardPage extends App {
             </div>
 
                     <!-- Quick Actions -->
-                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-8">
+                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-4">
                         <div class="flex items-center mb-6">
                             <div class="w-1 h-8 bg-gray-500 rounded-full mr-4"></div>
                             <h2 class="text-2xl font-bold text-gray-900">Quick Actions</h2>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
                             <!-- Academic Management Actions -->
                             <a href="/dashboard/admin/subjects" class="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
                                 <i class="fas fa-book-open text-blue-600 text-xl mb-2"></i>

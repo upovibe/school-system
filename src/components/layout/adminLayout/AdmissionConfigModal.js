@@ -245,6 +245,21 @@ class AdmissionConfigModal extends HTMLElement {
                 this.generateSHSProgrammes();
             }
         }
+        
+        // Show/hide BECE Results checkbox based on SHS selection
+        const beceResultsCheckbox = this.querySelector('[data-field-name="bece_results"]');
+        if (beceResultsCheckbox) {
+            if (enabledLevels.includes('shs')) {
+                beceResultsCheckbox.style.display = '';
+            } else {
+                beceResultsCheckbox.style.display = 'none';
+                // Uncheck BECE Results if SHS is not enabled
+                if (beceResultsCheckbox.hasAttribute('checked')) {
+                    beceResultsCheckbox.removeAttribute('checked');
+                    this.handleFormFieldToggle(beceResultsCheckbox);
+                }
+            }
+        }
     }
 
     // Generate level classes dynamically based on enabled levels
@@ -494,7 +509,12 @@ class AdmissionConfigModal extends HTMLElement {
             'email': 'Email Address',
             'occupation': 'Occupation',
             'residential_address': 'Residential Address',
-            'emergency_contact': 'Emergency Contact'
+            'emergency_contact': 'Emergency Contact',
+            'previous_school': 'Previous School Attended',
+            'last_class_completed': 'Last Class Completed',
+            'report_card': 'Report Card Upload',
+            'bece_results': 'BECE Results',
+            'transfer_letter': 'Transfer Letter'
         };
         return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -516,7 +536,12 @@ class AdmissionConfigModal extends HTMLElement {
             'email': 'email',
             'occupation': 'text',
             'residential_address': 'textarea',
-            'emergency_contact': 'text'
+            'emergency_contact': 'text',
+            'previous_school': 'text',
+            'last_class_completed': 'text',
+            'report_card': 'file',
+            'bece_results': 'file',
+            'transfer_letter': 'file'
         };
         return types[fieldName] || 'text';
     }
@@ -871,6 +896,46 @@ class AdmissionConfigModal extends HTMLElement {
                                     ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'emergency_contact') ? 'checked' : ''}
                                     data-field="parent_guardian_fields"
                                     data-field-name="emergency_contact">
+                                </ui-checkbox>
+                            </div>
+                        </div>
+
+                        <!-- Section C: Academic Background -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-graduation-cap mr-2 text-yellow-600"></i>Section C: Academic Background
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="Previous School" 
+                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'previous_school') ? 'checked' : ''}
+                                    data-field="academic_background_fields"
+                                    data-field-name="previous_school">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Last Class Completed" 
+                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'last_class_completed') ? 'checked' : ''}
+                                    data-field="academic_background_fields"
+                                    data-field-name="last_class_completed">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Report Card Upload" 
+                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'report_card') ? 'checked' : ''}
+                                    data-field="academic_background_fields"
+                                    data-field-name="report_card">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="BECE Results" 
+                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'bece_results') ? 'checked' : ''}
+                                    data-field="academic_background_fields"
+                                    data-field-name="bece_results"
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Transfer Letter" 
+                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'transfer_letter') ? 'checked' : ''}
+                                    data-field="academic_background_fields"
+                                    data-field-name="transfer_letter">
                                 </ui-checkbox>
                             </div>
                         </div>

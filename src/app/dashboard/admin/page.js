@@ -1942,7 +1942,7 @@ class AdminDashboardPage extends App {
                                 <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                                     <i class="fas fa-percentage text-white text-sm"></i>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 truncate">Fee Collection Rate by Class</h3>
                             </div>
                             <div class="flex flex-col gap-2 md:flex-row items-center space-x-4 w-full justify-end md:w-fit ml-auto">
                                 <div class="flex items-center space-x-2">
@@ -1975,7 +1975,7 @@ class AdminDashboardPage extends App {
             </div>
 
                     <!-- Quick Actions -->
-                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-4 my-5">
+                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-4 my-8">
                         <div class="flex items-center mb-6">
                             <div class="w-1 h-8 bg-gray-500 rounded-full mr-4"></div>
                             <h2 class="text-2xl font-bold text-gray-900">Quick Actions</h2>

@@ -82,6 +82,15 @@ class AdmissionConfigModal extends HTMLElement {
                 const index = parseInt(event.target.closest('[data-action="remove-class"]').dataset.index, 10);
                 this.removeClass(level, index);
             }
+            if (event.target.closest('[data-action="add-programme"]')) {
+                event.preventDefault();
+                this.addProgramme();
+            }
+            if (event.target.closest('[data-action="remove-programme"]')) {
+                event.preventDefault();
+                const index = parseInt(event.target.closest('[data-action="remove-programme"]').dataset.index, 10);
+                this.removeProgramme(index);
+            }
         });
     }
 
@@ -203,14 +212,9 @@ class AdmissionConfigModal extends HTMLElement {
         } else if (event.target.hasAttribute('data-level') && event.target.hasAttribute('data-class-index')) {
             // Handle individual class input changes
             this.syncClassesFromDOM();
-        } else if (event.target.hasAttribute('data-field')) {
-            // Handle SHS programmes inputs
-            const field = event.target.getAttribute('data-field');
-            
-            if (field === 'shs_programmes') {
-                const programmes = value.split(',').map(prog => prog.trim()).filter(prog => prog);
-                this.configData.shs_programmes = programmes;
-            }
+        } else if (event.target.hasAttribute('data-programme-index')) {
+            // Handle individual programme input changes
+            this.syncProgrammesFromDOM();
         } else if (name && name in this.configData) {
             if (type === 'checkbox') {
                 this.configData[name] = checked;
@@ -233,6 +237,9 @@ class AdmissionConfigModal extends HTMLElement {
         const shsProgrammesSection = this.querySelector('#shs-programmes-section');
         if (shsProgrammesSection) {
             shsProgrammesSection.classList.toggle('hidden', !enabledLevels.includes('shs'));
+            if (enabledLevels.includes('shs')) {
+                this.generateSHSProgrammes();
+            }
         }
     }
 
@@ -365,11 +372,73 @@ class AdmissionConfigModal extends HTMLElement {
         });
     }
 
+    // Generate SHS programmes dynamically
+    generateSHSProgrammes() {
+        const programmes = this.configData.shs_programmes || [''];
+        const container = this.querySelector('#shs-programmes-container');
+        
+        if (!container) return;
+        
+        // Ensure we have at least one empty programme input
+        const programmesToShow = programmes.length > 0 ? programmes : [''];
+        
+        const html = programmesToShow.map((programme, index) => `
+            <div class="flex gap-2 items-center">
+                <div class="flex-1">
+                    <ui-input
+                        type="text"
+                        placeholder="Enter programme name (e.g., General Science, Business, Arts)"
+                        value="${programme}"
+                        data-programme-index="${index}"
+                        class="w-full">
+                    </ui-input>
+                </div>
+                ${programmesToShow.length > 1 ? `
+                    <ui-button
+                        type="button"
+                        variant="danger-outline"
+                        size="sm"
+                        data-action="remove-programme"
+                        data-index="${index}"
+                        class="px-3">
+                        <i class="fas fa-trash"></i>
+                    </ui-button>
+                ` : ''}
+            </div>
+        `).join('');
+        
+        container.innerHTML = html;
+    }
+
+    // Add a new programme
+    addProgramme() {
+        if (!this.configData.shs_programmes) {
+            this.configData.shs_programmes = [''];
+        }
+        this.configData.shs_programmes.push('');
+        this.generateSHSProgrammes();
+    }
+
+    // Remove a programme
+    removeProgramme(index) {
+        if (this.configData.shs_programmes && this.configData.shs_programmes.length > 1) {
+            this.configData.shs_programmes.splice(index, 1);
+            this.generateSHSProgrammes();
+        }
+    }
+
+    // Sync programmes from DOM inputs
+    syncProgrammesFromDOM() {
+        const programmeInputs = this.querySelectorAll('input[data-programme-index]');
+        this.configData.shs_programmes = Array.from(programmeInputs).map(input => input.value || '');
+    }
+
     // Save the configuration
     async saveConfig() {
         try {
-            // Sync classes from DOM before saving
+            // Sync classes and programmes from DOM before saving
             this.syncClassesFromDOM();
+            this.syncProgrammesFromDOM();
             
             const token = localStorage.getItem('token');
             if (!token) {
@@ -581,16 +650,23 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                         
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
                                 <i class="fas fa-list mr-1"></i>Available Programmes
                             </label>
-                            <ui-input 
-                                type="text" 
-                                placeholder="Enter programmes separated by commas (e.g., General Science, Business, Arts, Technical, Home Economics)"
-                                value="${this.configData.shs_programmes ? this.configData.shs_programmes.join(', ') : ''}"
-                                data-field="shs_programmes"
-                                class="w-full">
-                            </ui-input>
+                            <div class="space-y-2" id="shs-programmes-container">
+                                <!-- Programmes will be dynamically generated here -->
+                            </div>
+                            <div class="flex justify-end mt-2">
+                                <ui-button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-action="add-programme"
+                                    class="px-3">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Add Programme
+                                </ui-button>
+                            </div>
                             <p class="text-xs text-gray-500 mt-1">These programmes will appear as options for SHS applicants</p>
                         </div>
                     </div>

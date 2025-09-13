@@ -128,7 +128,14 @@ class AdmissionConfigModal extends HTMLElement {
                     level_classes: data.level_classes ? (typeof data.level_classes === 'string' ? JSON.parse(data.level_classes) : data.level_classes) : {},
                     shs_programmes: data.shs_programmes ? (typeof data.shs_programmes === 'string' ? JSON.parse(data.shs_programmes) : data.shs_programmes) : [],
                     school_types: data.school_types ? (typeof data.school_types === 'string' ? JSON.parse(data.school_types) : data.school_types) : [],
-                    required_documents: data.required_documents ? (typeof data.required_documents === 'string' ? JSON.parse(data.required_documents) : data.required_documents) : []
+                    required_documents: data.required_documents ? (typeof data.required_documents === 'string' ? JSON.parse(data.required_documents) : data.required_documents) : [],
+                    // Parse form field configurations
+                    student_info_fields: data.student_info_fields ? (typeof data.student_info_fields === 'string' ? JSON.parse(data.student_info_fields) : data.student_info_fields) : [],
+                    parent_guardian_fields: data.parent_guardian_fields ? (typeof data.parent_guardian_fields === 'string' ? JSON.parse(data.parent_guardian_fields) : data.parent_guardian_fields) : [],
+                    academic_background_fields: data.academic_background_fields ? (typeof data.academic_background_fields === 'string' ? JSON.parse(data.academic_background_fields) : data.academic_background_fields) : [],
+                    admission_details_fields: data.admission_details_fields ? (typeof data.admission_details_fields === 'string' ? JSON.parse(data.admission_details_fields) : data.admission_details_fields) : [],
+                    health_info_fields: data.health_info_fields ? (typeof data.health_info_fields === 'string' ? JSON.parse(data.health_info_fields) : data.health_info_fields) : [],
+                    document_upload_fields: data.document_upload_fields ? (typeof data.document_upload_fields === 'string' ? JSON.parse(data.document_upload_fields) : data.document_upload_fields) : []
                 };
             }
             
@@ -275,6 +282,30 @@ class AdmissionConfigModal extends HTMLElement {
                 }
             }
         }
+
+        // Update conditional visibility based on Section D settings
+        this.updateConditionalVisibility();
+    }
+
+    // Update conditional visibility of sections based on Section D field settings
+    updateConditionalVisibility() {
+        // Update School Types section visibility
+        const schoolTypesSection = this.querySelector('.mb-6:has([data-field="school_types"])');
+        if (schoolTypesSection) {
+            schoolTypesSection.style.display = this.isSchoolTypeEnabled() ? '' : 'none';
+        }
+
+        // Update Enabled Levels section visibility
+        const enabledLevelsSection = this.querySelector('.mb-6:has([data-field="enabled_levels"])');
+        if (enabledLevelsSection) {
+            enabledLevelsSection.style.display = this.isLevelApplyingEnabled() ? '' : 'none';
+        }
+
+        // Update Class Applying For checkbox visibility
+        const classApplyingCheckbox = this.querySelector('[data-field-name="class_applying"]');
+        if (classApplyingCheckbox) {
+            classApplyingCheckbox.style.display = this.hasEnabledLevelsWithClasses() ? '' : 'none';
+        }
     }
 
     // Generate level classes dynamically based on enabled levels
@@ -371,6 +402,9 @@ class AdmissionConfigModal extends HTMLElement {
         });
         
         container.innerHTML = html;
+        
+        // Update conditional visibility after generating classes
+        this.updateConditionalVisibility();
     }
 
     // Add a new class to a level
@@ -476,6 +510,27 @@ class AdmissionConfigModal extends HTMLElement {
         return field && field.enabled === true;
     }
 
+    // Check if there are enabled levels with classes configured
+    hasEnabledLevelsWithClasses() {
+        const enabledLevels = this.configData.enabled_levels || [];
+        const levelClasses = this.configData.level_classes || {};
+        
+        return enabledLevels.some(level => {
+            const classes = levelClasses[level] || [];
+            return classes.length > 0 && classes.some(cls => cls.trim() !== '');
+        });
+    }
+
+    // Check if school type field is enabled in admission details
+    isSchoolTypeEnabled() {
+        return this.isFieldEnabled('admission_details_fields', 'school_type');
+    }
+
+    // Check if level applying field is enabled in admission details
+    isLevelApplyingEnabled() {
+        return this.isFieldEnabled('admission_details_fields', 'level_applying');
+    }
+
     // Handle form field toggle (enable/disable)
     handleFormFieldToggle(checkbox) {
         const section = checkbox.getAttribute('data-field');
@@ -505,6 +560,9 @@ class AdmissionConfigModal extends HTMLElement {
         field.enabled = isChecked;
         
         console.log(`🔧 Field ${fieldName} in ${section} is now ${isChecked ? 'enabled' : 'disabled'}`);
+        
+        // Update conditional visibility after toggling form fields
+        this.updateConditionalVisibility();
     }
 
     // Get field label for a field name
@@ -846,11 +904,17 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
 
                         <!-- Section D: Admission Details -->
-                        <div class="mb-6">
+                        <div class="mb-6"></div>
                             <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
                                 <i class="fas fa-clipboard-list mr-2 text-red-600"></i>Section D: Admission Details
                             </h4>
                             <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="School Type" 
+                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'school_type') ? 'checked' : ''}
+                                    data-field="admission_details_fields"
+                                    data-field-name="school_type">
+                                </ui-checkbox>
                                 <ui-checkbox 
                                     label="Level Applying For" 
                                     ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'level_applying') ? 'checked' : ''}
@@ -861,7 +925,8 @@ class AdmissionConfigModal extends HTMLElement {
                                     label="Class Applying For" 
                                     ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'class_applying') ? 'checked' : ''}
                                     data-field="admission_details_fields"
-                                    data-field-name="class_applying">
+                                    data-field-name="class_applying"
+                                    ${this.hasEnabledLevelsWithClasses() ? '' : 'style="display: none;"'}>
                                 </ui-checkbox>
                                 <ui-checkbox 
                                     label="Academic Programme" 
@@ -869,12 +934,6 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field="admission_details_fields"
                                     data-field-name="academic_programme"
                                     ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="School Type" 
-                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'school_type') ? 'checked' : ''}
-                                    data-field="admission_details_fields"
-                                    data-field-name="school_type">
                                 </ui-checkbox>
                             </div>
                         </div>
@@ -888,7 +947,7 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                         
                         <!-- School Types -->
-                        <div class="mb-6">
+                        <div class="mb-6" ${!this.isSchoolTypeEnabled() ? 'style="display: none;"' : ''}>
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 <i class="fas fa-building mr-1"></i>School Types (Applicant Selection Options)
                             </label>
@@ -910,7 +969,7 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                         
                         <!-- Enabled Levels -->
-                        <div class="mb-6">
+                        <div class="mb-6" ${!this.isLevelApplyingEnabled() ? 'style="display: none;"' : ''}>
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 <i class="fas fa-graduation-cap mr-1"></i>Enabled Levels
                             </label>

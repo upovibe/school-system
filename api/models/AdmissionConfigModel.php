@@ -123,9 +123,9 @@ class AdmissionConfigModel extends BaseModel {
         if (!$config) return [];
         
         $requiredDocs = json_decode($config['required_documents'], true);
-        return array_filter($requiredDocs, function($doc) use ($level) {
-            return in_array($level, $doc['levels'] ?? []);
-        });
+        // Since required_documents is now a simple array of strings, return all documents
+        // In the future, this could be enhanced to filter by level if needed
+        return $requiredDocs ?? [];
     }
 
     // Check if admission is open

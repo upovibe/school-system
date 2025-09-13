@@ -114,14 +114,7 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'bece_results_doc', 'label' => 'BECE Results Slip', 'required' => false, 'enabled' => true, 'type' => 'file', 'for_levels' => ['shs']],
             ['name' => 'immunization_card_doc', 'label' => 'Immunization Card', 'required' => false, 'enabled' => true, 'type' => 'file']
         ]);
-        $requiredDocuments = json_encode([
-            ['name' => 'Birth Certificate', 'required' => true, 'levels' => ['primary', 'jhs', 'shs']],
-            ['name' => 'Passport Photo', 'required' => true, 'levels' => ['primary', 'jhs', 'shs']],
-            ['name' => 'Report Card', 'required' => false, 'levels' => ['primary', 'jhs']],
-            ['name' => 'Transfer Letter', 'required' => false, 'levels' => ['jhs', 'shs']],
-            ['name' => 'BECE Results', 'required' => true, 'levels' => ['shs']],
-            ['name' => 'Immunization Card', 'required' => true, 'levels' => ['primary']]
-        ]);
+        $requiredDocuments = json_encode(['birth_certificate', 'passport_photo', 'report_card', 'transfer_letter', 'bece_results', 'immunization_card']);
 
         // Get the current active academic year ID
         $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 AND is_active = 1 LIMIT 1");

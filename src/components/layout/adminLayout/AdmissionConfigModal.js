@@ -154,6 +154,7 @@ class AdmissionConfigModal extends HTMLElement {
             // Update visibility after rendering
             setTimeout(() => {
                 this.updateLevelSectionsVisibility();
+                this.updateConditionalVisibility();
             }, 100);
         } catch (error) {
             console.error('❌ Error loading admission config:', error);
@@ -309,6 +310,12 @@ class AdmissionConfigModal extends HTMLElement {
         const enabledLevelsSection = this.querySelector('.mb-6:has([data-field="enabled_levels"])');
         if (enabledLevelsSection) {
             enabledLevelsSection.style.display = this.isLevelApplyingEnabled() ? '' : 'none';
+        }
+
+        // Update Level Classes Configuration section visibility
+        const levelClassesSection = this.querySelector('.bg-gradient-to-r.from-purple-50.to-violet-50');
+        if (levelClassesSection) {
+            levelClassesSection.style.display = this.isLevelApplyingEnabled() ? '' : 'none';
         }
 
         // Update Class Applying For checkbox visibility
@@ -541,6 +548,38 @@ class AdmissionConfigModal extends HTMLElement {
         return this.isFieldEnabled('admission_details_fields', 'level_applying');
     }
 
+    // Uncheck Class Applying For field
+    uncheckClassApplying() {
+        // Find and uncheck the Class Applying For checkbox
+        const classApplyingCheckbox = this.querySelector('[data-field-name="class_applying"]');
+        if (classApplyingCheckbox) {
+            // Remove checked attribute
+            classApplyingCheckbox.removeAttribute('checked');
+            
+            // Update the field configuration
+            if (!this.configData.admission_details_fields) {
+                this.configData.admission_details_fields = [];
+            }
+            
+            let classField = this.configData.admission_details_fields.find(f => f.name === 'class_applying');
+            if (classField) {
+                classField.enabled = false;
+            } else {
+                // Create the field if it doesn't exist
+                classField = {
+                    name: 'class_applying',
+                    label: 'Class Applying For',
+                    required: false,
+                    enabled: false,
+                    type: 'select'
+                };
+                this.configData.admission_details_fields.push(classField);
+            }
+            
+            console.log('🔧 Class Applying For has been unchecked because Level Applying For was disabled');
+        }
+    }
+
     // Handle form field toggle (enable/disable)
     handleFormFieldToggle(checkbox) {
         const section = checkbox.getAttribute('data-field');
@@ -577,6 +616,12 @@ class AdmissionConfigModal extends HTMLElement {
             checkbox.setAttribute('checked', '');
         } else {
             checkbox.removeAttribute('checked');
+        }
+        
+        // Special handling for Level Applying For
+        if (section === 'admission_details_fields' && fieldName === 'level_applying' && !field.enabled) {
+            // If Level Applying For is unchecked, also uncheck Class Applying For
+            this.uncheckClassApplying();
         }
         
         console.log(`🔧 Field ${fieldName} in ${section} is now ${field.enabled ? 'enabled' : 'disabled'}`);

@@ -1944,7 +1944,7 @@ class AdminDashboardPage extends App {
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
                             </div>
-                            <div class="flex items-center space-x-4 w-full justify-end md:w-fit ml-auto">
+                            <div class="flex flex-col gap-2 md:flex-row items-center space-x-4 w-full justify-end md:w-fit ml-auto">
                                 <div class="flex items-center space-x-2">
                                     <label class="text-sm text-gray-600 hidden lg:block">Class:</label>
                                     <select id="collectionClassSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -1975,7 +1975,7 @@ class AdminDashboardPage extends App {
             </div>
 
                     <!-- Quick Actions -->
-                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-4">
+                    <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-4 my-5">
                         <div class="flex items-center mb-6">
                             <div class="w-1 h-8 bg-gray-500 rounded-full mr-4"></div>
                             <h2 class="text-2xl font-bold text-gray-900">Quick Actions</h2>

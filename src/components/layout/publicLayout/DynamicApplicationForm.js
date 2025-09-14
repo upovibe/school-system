@@ -53,7 +53,6 @@ class DynamicApplicationForm extends App {
 
     determineEnabledSections() {
         this.enabledSections = [];
-        console.log('Determining enabled sections...');
         
         // Check each section based on enabled fields
         if (this.hasEnabledFields('student_info_fields')) {
@@ -63,7 +62,6 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-user',
                 color: 'blue'
             });
-            console.log('Added student-info section');
         }
         
         if (this.hasEnabledFields('parent_guardian_fields')) {
@@ -73,7 +71,6 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-users',
                 color: 'green'
             });
-            console.log('Added parent-guardian section');
         }
         
         if (this.hasEnabledFields('academic_background_fields')) {
@@ -83,7 +80,6 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-graduation-cap',
                 color: 'yellow'
             });
-            console.log('Added academic-background section');
         }
         
         if (this.hasEnabledFields('health_info_fields')) {
@@ -93,7 +89,6 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-heartbeat',
                 color: 'red'
             });
-            console.log('Added health-info section');
         }
         
         if (this.hasEnabledFields('document_upload_fields')) {
@@ -103,10 +98,7 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-file-upload',
                 color: 'purple'
             });
-            console.log('Added document-upload section');
         }
-        
-        console.log('Total enabled sections:', this.enabledSections.length);
     }
 
     hasEnabledFields(sectionName) {
@@ -146,10 +138,6 @@ class DynamicApplicationForm extends App {
         
         const allFields = sectionMap[sectionId] || [];
         const enabledFields = allFields.filter(field => field.enabled);
-        
-        console.log('Section ID:', sectionId);
-        console.log('All fields for section:', allFields);
-        console.log('Enabled fields for section:', enabledFields);
         
         return enabledFields;
     }
@@ -284,26 +272,19 @@ class DynamicApplicationForm extends App {
     }
 
     navigateToSection(sectionIndex) {
-        console.log('Navigating to section:', sectionIndex, 'Total sections:', this.enabledSections.length);
         if (sectionIndex >= 0 && sectionIndex < this.enabledSections.length) {
             this.currentSection = sectionIndex;
-            console.log('Current section set to:', this.currentSection);
             
             // Reinitialize form data for the new section
             this.initializeFormDataForCurrentSection();
             
             const html = this.render();
-            console.log('Generated HTML length:', html.length);
-            console.log('Setting innerHTML...');
             this.innerHTML = html;
-            console.log('innerHTML set, calling scrollToCurrentSection...');
             
             // Small delay to ensure DOM is updated
             setTimeout(() => {
                 this.scrollToCurrentSection();
             }, 100);
-        } else {
-            console.error('Invalid section index:', sectionIndex, 'Available sections:', this.enabledSections.length);
         }
     }
 
@@ -455,12 +436,9 @@ class DynamicApplicationForm extends App {
     }
 
     renderSection(section) {
-        console.log('Rendering section:', section);
         const sectionFields = this.getSectionFields(section.id);
-        console.log('Section fields for', section.id, ':', sectionFields);
         
         if (!sectionFields.length) {
-            console.log('No fields found for section:', section.id);
             return '';
         }
 
@@ -584,8 +562,6 @@ class DynamicApplicationForm extends App {
     }
 
     render() {
-        console.log('Rendering form - Current section:', this.currentSection, 'Total sections:', this.enabledSections.length);
-        
         if (!this.admissionConfig) {
             return `
                 <div class="container flex items-center justify-center mx-auto p-8">
@@ -607,10 +583,6 @@ class DynamicApplicationForm extends App {
         const applicationLogo = this.get('applicationLogo');
         const applicationName = this.get('applicationName');
         const bannerImage = this.get('contactBannerImage');
-
-        const currentSectionData = this.enabledSections[this.currentSection];
-        console.log('Current section data for rendering:', currentSectionData);
-        console.log('About to render section with ID:', currentSectionData?.id);
 
         return `
             <section class="min-h-screen bg-gray-50">

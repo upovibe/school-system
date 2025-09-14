@@ -182,65 +182,137 @@ class ApplicationController {
 
     /**
      * Get required fields from admission configuration
+     * Returns database column names (not config field names)
      */
     private function getRequiredFields($config) {
         $requiredFields = [];
         
+        // Field mapping from config names to database column names
+        $fieldMapping = [
+            // Student Information fields
+            'first_name' => 'student_first_name',
+            'middle_name' => 'student_middle_name',
+            'last_name' => 'student_last_name',
+            // gender, date_of_birth, place_of_birth, nationality, religion stay the same
+            
+            // Parent/Guardian fields
+            'guardian_name' => 'parent_guardian_name',
+            'guardian_phone' => 'parent_phone',
+            'guardian_email' => 'parent_email',
+            'guardian_occupation' => 'parent_occupation',
+            'address' => 'residential_address',
+            
+            // Academic Background fields
+            'previous_school_name' => 'previous_school',
+            'last_grade_completed' => 'last_class_completed',
+            
+            // School Setup fields (these are handled differently)
+            'level_applying' => 'level_applied',
+            'class_applying' => 'class_applied',
+            'academic_program' => 'programme_applied',
+        ];
+        
         // Check student info fields
         if (isset($config['student_info_fields'])) {
-            foreach ($config['student_info_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $studentFields = is_string($config['student_info_fields']) 
+                ? json_decode($config['student_info_fields'], true) 
+                : $config['student_info_fields'];
+            if (is_array($studentFields)) {
+                foreach ($studentFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
         // Check parent/guardian fields
         if (isset($config['parent_guardian_fields'])) {
-            foreach ($config['parent_guardian_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $parentFields = is_string($config['parent_guardian_fields']) 
+                ? json_decode($config['parent_guardian_fields'], true) 
+                : $config['parent_guardian_fields'];
+            if (is_array($parentFields)) {
+                foreach ($parentFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
         // Check academic background fields
         if (isset($config['academic_background_fields'])) {
-            foreach ($config['academic_background_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $academicFields = is_string($config['academic_background_fields']) 
+                ? json_decode($config['academic_background_fields'], true) 
+                : $config['academic_background_fields'];
+            if (is_array($academicFields)) {
+                foreach ($academicFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
         // Check admission details fields
         if (isset($config['admission_details_fields'])) {
-            foreach ($config['admission_details_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $admissionFields = is_string($config['admission_details_fields']) 
+                ? json_decode($config['admission_details_fields'], true) 
+                : $config['admission_details_fields'];
+            if (is_array($admissionFields)) {
+                foreach ($admissionFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
         // Check health info fields
         if (isset($config['health_info_fields'])) {
-            foreach ($config['health_info_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $healthFields = is_string($config['health_info_fields']) 
+                ? json_decode($config['health_info_fields'], true) 
+                : $config['health_info_fields'];
+            if (is_array($healthFields)) {
+                foreach ($healthFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
         // Check document upload fields
         if (isset($config['document_upload_fields'])) {
-            foreach ($config['document_upload_fields'] as $field) {
-                if ($field['required'] && $field['enabled']) {
-                    $requiredFields[] = $field['name'];
+            $documentFields = is_string($config['document_upload_fields']) 
+                ? json_decode($config['document_upload_fields'], true) 
+                : $config['document_upload_fields'];
+            if (is_array($documentFields)) {
+                foreach ($documentFields as $field) {
+                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
+                        // Map config field name to database column name
+                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
+                        $requiredFields[] = $dbFieldName;
+                    }
                 }
             }
         }
         
-        return $requiredFields;
+        // Always require school setup fields if they exist
+        $requiredFields[] = 'level_applied';
+        $requiredFields[] = 'class_applied';
+        
+        return array_unique($requiredFields); // Remove duplicates
     }
 
     /**

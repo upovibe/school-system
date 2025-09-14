@@ -506,8 +506,11 @@ class DynamicApplicationForm extends App {
                 return;
             }
 
+            // Map frontend field names to database column names
+            const mappedData = this.mapFormDataToDatabase(this.formData);
+
             // Submit form data
-            const response = await api.post('/applications', this.formData);
+            const response = await api.post('/applications', mappedData);
             
             if (response.data.success) {
                 Toast.show({
@@ -534,6 +537,81 @@ class DynamicApplicationForm extends App {
                 duration: 5000
             });
         }
+    }
+
+    mapFormDataToDatabase(formData) {
+        const mappedData = { ...formData };
+        
+        // Map frontend field names to database column names
+        const fieldMapping = {
+            // School Setup fields
+            'level_applying': 'level_applied',
+            'class_applying': 'class_applied',
+            'academic_program': 'programme_applied',
+            // school_type stays the same
+            
+            // Student Information fields
+            'first_name': 'student_first_name',
+            'middle_name': 'student_middle_name',
+            'last_name': 'student_last_name',
+            // gender, date_of_birth, place_of_birth, nationality, religion stay the same
+            
+            // Parent/Guardian fields
+            'guardian_name': 'parent_guardian_name',
+            'guardian_phone': 'parent_phone',
+            'guardian_email': 'parent_email',
+            'guardian_occupation': 'parent_occupation',
+            'address': 'residential_address',
+            
+            // Academic Background fields
+            'previous_school_name': 'previous_school',
+            'last_grade_completed': 'last_class_completed'
+        };
+        
+        // Apply field mapping
+        Object.keys(fieldMapping).forEach(frontendField => {
+            if (frontendField in mappedData) {
+                const dbField = fieldMapping[frontendField];
+                mappedData[dbField] = mappedData[frontendField];
+                delete mappedData[frontendField];
+            }
+        });
+        
+        // Remove fields that don't exist in database or need special handling
+        const fieldsToRemove = [
+            'passport_photo', // This field doesn't exist in database
+            // Add other fields that should be handled separately
+        ];
+        
+        fieldsToRemove.forEach(field => {
+            if (field in mappedData) {
+                delete mappedData[field];
+            }
+        });
+        
+        // Handle health info as JSON
+        if (mappedData.health_info && typeof mappedData.health_info === 'object') {
+            mappedData.health_info = JSON.stringify(mappedData.health_info);
+        }
+        
+        // Handle uploaded documents as JSON
+        if (mappedData.uploaded_documents && typeof mappedData.uploaded_documents === 'object') {
+            mappedData.uploaded_documents = JSON.stringify(mappedData.uploaded_documents);
+        }
+        
+        // Handle additional data as JSON
+        if (mappedData.additional_data && typeof mappedData.additional_data === 'object') {
+            mappedData.additional_data = JSON.stringify(mappedData.additional_data);
+        }
+        
+        // Remove empty values to avoid database errors
+        Object.keys(mappedData).forEach(key => {
+            if (mappedData[key] === '' || mappedData[key] === null || mappedData[key] === undefined) {
+                delete mappedData[key];
+            }
+        });
+        
+        return mappedData;
     }
 
     collectCurrentFormData() {

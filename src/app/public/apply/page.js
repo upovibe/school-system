@@ -4,7 +4,7 @@ import store from '@/core/store.js';
 import { fetchColorSettings } from '@/utils/colorSettings.js';
 import { escapeJsonForAttribute } from '@/utils/jsonUtils.js';
 import { setDocumentTitle } from '@/utils/appSettings.js';
-import '@/components/layout/publicLayout/ApplicationFormSection.js';
+import '@/components/layout/publicLayout/DynamicApplicationForm.js';
 
 class ApplyPage extends App {
     async connectedCallback() {
@@ -97,12 +97,12 @@ class ApplyPage extends App {
         const settingsWithLogoUrl = { ...allData.settings, application_logo: logoUrl };
         return `
             <div class="mx-auto">
-                <application-form-section 
+                <dynamic-application-form 
                     settings='${JSON.stringify(settingsWithLogoUrl).replace(/'/g, "&apos;")}'
                     banner-image='${allData.bannerImage ? `/api/${allData.bannerImage}` : ''}'
                     colors='${escapeJsonForAttribute(allData.colors)}'
                     page-data='${escapeJsonForAttribute(allData.contactPageData || {})}'
-                ></application-form-section>
+                ></dynamic-application-form>
             </div>
         `;
     }

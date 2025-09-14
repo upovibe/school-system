@@ -1,0 +1,525 @@
+import App from '@/core/App.js';
+import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
+import '@/components/ui/Input.js';
+import '@/components/ui/Dropdown.js';
+import '@/components/ui/Textarea.js';
+import '@/components/ui/Toast.js';
+import '@/components/common/PageLoader.js';
+import api from '@/services/api.js';
+
+/**
+ * Dynamic Application Form
+ * 
+ * Renders the application form dynamically based on admission configuration.
+ * Shows a progress bar with enabled sections and generates form fields accordingly.
+ */
+class DynamicApplicationForm extends App {
+    constructor() {
+        super();
+        this.formData = {};
+        this.admissionConfig = null;
+        this.currentSection = 0;
+        this.enabledSections = [];
+    }
+
+    static get observedAttributes() {
+        return ['settings', 'banner-image', 'colors', 'page-data'];
+    }
+
+    async connectedCallback() {
+        super.connectedCallback();
+        await this.loadAdmissionConfig();
+        this.loadDataFromProps();
+        this.setupEventListeners();
+    }
+
+    async loadAdmissionConfig() {
+        try {
+            const response = await api.get('/admission/config');
+            if (response.data.success && response.data.data) {
+                this.admissionConfig = response.data.data;
+                this.determineEnabledSections();
+                this.initializeFormData();
+                this.render();
+            } else {
+                console.error('Failed to load admission configuration');
+                this.showError('Admission configuration not available');
+            }
+        } catch (error) {
+            console.error('Error loading admission configuration:', error);
+            this.showError('Failed to load admission form');
+        }
+    }
+
+    determineEnabledSections() {
+        this.enabledSections = [];
+        
+        // Check each section based on enabled fields
+        if (this.hasEnabledFields('student_info_fields')) {
+            this.enabledSections.push({
+                id: 'student-info',
+                title: 'Student Information',
+                icon: 'fas fa-user',
+                color: 'blue'
+            });
+        }
+        
+        if (this.hasEnabledFields('parent_guardian_fields')) {
+            this.enabledSections.push({
+                id: 'parent-guardian',
+                title: 'Parent/Guardian Information',
+                icon: 'fas fa-users',
+                color: 'green'
+            });
+        }
+        
+        if (this.hasEnabledFields('academic_background_fields')) {
+            this.enabledSections.push({
+                id: 'academic-background',
+                title: 'Academic Background',
+                icon: 'fas fa-graduation-cap',
+                color: 'yellow'
+            });
+        }
+        
+        if (this.hasEnabledFields('health_info_fields')) {
+            this.enabledSections.push({
+                id: 'health-info',
+                title: 'Health Information',
+                icon: 'fas fa-heartbeat',
+                color: 'red'
+            });
+        }
+        
+        if (this.hasEnabledFields('document_upload_fields')) {
+            this.enabledSections.push({
+                id: 'document-upload',
+                title: 'Document Upload',
+                icon: 'fas fa-file-upload',
+                color: 'purple'
+            });
+        }
+    }
+
+    hasEnabledFields(sectionName) {
+        const fields = this.admissionConfig[sectionName];
+        return fields && Array.isArray(fields) && fields.some(field => field.enabled);
+    }
+
+    initializeFormData() {
+        // Initialize form data based on enabled fields
+        this.enabledSections.forEach(section => {
+            const sectionFields = this.getSectionFields(section.id);
+            sectionFields.forEach(field => {
+                this.formData[field.name] = '';
+            });
+        });
+    }
+
+    getSectionFields(sectionId) {
+        const sectionMap = {
+            'student-info': this.admissionConfig.student_info_fields || [],
+            'parent-guardian': this.admissionConfig.parent_guardian_fields || [],
+            'academic-background': this.admissionConfig.academic_background_fields || [],
+            'health-info': this.admissionConfig.health_info_fields || [],
+            'document-upload': this.admissionConfig.document_upload_fields || []
+        };
+        
+        return (sectionMap[sectionId] || []).filter(field => field.enabled);
+    }
+
+    loadDataFromProps() {
+        const settingsAttr = this.getAttribute('settings');
+        if (settingsAttr) {
+            const settings = unescapeJsonFromAttribute(settingsAttr);
+            if (settings) {
+                this.set('applicationLogo', settings.application_logo);
+                this.set('applicationName', settings.application_name);
+            }
+        }
+        
+        const bannerImageAttr = this.getAttribute('banner-image');
+        if (bannerImageAttr) {
+            this.set('contactBannerImage', bannerImageAttr);
+        }
+        
+        const colorsAttr = this.getAttribute('colors');
+        if (colorsAttr) {
+            try {
+                const colors = JSON.parse(colorsAttr.replace(/&quot;/g, '"'));
+                Object.entries(colors).forEach(([key, value]) => {
+                    this.set(key, value);
+                });
+            } catch (e) {}
+        }
+        
+        const pageDataAttr = this.getAttribute('page-data');
+        if (pageDataAttr) {
+            const pageData = unescapeJsonFromAttribute(pageDataAttr);
+            if (pageData) {
+                this.set('pageData', pageData);
+            }
+        }
+    }
+
+    setupEventListeners() {
+        // Form submission
+        this.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSubmit();
+        });
+
+
+        // Navigation buttons
+        this.addEventListener('click', (e) => {
+            if (e.target.matches('[data-nav="previous"]')) {
+                e.preventDefault();
+                if (this.currentSection > 0) {
+                    this.navigateToSection(this.currentSection - 1);
+                }
+            } else if (e.target.matches('[data-nav="next"]')) {
+                e.preventDefault();
+                if (this.currentSection < this.enabledSections.length - 1) {
+                    this.navigateToSection(this.currentSection + 1);
+                }
+            }
+        });
+
+        // Form input changes
+        this.addEventListener('input', (e) => {
+            if (e.target.matches('ui-input, ui-dropdown, ui-textarea')) {
+                this.formData[e.target.name] = e.target.value;
+                this.updateProgress();
+            }
+        });
+    }
+
+    navigateToSection(sectionIndex) {
+        if (sectionIndex >= 0 && sectionIndex < this.enabledSections.length) {
+            this.currentSection = sectionIndex;
+            this.render();
+            this.scrollToCurrentSection();
+        }
+    }
+
+    scrollToCurrentSection() {
+        const sectionElement = this.querySelector(`[data-section="${this.enabledSections[this.currentSection].id}"]`);
+        if (sectionElement) {
+            sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    updateProgress() {
+        const progressBar = this.querySelector('.progress-bar-fill');
+        if (progressBar) {
+            const totalFields = Object.keys(this.formData).length;
+            const filledFields = Object.values(this.formData).filter(value => value && value.trim() !== '').length;
+            const progress = totalFields > 0 ? (filledFields / totalFields) * 100 : 0;
+            progressBar.style.width = `${progress}%`;
+        }
+    }
+
+    async handleSubmit() {
+        try {
+            // Validate current section before submission
+            if (!this.validateCurrentSection()) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in all required fields',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Submit form data
+            const response = await api.post('/applications', this.formData);
+            
+            if (response.data.success) {
+                Toast.show({
+                    title: 'Success',
+                    message: 'Application submitted successfully',
+                    variant: 'success',
+                    duration: 5000
+                });
+                
+                // Reset form
+                this.formData = {};
+                this.initializeFormData();
+                this.currentSection = 0;
+                this.render();
+            } else {
+                throw new Error(response.data.message || 'Submission failed');
+            }
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            Toast.show({
+                title: 'Error',
+                message: error.response?.data?.message || 'Failed to submit application',
+                variant: 'error',
+                duration: 5000
+            });
+        }
+    }
+
+    validateCurrentSection() {
+        const currentSectionId = this.enabledSections[this.currentSection].id;
+        const sectionFields = this.getSectionFields(currentSectionId);
+        
+        return sectionFields.every(field => {
+            if (field.required) {
+                const value = this.formData[field.name];
+                return value && value.trim() !== '';
+            }
+            return true;
+        });
+    }
+
+    showError(message) {
+        this.innerHTML = `
+            <div class="container mx-auto flex items-center justify-center p-8">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    ${message}
+                </div>
+            </div>
+        `;
+    }
+
+    renderProgressBar() {
+        if (!this.enabledSections.length) return '';
+
+        const currentSection = this.enabledSections[this.currentSection];
+        const progress = ((this.currentSection + 1) / this.enabledSections.length) * 100;
+
+        return `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-${currentSection.color}-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="${currentSection.icon} text-${currentSection.color}-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">${currentSection.title}</h3>
+                            <p class="text-sm text-gray-500">Step ${this.currentSection + 1} of ${this.enabledSections.length}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="progress-bar-fill bg-${currentSection.color}-600 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderSection(section) {
+        const sectionFields = this.getSectionFields(section.id);
+        if (!sectionFields.length) return '';
+
+        return `
+            <div data-section="${section.id}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-${section.color}-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="${section.icon} text-${section.color}-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900">${section.title}</h3>
+                        <p class="text-sm text-gray-600">Please provide the following information</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${sectionFields.map(field => this.renderField(field)).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    renderField(field) {
+        const fieldId = `field_${field.name}`;
+        const isRequired = field.required ? 'required' : '';
+        const value = this.formData[field.name] || '';
+
+        switch (field.type) {
+            case 'text':
+            case 'email':
+            case 'tel':
+            case 'date':
+                return `
+                    <div class="col-span-1">
+                        <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
+                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        </label>
+                        <ui-input 
+                            id="${fieldId}"
+                            type="${field.type}"
+                            name="${field.name}"
+                            value="${value}"
+                            placeholder="Enter ${field.label.toLowerCase()}"
+                            ${isRequired}
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                `;
+            
+            case 'textarea':
+                return `
+                    <div class="col-span-2">
+                        <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
+                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        </label>
+                        <ui-textarea 
+                            id="${fieldId}"
+                            name="${field.name}"
+                            value="${value}"
+                            placeholder="Enter ${field.label.toLowerCase()}"
+                            ${isRequired}
+                            class="w-full">
+                        </ui-textarea>
+                    </div>
+                `;
+            
+            case 'select':
+                const options = field.options || [];
+                return `
+                    <div class="col-span-1">
+                        <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
+                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        </label>
+                        <ui-dropdown 
+                            id="${fieldId}"
+                            name="${field.name}"
+                            ${isRequired}
+                            class="w-full">
+                            <ui-option value="">Select ${field.label}</ui-option>
+                            ${options.map(option => `
+                                <ui-option value="${option}" ${value === option ? 'selected' : ''}>${option}</ui-option>
+                            `).join('')}
+                        </ui-dropdown>
+                    </div>
+                `;
+            
+            case 'file':
+                return `
+                    <div class="col-span-1">
+                        <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
+                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        </label>
+                        <ui-input 
+                            id="${fieldId}"
+                            type="file"
+                            name="${field.name}"
+                            ${isRequired}
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                `;
+            
+            default:
+                return `
+                    <div class="col-span-1">
+                        <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
+                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        </label>
+                        <ui-input 
+                            id="${fieldId}"
+                            type="text"
+                            name="${field.name}"
+                            value="${value}"
+                            placeholder="Enter ${field.label.toLowerCase()}"
+                            ${isRequired}
+                            class="w-full">
+                        </ui-input>
+                    </div>
+                `;
+        }
+    }
+
+    render() {
+        if (!this.admissionConfig) {
+            return `
+                <div class="container flex items-center justify-center mx-auto p-8">
+                    <page-loader></page-loader>
+                </div>
+            `;
+        }
+
+        if (!this.enabledSections.length) {
+            return `
+                <div class="container mx-auto flex items-center justify-center p-8">
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                        No form sections are currently enabled. Please contact the administrator.
+                    </div>
+                </div>
+            `;
+        }
+
+        const applicationLogo = this.get('applicationLogo');
+        const applicationName = this.get('applicationName');
+        const bannerImage = this.get('contactBannerImage');
+
+        return `
+            <section class="min-h-screen bg-gray-50">
+                <!-- Header with Banner -->
+                <div class="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                    ${bannerImage ? `
+                        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${bannerImage}');"></div>
+                    ` : ''}
+                    <div class="relative max-w-4xl mx-auto px-6 py-16">
+                        <div class="text-center">
+                            ${applicationLogo ? `
+                                <img src="${applicationLogo}" alt="School Logo" class="h-16 mx-auto mb-4">
+                            ` : ''}
+                            <h1 class="text-3xl md:text-4xl font-bold mb-4">
+                                ${applicationName || 'Application Form'}
+                            </h1>
+                            <p class="text-lg opacity-90">Complete your application in a few simple steps</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Content -->
+                <div class="max-w-4xl mx-auto px-6 py-8">
+                    <form id="dynamic-application-form">
+                        <!-- Progress Bar -->
+                        ${this.renderProgressBar()}
+                        
+                        <!-- Current Section -->
+                        ${this.renderSection(this.enabledSections[this.currentSection])}
+                        
+                        <!-- Navigation Buttons -->
+                        <div class="flex justify-between items-center mt-8">
+                            <button 
+                                type="button" 
+                                class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors ${this.currentSection === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${this.currentSection === 0 ? 'disabled' : ''}
+                                data-nav="previous">
+                                Previous
+                            </button>
+                            
+                            ${this.currentSection === this.enabledSections.length - 1 ? `
+                                <button 
+                                    type="submit" 
+                                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    Submit Application
+                                </button>
+                            ` : `
+                                <button 
+                                    type="button" 
+                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    data-nav="next">
+                                    Next
+                                </button>
+                            `}
+                        </div>
+                    </form>
+                </div>
+            </section>
+        `;
+    }
+}
+
+customElements.define('dynamic-application-form', DynamicApplicationForm);
+export default DynamicApplicationForm;

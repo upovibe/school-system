@@ -2,6 +2,7 @@ import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
 import '@/components/ui/Input.js';
 import '@/components/ui/Dropdown.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Textarea.js';
 import '@/components/ui/Toast.js';
 import '@/components/common/PageLoader.js';
@@ -201,7 +202,7 @@ class DynamicApplicationForm extends App {
 
         // Form input changes
         this.addEventListener('input', (e) => {
-            if (e.target.matches('ui-input, ui-dropdown, ui-textarea')) {
+            if (e.target.matches('ui-input, ui-dropdown, ui-search-dropdown, ui-textarea')) {
                 this.formData[e.target.name] = e.target.value;
                 this.updateProgress();
             }
@@ -209,7 +210,7 @@ class DynamicApplicationForm extends App {
 
         // Handle custom component events
         this.addEventListener('change', (e) => {
-            if (e.target.matches('ui-input, ui-dropdown, ui-textarea')) {
+            if (e.target.matches('ui-input, ui-dropdown, ui-search-dropdown, ui-textarea')) {
                 this.formData[e.target.name] = e.target.value;
                 this.updateProgress();
             }
@@ -512,16 +513,16 @@ class DynamicApplicationForm extends App {
                         <label for="${fieldId}" class="block text-sm font-medium text-gray-700 mb-1">
                             ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
                         </label>
-                        <ui-dropdown 
+                        <ui-search-dropdown 
                             id="${fieldId}"
                             name="${field.name}"
+                            placeholder="Select ${field.label}..."
                             ${isRequired}
                             class="w-full">
-                            <ui-option value="">Select ${field.label}</ui-option>
                             ${options.map(option => `
                                 <ui-option value="${option}" ${value === option ? 'selected' : ''}>${option}</ui-option>
                             `).join('')}
-                        </ui-dropdown>
+                        </ui-search-dropdown>
                     </div>
                 `;
             

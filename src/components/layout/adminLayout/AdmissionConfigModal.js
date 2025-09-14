@@ -80,7 +80,6 @@ class AdmissionConfigModal extends HTMLElement {
                 
                 if (name === 'admission_status') {
                     this.configData.admission_status = isChecked ? 'open' : 'closed';
-                    console.log('🔧 Admission status changed to:', this.configData.admission_status);
                 }
             }
         });
@@ -88,7 +87,6 @@ class AdmissionConfigModal extends HTMLElement {
         // Listen for ui-checkbox change events
         this.addEventListener('change', (event) => {
             if (event.target.tagName === 'UI-CHECKBOX' && event.target.hasAttribute('data-field') && event.target.hasAttribute('data-field-name')) {
-                console.log('🔧 UI-Checkbox change event detected:', event.target.getAttribute('data-field-name'));
                 this.handleFormFieldToggle(event.target);
             }
         });
@@ -201,7 +199,6 @@ class AdmissionConfigModal extends HTMLElement {
             
             if (switchName === 'admission_status') {
                 this.configData.admission_status = isChecked ? 'open' : 'closed';
-                console.log('🔧 Admission status changed to:', this.configData.admission_status);
             }
             return;
         }
@@ -370,17 +367,12 @@ class AdmissionConfigModal extends HTMLElement {
         const levelClasses = this.configData.level_classes || {};
         const container = this.querySelector('#level-classes-container');
         
-        console.log('🔍 Debug - Enabled levels:', enabledLevels);
-        console.log('🔍 Debug - Level classes:', levelClasses);
-        console.log('🔍 Debug - Container:', container);
         
         if (!container) {
-            console.log('❌ No container found');
             return;
         }
         
         if (!enabledLevels || enabledLevels.length === 0) {
-            console.log('❌ No enabled levels, clearing container');
             container.innerHTML = '';
             return;
         }
@@ -717,7 +709,6 @@ class AdmissionConfigModal extends HTMLElement {
         const fieldName = checkbox.getAttribute('data-field-name');
         const isCurrentlyChecked = checkbox.hasAttribute('checked');
         
-        console.log(`🔧 Toggling field: ${fieldName} in ${section}, currently checked: ${isCurrentlyChecked}`);
         
         if (!this.configData[section]) {
             this.configData[section] = [];
@@ -736,7 +727,6 @@ class AdmissionConfigModal extends HTMLElement {
                 type: this.getFieldType(fieldName)
             };
             this.configData[section].push(field);
-            console.log(`🔧 Created new field config for ${fieldName}`);
         }
         
         // Toggle the enabled state (opposite of current state)
@@ -749,7 +739,6 @@ class AdmissionConfigModal extends HTMLElement {
             checkbox.removeAttribute('checked');
         }
         
-        console.log(`🔧 Field ${fieldName} in ${section} is now ${field.enabled ? 'enabled' : 'disabled'}`);
         
         // Update conditional visibility after toggling form fields
         this.updateConditionalVisibility();

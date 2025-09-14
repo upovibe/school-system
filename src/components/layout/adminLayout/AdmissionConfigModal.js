@@ -133,21 +133,10 @@ class AdmissionConfigModal extends HTMLElement {
             if (response.data.success && response.data.data) {
                 const data = response.data.data;
                 
-                // Parse JSON fields that come as strings from the API
+                // Update config data (API now returns parsed JSON)
                 this.configData = {
                     ...this.configData,
-                    ...data,
-                    enabled_levels: data.enabled_levels ? (typeof data.enabled_levels === 'string' ? JSON.parse(data.enabled_levels) : data.enabled_levels) : [],
-                    level_classes: data.level_classes ? (typeof data.level_classes === 'string' ? JSON.parse(data.level_classes) : data.level_classes) : {},
-                    shs_programmes: data.shs_programmes ? (typeof data.shs_programmes === 'string' ? JSON.parse(data.shs_programmes) : data.shs_programmes) : [],
-                    school_types: data.school_types ? (typeof data.school_types === 'string' ? JSON.parse(data.school_types) : data.school_types) : [],
-                    required_documents: data.required_documents ? (typeof data.required_documents === 'string' ? JSON.parse(data.required_documents) : data.required_documents) : [],
-                    // Parse form field configurations
-                    student_info_fields: data.student_info_fields ? (typeof data.student_info_fields === 'string' ? JSON.parse(data.student_info_fields) : data.student_info_fields) : [],
-                    parent_guardian_fields: data.parent_guardian_fields ? (typeof data.parent_guardian_fields === 'string' ? JSON.parse(data.parent_guardian_fields) : data.parent_guardian_fields) : [],
-                    academic_background_fields: data.academic_background_fields ? (typeof data.academic_background_fields === 'string' ? JSON.parse(data.academic_background_fields) : data.academic_background_fields) : [],
-                    health_info_fields: data.health_info_fields ? (typeof data.health_info_fields === 'string' ? JSON.parse(data.health_info_fields) : data.health_info_fields) : [],
-                    document_upload_fields: data.document_upload_fields ? (typeof data.document_upload_fields === 'string' ? JSON.parse(data.document_upload_fields) : data.document_upload_fields) : []
+                    ...data
                 };
             }
             

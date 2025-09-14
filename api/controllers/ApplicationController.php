@@ -261,18 +261,21 @@ class ApplicationController {
 
             // Return only public configuration (no sensitive data)
             $publicConfig = [
+                'id' => $config['id'],
+                'academic_year_id' => $config['academic_year_id'],
+                'academic_year_name' => $config['academic_year_name'],
                 'admission_status' => $config['admission_status'],
-                'enabled_levels' => $config['enabled_levels'],
-                'level_classes' => $config['level_classes'],
-                'shs_programmes' => $config['shs_programmes'],
-                'school_types' => $config['school_types'],
-                'required_documents' => $config['required_documents'],
-                'student_info_fields' => $config['student_info_fields'],
-                'parent_guardian_fields' => $config['parent_guardian_fields'],
-                'academic_background_fields' => $config['academic_background_fields'],
-                'admission_details_fields' => $config['admission_details_fields'],
-                'health_info_fields' => $config['health_info_fields'],
-                'document_upload_fields' => $config['document_upload_fields']
+                'max_applications_per_ip_per_day' => $config['max_applications_per_ip_per_day'],
+                'enabled_levels' => json_decode($config['enabled_levels'], true),
+                'level_classes' => json_decode($config['level_classes'], true),
+                'shs_programmes' => json_decode($config['shs_programmes'], true),
+                'school_types' => json_decode($config['school_types'], true),
+                'required_documents' => json_decode($config['required_documents'], true),
+                'student_info_fields' => json_decode($config['student_info_fields'], true),
+                'parent_guardian_fields' => json_decode($config['parent_guardian_fields'], true),
+                'academic_background_fields' => json_decode($config['academic_background_fields'], true),
+                'health_info_fields' => json_decode($config['health_info_fields'], true),
+                'document_upload_fields' => json_decode($config['document_upload_fields'], true)
             ];
 
             http_response_code(200);

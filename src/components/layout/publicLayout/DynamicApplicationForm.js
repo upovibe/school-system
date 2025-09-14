@@ -175,12 +175,12 @@ class DynamicApplicationForm extends App {
             if (e.target.matches('[data-nav="previous"]')) {
                 e.preventDefault();
                 if (this.currentSection > 0) {
-                    this.navigateToSection(this.currentSection - 1);
+                    this.handlePreviousSection();
                 }
             } else if (e.target.matches('[data-nav="next"]')) {
                 e.preventDefault();
                 if (this.currentSection < this.enabledSections.length - 1) {
-                    this.navigateToSection(this.currentSection + 1);
+                    this.handleNextSection();
                 }
             }
         });
@@ -192,6 +192,69 @@ class DynamicApplicationForm extends App {
                 this.updateProgress();
             }
         });
+
+        // Handle custom component events
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-input, ui-dropdown, ui-textarea')) {
+                this.formData[e.target.name] = e.target.value;
+                this.updateProgress();
+            }
+        });
+
+        // Handle file input changes
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-input[type="file"]')) {
+                this.formData[e.target.name] = e.target.files ? e.target.files[0] : null;
+                this.updateProgress();
+            }
+        });
+    }
+
+    handleNextSection() {
+        // Collect current form data before validation
+        this.collectCurrentFormData();
+        
+        // Small delay to ensure data collection completes
+        setTimeout(() => {
+            // Validate current section before proceeding
+            if (!this.validateCurrentSection()) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in all required fields before proceeding',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Show success message and proceed to next section
+            Toast.show({
+                title: 'Section Complete',
+                message: 'Great! Moving to the next section',
+                variant: 'success',
+                duration: 2000
+            });
+
+            // Small delay to show the toast before navigation
+            setTimeout(() => {
+                this.navigateToSection(this.currentSection + 1);
+            }, 500);
+        }, 100);
+    }
+
+    handlePreviousSection() {
+        // Show info message and go to previous section
+        Toast.show({
+            title: 'Going Back',
+            message: 'Returning to previous section',
+            variant: 'info',
+            duration: 1500
+        });
+
+        // Small delay to show the toast before navigation
+        setTimeout(() => {
+            this.navigateToSection(this.currentSection - 1);
+        }, 300);
     }
 
     navigateToSection(sectionIndex) {
@@ -212,8 +275,24 @@ class DynamicApplicationForm extends App {
     updateProgress() {
         const progressBar = this.querySelector('.progress-bar-fill');
         if (progressBar) {
-            const totalFields = Object.keys(this.formData).length;
-            const filledFields = Object.values(this.formData).filter(value => value && value.trim() !== '').length;
+            // Calculate progress based on current section completion
+            const currentSectionId = this.enabledSections[this.currentSection].id;
+            const sectionFields = this.getSectionFields(currentSectionId);
+            const totalFields = sectionFields.length;
+            
+            // Count filled fields by checking actual DOM inputs
+            const filledFields = sectionFields.filter(field => {
+                const input = this.querySelector(`[name="${field.name}"]`);
+                if (!input) return false;
+                
+                if (field.type === 'file') {
+                    return input.files && input.files.length > 0;
+                } else {
+                    const value = input.value;
+                    return value && value.toString().trim() !== '';
+                }
+            }).length;
+            
             const progress = totalFields > 0 ? (filledFields / totalFields) * 100 : 0;
             progressBar.style.width = `${progress}%`;
         }
@@ -221,6 +300,9 @@ class DynamicApplicationForm extends App {
 
     async handleSubmit() {
         try {
+            // Collect all form data before validation
+            this.collectCurrentFormData();
+            
             // Validate current section before submission
             if (!this.validateCurrentSection()) {
                 Toast.show({
@@ -262,6 +344,23 @@ class DynamicApplicationForm extends App {
         }
     }
 
+    collectCurrentFormData() {
+        // Manually collect data from all form inputs in current section
+        const currentSectionId = this.enabledSections[this.currentSection].id;
+        const sectionFields = this.getSectionFields(currentSectionId);
+        
+        sectionFields.forEach(field => {
+            const input = this.querySelector(`[name="${field.name}"]`);
+            if (input) {
+                if (field.type === 'file') {
+                    this.formData[field.name] = input.files ? input.files[0] : null;
+                } else {
+                    this.formData[field.name] = input.value || '';
+                }
+            }
+        });
+    }
+
     validateCurrentSection() {
         const currentSectionId = this.enabledSections[this.currentSection].id;
         const sectionFields = this.getSectionFields(currentSectionId);
@@ -269,7 +368,7 @@ class DynamicApplicationForm extends App {
         return sectionFields.every(field => {
             if (field.required) {
                 const value = this.formData[field.name];
-                return value && value.trim() !== '';
+                return value && value.toString().trim() !== '';
             }
             return true;
         });

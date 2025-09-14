@@ -436,10 +436,44 @@ class DynamicApplicationForm extends App {
             // Calculate progress based on current section completion
             const currentSectionId = this.enabledSections[this.currentSection].id;
             const sectionFields = this.getSectionFields(currentSectionId);
-            const totalFields = sectionFields.length;
             
-            // Count filled fields by checking actual DOM inputs
-            const filledFields = sectionFields.filter(field => {
+            // Filter to only count visible/relevant fields
+            const relevantFields = sectionFields.filter(field => {
+                const input = this.querySelector(`[name="${field.name}"]`);
+                if (!input) return false;
+                
+                // Check if field is visible (not hidden)
+                const fieldContainer = input.closest('.col-span-1, .col-span-2');
+                if (fieldContainer && fieldContainer.style.display === 'none') {
+                    return false; // Don't count hidden fields
+                }
+                
+                // For school setup section, handle special cases
+                if (currentSectionId === 'school-setup') {
+                    // Don't count academic_program if not SHS level
+                    if (field.name === 'academic_program') {
+                        const selectedLevel = this.formData.level_applying;
+                        if (!selectedLevel || selectedLevel.toLowerCase() !== 'shs') {
+                            return false;
+                        }
+                    }
+                    
+                    // Don't count class_applying if no level selected
+                    if (field.name === 'class_applying') {
+                        const selectedLevel = this.formData.level_applying;
+                        if (!selectedLevel) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            });
+            
+            const totalFields = relevantFields.length;
+            
+            // Count filled fields from relevant fields only
+            const filledFields = relevantFields.filter(field => {
                 const input = this.querySelector(`[name="${field.name}"]`);
                 if (!input) return false;
                 

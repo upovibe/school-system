@@ -580,6 +580,102 @@ class AdmissionConfigModal extends HTMLElement {
         }
     }
 
+    // Check Class Applying For field
+    checkClassApplying() {
+        // Find and check the Class Applying For checkbox
+        const classApplyingCheckbox = this.querySelector('[data-field-name="class_applying"]');
+        if (classApplyingCheckbox) {
+            // Add checked attribute
+            classApplyingCheckbox.setAttribute('checked', '');
+            
+            // Update the field configuration
+            if (!this.configData.admission_details_fields) {
+                this.configData.admission_details_fields = [];
+            }
+            
+            let classField = this.configData.admission_details_fields.find(f => f.name === 'class_applying');
+            if (classField) {
+                classField.enabled = true;
+            } else {
+                // Create the field if it doesn't exist
+                classField = {
+                    name: 'class_applying',
+                    label: 'Class Applying For',
+                    required: false,
+                    enabled: true,
+                    type: 'select'
+                };
+                this.configData.admission_details_fields.push(classField);
+            }
+            
+            console.log('🔧 Class Applying For has been checked because Level Applying For was enabled');
+        }
+    }
+
+    // Check Academic Program field
+    checkAcademicProgram() {
+        // Find and check the Academic Program checkbox
+        const academicProgramCheckbox = this.querySelector('[data-field-name="academic_program"]');
+        if (academicProgramCheckbox) {
+            // Add checked attribute
+            academicProgramCheckbox.setAttribute('checked', '');
+            
+            // Update the field configuration
+            if (!this.configData.admission_details_fields) {
+                this.configData.admission_details_fields = [];
+            }
+            
+            let academicField = this.configData.admission_details_fields.find(f => f.name === 'academic_program');
+            if (academicField) {
+                academicField.enabled = true;
+            } else {
+                // Create the field if it doesn't exist
+                academicField = {
+                    name: 'academic_program',
+                    label: 'Academic Program',
+                    required: false,
+                    enabled: true,
+                    type: 'select'
+                };
+                this.configData.admission_details_fields.push(academicField);
+            }
+            
+            console.log('🔧 Academic Program has been checked because Level Applying For was enabled');
+        }
+    }
+
+    // Uncheck Academic Program field
+    uncheckAcademicProgram() {
+        // Find and uncheck the Academic Program checkbox
+        const academicProgramCheckbox = this.querySelector('[data-field-name="academic_program"]');
+        if (academicProgramCheckbox) {
+            // Remove checked attribute
+            academicProgramCheckbox.removeAttribute('checked');
+            
+            // Update the field configuration
+            if (!this.configData.admission_details_fields) {
+                this.configData.admission_details_fields = [];
+            }
+            
+            let academicField = this.configData.admission_details_fields.find(f => f.name === 'academic_program');
+            if (academicField) {
+                academicField.enabled = false;
+            } else {
+                // Create the field if it doesn't exist
+                academicField = {
+                    name: 'academic_program',
+                    label: 'Academic Program',
+                    required: false,
+                    enabled: false,
+                    type: 'select'
+                };
+                this.configData.admission_details_fields.push(academicField);
+            }
+            
+            console.log('🔧 Academic Program has been unchecked because Level Applying For was disabled');
+        }
+    }
+
     // Handle form field toggle (enable/disable)
     handleFormFieldToggle(checkbox) {
         const section = checkbox.getAttribute('data-field');
@@ -619,9 +715,16 @@ class AdmissionConfigModal extends HTMLElement {
         }
         
         // Special handling for Level Applying For
-        if (section === 'admission_details_fields' && fieldName === 'level_applying' && !field.enabled) {
-            // If Level Applying For is unchecked, also uncheck Class Applying For
-            this.uncheckClassApplying();
+        if (section === 'admission_details_fields' && fieldName === 'level_applying') {
+            if (!field.enabled) {
+                // If Level Applying For is unchecked, also uncheck Class Applying For and Academic Program
+                this.uncheckClassApplying();
+                this.uncheckAcademicProgram();
+            } else {
+                // If Level Applying For is checked, also check Class Applying For and Academic Program
+                this.checkClassApplying();
+                this.checkAcademicProgram();
+            }
         }
         
         console.log(`🔧 Field ${fieldName} in ${section} is now ${field.enabled ? 'enabled' : 'disabled'}`);

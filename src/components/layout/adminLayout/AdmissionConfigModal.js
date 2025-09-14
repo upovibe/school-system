@@ -72,6 +72,19 @@ class AdmissionConfigModal extends HTMLElement {
             this.handleFormChange(event);
         });
 
+        // Listen for switch changes specifically
+        this.addEventListener('switch-change', (event) => {
+            if (event.target.tagName === 'UI-SWITCH') {
+                const name = event.target.getAttribute('name');
+                const isChecked = event.detail.checked;
+                
+                if (name === 'admission_status') {
+                    this.configData.admission_status = isChecked ? 'open' : 'closed';
+                    console.log('🔧 Admission status changed to:', this.configData.admission_status);
+                }
+            }
+        });
+
         // Listen for ui-checkbox change events
         this.addEventListener('change', (event) => {
             if (event.target.tagName === 'UI-CHECKBOX' && event.target.hasAttribute('data-field') && event.target.hasAttribute('data-field-name')) {
@@ -180,6 +193,18 @@ class AdmissionConfigModal extends HTMLElement {
     // Handle form changes
     handleFormChange(event) {
         const { name, value, type, checked } = event.target;
+        
+        // Handle ui-switch components
+        if (event.target.tagName === 'UI-SWITCH') {
+            const switchName = event.target.getAttribute('name');
+            const isChecked = event.detail ? event.detail.checked : event.target.hasAttribute('checked');
+            
+            if (switchName === 'admission_status') {
+                this.configData.admission_status = isChecked ? 'open' : 'closed';
+                console.log('🔧 Admission status changed to:', this.configData.admission_status);
+            }
+            return;
+        }
         
         // Handle ui-checkbox components
         if (event.target.tagName === 'UI-CHECKBOX') {

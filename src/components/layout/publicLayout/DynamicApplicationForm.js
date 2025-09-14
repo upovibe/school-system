@@ -187,14 +187,25 @@ class DynamicApplicationForm extends App {
             });
         }
         
-        // Class Applying For (will be populated dynamically based on level selection)
+        // Class Applying For (populated based on current level selection)
+        const currentLevel = this.formData.level_applying;
+        let classOptions = ['Select level first...'];
+        
+        if (currentLevel) {
+            const levelKey = currentLevel.toLowerCase();
+            const levelClasses = this.admissionConfig.level_classes[levelKey];
+            if (levelClasses && levelClasses.length > 0) {
+                classOptions = levelClasses;
+            }
+        }
+        
         fields.push({
             name: 'class_applying',
             label: 'Class Applying For',
             type: 'select',
             required: true,
             enabled: true,
-            options: ['Select level first...']
+            options: classOptions
         });
         
         // Academic Program (for SHS only)
@@ -215,43 +226,48 @@ class DynamicApplicationForm extends App {
     handleLevelChange(selectedLevel) {
         if (!selectedLevel) return;
         
-        const levelKey = selectedLevel.toLowerCase();
-        const levelClasses = this.admissionConfig.level_classes[levelKey];
+        // Update form data with selected level
+        this.formData.level_applying = selectedLevel;
         
-        if (levelClasses && levelClasses.length > 0) {
-            // Update the class dropdown options
-            const classDropdown = this.querySelector('ui-search-dropdown[name="class_applying"]');
-            if (classDropdown) {
-                // Clear existing options
-                classDropdown.innerHTML = '';
-                
-                // Add new options
-                levelClasses.forEach(className => {
-                    const option = document.createElement('ui-option');
-                    option.value = className;
-                    option.textContent = className;
-                    classDropdown.appendChild(option);
-                });
-                
-                // Reset the selected value
-                classDropdown.value = '';
-                this.formData.class_applying = '';
-            }
-        }
+        // Clear class selection since level changed
+        this.formData.class_applying = '';
         
-        // Show/hide academic program based on level
-        const academicProgramField = this.querySelector('ui-search-dropdown[name="academic_program"]');
-        if (academicProgramField) {
-            const parentDiv = academicProgramField.closest('.col-span-1');
-            if (parentDiv) {
-                if (levelKey === 'shs') {
-                    parentDiv.style.display = 'block';
-                } else {
-                    parentDiv.style.display = 'none';
-                    this.formData.academic_program = '';
+        // Re-render to update class options based on new level
+        const html = this.render();
+        this.innerHTML = html;
+        
+        // Restore form values after re-render
+        setTimeout(() => {
+            this.restoreFormValues();
+            
+            // Show/hide academic program based on level
+            const levelKey = selectedLevel.toLowerCase();
+            const academicProgramField = this.querySelector('ui-search-dropdown[name="academic_program"]');
+            if (academicProgramField) {
+                const parentDiv = academicProgramField.closest('.col-span-1');
+                if (parentDiv) {
+                    if (levelKey === 'shs') {
+                        parentDiv.style.display = 'block';
+                    } else {
+                        parentDiv.style.display = 'none';
+                        this.formData.academic_program = '';
+                    }
                 }
             }
-        }
+        }, 100);
+    }
+    
+    restoreFormValues() {
+        // Restore all form values from formData
+        Object.keys(this.formData).forEach(fieldName => {
+            const value = this.formData[fieldName];
+            if (!value) return;
+            
+            const element = this.querySelector(`[name="${fieldName}"]`);
+            if (element) {
+                element.value = value;
+            }
+        });
     }
 
     loadDataFromProps() {

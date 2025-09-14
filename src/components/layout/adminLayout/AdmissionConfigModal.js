@@ -764,7 +764,17 @@ class AdmissionConfigModal extends HTMLElement {
             'level_applying': 'Level Applying For',
             'class_applying': 'Class Applying For',
             'academic_programme': 'Academic Programme',
-            'school_type': 'School Type'
+            'school_type': 'School Type',
+            'blood_group': 'Blood Group',
+            'allergies': 'Allergies',
+            'medical_conditions': 'Medical Conditions',
+            'immunization_card': 'Immunization Card Upload',
+            'birth_certificate': 'Birth Certificate',
+            'passport_photo_doc': 'Passport Photo',
+            'report_card_doc': 'Report Card',
+            'transfer_letter_doc': 'Transfer Letter',
+            'bece_results_doc': 'BECE Results Slip',
+            'immunization_card_doc': 'Immunization Card'
         };
         return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -795,7 +805,17 @@ class AdmissionConfigModal extends HTMLElement {
             'level_applying': 'select',
             'class_applying': 'select',
             'academic_programme': 'select',
-            'school_type': 'select'
+            'school_type': 'select',
+            'blood_group': 'select',
+            'allergies': 'select_multiple',
+            'medical_conditions': 'select_multiple',
+            'immunization_card': 'file',
+            'birth_certificate': 'file',
+            'passport_photo_doc': 'file',
+            'report_card_doc': 'file',
+            'transfer_letter_doc': 'file',
+            'bece_results_doc': 'file',
+            'immunization_card_doc': 'file'
         };
         return types[fieldName] || 'text';
     }
@@ -1105,6 +1125,52 @@ class AdmissionConfigModal extends HTMLElement {
                                     ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'immunization_card') ? 'checked' : ''}
                                     data-field="health_info_fields"
                                     data-field-name="immunization_card">
+                                </ui-checkbox>
+                            </div>
+                        </div>
+
+                        <!-- Section G: Document Upload -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-file-upload mr-2 text-purple-600"></i>Section G: Document Upload
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="Birth Certificate" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'birth_certificate') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="birth_certificate">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Passport Photo" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'passport_photo_doc') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="passport_photo_doc">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Report Card" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'report_card_doc') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="report_card_doc">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Transfer Letter" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'transfer_letter_doc') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="transfer_letter_doc">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="BECE Results Slip" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'bece_results_doc') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="bece_results_doc"
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Immunization Card" 
+                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'immunization_card_doc') ? 'checked' : ''}
+                                    data-field="document_upload_fields"
+                                    data-field-name="immunization_card_doc">
                                 </ui-checkbox>
                             </div>
                         </div>

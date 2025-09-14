@@ -92,9 +92,9 @@ class Migration_20241001000007createadmissionconfigtable {
         
         
         $healthInfoFields = json_encode([
-            ['name' => 'blood_group', 'label' => 'Blood Group', 'required' => false, 'enabled' => false, 'type' => 'select', 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']],
-            ['name' => 'allergies', 'label' => 'Allergies', 'required' => false, 'enabled' => false, 'type' => 'select_multiple', 'options' => ['None', 'Food Allergies', 'Drug Allergies', 'Environmental Allergies', 'Latex', 'Other'], 'allow_other' => true],
-            ['name' => 'medical_conditions', 'label' => 'Medical Conditions', 'required' => false, 'enabled' => false, 'type' => 'select_multiple', 'options' => ['None', 'Asthma', 'Diabetes', 'Epilepsy', 'Heart Condition', 'Other'], 'allow_other' => true],
+            ['name' => 'blood_group', 'label' => 'Blood Group', 'required' => false, 'enabled' => false, 'type' => 'select'],
+            ['name' => 'allergies', 'label' => 'Allergies', 'required' => false, 'enabled' => false, 'type' => 'select_multiple'],
+            ['name' => 'medical_conditions', 'label' => 'Medical Conditions', 'required' => false, 'enabled' => false, 'type' => 'select_multiple'],
             ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file']
         ]);
         

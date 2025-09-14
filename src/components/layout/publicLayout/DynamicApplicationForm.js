@@ -462,20 +462,36 @@ class DynamicApplicationForm extends App {
         return `
             <section class="min-h-screen bg-gray-50">
                 <!-- Header with Banner -->
-                <div class="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                    ${bannerImage ? `
-                        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${bannerImage}');"></div>
-                    ` : ''}
-                    <div class="relative max-w-4xl mx-auto px-6 py-16">
-                        <div class="text-center">
-                            ${applicationLogo ? `
-                                <img src="${applicationLogo}" alt="School Logo" class="h-16 mx-auto mb-4">
+                <div class="mx-auto py-8 px-4">
+                    <div class="relative group rounded-3xl overflow-hidden shadow-2xl mb-8">
+                        <div class="relative h-80 lg:h-96 overflow-hidden">
+                            ${bannerImage ? `
+                                <img src="${bannerImage}" 
+                                     alt="Application Banner" 
+                                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             ` : ''}
-                            <h1 class="text-3xl md:text-4xl font-bold mb-4">
-                                ${applicationName || 'Application Form'}
-                            </h1>
-                            <p class="text-lg opacity-90">Complete your application in a few simple steps</p>
+                            <div class="absolute inset-0 ${bannerImage ? 'hidden' : 'flex'} items-center justify-center bg-gray-100">
+                                <div class="text-center">
+                                    <i class="fas fa-file-alt text-gray-400 text-4xl mb-2"></i>
+                                    <p class="text-gray-500 font-medium">Application banner</p>
+                                </div>
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                            <!-- Overlay content: title and subtitle -->
+                            <div class="absolute inset-0 flex items-center justify-center p-6">
+                                <div class="text-center text-white relative z-10">
+                                    ${applicationLogo ? `
+                                        <img src="${applicationLogo}" alt="School Logo" class="h-16 mx-auto mb-4">
+                                    ` : ''}
+                                    <h2 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                                        ${applicationName || 'Application Form'}
+                                    </h2>
+                                    <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
+                                        Complete your application in a few simple steps
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

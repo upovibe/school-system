@@ -28,9 +28,9 @@ class Migration_20241001000007createadmissionconfigtable {
                 student_info_fields JSON,
                 parent_guardian_fields JSON,
                 academic_background_fields JSON,
-                admission_details_fields JSON,
                 health_info_fields JSON,
                 document_upload_fields JSON,
+                
                 
                 -- Document Requirements
                 required_documents JSON,
@@ -90,12 +90,6 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'transfer_letter', 'label' => 'Transfer Letter', 'required' => false, 'enabled' => true, 'type' => 'file']
         ]);
         
-        $admissionDetailsFields = json_encode([
-            ['name' => 'level_applying', 'label' => 'Level Applying For', 'required' => true, 'enabled' => true, 'type' => 'select'],
-            ['name' => 'class_applying', 'label' => 'Class Applying For', 'required' => true, 'enabled' => true, 'type' => 'select'],
-            ['name' => 'academic_programme', 'label' => 'Academic Programme', 'required' => false, 'enabled' => true, 'type' => 'select', 'for_levels' => ['shs']],
-            ['name' => 'school_type', 'label' => 'School Type', 'required' => true, 'enabled' => true, 'type' => 'select']
-        ]);
         
         $healthInfoFields = json_encode([
             ['name' => 'blood_group', 'label' => 'Blood Group', 'required' => false, 'enabled' => false, 'type' => 'select', 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']],
@@ -126,8 +120,8 @@ class Migration_20241001000007createadmissionconfigtable {
             $stmt = $this->pdo->prepare("
                 INSERT INTO admission_config (
                     academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
-                    student_info_fields, parent_guardian_fields, academic_background_fields, admission_details_fields, health_info_fields, document_upload_fields
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    student_info_fields, parent_guardian_fields, academic_background_fields, health_info_fields, document_upload_fields
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $academicYearId,
@@ -139,7 +133,6 @@ class Migration_20241001000007createadmissionconfigtable {
                 $studentInfoFields,
                 $parentGuardianFields,
                 $academicBackgroundFields,
-                $admissionDetailsFields,
                 $healthInfoFields,
                 $documentUploadFields
             ]);

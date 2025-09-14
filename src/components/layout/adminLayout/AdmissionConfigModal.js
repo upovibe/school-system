@@ -143,7 +143,6 @@ class AdmissionConfigModal extends HTMLElement {
                     student_info_fields: data.student_info_fields ? (typeof data.student_info_fields === 'string' ? JSON.parse(data.student_info_fields) : data.student_info_fields) : [],
                     parent_guardian_fields: data.parent_guardian_fields ? (typeof data.parent_guardian_fields === 'string' ? JSON.parse(data.parent_guardian_fields) : data.parent_guardian_fields) : [],
                     academic_background_fields: data.academic_background_fields ? (typeof data.academic_background_fields === 'string' ? JSON.parse(data.academic_background_fields) : data.academic_background_fields) : [],
-                    admission_details_fields: data.admission_details_fields ? (typeof data.admission_details_fields === 'string' ? JSON.parse(data.admission_details_fields) : data.admission_details_fields) : [],
                     health_info_fields: data.health_info_fields ? (typeof data.health_info_fields === 'string' ? JSON.parse(data.health_info_fields) : data.health_info_fields) : [],
                     document_upload_fields: data.document_upload_fields ? (typeof data.document_upload_fields === 'string' ? JSON.parse(data.document_upload_fields) : data.document_upload_fields) : []
                 };
@@ -221,11 +220,17 @@ class AdmissionConfigModal extends HTMLElement {
             
             // Update visibility of class sections and SHS programmes
             this.updateLevelSectionsVisibility();
+            
+            // Update conditional visibility based on level changes
+            this.updateConditionalVisibility();
         } else if (name === 'enabled_levels') {
             // Handle level checkboxes
             const levels = Array.from(this.querySelectorAll('input[name="enabled_levels"]:checked'))
                 .map(input => input.value);
             this.configData.enabled_levels = levels;
+            
+            // Update conditional visibility based on level changes
+            this.updateConditionalVisibility();
         } else if (name === 'required_documents') {
             // Handle document checkboxes
             const documents = Array.from(this.querySelectorAll('input[name="required_documents"]:checked'))
@@ -294,34 +299,51 @@ class AdmissionConfigModal extends HTMLElement {
             }
         }
 
+        // Update individual level class sections visibility
+        this.updateIndividualLevelClassSections();
+        
         // Update conditional visibility based on Section D settings
         this.updateConditionalVisibility();
     }
 
-    // Update conditional visibility of sections based on Section D field settings
+    // Update individual level class sections visibility
+    updateIndividualLevelClassSections() {
+        const enabledLevels = this.configData.enabled_levels || [];
+        
+        // List of all possible levels
+        const allLevels = ['creche', 'nursery', 'kg1', 'kg2', 'primary', 'jhs', 'shs'];
+        
+        allLevels.forEach(level => {
+            // Find the level class section for this level (using the ID pattern)
+            const levelSection = this.querySelector(`#${level}-classes`);
+            if (levelSection) {
+                const isLevelEnabled = enabledLevels.includes(level);
+                levelSection.style.display = isLevelEnabled ? '' : 'none';
+                
+                // Clear classes for disabled levels
+                if (!isLevelEnabled) {
+                    if (!this.configData.level_classes) {
+                        this.configData.level_classes = {};
+                    }
+                    this.configData.level_classes[level] = [];
+                    
+                    // Also clear SHS programmes if SHS is disabled
+                    if (level === 'shs') {
+                        this.configData.shs_programmes = [];
+                    }
+                }
+            }
+        });
+    }
+
+    // Update conditional visibility of sections based on enabled levels
     updateConditionalVisibility() {
-        // Update School Types section visibility
-        const schoolTypesSection = this.querySelector('.mb-6:has([data-field="school_types"])');
-        if (schoolTypesSection) {
-            schoolTypesSection.style.display = this.isSchoolTypeEnabled() ? '' : 'none';
-        }
-
-        // Update Enabled Levels section visibility
-        const enabledLevelsSection = this.querySelector('.mb-6:has([data-field="enabled_levels"])');
-        if (enabledLevelsSection) {
-            enabledLevelsSection.style.display = this.isLevelApplyingEnabled() ? '' : 'none';
-        }
-
-        // Update Level Classes Configuration section visibility
+        // Update Level Classes Configuration section visibility (School Setup)
+        // Only show if there are enabled levels selected
         const levelClassesSection = this.querySelector('.bg-gradient-to-r.from-purple-50.to-violet-50');
         if (levelClassesSection) {
-            levelClassesSection.style.display = this.isLevelApplyingEnabled() ? '' : 'none';
-        }
-
-        // Update Class Applying For checkbox visibility
-        const classApplyingCheckbox = this.querySelector('[data-field-name="class_applying"]');
-        if (classApplyingCheckbox) {
-            classApplyingCheckbox.style.display = this.hasEnabledLevelsWithClasses() ? '' : 'none';
+            const hasEnabledLevels = this.configData.enabled_levels && this.configData.enabled_levels.length > 0;
+            levelClassesSection.style.display = hasEnabledLevels ? '' : 'none';
         }
     }
 
@@ -341,10 +363,8 @@ class AdmissionConfigModal extends HTMLElement {
         }
         
         if (!enabledLevels || enabledLevels.length === 0) {
-            console.log('❌ No enabled levels, using defaults for testing');
-            // For testing, let's use some default levels
-            this.configData.enabled_levels = ['primary', 'jhs', 'shs'];
-            this.generateLevelClasses();
+            console.log('❌ No enabled levels, clearing container');
+            container.innerHTML = '';
             return;
         }
         
@@ -459,10 +479,17 @@ class AdmissionConfigModal extends HTMLElement {
 
     // Generate SHS programmes dynamically
     generateSHSProgrammes() {
+        const enabledLevels = this.configData.enabled_levels || [];
         const programmes = this.configData.shs_programmes || [''];
         const container = this.querySelector('#shs-programmes-container');
         
         if (!container) return;
+        
+        // Only generate SHS programmes if SHS is enabled
+        if (!enabledLevels.includes('shs')) {
+            container.innerHTML = '';
+            return;
+        }
         
         // Ensure we have at least one empty programme input
         const programmesToShow = programmes.length > 0 ? programmes : [''];
@@ -538,15 +565,6 @@ class AdmissionConfigModal extends HTMLElement {
         });
     }
 
-    // Check if school type field is enabled in admission details
-    isSchoolTypeEnabled() {
-        return this.isFieldEnabled('admission_details_fields', 'school_type');
-    }
-
-    // Check if level applying field is enabled in admission details
-    isLevelApplyingEnabled() {
-        return this.isFieldEnabled('admission_details_fields', 'level_applying');
-    }
 
     // Uncheck Class Applying For field
     uncheckClassApplying() {
@@ -712,19 +730,6 @@ class AdmissionConfigModal extends HTMLElement {
             checkbox.setAttribute('checked', '');
         } else {
             checkbox.removeAttribute('checked');
-        }
-        
-        // Special handling for Level Applying For
-        if (section === 'admission_details_fields' && fieldName === 'level_applying') {
-            if (!field.enabled) {
-                // If Level Applying For is unchecked, also uncheck Class Applying For and Academic Program
-                this.uncheckClassApplying();
-                this.uncheckAcademicProgram();
-            } else {
-                // If Level Applying For is checked, also check Class Applying For and Academic Program
-                this.checkClassApplying();
-                this.checkAcademicProgram();
-            }
         }
         
         console.log(`🔧 Field ${fieldName} in ${section} is now ${field.enabled ? 'enabled' : 'disabled'}`);
@@ -1071,40 +1076,6 @@ class AdmissionConfigModal extends HTMLElement {
                             </div>
                         </div>
 
-                        <!-- Section D: Admission Details -->
-                        <div class="mb-6"></div>
-                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-clipboard-list mr-2 text-red-600"></i>Section D: Admission Details
-                            </h4>
-                            <div class="grid grid-cols-2 gap-3">
-                                <ui-checkbox 
-                                    label="School Type" 
-                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'school_type') ? 'checked' : ''}
-                                    data-field="admission_details_fields"
-                                    data-field-name="school_type">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Level Applying For" 
-                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'level_applying') ? 'checked' : ''}
-                                    data-field="admission_details_fields"
-                                    data-field-name="level_applying">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Class Applying For" 
-                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'class_applying') ? 'checked' : ''}
-                                    data-field="admission_details_fields"
-                                    data-field-name="class_applying"
-                                    ${this.hasEnabledLevelsWithClasses() ? '' : 'style="display: none;"'}>
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Academic Programme" 
-                                    ${this.configData.admission_details_fields && this.isFieldEnabled('admission_details_fields', 'academic_programme') ? 'checked' : ''}
-                                    data-field="admission_details_fields"
-                                    data-field-name="academic_programme"
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
-                                </ui-checkbox>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- School Setup Configuration -->
@@ -1115,7 +1086,7 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                         
                         <!-- School Types -->
-                        <div class="mb-6" ${!this.isSchoolTypeEnabled() ? 'style="display: none;"' : ''}>
+                        <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 <i class="fas fa-building mr-1"></i>School Types (Applicant Selection Options)
                             </label>
@@ -1137,7 +1108,7 @@ class AdmissionConfigModal extends HTMLElement {
                         </div>
                         
                         <!-- Enabled Levels -->
-                        <div class="mb-6" ${!this.isLevelApplyingEnabled() ? 'style="display: none;"' : ''}>
+                        <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 <i class="fas fa-graduation-cap mr-1"></i>Enabled Levels
                             </label>

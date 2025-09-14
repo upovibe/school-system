@@ -53,6 +53,7 @@ class DynamicApplicationForm extends App {
 
     determineEnabledSections() {
         this.enabledSections = [];
+        console.log('Determining enabled sections...');
         
         // Check each section based on enabled fields
         if (this.hasEnabledFields('student_info_fields')) {
@@ -62,6 +63,7 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-user',
                 color: 'blue'
             });
+            console.log('Added student-info section');
         }
         
         if (this.hasEnabledFields('parent_guardian_fields')) {
@@ -71,6 +73,7 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-users',
                 color: 'green'
             });
+            console.log('Added parent-guardian section');
         }
         
         if (this.hasEnabledFields('academic_background_fields')) {
@@ -80,6 +83,7 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-graduation-cap',
                 color: 'yellow'
             });
+            console.log('Added academic-background section');
         }
         
         if (this.hasEnabledFields('health_info_fields')) {
@@ -89,6 +93,7 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-heartbeat',
                 color: 'red'
             });
+            console.log('Added health-info section');
         }
         
         if (this.hasEnabledFields('document_upload_fields')) {
@@ -98,7 +103,10 @@ class DynamicApplicationForm extends App {
                 icon: 'fas fa-file-upload',
                 color: 'purple'
             });
+            console.log('Added document-upload section');
         }
+        
+        console.log('Total enabled sections:', this.enabledSections.length);
     }
 
     hasEnabledFields(sectionName) {
@@ -258,10 +266,14 @@ class DynamicApplicationForm extends App {
     }
 
     navigateToSection(sectionIndex) {
+        console.log('Navigating to section:', sectionIndex, 'Total sections:', this.enabledSections.length);
         if (sectionIndex >= 0 && sectionIndex < this.enabledSections.length) {
             this.currentSection = sectionIndex;
+            console.log('Current section set to:', this.currentSection);
             this.render();
             this.scrollToCurrentSection();
+        } else {
+            console.error('Invalid section index:', sectionIndex, 'Available sections:', this.enabledSections.length);
         }
     }
 
@@ -536,6 +548,8 @@ class DynamicApplicationForm extends App {
     }
 
     render() {
+        console.log('Rendering form - Current section:', this.currentSection, 'Total sections:', this.enabledSections.length);
+        
         if (!this.admissionConfig) {
             return `
                 <div class="container flex items-center justify-center mx-auto p-8">
@@ -602,7 +616,7 @@ class DynamicApplicationForm extends App {
                         ${this.renderProgressBar()}
                         
                         <!-- Current Section -->
-                        ${this.renderSection(this.enabledSections[this.currentSection])}
+                        ${this.enabledSections[this.currentSection] ? this.renderSection(this.enabledSections[this.currentSection]) : ''}
                         
                         <!-- Navigation Buttons -->
                         <div class="flex justify-between items-center mt-8">

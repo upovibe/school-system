@@ -124,6 +124,17 @@ class DynamicApplicationForm extends App {
         });
     }
 
+    initializeFormDataForCurrentSection() {
+        // Initialize form data for the current section only
+        const currentSectionId = this.enabledSections[this.currentSection].id;
+        const sectionFields = this.getSectionFields(currentSectionId);
+        sectionFields.forEach(field => {
+            if (!(field.name in this.formData)) {
+                this.formData[field.name] = '';
+            }
+        });
+    }
+
     getSectionFields(sectionId) {
         const sectionMap = {
             'student-info': this.admissionConfig.student_info_fields || [],
@@ -133,7 +144,14 @@ class DynamicApplicationForm extends App {
             'document-upload': this.admissionConfig.document_upload_fields || []
         };
         
-        return (sectionMap[sectionId] || []).filter(field => field.enabled);
+        const allFields = sectionMap[sectionId] || [];
+        const enabledFields = allFields.filter(field => field.enabled);
+        
+        console.log('Section ID:', sectionId);
+        console.log('All fields for section:', allFields);
+        console.log('Enabled fields for section:', enabledFields);
+        
+        return enabledFields;
     }
 
     loadDataFromProps() {
@@ -270,8 +288,20 @@ class DynamicApplicationForm extends App {
         if (sectionIndex >= 0 && sectionIndex < this.enabledSections.length) {
             this.currentSection = sectionIndex;
             console.log('Current section set to:', this.currentSection);
-            this.render();
-            this.scrollToCurrentSection();
+            
+            // Reinitialize form data for the new section
+            this.initializeFormDataForCurrentSection();
+            
+            const html = this.render();
+            console.log('Generated HTML length:', html.length);
+            console.log('Setting innerHTML...');
+            this.innerHTML = html;
+            console.log('innerHTML set, calling scrollToCurrentSection...');
+            
+            // Small delay to ensure DOM is updated
+            setTimeout(() => {
+                this.scrollToCurrentSection();
+            }, 100);
         } else {
             console.error('Invalid section index:', sectionIndex, 'Available sections:', this.enabledSections.length);
         }
@@ -425,8 +455,14 @@ class DynamicApplicationForm extends App {
     }
 
     renderSection(section) {
+        console.log('Rendering section:', section);
         const sectionFields = this.getSectionFields(section.id);
-        if (!sectionFields.length) return '';
+        console.log('Section fields for', section.id, ':', sectionFields);
+        
+        if (!sectionFields.length) {
+            console.log('No fields found for section:', section.id);
+            return '';
+        }
 
         return `
             <div data-section="${section.id}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -571,6 +607,10 @@ class DynamicApplicationForm extends App {
         const applicationLogo = this.get('applicationLogo');
         const applicationName = this.get('applicationName');
         const bannerImage = this.get('contactBannerImage');
+
+        const currentSectionData = this.enabledSections[this.currentSection];
+        console.log('Current section data for rendering:', currentSectionData);
+        console.log('About to render section with ID:', currentSectionData?.id);
 
         return `
             <section class="min-h-screen bg-gray-50">

@@ -55,6 +55,14 @@ class DynamicApplicationForm extends App {
     determineEnabledSections() {
         this.enabledSections = [];
         
+        // Always add School Setup as the first section
+        this.enabledSections.push({
+            id: 'school-setup',
+            title: 'School Setup',
+            icon: 'fas fa-school',
+            color: 'indigo'
+        });
+        
         // Check each section based on enabled fields
         if (this.hasEnabledFields('student_info_fields')) {
             this.enabledSections.push({
@@ -129,6 +137,11 @@ class DynamicApplicationForm extends App {
     }
 
     getSectionFields(sectionId) {
+        if (sectionId === 'school-setup') {
+            // Generate school setup fields based on admission config
+            return this.generateSchoolSetupFields();
+        }
+        
         const sectionMap = {
             'student-info': this.admissionConfig.student_info_fields || [],
             'parent-guardian': this.admissionConfig.parent_guardian_fields || [],
@@ -141,6 +154,104 @@ class DynamicApplicationForm extends App {
         const enabledFields = allFields.filter(field => field.enabled);
         
         return enabledFields;
+    }
+
+    generateSchoolSetupFields() {
+        const fields = [];
+        
+        // School Type selection
+        if (this.admissionConfig.school_types && this.admissionConfig.school_types.length > 0) {
+            fields.push({
+                name: 'school_type',
+                label: 'School Type',
+                type: 'select',
+                required: true,
+                enabled: true,
+                options: this.admissionConfig.school_types.map(type => 
+                    type.charAt(0).toUpperCase() + type.slice(1)
+                )
+            });
+        }
+        
+        // Level Applying For
+        if (this.admissionConfig.enabled_levels && this.admissionConfig.enabled_levels.length > 0) {
+            fields.push({
+                name: 'level_applying',
+                label: 'Level Applying For',
+                type: 'select',
+                required: true,
+                enabled: true,
+                options: this.admissionConfig.enabled_levels.map(level => 
+                    level.charAt(0).toUpperCase() + level.slice(1)
+                )
+            });
+        }
+        
+        // Class Applying For (will be populated dynamically based on level selection)
+        fields.push({
+            name: 'class_applying',
+            label: 'Class Applying For',
+            type: 'select',
+            required: true,
+            enabled: true,
+            options: ['Select level first...']
+        });
+        
+        // Academic Program (for SHS only)
+        if (this.admissionConfig.shs_programmes && this.admissionConfig.shs_programmes.length > 0) {
+            fields.push({
+                name: 'academic_program',
+                label: 'Academic Program',
+                type: 'select',
+                required: false,
+                enabled: true,
+                options: this.admissionConfig.shs_programmes
+            });
+        }
+        
+        return fields;
+    }
+
+    handleLevelChange(selectedLevel) {
+        if (!selectedLevel) return;
+        
+        const levelKey = selectedLevel.toLowerCase();
+        const levelClasses = this.admissionConfig.level_classes[levelKey];
+        
+        if (levelClasses && levelClasses.length > 0) {
+            // Update the class dropdown options
+            const classDropdown = this.querySelector('ui-search-dropdown[name="class_applying"]');
+            if (classDropdown) {
+                // Clear existing options
+                classDropdown.innerHTML = '';
+                
+                // Add new options
+                levelClasses.forEach(className => {
+                    const option = document.createElement('ui-option');
+                    option.value = className;
+                    option.textContent = className;
+                    classDropdown.appendChild(option);
+                });
+                
+                // Reset the selected value
+                classDropdown.value = '';
+                this.formData.class_applying = '';
+            }
+        }
+        
+        // Show/hide academic program based on level
+        const academicProgramField = this.querySelector('ui-search-dropdown[name="academic_program"]');
+        if (academicProgramField) {
+            const parentDiv = academicProgramField.closest('.col-span-1');
+            if (parentDiv) {
+                if (levelKey === 'shs') {
+                    parentDiv.style.display = 'block';
+                } else {
+                    parentDiv.style.display = 'none';
+                    this.formData.academic_program = '';
+                }
+            }
+        }
     }
 
     loadDataFromProps() {
@@ -221,6 +332,13 @@ class DynamicApplicationForm extends App {
             if (e.target.matches('ui-input[type="file"]')) {
                 this.formData[e.target.name] = e.target.files ? e.target.files[0] : null;
                 this.updateProgress();
+            }
+        });
+
+        // Handle level selection change for dynamic class options
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-search-dropdown[name="level_applying"]')) {
+                this.handleLevelChange(e.target.value);
             }
         });
     }

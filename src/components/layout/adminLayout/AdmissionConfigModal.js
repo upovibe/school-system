@@ -830,16 +830,33 @@ class AdmissionConfigModal extends HTMLElement {
                 return;
             }
 
+            // Prepare data for saving (exclude non-database fields)
+            const saveData = {
+                academic_year_id: this.configData.academic_year_id,
+                admission_status: this.configData.admission_status,
+                max_applications_per_ip_per_day: this.configData.max_applications_per_ip_per_day,
+                enabled_levels: this.configData.enabled_levels,
+                level_classes: this.configData.level_classes,
+                shs_programmes: this.configData.shs_programmes,
+                school_types: this.configData.school_types,
+                required_documents: this.configData.required_documents,
+                student_info_fields: this.configData.student_info_fields,
+                parent_guardian_fields: this.configData.parent_guardian_fields,
+                academic_background_fields: this.configData.academic_background_fields,
+                health_info_fields: this.configData.health_info_fields,
+                document_upload_fields: this.configData.document_upload_fields
+            };
+
             // Get current config ID or create new one
             const currentConfig = await api.withToken(token).get('/admission/config');
             let response;
 
             if (currentConfig.data.success && currentConfig.data.data) {
                 // Update existing config
-                response = await api.withToken(token).put(`/admission-configs/${currentConfig.data.data.id}`, this.configData);
+                response = await api.withToken(token).put(`/admission-configs/${currentConfig.data.data.id}`, saveData);
             } else {
                 // Create new config
-                response = await api.withToken(token).post('/admission-configs', this.configData);
+                response = await api.withToken(token).post('/admission-configs', saveData);
             }
             
             Toast.show({

@@ -1076,6 +1076,39 @@ class AdmissionConfigModal extends HTMLElement {
                             </div>
                         </div>
 
+                        <!-- Section F: Health Information -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                                <i class="fas fa-heartbeat mr-2 text-red-600"></i>Section F: Health Information
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <ui-checkbox 
+                                    label="Blood Group" 
+                                    ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'blood_group') ? 'checked' : ''}
+                                    data-field="health_info_fields"
+                                    data-field-name="blood_group">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Allergies" 
+                                    ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'allergies') ? 'checked' : ''}
+                                    data-field="health_info_fields"
+                                    data-field-name="allergies">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Medical Conditions" 
+                                    ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'medical_conditions') ? 'checked' : ''}
+                                    data-field="health_info_fields"
+                                    data-field-name="medical_conditions">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Immunization Card Upload" 
+                                    ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'immunization_card') ? 'checked' : ''}
+                                    data-field="health_info_fields"
+                                    data-field-name="immunization_card">
+                                </ui-checkbox>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- School Setup Configuration -->

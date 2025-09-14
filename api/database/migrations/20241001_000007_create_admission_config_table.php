@@ -50,8 +50,9 @@ class Migration_20241001000007createadmissionconfigtable {
         ");
 
         // Insert default config (sample)
-        $enabledLevels = json_encode(['nursery', 'kindergarten', 'primary', 'jhs', 'shs']);
+        $enabledLevels = json_encode(['creche', 'nursery', 'kindergarten', 'primary', 'jhs', 'shs']);
         $levelClasses = json_encode([
+            'creche' => ['Creche'],
             'nursery' => ['N1', 'N2'],
             'kindergarten' => ['KG1', 'KG2'],
             'primary' => ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],

@@ -94,6 +94,11 @@ class AdmissionConfigModel extends BaseModel {
         return $config ? json_decode($config['enabled_levels'], true) : [];
     }
 
+    // Get all available school levels
+    public function getAllSchoolLevels() {
+        return ['creche', 'nursery', 'kindergarten', 'primary', 'jhs', 'shs'];
+    }
+
     // Get classes for a specific level
     public function getClassesForLevel($level) {
         $config = $this->getCurrentConfig();

@@ -27,8 +27,11 @@ class AdmissionConfigModal extends HTMLElement {
             academic_year_name: '',
             admission_status: 'open',
             max_applications_per_ip_per_day: 3,
-            enabled_levels: ['primary', 'jhs', 'shs'],
+            enabled_levels: ['creche', 'nursery', 'kindergarten', 'primary', 'jhs', 'shs'],
             level_classes: {
+                creche: ['Creche'],
+                nursery: ['N1', 'N2'],
+                kindergarten: ['KG1', 'KG2'],
                 primary: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
                 jhs: ['JHS1', 'JHS2', 'JHS3'],
                 shs: ['SHS1', 'SHS2', 'SHS3']
@@ -311,7 +314,7 @@ class AdmissionConfigModal extends HTMLElement {
         const enabledLevels = this.configData.enabled_levels || [];
         
         // List of all possible levels
-        const allLevels = ['creche', 'nursery', 'kg1', 'kg2', 'primary', 'jhs', 'shs'];
+        const allLevels = ['creche', 'nursery', 'kindergarten', 'primary', 'jhs', 'shs'];
         
         allLevels.forEach(level => {
             // Find the level class section for this level (using the ID pattern)
@@ -370,12 +373,12 @@ class AdmissionConfigModal extends HTMLElement {
         
         // Level display names
         const levelInfo = {
-            'primary': 'Primary Classes',
-            'jhs': 'JHS Classes', 
-            'shs': 'SHS Classes',
             'creche': 'Creche Classes',
             'nursery': 'Nursery Classes',
-            'kg': 'KG Classes'
+            'kindergarten': 'Kindergarten Classes',
+            'primary': 'Primary Classes',
+            'jhs': 'JHS Classes', 
+            'shs': 'SHS Classes'
         };
         
         let html = '';
@@ -1225,10 +1228,10 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-value="nursery">
                                 </ui-checkbox>
                                 <ui-checkbox 
-                                    label="Kindergarten (KG)" 
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('kg') ? 'checked' : ''}
+                                    label="Kindergarten" 
+                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('kindergarten') ? 'checked' : ''}
                                     data-field="enabled_levels"
-                                    data-value="kg">
+                                    data-value="kindergarten">
                                 </ui-checkbox>
                                 <ui-checkbox 
                                     label="Primary" 

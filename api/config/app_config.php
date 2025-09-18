@@ -9,8 +9,8 @@ return [
     ],
     'mail' => [
         'host' => 'mboxhosting.com',
-        'port' => 465,
-        'encryption' => 'ssl',
+        'port' => isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'school.ntubedglobal.com' ? 25 : 465,
+        'encryption' => isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'school.ntubedglobal.com' ? 'none' : 'ssl',
         'username' => 'info@piwcfranklincitytn.org',
         'password' => 'Piwc@FC2025',
         'from_address' => 'info@piwcfranklincitytn.org',

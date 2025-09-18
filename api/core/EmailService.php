@@ -100,22 +100,28 @@ class EmailService {
      */
     private function sendViaSmtp($to, $subject, $message, $config) {
         if (!$config['host'] || !$config['username'] || !$config['password']) {
-            error_log('SMTP configuration incomplete. Please check your .env file.');
+            error_log('SMTP configuration incomplete. Please check your configuration.');
             return false;
         }
 
+        error_log("Attempting SMTP connection to {$config['host']}:{$config['port']} with {$config['encryption']}");
+
         // Create SMTP connection based on encryption type
         if ($config['encryption'] == 'ssl') {
-            // Use SSL connection
+            // Use SSL connection with more permissive SSL context
             $context = stream_context_create([
                 'ssl' => [
                     'verify_peer' => false,
                     'verify_peer_name' => false,
                     'allow_self_signed' => true,
+                    'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT,
+                    'ciphers' => 'HIGH:!SSLv2:!SSLv3'
                 ]
             ]);
             
             $connectionString = "ssl://{$config['host']}:{$config['port']}";
+            error_log("Attempting SSL connection: $connectionString");
+            
             $smtp = @stream_socket_client(
                 $connectionString, 
                 $errno, 
@@ -124,22 +130,47 @@ class EmailService {
                 STREAM_CLIENT_CONNECT,
                 $context
             );
+        } elseif ($config['encryption'] == 'tls') {
+            // Use regular connection for TLS (will upgrade later)
+            error_log("Attempting TLS connection to {$config['host']}:{$config['port']}");
+            $smtp = @fsockopen($config['host'], $config['port'], $errno, $errstr, $config['timeout']);
         } else {
-            // Use regular connection
+            // Use regular connection (plain or none)
+            error_log("Attempting plain connection to {$config['host']}:{$config['port']}");
             $smtp = @fsockopen($config['host'], $config['port'], $errno, $errstr, $config['timeout']);
         }
 
         if (!$smtp) {
-            error_log("SMTP connection failed: $errstr ($errno)");
-            return false;
+            error_log("SMTP connection failed: $errstr ($errno) - Host: {$config['host']}:{$config['port']}");
+            
+            // Try alternative connection method if SSL fails
+            if ($config['encryption'] == 'ssl') {
+                error_log("SSL connection failed, trying alternative method...");
+                
+                // Try connecting to port 587 with TLS instead
+                $smtp = @fsockopen($config['host'], 587, $errno, $errstr, $config['timeout']);
+                if ($smtp) {
+                    error_log("Alternative connection successful on port 587");
+                    $config['port'] = 587;
+                    $config['encryption'] = 'tls';
+                } else {
+                    error_log("Alternative connection also failed: $errstr ($errno)");
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
 
         // Read server greeting
         $response = fgets($smtp, 515);
         if (!$response) {
+            error_log("SMTP: No response from server greeting");
             fclose($smtp);
             return false;
         }
+        
+        error_log("SMTP greeting response: " . trim($response));
         
         if (substr($response, 0, 3) != '220') {
             error_log("SMTP greeting failed: $response");
@@ -161,7 +192,7 @@ class EmailService {
             return false;
         }
 
-        // Start TLS if required (only for non-SSL connections)
+        // Start TLS if required (only for TLS encryption, skip for 'none')
         if ($config['encryption'] == 'tls') {
             fputs($smtp, "STARTTLS\r\n");
             $response = fgets($smtp, 515);
@@ -185,6 +216,7 @@ class EmailService {
         }
 
         // Authenticate
+        error_log("SMTP: Starting authentication for user: " . $config['username']);
         fputs($smtp, "AUTH LOGIN\r\n");
         $response = fgets($smtp, 515);
         if (substr($response, 0, 3) != '334') {
@@ -193,6 +225,7 @@ class EmailService {
             return false;
         }
 
+        error_log("SMTP: Sending username...");
         fputs($smtp, base64_encode($config['username']) . "\r\n");
         $response = fgets($smtp, 515);
         if (substr($response, 0, 3) != '334') {
@@ -201,13 +234,17 @@ class EmailService {
             return false;
         }
 
+        error_log("SMTP: Sending password...");
         fputs($smtp, base64_encode($config['password']) . "\r\n");
         $response = fgets($smtp, 515);
         if (substr($response, 0, 3) != '235') {
             error_log("Password authentication failed: $response");
+            error_log("SMTP: Check if username/password are correct for " . $config['username']);
             fclose($smtp);
             return false;
         }
+        
+        error_log("SMTP: Authentication successful!");
 
         // Send MAIL FROM
         fputs($smtp, "MAIL FROM: <" . $this->config['from']['address'] . ">\r\n");
@@ -259,6 +296,7 @@ class EmailService {
         fputs($smtp, "QUIT\r\n");
         fclose($smtp);
         
+        error_log("SMTP: Email sent successfully to $to");
         return true;
     }
 } 

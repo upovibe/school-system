@@ -537,27 +537,22 @@ class DynamicApplicationForm extends App {
         
         // Map frontend field names to database column names
         const fieldMapping = {
-            // School Setup fields
-            'level_applying': 'level_applied',
-            'class_applying': 'class_applied',
-            'academic_program': 'programme_applied',
-            // school_type stays the same
+            // School Setup fields - now match exactly
+            'academic_program': 'academic_programme',
+            // level_applying, class_applying, school_type stay the same
             
-            // Student Information fields
-            'first_name': 'student_first_name',
-            'middle_name': 'student_middle_name',
-            'last_name': 'student_last_name',
-            // gender, date_of_birth, place_of_birth, nationality, religion stay the same
+            // Student Information fields - now match exactly
+            // first_name, middle_name, last_name, gender, date_of_birth, place_of_birth, nationality, religion, student_phone, email stay the same
             
-            // Parent/Guardian fields
-            'guardian_name': 'parent_guardian_name',
-            'guardian_phone': 'parent_phone',
-            'guardian_email': 'parent_email',
-            'guardian_occupation': 'parent_occupation',
-            'emergency_contact': 'emergency_contact',
+            // Parent/Guardian fields - now match exactly
+            'guardian_name': 'parent_full_name',
+            'guardian_phone': 'phone_number',
+            'guardian_email': 'email',
+            'guardian_occupation': 'occupation',
             'address': 'residential_address',
+            // emergency_contact stays the same
             
-            // Academic Background fields
+            // Academic Background fields - now match exactly
             'previous_school_name': 'previous_school',
             'last_grade_completed': 'last_class_completed'
         };
@@ -574,6 +569,8 @@ class DynamicApplicationForm extends App {
         // Remove fields that don't exist in database or need special handling
         const fieldsToRemove = [
             'passport_photo', // This field doesn't exist in database
+            'uploaded_documents', // This field doesn't exist in database
+            'additional_data', // This field doesn't exist in database
             // Add other fields that should be handled separately
         ];
         
@@ -586,16 +583,6 @@ class DynamicApplicationForm extends App {
         // Handle health info as JSON
         if (mappedData.health_info && typeof mappedData.health_info === 'object') {
             mappedData.health_info = JSON.stringify(mappedData.health_info);
-        }
-        
-        // Handle uploaded documents as JSON
-        if (mappedData.uploaded_documents && typeof mappedData.uploaded_documents === 'object') {
-            mappedData.uploaded_documents = JSON.stringify(mappedData.uploaded_documents);
-        }
-        
-        // Handle additional data as JSON
-        if (mappedData.additional_data && typeof mappedData.additional_data === 'object') {
-            mappedData.additional_data = JSON.stringify(mappedData.additional_data);
         }
         
         // Remove empty values to avoid database errors

@@ -65,12 +65,12 @@ class ApplicationController {
             // Fetch the created application (to get applicant_number)
             $application = (new ApplicationModel($this->pdo))->findById($id);
             // Prepare email variables
-            $applicantName = $application['student_first_name'] . ' ' . $application['student_last_name'];
+            $applicantName = $application['first_name'] . ' ' . $application['last_name'];
             $applicantNumber = $application['applicant_number'];
-            $grade = $application['grade'];
+            $grade = $application['class_applying'];
             $schoolName = $this->getSchoolName();
             $applicantEmail = $application['email'];
-            $parentPhone = $application['parent_phone'];
+            $parentPhone = $application['phone_number'];
             // Send email to applicant (if email provided)
             $emailService = new EmailService();
             $applicantEmailSent = false;

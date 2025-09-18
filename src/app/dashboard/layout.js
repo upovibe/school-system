@@ -377,56 +377,6 @@ class DashboardLayout extends App {
                     ]
                 },
             ],
-            parent: [
-                {
-                    group: 'Dashboard',
-                    items: [
-                        { label: 'Home', icon: 'fas fa-users', href: '/dashboard/parent' },
-                    ]
-                },
-                {
-                    group: 'Family',
-                    items: [
-                        { label: 'Children', icon: 'fas fa-child', href: '/dashboard/parent/children' },
-                        { label: 'Reports', icon: 'fas fa-chart-pie', href: '/dashboard/parent/reports' },
-                        { label: 'Messages', icon: 'fas fa-comments', href: '/dashboard/parent/messages' },
-                    ]
-                },
-                {
-                    group: 'Communication',
-                    items: [
-                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/parent/announcements' },
-                    ]
-                },
-                {
-                    group: 'Reports',
-                    items: [
-                        { label: 'Student Grade Report', icon: 'fas fa-clipboard-list', href: '/dashboard/student-grade-report' },
-                    ]
-                }
-            ],
-            staff: [
-                {
-                    group: 'Dashboard',
-                    items: [
-                        { label: 'Home', icon: 'fas fa-user-tie', href: '/dashboard/staff' },
-                    ]
-                },
-                {
-                    group: 'Work',
-                    items: [
-                        { label: 'Admin', icon: 'fas fa-clipboard-list', href: '/dashboard/staff/admin' },
-                        { label: 'Reports', icon: 'fas fa-file-alt', href: '/dashboard/staff/reports' },
-                        { label: 'Support', icon: 'fas fa-headset', href: '/dashboard/staff/support' },
-                    ]
-                },
-                {
-                    group: 'Communication',
-                    items: [
-                        { label: 'Announcements', icon: 'fas fa-bullhorn', href: '/dashboard/staff/announcements' },
-                    ]
-                }
-            ],
             cashier: [
                     {
                         group: 'Dashboard',
@@ -437,7 +387,7 @@ class DashboardLayout extends App {
                                        {
                        group: 'Finance Management',
                        items: [
-                           { label: 'Payment Scheduler', icon: 'fas fa-calendar-alt', href: '/dashboard/cashier/payment-scheduler' },
+                           { label: 'Fee Scheduler', icon: 'fas fa-calendar-alt', href: '/dashboard/cashier/payment-scheduler' },
                            { label: 'Payment', icon: 'fas fa-credit-card', href: '/dashboard/cashier/payment' },
                            { label: 'Invoices', icon: 'fas fa-file-invoice', href: '/dashboard/cashier/invoices' },
                            { label: 'Receipts', icon: 'fas fa-receipt', href: '/dashboard/cashier/receipts' },

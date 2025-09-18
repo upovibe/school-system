@@ -19,6 +19,7 @@ class CashierPage extends App {
     this.collectionRateSummary = null;
     this.classes = [];
     this.gradingPeriods = [];
+    this.paymentSummaryByPeriod = null;
   }
 
   connectedCallback() {
@@ -227,6 +228,22 @@ class CashierPage extends App {
     } catch (error) {
       console.error('❌ Error loading grading periods:', error);
       this.gradingPeriods = [];
+    }
+  }
+
+  async loadPaymentSummaryByPeriod(token) {
+    try {
+      const response = await api.withToken(token).get('/cashier/payment-summary-by-period');
+      if (response?.data?.success && response.data.data) {
+        this.paymentSummaryByPeriod = response.data;
+        console.log('✅ Payment summary by period loaded for cashier:', this.paymentSummaryByPeriod);
+      } else {
+        console.warn('⚠️ No payment summary by period data available');
+        this.paymentSummaryByPeriod = null;
+      }
+    } catch (error) {
+      console.error('❌ Error loading payment summary by period:', error);
+      this.paymentSummaryByPeriod = null;
     }
   }
 
@@ -658,6 +675,9 @@ class CashierPage extends App {
       
       // Load grading periods data
       await this.loadGradingPeriods(token);
+      
+      // Load payment summary by period
+      await this.loadPaymentSummaryByPeriod(token);
 
       // Fetch financial data
       const [invoicesResp, paymentsResp, receiptsResp, studentsResp] = await Promise.all([
@@ -818,6 +838,70 @@ class CashierPage extends App {
               </div>
             </div>
           `}
+
+          <!-- Payment Summary by Grading Period -->
+          ${!loading && this.paymentSummaryByPeriod ? `
+            <div class="mt-6">
+              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-lg font-semibold text-white">Payment Summary by Grading Period</h3>
+                  <div class="text-sm text-green-100">
+                    Academic Year: ${this.paymentSummaryByPeriod.academic_year?.display_name || this.paymentSummaryByPeriod.academic_year?.year_code || 'N/A'}
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  ${this.paymentSummaryByPeriod.data.map(period => `
+                    <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-30">
+                      <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-white truncate">${period.period_name}</h4>
+                        ${period.is_active ? '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">Active</span>' : ''}
+                      </div>
+                      <div class="space-y-1">
+                        <div class="flex justify-between text-xs">
+                          <span class="text-green-100">Received:</span>
+                          <span class="text-white font-semibold">₵${period.total_received.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                          <span class="text-green-100">Expected:</span>
+                          <span class="text-white">₵${period.total_expected.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                          <span class="text-green-100">Rate:</span>
+                          <span class="text-white font-semibold">${period.collection_rate}%</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                          <span class="text-green-100">Students:</span>
+                          <span class="text-white">${period.students_paid}/${period.total_students}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                ${this.paymentSummaryByPeriod.summary ? `
+                  <div class="mt-4 pt-3 border-t border-white border-opacity-30">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <div class="text-lg font-bold text-white">₵${this.paymentSummaryByPeriod.summary.total_received.toFixed(2)}</div>
+                        <div class="text-xs text-green-100">Total Received</div>
+                      </div>
+                      <div>
+                        <div class="text-lg font-bold text-white">₵${this.paymentSummaryByPeriod.summary.total_expected.toFixed(2)}</div>
+                        <div class="text-xs text-green-100">Total Expected</div>
+                      </div>
+                      <div>
+                        <div class="text-lg font-bold text-white">${this.paymentSummaryByPeriod.summary.overall_collection_rate}%</div>
+                        <div class="text-xs text-green-100">Collection Rate</div>
+                      </div>
+                      <div>
+                        <div class="text-lg font-bold text-white">${this.paymentSummaryByPeriod.summary.total_payments}</div>
+                        <div class="text-xs text-green-100">Total Payments</div>
+                      </div>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
         </div>
 
         <!-- Financial Overview -->

@@ -1730,5 +1730,125 @@ class CashierController {
         }
     }
 
+    /**
+     * Get total payment summary by grading period (cashier only)
+     */
+    public function getPaymentSummaryByPeriod() {
+        try {
+            global $pdo;
+            RoleMiddleware::requireCashier($pdo);
+
+            // Get current academic year
+            $academicYearSql = "SELECT id, year_code, display_name FROM academic_years WHERE is_current = 1 LIMIT 1";
+            $academicYearStmt = $pdo->prepare($academicYearSql);
+            $academicYearStmt->execute();
+            $academicYear = $academicYearStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$academicYear) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No active academic year found'
+                ]);
+                return;
+            }
+
+            // Get all grading periods for the current academic year
+            $periodsSql = "SELECT id, name, start_date, end_date, is_active FROM grading_periods ORDER BY start_date";
+            $periodsStmt = $pdo->prepare($periodsSql);
+            $periodsStmt->execute();
+            $periods = $periodsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $summaryData = [];
+
+            foreach ($periods as $period) {
+                // Get total payments for this grading period
+                $paymentsSql = "
+                    SELECT 
+                        COALESCE(SUM(fp.amount), 0) as total_received,
+                        COUNT(DISTINCT fp.id) as payment_count,
+                        COUNT(DISTINCT fp.student_id) as students_paid
+                    FROM fee_payments fp
+                    INNER JOIN fee_invoices fi ON fp.invoice_id = fi.id
+                    WHERE fi.grading_period = ? 
+                    AND fi.academic_year = ?
+                    AND (fp.status IS NULL OR fp.status != 'voided')
+                ";
+                
+                $paymentsStmt = $pdo->prepare($paymentsSql);
+                $paymentsStmt->execute([$period['name'], $academicYear['year_code']]);
+                $paymentData = $paymentsStmt->fetch(PDO::FETCH_ASSOC);
+
+                // Get total expected collection for this grading period
+                $expectedSql = "
+                    SELECT 
+                        COALESCE(SUM(fs.total_fee), 0) as total_expected,
+                        COUNT(DISTINCT s.id) as total_students
+                    FROM students s
+                    INNER JOIN classes c ON s.current_class_id = c.id
+                    INNER JOIN fee_schedules fs ON fs.class_id = c.id 
+                        AND fs.grading_period = ?
+                        AND (s.student_type = fs.student_type OR fs.student_type = 'all')
+                    WHERE s.status = 'active'
+                ";
+                
+                $expectedStmt = $pdo->prepare($expectedSql);
+                $expectedStmt->execute([$period['name']]);
+                $expectedData = $expectedStmt->fetch(PDO::FETCH_ASSOC);
+
+                // Calculate collection rate
+                $collectionRate = 0;
+                if ($expectedData['total_expected'] > 0) {
+                    $collectionRate = round(($paymentData['total_received'] / $expectedData['total_expected']) * 100, 2);
+                }
+
+                $summaryData[] = [
+                    'period_id' => $period['id'],
+                    'period_name' => $period['name'],
+                    'start_date' => $period['start_date'],
+                    'end_date' => $period['end_date'],
+                    'is_active' => $period['is_active'],
+                    'total_received' => (float)$paymentData['total_received'],
+                    'total_expected' => (float)$expectedData['total_expected'],
+                    'collection_rate' => $collectionRate,
+                    'payment_count' => (int)$paymentData['payment_count'],
+                    'students_paid' => (int)$paymentData['students_paid'],
+                    'total_students' => (int)$expectedData['total_students']
+                ];
+            }
+
+            // Calculate overall summary
+            $overallSummary = [
+                'total_received' => array_sum(array_column($summaryData, 'total_received')),
+                'total_expected' => array_sum(array_column($summaryData, 'total_expected')),
+                'total_payments' => array_sum(array_column($summaryData, 'payment_count')),
+                'total_students_paid' => array_sum(array_column($summaryData, 'students_paid')),
+                'total_students' => array_sum(array_column($summaryData, 'total_students')),
+                'overall_collection_rate' => 0
+            ];
+
+            if ($overallSummary['total_expected'] > 0) {
+                $overallSummary['overall_collection_rate'] = round(($overallSummary['total_received'] / $overallSummary['total_expected']) * 100, 2);
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $summaryData,
+                'summary' => $overallSummary,
+                'academic_year' => $academicYear,
+                'message' => 'Payment summary by grading period retrieved successfully'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error in getPaymentSummaryByPeriod: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving payment summary: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 }
 ?>

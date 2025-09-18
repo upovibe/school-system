@@ -251,9 +251,7 @@ class CashierPage extends App {
 
   async loadAcademicYears(token) {
     try {
-      console.log('🔄 Loading academic years...');
       const response = await api.withToken(token).get('/academic-years/public');
-      console.log('📊 Academic years response:', response);
       
       if (response?.data?.success && response.data.data) {
         this.academicYears = response.data.data;
@@ -262,45 +260,12 @@ class CashierPage extends App {
           const currentYear = this.academicYears.find(year => year.is_current);
           this.selectedAcademicYear = currentYear || this.academicYears[0];
         }
-        console.log('✅ Academic years loaded:', this.academicYears);
-        console.log('✅ Selected academic year:', this.selectedAcademicYear);
       } else {
-        console.warn('⚠️ No academic years data available');
         this.academicYears = [];
       }
     } catch (error) {
       console.error('❌ Error loading academic years:', error);
       this.academicYears = [];
-    }
-  }
-
-  async loadPaymentSummaryForYear(token, yearId) {
-    try {
-      const response = await api.withToken(token).get(`/cashier/payment-summary-by-period?academic_year_id=${yearId}`);
-      if (response?.data?.success && response.data.data) {
-        this.paymentSummaryByPeriod = response.data;
-        console.log('✅ Payment summary loaded for academic year:', yearId, this.paymentSummaryByPeriod);
-      } else {
-        console.warn('⚠️ No payment summary data available for academic year:', yearId);
-        this.paymentSummaryByPeriod = null;
-      }
-    } catch (error) {
-      console.error('❌ Error loading payment summary for academic year:', error);
-      this.paymentSummaryByPeriod = null;
-    }
-  }
-
-  async onAcademicYearChange(event) {
-    const yearId = event.target.value;
-    const selectedYear = this.academicYears.find(year => year.id == yearId);
-    
-    if (selectedYear) {
-      this.selectedAcademicYear = selectedYear;
-      const token = localStorage.getItem('token');
-      if (token) {
-        await this.loadPaymentSummaryForYear(token, yearId);
-        this.render();
-      }
     }
   }
 
@@ -662,13 +627,11 @@ class CashierPage extends App {
 
   generateClassOptions() {
     const classes = this.classes || [];
-    console.log('🔍 Generating class options for cashier, classes:', classes);
     let options = '<option value="">All Classes</option>';
     classes.forEach(cls => {
       const displayName = cls.section ? `${cls.name} (${cls.section})` : cls.name;
       options += `<option value="${cls.id}">${displayName}</option>`;
     });
-    console.log('🔍 Generated class options:', options);
     return options;
   }
 
@@ -903,19 +866,10 @@ class CashierPage extends App {
             <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
                 <div class="flex items-center justify-between mb-3">
                   <h3 class="text-lg font-semibold text-white truncate">Payment Summary by Grading Period</h3>
-                <div class="flex items-center gap-3">
-                  <select 
-                      id="academicYearSelector" 
-                      class="px-3 py-1.5 text-sm bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      onchange="this.closest('app-cashier-page').onAcademicYearChange(event)">
-                    ${this.academicYears && this.academicYears.length > 0 ? this.academicYears.map(year => `
-                      <option value="${year.id}" ${this.selectedAcademicYear?.id == year.id ? 'selected' : ''} class="text-gray-900">
-                        ${year.display_name || year.year_code}
-                      </option>
-                    `).join('') : '<option class="text-gray-900">Loading...</option>'}
-                  </select>
+                  <div class="text-sm text-green-100 text-nowrap flex-shrink-0">
+                    ${this.selectedAcademicYear ? (this.selectedAcademicYear.display_name || this.selectedAcademicYear.year_code) : 'Current Academic Year'}
+                  </div>
                 </div>
-              </div>
               ${this.paymentSummaryByPeriod && this.paymentSummaryByPeriod.data ? `
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
                   ${this.paymentSummaryByPeriod.data.map(period => `

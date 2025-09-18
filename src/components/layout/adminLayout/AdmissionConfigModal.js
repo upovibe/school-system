@@ -38,7 +38,6 @@ class AdmissionConfigModal extends HTMLElement {
             },
             shs_programmes: ['Science', 'Business', 'Arts', 'General Arts'],
             school_types: ['Day', 'Boarding', 'Day/Boarding'],
-            required_documents: ['birth_certificate', 'passport_photo', 'report_card']
         };
     }
 

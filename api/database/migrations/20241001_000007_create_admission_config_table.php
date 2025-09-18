@@ -31,8 +31,6 @@ class Migration_20241001000007createadmissionconfigtable {
                 health_info_fields JSON,
                 
                 
-                -- Document Requirements
-                required_documents JSON,
                 
                 -- Additional Settings
                 -- (All settings now controlled via JSON field configurations)
@@ -101,7 +99,6 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file']
         ]);
         
-        $requiredDocuments = json_encode(['birth_certificate', 'passport_photo', 'report_card', 'transfer_letter', 'bece_results', 'immunization_card']);
 
         // Get the current active academic year ID
         $currentYearStmt = $this->pdo->query("SELECT id FROM academic_years WHERE is_current = 1 AND is_active = 1 LIMIT 1");
@@ -112,9 +109,9 @@ class Migration_20241001000007createadmissionconfigtable {
         if ($academicYearId) {
             $stmt = $this->pdo->prepare("
                 INSERT INTO admission_config (
-                    academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
+                    academic_year_id, school_types, enabled_levels, level_classes, shs_programmes,
                     student_info_fields, parent_guardian_fields, academic_background_fields, health_info_fields
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $academicYearId,
@@ -122,7 +119,6 @@ class Migration_20241001000007createadmissionconfigtable {
                 $enabledLevels,
                 $levelClasses,
                 $shsProgrammes,
-                $requiredDocuments,
                 $studentInfoFields,
                 $parentGuardianFields,
                 $academicBackgroundFields,

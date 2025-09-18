@@ -163,7 +163,6 @@ class AdmissionConfigController {
                 ],
                 'shs_programmes' => ['Science', 'Business', 'Arts', 'General Arts'],
                 'school_types' => ['day', 'boarding'],
-                'required_documents' => ['birth_certificate', 'passport_photo', 'report_card'],
                 'student_info_fields' => $this->getDefaultStudentInfoFields(),
                 'parent_guardian_fields' => $this->getDefaultParentGuardianFields(),
                 'academic_background_fields' => $this->getDefaultAcademicBackgroundFields(),

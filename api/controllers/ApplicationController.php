@@ -67,8 +67,25 @@ class ApplicationController {
                 }
             }
 
+            // Check if user has already submitted an application
+            $userIP = $_SERVER['REMOTE_ADDR'] ?? '';
+            $existingApplication = $this->checkExistingApplication($userIP);
+            if ($existingApplication) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'You have already submitted an application. Your application number is: ' . $existingApplication['applicant_number'],
+                    'application_data' => [
+                        'applicant_number' => $existingApplication['applicant_number'],
+                        'submitted_at' => $existingApplication['created_at'],
+                        'status' => $existingApplication['status']
+                    ]
+                ]);
+                return;
+            }
+
             // Validate IP limit with detailed info
-            $ipRateLimitInfo = $this->model->getIPRateLimitInfo($_SERVER['REMOTE_ADDR'] ?? '');
+            $ipRateLimitInfo = $this->model->getIPRateLimitInfo($userIP);
             if (!$ipRateLimitInfo['can_apply']) {
                 http_response_code(400);
                 echo json_encode([
@@ -395,6 +412,26 @@ class ApplicationController {
         }
         
         return $healthInfo;
+    }
+
+    /**
+     * Check if user has already submitted an application from this IP
+     */
+    private function checkExistingApplication($ip) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT applicant_number, created_at, status 
+                FROM applications 
+                WHERE applicant_ip = ? 
+                ORDER BY created_at DESC 
+                LIMIT 1
+            ");
+            $stmt->execute([$ip]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log('Error checking existing application: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

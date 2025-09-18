@@ -69,6 +69,8 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'place_of_birth', 'label' => 'Place of Birth', 'required' => false, 'enabled' => true, 'type' => 'text'],
             ['name' => 'nationality', 'label' => 'Nationality', 'required' => true, 'enabled' => true, 'type' => 'text'],
             ['name' => 'religion', 'label' => 'Religion/Denomination', 'required' => false, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'student_phone', 'label' => 'Student Phone', 'required' => false, 'enabled' => true, 'type' => 'tel'],
+            ['name' => 'student_email', 'label' => 'Student Email', 'required' => false, 'enabled' => true, 'type' => 'email'],
         ]);
         
         $parentGuardianFields = json_encode([

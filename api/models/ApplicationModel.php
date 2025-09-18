@@ -19,6 +19,7 @@ class ApplicationModel extends BaseModel {
         'nationality',
         'religion',
         'student_phone',
+        'student_email',
         'email',
         // Section B: Parent/Guardian Information
         'parent_full_name',

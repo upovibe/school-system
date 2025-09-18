@@ -112,9 +112,9 @@ class ApplicationViewModal extends HTMLElement {
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-envelope mr-1"></i>Email Address
+                                        <i class="fas fa-envelope mr-1"></i>Student Email
                                     </label>
-                                    <p class="text-gray-900 text-sm">${this.applicationData.email || 'N/A'}</p>
+                                    <p class="text-gray-900 text-sm">${this.applicationData.student_email || 'N/A'}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -179,6 +179,12 @@ class ApplicationViewModal extends HTMLElement {
                                         <i class="fas fa-phone mr-1"></i>Parent Phone
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.applicationData.phone_number || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-envelope mr-1"></i>Parent Email
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.applicationData.email || 'N/A'}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">

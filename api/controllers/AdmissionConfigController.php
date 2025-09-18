@@ -499,6 +499,22 @@ class AdmissionConfigController {
                 'enabled' => true,
                 'for_levels' => ['all']
             ],
+            [
+                'name' => 'student_phone',
+                'label' => 'Student Phone',
+                'type' => 'tel',
+                'required' => false,
+                'enabled' => true,
+                'for_levels' => ['all']
+            ],
+            [
+                'name' => 'student_email',
+                'label' => 'Student Email',
+                'type' => 'email',
+                'required' => false,
+                'enabled' => true,
+                'for_levels' => ['all']
+            ],
         ];
     }
 

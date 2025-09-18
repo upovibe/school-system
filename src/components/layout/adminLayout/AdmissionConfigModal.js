@@ -754,6 +754,8 @@ class AdmissionConfigModal extends HTMLElement {
             'place_of_birth': 'Place of Birth',
             'nationality': 'Nationality',
             'religion': 'Religion/Denomination',
+            'student_phone': 'Student Phone',
+            'student_email': 'Student Email',
             'parent_full_name': 'Parent/Guardian Full Name',
             'relationship': 'Relationship to Student',
             'phone_number': 'Phone Number',
@@ -785,6 +787,8 @@ class AdmissionConfigModal extends HTMLElement {
             'place_of_birth': 'text',
             'nationality': 'text',
             'religion': 'text',
+            'student_phone': 'tel',
+            'student_email': 'email',
             'parent_full_name': 'text',
             'relationship': 'select',
             'phone_number': 'tel',
@@ -1001,6 +1005,18 @@ class AdmissionConfigModal extends HTMLElement {
                                     ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'religion') ? 'checked' : ''}
                                     data-field="student_info_fields"
                                     data-field-name="religion">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Student Phone" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'student_phone') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="student_phone">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Student Email" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'student_email') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="student_email">
                                 </ui-checkbox>
                             </div>
                         </div>

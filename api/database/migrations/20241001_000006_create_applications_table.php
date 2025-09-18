@@ -24,6 +24,7 @@ class Migration_20241001000006createapplicationstable {
                 nationality VARCHAR(50) DEFAULT NULL,
                 religion VARCHAR(100) DEFAULT NULL,
                 student_phone VARCHAR(20) DEFAULT NULL,
+                student_email VARCHAR(150) DEFAULT NULL,
                 email VARCHAR(150) DEFAULT NULL,
                 
                 -- Section B: Parent/Guardian Information (from parent_guardian_fields)

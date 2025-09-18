@@ -27,7 +27,7 @@ class ApplicationsPage extends App {
     getHeaderCounts() {
         const apps = this.get('applications') || [];
         const total = apps.length;
-        const grades = new Set(apps.map(a => a.grade || 'Unspecified')).size;
+        const grades = new Set(apps.map(a => a.class_applying || 'Unspecified')).size;
         const thisMonth = apps.filter(a => {
             const d = new Date(a.created_at);
             const now = new Date();
@@ -245,24 +245,30 @@ class ApplicationsPage extends App {
             id: app.id,
             index: index + 1,
             applicant_number: app.applicant_number,
-            student_first_name: app.student_first_name,
-            student_last_name: app.student_last_name,
-            grade: app.grade,
-            parent_phone: app.parent_phone,
+            first_name: app.first_name,
+            last_name: app.last_name,
+            gender: app.gender,
+            level_applying: app.level_applying,
+            class_applying: app.class_applying,
+            phone_number: app.phone_number,
             email: app.email,
+            status: app.status,
             created: app.created_at,
             updated: app.updated_at
         })) : [];
         const tableColumns = [
             { key: 'index', label: 'No.' },
             { key: 'applicant_number', label: 'Applicant Number' },
-            { key: 'student_first_name', label: 'First Name' },
-            { key: 'student_last_name', label: 'Last Name' },
-            { key: 'grade', label: 'Grade' },
-            { key: 'parent_phone', label: 'Parent Phone' },
-            { key: 'email', label: 'Email' },
+            { key: 'first_name', label: 'First Name' },
+            { key: 'last_name', label: 'Last Name' },
+            { key: 'gender', label: 'Gender' },
+            { key: 'level_applying', label: 'Level' },
+            { key: 'class_applying', label: 'Class Applying' },
+            { key: 'phone_number', label: 'Parent Phone' },
+            { key: 'email', label: 'Parent Email' },
+            { key: 'status', label: 'Status' },
             { key: 'created', label: 'Created' },
-            { key: 'updated', label: 'Updated' }
+            // { key: 'updated', label: 'Updated' }
         ];
         return `
             ${this.renderHeader()}

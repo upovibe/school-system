@@ -137,9 +137,19 @@ class BaseModel {
                 }
             }
 
+            // Filter out any keys with null, undefined, or empty values
+            $processedData = array_filter($processedData, function($value, $key) {
+                return $value !== null && $value !== '' && $key !== 'undefined';
+            }, ARRAY_FILTER_USE_BOTH);
+            
             $keys = implode(', ', array_keys($processedData));
             $placeholders = ':' . implode(', :', array_keys($processedData));
             $tableName = $this->getTableName();
+            
+            // Debug: Log the SQL query being prepared
+            error_log("Preparing SQL: INSERT INTO {$tableName} ($keys) VALUES ($placeholders)");
+            error_log("Data being inserted: " . json_encode($processedData));
+            
             $stmt = $this->pdo->prepare("INSERT INTO {$tableName} ($keys) VALUES ($placeholders)");
             foreach ($processedData as $key => $value) {
                 $stmt->bindValue(':' . $key, $value);

@@ -492,8 +492,8 @@ class DynamicApplicationForm extends App {
 
     async handleSubmit() {
         try {
-            // Collect all form data before validation
-            this.collectCurrentFormData();
+            // Collect all form data from all sections before validation
+            this.collectAllFormData();
             
             // Validate current section before submission
             const validationResult = this.validateCurrentSectionWithDetails();
@@ -509,6 +509,10 @@ class DynamicApplicationForm extends App {
 
             // Map frontend field names to database column names
             const mappedData = this.mapFormDataToDatabase(this.formData);
+
+            // Debug: Log the data being sent
+            console.log('Form data before mapping:', this.formData);
+            console.log('Mapped data being sent:', mappedData);
 
             // Submit form data
             const response = await api.post('/applications', mappedData);
@@ -618,6 +622,30 @@ class DynamicApplicationForm extends App {
                     this.formData[field.name] = input.value || '';
                 }
             }
+        });
+    }
+
+    collectAllFormData() {
+        // Collect data from all enabled sections
+        this.enabledSections.forEach(section => {
+            const sectionFields = this.getSectionFields(section.id);
+            
+            sectionFields.forEach(field => {
+                const input = this.querySelector(`[name="${field.name}"]`);
+                if (input) {
+                    if (field.type === 'file') {
+                        // File fields are not needed anymore
+                        this.formData[field.name] = null;
+                    } else {
+                        this.formData[field.name] = input.value || '';
+                    }
+                } else {
+                    // If input doesn't exist, ensure field is initialized
+                    if (!(field.name in this.formData)) {
+                        this.formData[field.name] = '';
+                    }
+                }
+            });
         });
     }
 

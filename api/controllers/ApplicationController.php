@@ -36,6 +36,9 @@ class ApplicationController {
 
             $data = json_decode(file_get_contents('php://input'), true);
             
+            // Debug: Log the received data to see what's being sent
+            error_log('Received application data: ' . json_encode($data));
+            
             // Get required fields from configuration
             $requiredFields = $this->getRequiredFields($config);
             foreach ($requiredFields as $field) {
@@ -89,6 +92,10 @@ class ApplicationController {
 
             // Add academic year ID to data
             $data['academic_year_id'] = $config['academic_year_id'];
+            
+            // Debug: Log the final data being sent to the model
+            error_log('Final data for model: ' . json_encode($data));
+            
             $id = $this->model->create($data);
             // Fetch the created application (to get applicant_number)
             $application = (new ApplicationModel($this->pdo))->findById($id);
@@ -342,7 +349,7 @@ class ApplicationController {
     /**
      * Process and validate health information fields
      */
-    private function processHealthInfo($data, $config) {
+    private function processHealthInfo(&$data, $config) {
         $healthInfo = [];
         $healthFields = ['blood_group', 'allergies', 'medical_conditions'];
         

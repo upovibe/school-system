@@ -769,7 +769,7 @@ class CashierPage extends App {
     const students = this.get('students') || [];
 
     return `
-      <div class="space-y-8 p-0">
+      <div class="space-y-8 p-0"></div>
         <!-- Header -->
         <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
@@ -1044,16 +1044,16 @@ class CashierPage extends App {
         <!-- Monthly Income Chart -->
         ${!loading ? `
           <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+            <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
+              <div class="flex items-center min-w-0 flex-1">
+                <div class="w-8 h-8 min-w-8 bg-green-500 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
                   <i class="fas fa-chart-line text-white text-sm"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Monthly Income Trends</h3>
+                <h3 class="text-lg font-semibold text-gray-900 truncate">Monthly Income Trends</h3>
               </div>
-              <div class="flex items-center space-x-4">
+              <div class="flex flex-col gap-2 md:flex-row items-center space-x-4 w-full justify-end md:w-fit ml-auto">
                 <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Year:</label>
+                  <label class="text-sm text-gray-600 hidden lg:block">Year:</label>
                   <select id="cashierIncomeYearSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                     ${this.generateYearOptions()}
                   </select>
@@ -1108,8 +1108,8 @@ class CashierPage extends App {
         ${!loading ? `
           <div class="bg-white shadow rounded-lg p-6">
             <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+              <div class="flex items-center min-w-0 flex-1">
+                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
                   <i class="fas fa-percentage text-white text-sm"></i>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 truncate">Fee Collection Rate by Class</h3>

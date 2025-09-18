@@ -45,8 +45,13 @@ function uploadNewsBanner($file) {
         throw new Exception('Failed to upload file.');
     }
     
-    // Create thumbnails
-    $thumbnails = generateNewsThumbnails($originalPath, $filename, $thumbnailsDir);
+    // Create thumbnails only if GD extension is available
+    $thumbnails = [];
+    if (extension_loaded('gd')) {
+        $thumbnails = generateNewsThumbnails($originalPath, $filename, $thumbnailsDir);
+    } else {
+        error_log('GD extension not available. Skipping thumbnail generation.');
+    }
     
     return [
         'original' => 'uploads/news/' . $filename,
@@ -114,6 +119,12 @@ function updateNewsBanner($newFile, $oldImagePath = null) {
  * @return array Array of thumbnail paths
  */
 function generateNewsThumbnails($originalPath, $filename, $thumbnailsDir) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot generate thumbnails.');
+        return [];
+    }
+    
     $thumbnails = [];
     $sizes = [
         'small' => [150, 150],
@@ -147,6 +158,12 @@ function generateNewsThumbnails($originalPath, $filename, $thumbnailsDir) {
  */
 function createThumbnail($sourcePath, $destPath, $width, $height) {
     try {
+        // Check if GD extension is available
+        if (!extension_loaded('gd')) {
+            error_log('GD extension not available. Cannot create thumbnail.');
+            return false;
+        }
+        
         $imageInfo = getimagesize($sourcePath);
         if ($imageInfo === false) {
             return false;
@@ -220,6 +237,12 @@ function createThumbnail($sourcePath, $destPath, $width, $height) {
  * @return GdImage|false Image resource or false on failure
  */
 function createImageResource($path, $mimeType) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot create image resource.');
+        return false;
+    }
+    
     switch ($mimeType) {
         case 'image/jpeg':
         case 'image/jpg':
@@ -244,6 +267,12 @@ function createImageResource($path, $mimeType) {
  * @return bool True if successful, false otherwise
  */
 function saveImage($image, $path, $mimeType) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot save image.');
+        return false;
+    }
+    
     switch ($mimeType) {
         case 'image/jpeg':
         case 'image/jpg':
@@ -258,4 +287,4 @@ function saveImage($image, $path, $mimeType) {
             return false;
     }
 }
-?> 
+?>

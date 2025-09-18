@@ -121,14 +121,22 @@ class NewsSettingsModal extends HTMLElement {
 
 
 
+            // Show loading toast
+            Toast.show({
+                title: 'Adding News Article',
+                message: 'Please wait...',
+                variant: 'info',
+                duration: 2000
+            });
+
             // Create the news article with multipart data
             const response = await api.withToken(token).post('/news', formData);
             
             Toast.show({
-                title: 'Success',
-                message: 'News article created successfully',
+                title: 'News Article Added!',
+                message: `"${newsData.title}" has been successfully added to the news.`,
                 variant: 'success',
-                duration: 3000
+                duration: 5000
             });
 
             // Construct the new news data from response

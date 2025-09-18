@@ -134,14 +134,22 @@ class NewsUpdateModal extends HTMLElement {
                 });
             }
 
+            // Show loading toast
+            Toast.show({
+                title: 'Updating News Article',
+                message: 'Please wait...',
+                variant: 'info',
+                duration: 2000
+            });
+
             // Update the news article with multipart data
             const response = await api.withToken(token).put(`/news/${this.newsData.id}`, formData);
             
             Toast.show({
-                title: 'Success',
-                message: 'News article updated successfully',
+                title: 'News Article Updated!',
+                message: `"${newsData.title}" has been successfully updated in the news.`,
                 variant: 'success',
-                duration: 3000
+                duration: 5000
             });
 
             // Close modal and dispatch event with the updated data from the server

@@ -550,7 +550,7 @@ class StudentDashboardPage extends App {
         const levelData = this.getLevelAndXP();
 
         return `
-            <div class="space-y-8">
+            <div class="space-y-8 p-0">
                 <!-- Enhanced Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">

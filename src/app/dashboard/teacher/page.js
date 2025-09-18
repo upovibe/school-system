@@ -161,7 +161,7 @@ class TeacherDashboardPage extends App {
     const students = Array.isArray(teacherClass?.students) ? teacherClass.students : [];
 
     return `
-      <div class="space-y-8">
+      <div class="space-y-8 p-0">
         <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">

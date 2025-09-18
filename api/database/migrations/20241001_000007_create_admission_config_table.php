@@ -24,12 +24,11 @@ class Migration_20241001000007createadmissionconfigtable {
                 shs_programmes JSON,
                 school_types JSON,
                 
-                -- Form Field Configuration (Sections A-F)
+                -- Form Field Configuration (Sections A-E)
                 student_info_fields JSON,
                 parent_guardian_fields JSON,
                 academic_background_fields JSON,
                 health_info_fields JSON,
-                document_upload_fields JSON,
                 
                 
                 -- Document Requirements
@@ -72,7 +71,8 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'place_of_birth', 'label' => 'Place of Birth', 'required' => false, 'enabled' => true, 'type' => 'text'],
             ['name' => 'nationality', 'label' => 'Nationality', 'required' => true, 'enabled' => true, 'type' => 'text'],
             ['name' => 'religion', 'label' => 'Religion/Denomination', 'required' => false, 'enabled' => true, 'type' => 'text'],
-            ['name' => 'passport_photo', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file']
+            ['name' => 'passport_photo', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file'],
+            ['name' => 'birth_certificate', 'label' => 'Birth Certificate', 'required' => true, 'enabled' => true, 'type' => 'file']
         ]);
         
         $parentGuardianFields = json_encode([
@@ -101,14 +101,6 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file']
         ]);
         
-        $documentUploadFields = json_encode([
-            ['name' => 'birth_certificate', 'label' => 'Birth Certificate', 'required' => true, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'passport_photo_doc', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'report_card_doc', 'label' => 'Report Card', 'required' => false, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'transfer_letter_doc', 'label' => 'Transfer Letter', 'required' => false, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'bece_results_doc', 'label' => 'BECE Results Slip', 'required' => false, 'enabled' => true, 'type' => 'file', 'for_levels' => ['shs']],
-            ['name' => 'immunization_card_doc', 'label' => 'Immunization Card', 'required' => false, 'enabled' => true, 'type' => 'file']
-        ]);
         $requiredDocuments = json_encode(['birth_certificate', 'passport_photo', 'report_card', 'transfer_letter', 'bece_results', 'immunization_card']);
 
         // Get the current active academic year ID
@@ -121,8 +113,8 @@ class Migration_20241001000007createadmissionconfigtable {
             $stmt = $this->pdo->prepare("
                 INSERT INTO admission_config (
                     academic_year_id, school_types, enabled_levels, level_classes, shs_programmes, required_documents,
-                    student_info_fields, parent_guardian_fields, academic_background_fields, health_info_fields, document_upload_fields
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    student_info_fields, parent_guardian_fields, academic_background_fields, health_info_fields
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $academicYearId,
@@ -134,8 +126,7 @@ class Migration_20241001000007createadmissionconfigtable {
                 $studentInfoFields,
                 $parentGuardianFields,
                 $academicBackgroundFields,
-                $healthInfoFields,
-                $documentUploadFields
+                $healthInfoFields
             ]);
         }
     }

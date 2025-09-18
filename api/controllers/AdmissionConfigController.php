@@ -167,8 +167,7 @@ class AdmissionConfigController {
                 'student_info_fields' => $this->getDefaultStudentInfoFields(),
                 'parent_guardian_fields' => $this->getDefaultParentGuardianFields(),
                 'academic_background_fields' => $this->getDefaultAcademicBackgroundFields(),
-                'health_info_fields' => $this->getDefaultHealthInfoFields(),
-                'document_upload_fields' => $this->getDefaultDocumentUploadFields()
+                'health_info_fields' => $this->getDefaultHealthInfoFields()
             ];
 
             $configData = array_merge($defaultData, $data);
@@ -508,6 +507,14 @@ class AdmissionConfigController {
                 'required' => true,
                 'enabled' => true,
                 'for_levels' => ['all']
+            ],
+            [
+                'name' => 'birth_certificate',
+                'label' => 'Birth Certificate',
+                'type' => 'file',
+                'required' => true,
+                'enabled' => true,
+                'for_levels' => ['all']
             ]
         ];
     }
@@ -703,57 +710,5 @@ class AdmissionConfigController {
         ];
     }
 
-    private function getDefaultDocumentUploadFields() {
-        return [
-            [
-                'name' => 'birth_certificate',
-                'label' => 'Birth Certificate',
-                'type' => 'file',
-                'required' => true,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'passport_photo_doc',
-                'label' => 'Passport Photo',
-                'type' => 'file',
-                'required' => true,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'report_card_doc',
-                'label' => 'Report Card',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['primary', 'jhs', 'shs']
-            ],
-            [
-                'name' => 'transfer_letter_doc',
-                'label' => 'Transfer Letter',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['primary', 'jhs', 'shs']
-            ],
-            [
-                'name' => 'bece_results_doc',
-                'label' => 'BECE Results Slip',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['shs']
-            ],
-            [
-                'name' => 'immunization_card_doc',
-                'label' => 'Immunization Card',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ]
-        ];
-    }
 }
 ?>

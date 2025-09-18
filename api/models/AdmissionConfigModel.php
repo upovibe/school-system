@@ -20,7 +20,6 @@ class AdmissionConfigModel extends BaseModel {
         'parent_guardian_fields',
         'academic_background_fields',
         'health_info_fields',
-        'document_upload_fields',
     ];
 
     // Fields that should be cast to specific types
@@ -34,7 +33,6 @@ class AdmissionConfigModel extends BaseModel {
         'parent_guardian_fields' => 'json',
         'academic_background_fields' => 'json',
         'health_info_fields' => 'json',
-        'document_upload_fields' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -76,7 +74,7 @@ class AdmissionConfigModel extends BaseModel {
     public function updateFormFields($academicYearId, $section, $fields) {
         $fieldColumn = $section . '_fields';
         
-        if (!in_array($fieldColumn, ['student_info_fields', 'parent_guardian_fields', 'academic_background_fields', 'health_info_fields', 'document_upload_fields'])) {
+        if (!in_array($fieldColumn, ['student_info_fields', 'parent_guardian_fields', 'academic_background_fields', 'health_info_fields'])) {
             throw new InvalidArgumentException('Invalid section name');
         }
 
@@ -143,7 +141,7 @@ class AdmissionConfigModel extends BaseModel {
         if (!$config) return [];
         
         $fieldColumn = $section . '_fields';
-        if (!in_array($fieldColumn, ['student_info_fields', 'parent_guardian_fields', 'academic_background_fields', 'health_info_fields', 'document_upload_fields'])) {
+        if (!in_array($fieldColumn, ['student_info_fields', 'parent_guardian_fields', 'academic_background_fields', 'health_info_fields'])) {
             return [];
         }
         

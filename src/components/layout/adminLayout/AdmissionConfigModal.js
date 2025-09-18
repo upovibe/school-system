@@ -857,8 +857,7 @@ class AdmissionConfigModal extends HTMLElement {
                 student_info_fields: this.configData.student_info_fields,
                 parent_guardian_fields: this.configData.parent_guardian_fields,
                 academic_background_fields: this.configData.academic_background_fields,
-                health_info_fields: this.configData.health_info_fields,
-                document_upload_fields: this.configData.document_upload_fields
+                health_info_fields: this.configData.health_info_fields
             };
 
             // Get current config ID or create new one
@@ -1025,6 +1024,18 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field="student_info_fields"
                                     data-field-name="religion">
                                 </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Passport Photo" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'passport_photo') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="passport_photo">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Birth Certificate" 
+                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'birth_certificate') ? 'checked' : ''}
+                                    data-field="student_info_fields"
+                                    data-field-name="birth_certificate">
+                                </ui-checkbox>
                             </div>
                         </div>
 
@@ -1119,10 +1130,10 @@ class AdmissionConfigModal extends HTMLElement {
                             </div>
                         </div>
 
-                        <!-- Section F: Health Information -->
+                        <!-- Section D: Health Information -->
                         <div class="mb-6">
                             <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-heartbeat mr-2 text-red-600"></i>Section F: Health Information
+                                <i class="fas fa-heartbeat mr-2 text-red-600"></i>Section D: Health Information
                             </h4>
                             <div class="grid grid-cols-2 gap-3">
                                 <ui-checkbox 
@@ -1152,51 +1163,6 @@ class AdmissionConfigModal extends HTMLElement {
                             </div>
                         </div>
 
-                        <!-- Section G: Document Upload -->
-                        <div class="mb-6">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-file-upload mr-2 text-purple-600"></i>Section G: Document Upload
-                            </h4>
-                            <div class="grid grid-cols-2 gap-3">
-                                <ui-checkbox 
-                                    label="Birth Certificate" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'birth_certificate') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="birth_certificate">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Passport Photo" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'passport_photo_doc') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="passport_photo_doc">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Report Card" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'report_card_doc') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="report_card_doc">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Transfer Letter" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'transfer_letter_doc') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="transfer_letter_doc">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="BECE Results Slip" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'bece_results_doc') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="bece_results_doc"
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Immunization Card" 
-                                    ${this.configData.document_upload_fields && this.isFieldEnabled('document_upload_fields', 'immunization_card_doc') ? 'checked' : ''}
-                                    data-field="document_upload_fields"
-                                    data-field-name="immunization_card_doc">
-                                </ui-checkbox>
-                            </div>
-                        </div>
 
                     </div>
 

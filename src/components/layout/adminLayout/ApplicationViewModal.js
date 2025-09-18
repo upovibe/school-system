@@ -39,15 +39,20 @@ class ApplicationViewModal extends HTMLElement {
 
         // Handle status change actions
         this.addEventListener('click', (e) => {
-            if (e.target.matches('[data-action="approve"]')) {
+            // Find the closest button with data-action (in case we clicked on icon or text inside button)
+            const actionButton = e.target.closest('[data-action]');
+            
+            if (actionButton) {
+                const action = actionButton.getAttribute('data-action');
                 e.preventDefault();
-                this.handleStatusChange('approved');
-            } else if (e.target.matches('[data-action="reject"]')) {
-                e.preventDefault();
-                this.handleStatusChange('rejected');
-            } else if (e.target.matches('[data-action="reset"]')) {
-                e.preventDefault();
-                this.handleStatusChange('pending');
+                
+                if (action === 'approve') {
+                    this.handleStatusChange('approved');
+                } else if (action === 'reject') {
+                    this.handleStatusChange('rejected');
+                } else if (action === 'reset') {
+                    this.handleStatusChange('pending');
+                }
             }
         });
     }
@@ -102,8 +107,14 @@ class ApplicationViewModal extends HTMLElement {
         }
 
         try {
-            // Update status via API
-            const response = await api.put(`/applications/${this.applicationData.id}/status`, {
+            // Get authentication token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found. Please log in again.');
+            }
+            
+            // Update status via API with authentication
+            const response = await api.withToken(token).put(`/applications/${this.applicationData.id}/status`, {
                 status: newStatus
             });
 
@@ -135,7 +146,6 @@ class ApplicationViewModal extends HTMLElement {
                 throw new Error(response.data.message || 'Failed to update status');
             }
         } catch (error) {
-            console.error('Error updating application status:', error);
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update application status',

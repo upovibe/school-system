@@ -436,6 +436,73 @@ class ApplicationController {
     }
 
     /**
+     * Send status change email notification to parent
+     */
+    private function sendStatusChangeEmail($application, $status) {
+        try {
+            $emailService = new EmailService();
+            $schoolName = $this->getSchoolName();
+            $parentEmail = $application['email'];
+            $studentName = $application['first_name'] . ' ' . $application['last_name'];
+            $applicantNumber = $application['applicant_number'];
+            
+            $subject = $status === 'approved' 
+                ? "Application Approved - {$schoolName}"
+                : "Application Status Update - {$schoolName}";
+                
+            $statusText = $status === 'approved' ? 'approved' : 'rejected';
+            $statusMessage = $status === 'approved' 
+                ? 'Congratulations! Your child\'s application has been approved.'
+                : 'We regret to inform you that your child\'s application was not successful at this time.';
+                
+            $nextSteps = $status === 'approved'
+                ? 'Please contact the school office for enrollment procedures and required documents.'
+                : 'Thank you for your interest in our school. You may apply again in the next admission period.';
+            
+            $htmlBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <div style='background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
+                        <h2 style='color: #333; margin: 0;'>{$schoolName}</h2>
+                        <h3 style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; margin: 10px 0;'>Application {$statusText}</h3>
+                    </div>
+                    
+                    <div style='background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+                        <p>Dear Parent/Guardian,</p>
+                        
+                        <p><strong>{$statusMessage}</strong></p>
+                        
+                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                            <h4 style='margin: 0 0 10px 0; color: #333;'>Application Details:</h4>
+                            <p style='margin: 5px 0;'><strong>Student Name:</strong> {$studentName}</p>
+                            <p style='margin: 5px 0;'><strong>Application Number:</strong> {$applicantNumber}</p>
+                            <p style='margin: 5px 0;'><strong>Level:</strong> {$application['level_applying']}</p>
+                            <p style='margin: 5px 0;'><strong>Class:</strong> {$application['class_applying']}</p>
+                            <p style='margin: 5px 0;'><strong>Status:</strong> <span style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; font-weight: bold;'>" . ucfirst($statusText) . "</span></p>
+                        </div>
+                        
+                        <p><strong>Next Steps:</strong><br>{$nextSteps}</p>
+                        
+                        <p>If you have any questions, please don't hesitate to contact us.</p>
+                        
+                        <p>Best regards,<br>
+                        <strong>{$schoolName} Admissions Team</strong></p>
+                    </div>
+                    
+                    <div style='text-align: center; margin-top: 20px; padding: 10px; font-size: 12px; color: #666;'>
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                    </div>
+                </div>
+            ";
+            
+            return $emailService->sendEmail($parentEmail, $subject, $htmlBody);
+            
+        } catch (Exception $e) {
+            error_log('Failed to send status change email: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Get admission configuration for public form (GET /admission/config)
      */
     public function getConfig() {
@@ -501,8 +568,17 @@ class ApplicationController {
                 return;
             }
 
-            $validStatuses = ['pending', 'under_review', 'accepted', 'rejected', 'waitlisted'];
-            if (!in_array($data['status'], $validStatuses)) {
+            // Map frontend statuses to backend statuses
+            $statusMapping = [
+                'approved' => 'approved',
+                'rejected' => 'rejected',
+                'pending' => 'pending'
+            ];
+            
+            $backendStatus = $statusMapping[$data['status']] ?? $data['status'];
+            $validStatuses = ['pending', 'approved', 'rejected'];
+            
+            if (!in_array($backendStatus, $validStatuses)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -511,7 +587,24 @@ class ApplicationController {
                 return;
             }
 
-            $this->model->updateStatus($id, $data['status']);
+            // Get application data before updating for email
+            $application = $this->model->findById($id);
+            if (!$application) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Application not found'
+                ]);
+                return;
+            }
+
+            // Update status
+            $this->model->updateStatus($id, $backendStatus);
+            
+            // Send email notification to parent if status changed to approved or rejected
+            if (in_array($backendStatus, ['approved', 'rejected']) && !empty($application['email'])) {
+                $this->sendStatusChangeEmail($application, $backendStatus);
+            }
             
             http_response_code(200);
             echo json_encode([

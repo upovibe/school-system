@@ -81,7 +81,7 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'phone_number', 'label' => 'Phone Number', 'required' => true, 'enabled' => true, 'type' => 'tel'],
             ['name' => 'email', 'label' => 'Email Address', 'required' => false, 'enabled' => true, 'type' => 'email'],
             ['name' => 'occupation', 'label' => 'Occupation', 'required' => false, 'enabled' => true, 'type' => 'text'],
-            ['name' => 'emergency_contact', 'label' => 'Emergency Contact', 'required' => true, 'enabled' => true, 'type' => 'text'],
+            ['name' => 'emergency_contact', 'label' => 'Emergency Contact', 'required' => false, 'enabled' => true, 'type' => 'text'],
             ['name' => 'residential_address', 'label' => 'Residential Address', 'required' => true, 'enabled' => true, 'type' => 'textarea']
         ]);
         

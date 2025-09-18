@@ -39,11 +39,7 @@ class ApplicationModel extends BaseModel {
         'health_info',
         // Application Management
         'status',
-        'admin_notes',
-        'reviewed_by',
-        'reviewed_at',
         // Additional Data & Tracking
-        'additional_data',
         'applicant_ip',
         'academic_year_id'
     ];
@@ -52,8 +48,6 @@ class ApplicationModel extends BaseModel {
     protected static $casts = [
         'date_of_birth' => 'date',
         'health_info' => 'json',
-        'additional_data' => 'json',
-        'reviewed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -109,7 +103,7 @@ class ApplicationModel extends BaseModel {
     public function getByLevel($level) {
         $stmt = $this->pdo->prepare("
             SELECT * FROM applications 
-            WHERE level_applied = ? 
+            WHERE level_applying = ? 
             ORDER BY created_at DESC
         ");
         $stmt->execute([$level]);
@@ -128,7 +122,7 @@ class ApplicationModel extends BaseModel {
         }
         
         if (!empty($filters['level'])) {
-            $whereClause .= ' AND level_applied = ?';
+            $whereClause .= ' AND level_applying = ?';
             $params[] = $filters['level'];
         }
         
@@ -152,13 +146,13 @@ class ApplicationModel extends BaseModel {
     }
 
     // Update application status
-    public function updateStatus($id, $status, $adminNotes = null, $reviewedBy = null) {
+    public function updateStatus($id, $status) {
         $stmt = $this->pdo->prepare("
             UPDATE applications 
-            SET status = ?, admin_notes = ?, reviewed_by = ?, reviewed_at = NOW()
+            SET status = ?
             WHERE id = ?
         ");
-        return $stmt->execute([$status, $adminNotes, $reviewedBy, $id]);
+        return $stmt->execute([$status, $id]);
     }
 
     // Get application statistics
@@ -169,7 +163,7 @@ class ApplicationModel extends BaseModel {
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
                 SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
-                COUNT(DISTINCT level_applied) as levels_applied,
+                COUNT(DISTINCT level_applying) as levels_applied,
                 COUNT(DISTINCT DATE(created_at)) as application_days
             FROM applications
         ");

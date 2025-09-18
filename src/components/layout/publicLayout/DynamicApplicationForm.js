@@ -21,6 +21,7 @@ class DynamicApplicationForm extends App {
         this.admissionConfig = null;
         this.currentSection = 0;
         this.enabledSections = [];
+        this.isSubmitting = false;
     }
 
     static get observedAttributes() {
@@ -491,13 +492,38 @@ class DynamicApplicationForm extends App {
     }
 
     async handleSubmit() {
+        // Prevent multiple submissions
+        if (this.isSubmitting) {
+            return;
+        }
+
         try {
+            // Set submitting state
+            this.isSubmitting = true;
+            this.updateSubmitButton(true);
+
+            // Show submitting toast
+            this.submittingToast = Toast.show({
+                title: 'Submitting',
+                message: 'Please wait while we process your application...',
+                variant: 'info',
+                duration: 0 // Don't auto-dismiss
+            });
+
             // Collect all form data from all sections before validation
             this.collectAllFormData();
             
             // Validate current section before submission
             const validationResult = this.validateCurrentSectionWithDetails();
             if (!validationResult.isValid) {
+                this.isSubmitting = false;
+                this.updateSubmitButton(false);
+                
+                // Dismiss submitting toast
+                if (this.submittingToast && this.submittingToast.dismiss) {
+                    this.submittingToast.dismiss();
+                }
+                
                 Toast.show({
                     title: 'Validation Error',
                     message: validationResult.message,
@@ -518,6 +544,11 @@ class DynamicApplicationForm extends App {
             const response = await api.post('/applications', mappedData);
             
             if (response.data.success) {
+                // Dismiss submitting toast
+                if (this.submittingToast && this.submittingToast.dismiss) {
+                    this.submittingToast.dismiss();
+                }
+                
                 Toast.show({
                     title: 'Success',
                     message: 'Application submitted successfully',
@@ -535,12 +566,22 @@ class DynamicApplicationForm extends App {
             }
         } catch (error) {
             console.error('Error submitting application:', error);
+            
+            // Dismiss submitting toast
+            if (this.submittingToast && this.submittingToast.dismiss) {
+                this.submittingToast.dismiss();
+            }
+            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to submit application',
                 variant: 'error',
                 duration: 5000
             });
+        } finally {
+            // Reset submitting state
+            this.isSubmitting = false;
+            this.updateSubmitButton(false);
         }
     }
 
@@ -647,6 +688,27 @@ class DynamicApplicationForm extends App {
                 }
             });
         });
+    }
+
+    updateSubmitButton(isLoading) {
+        const submitButton = this.querySelector('[data-submit]');
+        if (submitButton) {
+            if (isLoading) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    Submitting...
+                `;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                submitButton.disabled = false;
+                submitButton.innerHTML = `
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Submit Application
+                `;
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
     }
 
     validateCurrentSection() {
@@ -985,7 +1047,9 @@ class DynamicApplicationForm extends App {
                             ${this.currentSection === this.enabledSections.length - 1 ? `
                                 <button 
                                     type="submit" 
-                                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    data-submit
+                                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-paper-plane mr-2"></i>
                                     Submit Application
                                 </button>
                             ` : `

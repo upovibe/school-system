@@ -40,7 +40,15 @@ class NewsList extends App {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.data) {
-                    this.set('news', data.data);
+                    let newsData = data.data;
+                    
+                    // Filter out the excluded news if exclude-id attribute is provided
+                    const excludeId = this.getAttribute('exclude-id');
+                    if (excludeId) {
+                        newsData = newsData.filter(newsItem => newsItem.id != excludeId);
+                    }
+                    
+                    this.set('news', newsData);
                 } else {
                     this.set('news', []);
                 }

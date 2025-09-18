@@ -291,7 +291,7 @@ class NewsView extends App {
                     <!-- Right Container -->
                     <div class="space-y-6">
                         <!-- News List -->
-                        <news-list></news-list>
+                        <news-list exclude-id="${news.id}"></news-list>
                     </div>
                 </div>
             </div>

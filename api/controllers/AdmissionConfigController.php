@@ -698,23 +698,7 @@ class AdmissionConfigController {
                 'label' => 'Immunization Card Upload',
                 'type' => 'file',
                 'required' => false,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'health_insurance',
-                'label' => 'Health Insurance Information',
-                'type' => 'text',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'emergency_medication',
-                'label' => 'Emergency Medication',
-                'type' => 'text',
-                'required' => false,
-                'enabled' => true,
+                'enabled' => false,
                 'for_levels' => ['all']
             ]
         ];

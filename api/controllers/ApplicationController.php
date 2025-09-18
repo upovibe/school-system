@@ -200,6 +200,7 @@ class ApplicationController {
             'guardian_phone' => 'parent_phone',
             'guardian_email' => 'parent_email',
             'guardian_occupation' => 'parent_occupation',
+            'emergency_contact' => 'emergency_contact',
             'address' => 'residential_address',
             
             // Academic Background fields
@@ -292,21 +293,6 @@ class ApplicationController {
             }
         }
         
-        // Check document upload fields
-        if (isset($config['document_upload_fields'])) {
-            $documentFields = is_string($config['document_upload_fields']) 
-                ? json_decode($config['document_upload_fields'], true) 
-                : $config['document_upload_fields'];
-            if (is_array($documentFields)) {
-                foreach ($documentFields as $field) {
-                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
-                        // Map config field name to database column name
-                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
-                        $requiredFields[] = $dbFieldName;
-                    }
-                }
-            }
-        }
         
         // Always require school setup fields if they exist
         $requiredFields[] = 'level_applied';

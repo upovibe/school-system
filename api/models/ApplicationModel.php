@@ -26,9 +26,8 @@ class ApplicationModel extends BaseModel {
         'parent_phone',
         'parent_email',
         'parent_occupation',
+        'emergency_contact',
         'residential_address',
-        'emergency_contact_name',
-        'emergency_contact_phone',
         // Section C: Academic Background
         'previous_school',
         'last_class_completed',
@@ -39,8 +38,6 @@ class ApplicationModel extends BaseModel {
         'school_type',
         // Section E: Health Information
         'health_info',
-        // Section F: Document Uploads
-        'uploaded_documents',
         // Application Management
         'status',
         'admin_notes',
@@ -55,7 +52,6 @@ class ApplicationModel extends BaseModel {
     protected static $casts = [
         'date_of_birth' => 'date',
         'health_info' => 'json',
-        'uploaded_documents' => 'json',
         'additional_data' => 'json',
         'reviewed_at' => 'datetime',
         'created_at' => 'datetime',

@@ -32,9 +32,8 @@ class Migration_20241001000006createapplicationstable {
                 parent_phone VARCHAR(20) DEFAULT NULL,
                 parent_email VARCHAR(150) DEFAULT NULL,
                 parent_occupation VARCHAR(100) DEFAULT NULL,
+                emergency_contact TEXT DEFAULT NULL,
                 residential_address TEXT DEFAULT NULL,
-                emergency_contact_name VARCHAR(100) DEFAULT NULL,
-                emergency_contact_phone VARCHAR(20) DEFAULT NULL,
                 
                 -- Section C: Academic Background
                 previous_school VARCHAR(200) DEFAULT NULL,
@@ -48,9 +47,6 @@ class Migration_20241001000006createapplicationstable {
                 
                 -- Section E: Health Information (JSON)
                 health_info JSON DEFAULT NULL,
-                
-                -- Section F: Document Uploads (JSON)
-                uploaded_documents JSON,
                 
                 -- Application Management
                 status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',

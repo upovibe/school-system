@@ -633,7 +633,7 @@ class DynamicApplicationForm extends App {
                 }
                 
                 // Special validation for phone numbers
-                if (field.type === 'tel' || field.name.includes('phone')) {
+                if (field.type === 'tel' || field.name.includes('phone') || field.name === 'emergency_contact') {
                     return this.validatePhoneNumber(value);
                 }
                 
@@ -658,7 +658,7 @@ class DynamicApplicationForm extends App {
                 }
                 
                 // Special validation for phone numbers
-                if (field.type === 'tel' || field.name.includes('phone')) {
+                if (field.type === 'tel' || field.name.includes('phone') || field.name === 'emergency_contact') {
                     if (!this.validatePhoneNumber(value)) {
                         return {
                             isValid: false,

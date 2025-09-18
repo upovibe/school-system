@@ -565,7 +565,7 @@ class AdmissionConfigController {
             [
                 'name' => 'emergency_contact',
                 'label' => 'Emergency Contact',
-                'type' => 'text',
+                'type' => 'tel',
                 'required' => false,
                 'enabled' => true,
                 'for_levels' => ['all']

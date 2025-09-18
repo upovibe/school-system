@@ -795,7 +795,7 @@ class AdmissionConfigModal extends HTMLElement {
             'email': 'email',
             'occupation': 'text',
             'residential_address': 'textarea',
-            'emergency_contact': 'text',
+            'emergency_contact': 'tel',
             'previous_school': 'text',
             'last_class_completed': 'text',
             'level_applying': 'select',

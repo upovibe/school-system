@@ -53,6 +53,17 @@ class ApplicationViewModal extends HTMLElement {
 
     setApplicationData(applicationData) {
         this.applicationData = { ...applicationData };
+        
+        // Parse health_info if it's a JSON string
+        if (this.applicationData.health_info && typeof this.applicationData.health_info === 'string') {
+            try {
+                this.applicationData.health_info = JSON.parse(this.applicationData.health_info);
+            } catch (e) {
+                console.error('Error parsing health_info:', e);
+                this.applicationData.health_info = null;
+            }
+        }
+        
         this.render();
     }
 
@@ -296,12 +307,6 @@ class ApplicationViewModal extends HTMLElement {
                                         <i class="fas fa-stethoscope mr-1"></i>Medical Conditions
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.applicationData.health_info.medical_conditions || 'N/A'}</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        <i class="fas fa-file-medical mr-1"></i>Immunization Card
-                                    </label>
-                                    <p class="text-gray-900 text-sm">${this.applicationData.health_info.immunization_card || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>

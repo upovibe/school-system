@@ -852,7 +852,6 @@ class AdmissionConfigModal extends HTMLElement {
                 level_classes: this.configData.level_classes,
                 shs_programmes: this.configData.shs_programmes,
                 school_types: this.configData.school_types,
-                required_documents: this.configData.required_documents,
                 student_info_fields: this.configData.student_info_fields,
                 parent_guardian_fields: this.configData.parent_guardian_fields,
                 academic_background_fields: this.configData.academic_background_fields,

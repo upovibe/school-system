@@ -342,12 +342,10 @@ class ApplicationController {
                 'level_classes' => json_decode($config['level_classes'], true),
                 'shs_programmes' => json_decode($config['shs_programmes'], true),
                 'school_types' => json_decode($config['school_types'], true),
-                'required_documents' => json_decode($config['required_documents'], true),
                 'student_info_fields' => json_decode($config['student_info_fields'], true),
                 'parent_guardian_fields' => json_decode($config['parent_guardian_fields'], true),
                 'academic_background_fields' => json_decode($config['academic_background_fields'], true),
-                'health_info_fields' => json_decode($config['health_info_fields'], true),
-                'document_upload_fields' => json_decode($config['document_upload_fields'], true)
+                'health_info_fields' => json_decode($config['health_info_fields'], true)
             ];
 
             http_response_code(200);

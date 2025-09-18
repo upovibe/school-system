@@ -763,9 +763,6 @@ class AdmissionConfigModal extends HTMLElement {
             'emergency_contact': 'Emergency Contact',
             'previous_school': 'Previous School Attended',
             'last_class_completed': 'Last Class Completed',
-            'report_card': 'Report Card Upload',
-            'bece_results': 'BECE Results',
-            'transfer_letter': 'Transfer Letter',
             'level_applying': 'Level Applying For',
             'class_applying': 'Class Applying For',
             'academic_programme': 'Academic Programme',
@@ -773,13 +770,6 @@ class AdmissionConfigModal extends HTMLElement {
             'blood_group': 'Blood Group',
             'allergies': 'Allergies',
             'medical_conditions': 'Medical Conditions',
-            'immunization_card': 'Immunization Card Upload',
-            'birth_certificate': 'Birth Certificate',
-            'passport_photo_doc': 'Passport Photo',
-            'report_card_doc': 'Report Card',
-            'transfer_letter_doc': 'Transfer Letter',
-            'bece_results_doc': 'BECE Results Slip',
-            'immunization_card_doc': 'Immunization Card'
         };
         return labels[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -804,9 +794,6 @@ class AdmissionConfigModal extends HTMLElement {
             'emergency_contact': 'text',
             'previous_school': 'text',
             'last_class_completed': 'text',
-            'report_card': 'file',
-            'bece_results': 'file',
-            'transfer_letter': 'file',
             'level_applying': 'select',
             'class_applying': 'select',
             'academic_programme': 'select',
@@ -814,13 +801,6 @@ class AdmissionConfigModal extends HTMLElement {
             'blood_group': 'select',
             'allergies': 'select_multiple',
             'medical_conditions': 'select_multiple',
-            'immunization_card': 'file',
-            'birth_certificate': 'file',
-            'passport_photo_doc': 'file',
-            'report_card_doc': 'file',
-            'transfer_letter_doc': 'file',
-            'bece_results_doc': 'file',
-            'immunization_card_doc': 'file'
         };
         return types[fieldName] || 'text';
     }
@@ -1022,18 +1002,6 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field="student_info_fields"
                                     data-field-name="religion">
                                 </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Passport Photo" 
-                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'passport_photo') ? 'checked' : ''}
-                                    data-field="student_info_fields"
-                                    data-field-name="passport_photo">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Birth Certificate" 
-                                    ${this.configData.student_info_fields && this.isFieldEnabled('student_info_fields', 'birth_certificate') ? 'checked' : ''}
-                                    data-field="student_info_fields"
-                                    data-field-name="birth_certificate">
-                                </ui-checkbox>
                             </div>
                         </div>
 
@@ -1106,25 +1074,6 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field="academic_background_fields"
                                     data-field-name="last_class_completed">
                                 </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Report Card Upload" 
-                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'report_card') ? 'checked' : ''}
-                                    data-field="academic_background_fields"
-                                    data-field-name="report_card">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="BECE Results" 
-                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'bece_results') ? 'checked' : ''}
-                                    data-field="academic_background_fields"
-                                    data-field-name="bece_results"
-                                    ${this.configData.enabled_levels && this.configData.enabled_levels.includes('shs') ? '' : 'style="display: none;"'}>
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Transfer Letter" 
-                                    ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'transfer_letter') ? 'checked' : ''}
-                                    data-field="academic_background_fields"
-                                    data-field-name="transfer_letter">
-                                </ui-checkbox>
                             </div>
                         </div>
 
@@ -1151,12 +1100,6 @@ class AdmissionConfigModal extends HTMLElement {
                                     ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'medical_conditions') ? 'checked' : ''}
                                     data-field="health_info_fields"
                                     data-field-name="medical_conditions">
-                                </ui-checkbox>
-                                <ui-checkbox 
-                                    label="Immunization Card Upload" 
-                                    ${this.configData.health_info_fields && this.isFieldEnabled('health_info_fields', 'immunization_card') ? 'checked' : ''}
-                                    data-field="health_info_fields"
-                                    data-field-name="immunization_card">
                                 </ui-checkbox>
                             </div>
                         </div>

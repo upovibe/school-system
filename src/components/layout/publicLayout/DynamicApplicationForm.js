@@ -343,13 +343,6 @@ class DynamicApplicationForm extends App {
             }
         });
 
-        // Handle file input changes
-        this.addEventListener('change', (e) => {
-            if (e.target.matches('ui-input[type="file"]')) {
-                this.formData[e.target.name] = e.target.files ? e.target.files[0] : null;
-                this.updateProgress();
-            }
-        });
 
         // Handle level selection change for dynamic class options
         this.addEventListener('change', (e) => {
@@ -478,7 +471,7 @@ class DynamicApplicationForm extends App {
                 if (!input) return false;
                 
                 if (field.type === 'file') {
-                    return input.files && input.files.length > 0;
+                    return true; // File fields are not required anymore
                 } else {
                     const value = input.value;
                     return value && value.toString().trim() !== '';
@@ -624,7 +617,8 @@ class DynamicApplicationForm extends App {
             const input = this.querySelector(`[name="${field.name}"]`);
             if (input) {
                 if (field.type === 'file') {
-                    this.formData[field.name] = input.files ? input.files[0] : null;
+                    // File fields are not needed anymore
+                    this.formData[field.name] = null;
                 } else {
                     this.formData[field.name] = input.value || '';
                 }

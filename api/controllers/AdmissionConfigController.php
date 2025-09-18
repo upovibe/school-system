@@ -499,22 +499,6 @@ class AdmissionConfigController {
                 'enabled' => true,
                 'for_levels' => ['all']
             ],
-            [
-                'name' => 'passport_photo',
-                'label' => 'Passport Photo',
-                'type' => 'file',
-                'required' => true,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'birth_certificate',
-                'label' => 'Birth Certificate',
-                'type' => 'file',
-                'required' => true,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ]
         ];
     }
 
@@ -599,30 +583,6 @@ class AdmissionConfigController {
                 'enabled' => true,
                 'for_levels' => ['primary', 'jhs', 'shs']
             ],
-            [
-                'name' => 'report_card',
-                'label' => 'Report Card Upload',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['primary', 'jhs', 'shs']
-            ],
-            [
-                'name' => 'bece_results',
-                'label' => 'BECE Results',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['shs']
-            ],
-            [
-                'name' => 'transfer_letter',
-                'label' => 'Transfer Letter',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => true,
-                'for_levels' => ['primary', 'jhs', 'shs']
-            ]
         ];
     }
 
@@ -698,14 +658,6 @@ class AdmissionConfigController {
                 'allow_other' => true,
                 'for_levels' => ['all']
             ],
-            [
-                'name' => 'immunization_card',
-                'label' => 'Immunization Card Upload',
-                'type' => 'file',
-                'required' => false,
-                'enabled' => false,
-                'for_levels' => ['all']
-            ]
         ];
     }
 

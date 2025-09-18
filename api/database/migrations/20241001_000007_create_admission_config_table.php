@@ -69,8 +69,6 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'place_of_birth', 'label' => 'Place of Birth', 'required' => false, 'enabled' => true, 'type' => 'text'],
             ['name' => 'nationality', 'label' => 'Nationality', 'required' => true, 'enabled' => true, 'type' => 'text'],
             ['name' => 'religion', 'label' => 'Religion/Denomination', 'required' => false, 'enabled' => true, 'type' => 'text'],
-            ['name' => 'passport_photo', 'label' => 'Passport Photo', 'required' => true, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'birth_certificate', 'label' => 'Birth Certificate', 'required' => true, 'enabled' => true, 'type' => 'file']
         ]);
         
         $parentGuardianFields = json_encode([
@@ -86,9 +84,6 @@ class Migration_20241001000007createadmissionconfigtable {
         $academicBackgroundFields = json_encode([
             ['name' => 'previous_school', 'label' => 'Previous School Attended', 'required' => false, 'enabled' => true, 'type' => 'text'],
             ['name' => 'last_class_completed', 'label' => 'Last Class Completed', 'required' => false, 'enabled' => true, 'type' => 'text'],
-            ['name' => 'report_card', 'label' => 'Report Card Upload', 'required' => false, 'enabled' => true, 'type' => 'file'],
-            ['name' => 'bece_results', 'label' => 'BECE Results', 'required' => false, 'enabled' => true, 'type' => 'file', 'for_levels' => ['shs']],
-            ['name' => 'transfer_letter', 'label' => 'Transfer Letter', 'required' => false, 'enabled' => true, 'type' => 'file']
         ]);
         
         
@@ -96,7 +91,6 @@ class Migration_20241001000007createadmissionconfigtable {
             ['name' => 'blood_group', 'label' => 'Blood Group', 'required' => false, 'enabled' => true, 'type' => 'select', 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']],
             ['name' => 'allergies', 'label' => 'Allergies', 'required' => false, 'enabled' => true, 'type' => 'select_multiple', 'options' => ['None', 'Food', 'Medication', 'Environmental', 'Other']],
             ['name' => 'medical_conditions', 'label' => 'Medical Conditions', 'required' => false, 'enabled' => true, 'type' => 'select_multiple', 'options' => ['None', 'Asthma', 'Diabetes', 'Epilepsy', 'Heart Condition', 'Other']],
-            ['name' => 'immunization_card', 'label' => 'Immunization Card Upload', 'required' => false, 'enabled' => false, 'type' => 'file']
         ]);
         
 

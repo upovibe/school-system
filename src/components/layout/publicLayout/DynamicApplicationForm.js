@@ -538,9 +538,9 @@ class DynamicApplicationForm extends App {
                 
                 Toast.show({
                     title: 'Success',
-                    message: `Application submitted successfully! Your application number is: ${response.data.applicant_number}`,
+                    message: 'Application submitted successfully! We will get back to you through your email.',
                     variant: 'success',
-                    duration: 8000
+                    duration: 6000
                 });
             } else {
                 throw new Error(response.data.message || 'Submission failed');
@@ -700,7 +700,7 @@ class DynamicApplicationForm extends App {
         // Show info toast for already submitted
         Toast.show({
             title: 'Registration Already Submitted',
-            message: 'You have already submitted your application. Please check below for your application details.',
+            message: 'You have already submitted your application. We will get back to you through parent email regarding your application status.',
             variant: 'info',
             duration: 6000
         });

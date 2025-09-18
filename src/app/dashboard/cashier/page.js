@@ -849,9 +849,9 @@ class CashierPage extends App {
                     Academic Year: ${this.paymentSummaryByPeriod.academic_year?.display_name || this.paymentSummaryByPeriod.academic_year?.year_code || 'N/A'}
                   </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
                   ${this.paymentSummaryByPeriod.data.map(period => `
-                    <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-30">
+                    <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-30 lg:flex-1">
                       <div class="flex items-center justify-between mb-2">
                         <h4 class="text-sm font-semibold text-white truncate">${period.period_name}</h4>
                         ${period.is_active ? '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">Active</span>' : ''}
@@ -970,7 +970,7 @@ class CashierPage extends App {
             </div>
 
             <!-- Collection Progress Card -->
-            <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-5">
+            <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-5"></div>
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                   <div class="p-2.5 rounded-lg bg-purple-500 text-white size-10 flex items-center justify-center">

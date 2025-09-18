@@ -60,7 +60,29 @@ class ApplicationModel extends BaseModel {
         parent::__construct($pdo);
     }
 
-    // Add custom methods for ApplicationModel here as needed
+    // Override findAll to include academic year name
+    public function findAll() {
+        $stmt = $this->pdo->prepare("
+            SELECT a.*, ay.display_name as academic_year_name 
+            FROM applications a
+            LEFT JOIN academic_years ay ON a.academic_year_id = ay.id
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Override findById to include academic year name
+    public function findById($id) {
+        $stmt = $this->pdo->prepare("
+            SELECT a.*, ay.display_name as academic_year_name 
+            FROM applications a
+            LEFT JOIN academic_years ay ON a.academic_year_id = ay.id
+            WHERE a.id = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
     // Override create to auto-generate applicant_number and set IP
     public function create($data) {

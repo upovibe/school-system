@@ -107,8 +107,9 @@ class ApplicationController {
                 $data['health_info'] = json_encode($healthInfo);
             }
 
-            // Add academic year ID to data
+            // Add academic year ID and IP address to data
             $data['academic_year_id'] = $config['academic_year_id'];
+            $data['applicant_ip'] = $userIP;
             
             // Debug: Log the final data being sent to the model
             error_log('Final data for model: ' . json_encode($data));

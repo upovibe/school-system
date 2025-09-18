@@ -106,6 +106,18 @@ class ApplicationViewModal extends HTMLElement {
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-calendar-alt mr-1"></i>Academic Year
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.applicationData.academic_year_name || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-globe mr-1"></i>IP Address
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-mono">${this.applicationData.applicant_ip || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-user mr-1"></i>Full Name
                                     </label>
                                     <p class="text-gray-900 text-sm font-medium">${this.applicationData.first_name} ${this.applicationData.middle_name || ''} ${this.applicationData.last_name}</p>

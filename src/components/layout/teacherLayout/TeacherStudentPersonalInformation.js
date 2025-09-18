@@ -184,6 +184,28 @@ class TeacherStudentPersonalInformation extends HTMLElement {
                             </div>
                         </div>
 
+                        <!-- Medical Information -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-heartbeat text-pink-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Medical Information</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-tint mr-1"></i>Blood Group
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.studentData.blood_group || 'N/A'}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-notes-medical mr-1"></i>Medical Conditions
+                                    </label>
+                                    <p class="text-gray-900 text-sm">${this.studentData.medical_conditions || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
 
                     ` : `
                         <div class="text-center py-8">

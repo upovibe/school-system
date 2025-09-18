@@ -329,13 +329,21 @@ class ApplicationsPage extends App {
     renderFilters() {
         const applications = this.get('applications') || [];
         
-        // Get unique values for dropdowns
-        const genders = [...new Set(applications.map(a => a.gender).filter(Boolean))];
-        const statuses = [...new Set(applications.map(a => a.status).filter(Boolean))];
-        const classes = [...new Set(applications.map(a => a.class_applying).filter(Boolean))];
+        // Hardcoded gender options
+        const genderOptions = `
+            <ui-option value="male">Male</ui-option>
+            <ui-option value="female">Female</ui-option>
+        `;
         
-        const genderOptions = genders.map(g => `<ui-option value="${g}">${g.charAt(0).toUpperCase() + g.slice(1)}</ui-option>`).join('');
-        const statusOptions = statuses.map(s => `<ui-option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</ui-option>`).join('');
+        // Hardcoded status options
+        const statusOptions = `
+            <ui-option value="pending">Pending</ui-option>
+            <ui-option value="approved">Approved</ui-option>
+            <ui-option value="rejected">Rejected</ui-option>
+        `;
+        
+        // Get unique values for class dropdown
+        const classes = [...new Set(applications.map(a => a.class_applying).filter(Boolean))];
         const classOptions = classes.map(c => `<ui-option value="${c}">${c}</ui-option>`).join('');
 
         const filters = this.get('filters') || { gender: '', status: '', class_applying: '' };

@@ -5,6 +5,7 @@ import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
+import '@/components/ui/SearchDropdown.js';
 import '@/components/layout/adminLayout/ApplicationViewModal.js';
 import '@/components/layout/adminLayout/AdmissionConfigModal.js';
 import api from '@/services/api.js';
@@ -22,10 +23,14 @@ class ApplicationsPage extends App {
         this.showViewModal = false;
         this.viewApplicationData = null;
         this.showConfigModal = false;
+        this.filters = { gender: '', status: '', class_applying: '' };
+        // Initialize reactive state for filters to avoid undefined access during first render
+        this.set('filters', { ...this.filters });
+        this.filteredApplications = null;
     }
 
     getHeaderCounts() {
-        const apps = this.get('applications') || [];
+        const apps = this.get('filteredApplications') || this.get('applications') || [];
         const total = apps.length;
         const grades = new Set(apps.map(a => a.class_applying || 'Unspecified')).size;
         const thisMonth = apps.filter(a => {
@@ -144,6 +149,31 @@ class ApplicationsPage extends App {
         this.addEventListener('table-row-click', this.onRowClick.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
         this.addEventListener('application-status-changed', this.onStatusChanged.bind(this));
+
+        // Filter interactions
+        this.addEventListener('change', (e) => {
+            const dd = e.target.closest('ui-search-dropdown');
+            if (!dd) return;
+
+            const name = dd.getAttribute('name');
+            if (!name) return;
+            const next = { ...this.get('filters'), [name]: dd.value };
+            this.set('filters', next);
+            this.applyFilters();
+        });
+
+        this.addEventListener('click', (e) => {
+            const applyBtn = e.target.closest('[data-action="apply-filters"]');
+            if (applyBtn) { e.preventDefault(); this.applyFilters(); return; }
+            const clearBtn = e.target.closest('[data-action="clear-filters"]');
+            if (clearBtn) {
+                e.preventDefault();
+                const defaults = { gender: '', status: '', class_applying: '' };
+                this.set('filters', defaults);
+                this.set('filteredApplications', null);
+                this.render();
+            }
+        });
     }
 
     handleHeaderActions(event) {
@@ -233,7 +263,8 @@ class ApplicationsPage extends App {
 
     onRowClick(event) {
         const { detail } = event;
-        const application = this.get('applications').find(app => app.id === detail.row.id);
+        const applications = this.get('applications') || [];
+        const application = applications.find(app => app.id === detail.row.id);
         if (application) {
             this.set('viewApplicationData', application);
             this.set('showViewModal', true);
@@ -265,14 +296,95 @@ class ApplicationsPage extends App {
         
         // Update the state to refresh the header counts and table
         this.set('applications', updatedApplications);
+        // Re-apply filters to update filtered applications as well
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        const applications = this.get('applications') || [];
+        const filters = this.get('filters') || {};
+        
+        const filtered = applications.filter(app => {
+            // Gender filter
+            if (filters.gender && app.gender !== filters.gender) {
+                return false;
+            }
+            
+            // Status filter
+            if (filters.status && app.status !== filters.status) {
+                return false;
+            }
+            
+            // Class applying filter
+            if (filters.class_applying && app.class_applying !== filters.class_applying) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        this.set('filteredApplications', filtered);
+    }
+
+    renderFilters() {
+        const applications = this.get('applications') || [];
+        
+        // Get unique values for dropdowns
+        const genders = [...new Set(applications.map(a => a.gender).filter(Boolean))];
+        const statuses = [...new Set(applications.map(a => a.status).filter(Boolean))];
+        const classes = [...new Set(applications.map(a => a.class_applying).filter(Boolean))];
+        
+        const genderOptions = genders.map(g => `<ui-option value="${g}">${g.charAt(0).toUpperCase() + g.slice(1)}</ui-option>`).join('');
+        const statusOptions = statuses.map(s => `<ui-option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</ui-option>`).join('');
+        const classOptions = classes.map(c => `<ui-option value="${c}">${c}</ui-option>`).join('');
+
+        const filters = this.get('filters') || { gender: '', status: '', class_applying: '' };
+        const { gender, status, class_applying } = filters;
+        
+        return `
+            <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Gender</label>
+                        <ui-search-dropdown name="gender" placeholder="All genders" class="w-full" value="${gender || ''}">
+                            ${genderOptions}
+                        </ui-search-dropdown>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Status</label>
+                        <ui-search-dropdown name="status" placeholder="All statuses" class="w-full" value="${status || ''}">
+                            ${statusOptions}
+                        </ui-search-dropdown>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Class Applying</label>
+                        <ui-search-dropdown name="class_applying" placeholder="All classes" class="w-full" value="${class_applying || ''}">
+                            ${classOptions}
+                        </ui-search-dropdown>
+                    </div>
+                </div>
+                <div class="flex justify-between gap-2 mt-3 w-full">                    
+                    <div class="flex gap-2">
+                        <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
+                            <i class="fas fa-filter mr-1"></i> Apply Filters
+                        </ui-button>
+                        <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
+                            <i class="fas fa-times mr-1"></i> Clear Filters
+                        </ui-button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     render() {
         const applications = this.get('applications');
+        const filteredApplications = this.get('filteredApplications');
+        const displayApplications = filteredApplications || applications;
         const loading = this.get('loading');
         const showViewModal = this.get('showViewModal');
         const showConfigModal = this.get('showConfigModal');
-        const tableData = applications ? applications.map((app, index) => ({
+        const tableData = displayApplications ? displayApplications.map((app, index) => ({
             id: app.id,
             index: index + 1,
             applicant_number: app.applicant_number,
@@ -303,6 +415,7 @@ class ApplicationsPage extends App {
         ];
         return `
             ${this.renderHeader()}
+            ${applications && applications.length > 0 ? this.renderFilters() : ''}
             <div class="bg-white rounded-lg shadow-lg p-4">
                 ${loading ? `
                     <div class="space-y-4">

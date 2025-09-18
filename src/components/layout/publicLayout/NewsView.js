@@ -212,11 +212,11 @@ class NewsView extends App {
                 </div>
                 
                 <!-- Share/Copy buttons - Absolute positioned at top-right corner -->
-                <div class="absolute top-4 right-4 z-10 flex gap-3">
+                <div class="absolute top-4 right-4 z-10 flex gap-3 items-center justify-center">
                     <i onclick="navigator.share ? navigator.share({title: '${news.title}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href)" 
-                       class="fas fa-share size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm"></i>
+                       class="fas fa-share size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm flex items-center justify-center"></i>
                     <i onclick="this.closest('app-news-view').copyNewsUrl()" 
-                       class="fas fa-copy size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm"></i>
+                       class="fas fa-copy size-8 text-white hover:text-gray-200 cursor-pointer transition-colors bg-black bg-opacity-50 rounded-lg p-1.5 backdrop-blur-sm flex items-center justify-center"></i>
                 </div>
                 
                 <!-- Dark gradient overlay for images -->

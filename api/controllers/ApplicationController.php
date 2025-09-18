@@ -189,10 +189,10 @@ class ApplicationController {
         
         // Field mapping from config names to database column names
         $fieldMapping = [
-            // Student Information fields
-            'first_name' => 'student_first_name',
-            'middle_name' => 'student_middle_name',
-            'last_name' => 'student_last_name',
+            // Student Information fields - now match exactly
+            'first_name' => 'first_name',
+            'middle_name' => 'middle_name',
+            'last_name' => 'last_name',
             'student_phone' => 'student_phone',
             // gender, date_of_birth, place_of_birth, nationality, religion stay the same
             
@@ -205,14 +205,14 @@ class ApplicationController {
             'emergency_contact' => 'emergency_contact',
             'residential_address' => 'residential_address',
             
-            // Academic Background fields
+            // Academic Background fields - now match exactly
             'previous_school' => 'previous_school',
             'last_class_completed' => 'last_class_completed',
             
-            // School Setup fields
-            'level_applying' => 'level_applied',
-            'class_applying' => 'class_applied',
-            'academic_programme' => 'programme_applied',
+            // School Setup fields - now match exactly
+            'level_applying' => 'level_applying',
+            'class_applying' => 'class_applying',
+            'academic_programme' => 'academic_programme',
             'school_type' => 'school_type',
         ];
         
@@ -298,8 +298,8 @@ class ApplicationController {
         
         
         // Always require school setup fields if they exist
-        $requiredFields[] = 'level_applied';
-        $requiredFields[] = 'class_applied';
+        $requiredFields[] = 'level_applying';
+        $requiredFields[] = 'class_applying';
         
         return array_unique($requiredFields); // Remove duplicates
     }
@@ -380,7 +380,7 @@ class ApplicationController {
                 return;
             }
 
-            $this->model->updateStatus($id, $data['status'], $data['notes'] ?? null);
+            $this->model->updateStatus($id, $data['status']);
             
             http_response_code(200);
             echo json_encode([

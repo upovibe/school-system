@@ -95,7 +95,7 @@ class TeacherStudentGradesPage extends App {
                   <i class="fas fa-question-circle text-lg"></i>
                 </button>
                 <button 
-                  onclick="this.closest('app-teacher-student-grades-page').loadGrades()"
+                  onclick="this.closest('app-teacher-student-grades-page').refreshData()"
                   class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
                   title="Refresh data">
                   <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
@@ -484,6 +484,27 @@ class TeacherStudentGradesPage extends App {
     }
   }
 
+  // Refresh data method for the refresh button
+  async refreshData() {
+    try {
+      await this.loadGrades();
+      Toast.show({
+        title: 'Success',
+        message: 'Data refreshed successfully',
+        variant: 'success',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      Toast.show({
+        title: 'Error',
+        message: 'Failed to refresh data',
+        variant: 'error',
+        duration: 3000
+      });
+    }
+  }
+
   onView(event) {
     const { detail } = event;
     const item = (this.get('grades') || []).find(g => g.id === detail.row.id);
@@ -694,7 +715,7 @@ class TeacherStudentGradesPage extends App {
       { key: 'assign_total', label: 'Assignment Score Total' },
       { key: 'exam_total', label: 'Exam Score Total' },
       { key: 'final_pct', label: 'Final Total Score %' },
-      { key: 'final_grade', label: 'Letter' },
+      { key: 'final_grade', label: 'Grade' },
       { key: 'updated', label: 'Updated' }
     ];
 

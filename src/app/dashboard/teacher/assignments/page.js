@@ -245,6 +245,27 @@ class TeacherAssignmentsPage extends App {
         }
     }
 
+    // Refresh data method for the refresh button
+    async refreshData() {
+        try {
+            await this.loadAssignments();
+            Toast.show({
+                title: 'Success',
+                message: 'Data refreshed successfully',
+                variant: 'success',
+                duration: 2000
+            });
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to refresh data',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
     // Format date for display
     formatDate(dateString) {
         if (!dateString) return 'No date set';
@@ -951,7 +972,7 @@ class TeacherAssignmentsPage extends App {
                                     <i class="fas fa-question-circle text-lg"></i>
                                 </button>
                                 <button 
-                                    onclick="this.closest('app-teacher-assignments-page').loadAssignments()"
+                                    onclick="this.closest('app-teacher-assignments-page').refreshData()"
                                     class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
                                     title="Refresh data">
                                     <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>

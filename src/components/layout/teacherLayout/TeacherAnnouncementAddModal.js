@@ -165,28 +165,40 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            // First try to get if teacher is a class teacher
-            const classResponse = await api.withToken(token).get('/teachers/my-class');
+            // Load both class assignment and subject assignments
+            const [classResponse, assignmentsResponse] = await Promise.all([
+                api.withToken(token).get('/teachers/my-class'),
+                api.withToken(token).get('/teachers/my-assignments')
+            ]);
             
+            // Check if teacher is a class teacher
             if (classResponse.data.success && classResponse.data.data) {
-                // Teacher is a class teacher
                 this.teacherClass = classResponse.data.data;
                 this.isClassTeacher = true;
+            }
+            
+            // Check if teacher has subject assignments
+            if (assignmentsResponse.data.success && assignmentsResponse.data.data && assignmentsResponse.data.data.assignments) {
+                this.teacherAssignments = assignmentsResponse.data.data.assignments;
+            }
+            
+            // Determine what classes to show based on teacher's roles
+            if (this.isClassTeacher && this.teacherAssignments) {
+                // Teacher is both class teacher AND has subject assignments
+                // Show all classes they teach subjects to (including their assigned class)
+                this.populateClassDropdown(this.teacherAssignments);
+                this.setDefaultTargetAudience();
+            } else if (this.isClassTeacher) {
+                // Teacher is only a class teacher (no subject assignments)
                 this.populateClassDropdown([this.teacherClass]);
                 this.setDefaultTargetAudience();
+            } else if (this.teacherAssignments) {
+                // Teacher is only a subject teacher (no class assignment)
+                this.populateClassDropdown(this.teacherAssignments);
+                this.setDefaultTargetAudience();
             } else {
-                // Teacher is not a class teacher, check for subject assignments
-                const assignmentsResponse = await api.withToken(token).get('/teachers/my-assignments');
-                
-                if (assignmentsResponse.data.success && assignmentsResponse.data.data && assignmentsResponse.data.data.assignments) {
-                    this.teacherAssignments = assignmentsResponse.data.data.assignments;
-                    this.isClassTeacher = false;
-                    this.populateClassDropdown(this.teacherAssignments);
-                    this.setDefaultTargetAudience();
-                } else {
-                    // No assignments at all
-                    this.showNoAssignmentsMessage();
-                }
+                // No assignments at all
+                this.showNoAssignmentsMessage();
             }
         } catch (error) {
             console.error('Error loading teacher assignments:', error);
@@ -227,7 +239,17 @@ class TeacherAnnouncementAddModal extends HTMLElement {
     setDefaultTargetAudience() {
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
         if (targetAudienceDropdown) {
-            if (this.isClassTeacher) {
+            if (this.isClassTeacher && this.teacherAssignments) {
+                // Teacher is both class teacher AND has subject assignments
+                // Show both options: "My Class Students" and "My Subject Students"
+                this.updateTargetAudienceOptions('both');
+                // Set value after dropdown is shown and options are populated
+                setTimeout(() => {
+                    targetAudienceDropdown.value = 'specific_class';
+                    this.showTargetClassField();
+                    this.updateHelpText('both');
+                }, 150); // Longer delay to ensure dropdown is fully rendered
+            } else if (this.isClassTeacher) {
                 // Class teacher can target their assigned class
                 this.updateTargetAudienceOptions('class');
                 // Set value after dropdown is shown and options are populated
@@ -253,7 +275,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
     updateHelpText(teacherType) {
         const helpText = this.querySelector('#class-help-text');
         if (helpText) {
-            if (teacherType === 'class') {
+            if (teacherType === 'both') {
+                helpText.textContent = 'Select from all classes where you teach subjects (including your assigned class)';
+            } else if (teacherType === 'class') {
                 helpText.textContent = 'This is automatically set to your assigned class';
             } else if (teacherType === 'subject') {
                 helpText.textContent = 'Where you teach subjects to target announcements';
@@ -273,7 +297,19 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         targetAudienceDropdown.value = '';
         targetAudienceDropdown.setAttribute('placeholder', 'Select target audience...');
 
-        if (teacherType === 'class') {
+        if (teacherType === 'both') {
+            // Teacher is both class teacher AND has subject assignments
+            // Can target their assigned class students OR all classes they teach subjects to
+            const studentsOption = document.createElement('ui-option');
+            studentsOption.setAttribute('value', 'students');
+            studentsOption.textContent = 'My Class Students';
+            targetAudienceDropdown.appendChild(studentsOption);
+
+            const classMembersOption = document.createElement('ui-option');
+            classMembersOption.setAttribute('value', 'specific_class');
+            classMembersOption.textContent = 'My Subject Students';
+            targetAudienceDropdown.appendChild(classMembersOption);
+        } else if (teacherType === 'class') {
             // Class teacher can target both students and class members
             const studentsOption = document.createElement('ui-option');
             studentsOption.setAttribute('value', 'students');
@@ -335,8 +371,29 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         // Clear existing options
         classDropdown.innerHTML = '';
 
-        if (this.isClassTeacher) {
-            // For class teacher, show their assigned class
+        if (this.isClassTeacher && this.teacherAssignments) {
+            // Teacher is both class teacher AND has subject assignments
+            // Show all classes they teach subjects to (including their assigned class)
+            classes.forEach(assignment => {
+                const option = document.createElement('ui-option');
+                option.setAttribute('value', assignment.class_id);
+                option.textContent = `${assignment.class_name} (${assignment.class_section})`;
+                classDropdown.appendChild(option);
+            });
+            
+            // Enable selection for teacher with both roles
+            classDropdown.disabled = false;
+            
+            // Auto-select their assigned class if available
+            if (this.teacherClass) {
+                const assignedClassOption = classes.find(c => c.class_id == this.teacherClass.class_id);
+                if (assignedClassOption) {
+                    classDropdown.value = assignedClassOption.class_id;
+                    this.updateDropdownDisplay();
+                }
+            }
+        } else if (this.isClassTeacher) {
+            // For class teacher only, show their assigned class
             const classItem = classes[0]; // Should only be one class
             const option = document.createElement('ui-option');
             option.setAttribute('value', classItem.class_id);
@@ -345,12 +402,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             
             // Automatically select the class
             classDropdown.value = classItem.class_id;
-            classDropdown.disabled = true; // Cannot change for class teacher
+            classDropdown.disabled = true; // Cannot change for class teacher only
             
             // Force the dropdown to display the selected option's text
             this.updateDropdownDisplay();
         } else if (this.teacherAssignments) {
-            // For subject teacher, show all classes where they teach subjects
+            // For subject teacher only, show all classes where they teach subjects
             classes.forEach(assignment => {
                 const option = document.createElement('ui-option');
                 option.setAttribute('value', assignment.class_id);

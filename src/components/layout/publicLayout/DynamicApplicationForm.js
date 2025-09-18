@@ -330,7 +330,13 @@ class DynamicApplicationForm extends App {
         // Form input changes
         this.addEventListener('input', (e) => {
             if (e.target.matches('ui-input, ui-dropdown, ui-search-dropdown, ui-textarea')) {
-                this.formData[e.target.name] = e.target.value;
+                // Special handling for phone numbers
+                if (e.target.type === 'tel' || e.target.name.includes('phone')) {
+                    this.formData[e.target.name] = this.formatPhoneNumber(e.target.value);
+                    e.target.value = this.formData[e.target.name];
+                } else {
+                    this.formData[e.target.name] = e.target.value;
+                }
                 this.updateProgress();
             }
         });
@@ -359,10 +365,11 @@ class DynamicApplicationForm extends App {
         // Small delay to ensure data collection completes
         setTimeout(() => {
             // Validate current section before proceeding
-            if (!this.validateCurrentSection()) {
+            const validationResult = this.validateCurrentSectionWithDetails();
+            if (!validationResult.isValid) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please fill in all required fields before proceeding',
+                    message: validationResult.message,
                     variant: 'error',
                     duration: 3000
                 });
@@ -489,10 +496,11 @@ class DynamicApplicationForm extends App {
             this.collectCurrentFormData();
             
             // Validate current section before submission
-            if (!this.validateCurrentSection()) {
+            const validationResult = this.validateCurrentSectionWithDetails();
+            if (!validationResult.isValid) {
                 Toast.show({
                     title: 'Validation Error',
-                    message: 'Please fill in all required fields',
+                    message: validationResult.message,
                     variant: 'error',
                     duration: 3000
                 });
@@ -620,10 +628,87 @@ class DynamicApplicationForm extends App {
         return sectionFields.every(field => {
             if (field.required) {
                 const value = this.formData[field.name];
-                return value && value.toString().trim() !== '';
+                if (!value || value.toString().trim() === '') {
+                    return false;
+                }
+                
+                // Special validation for phone numbers
+                if (field.type === 'tel' || field.name.includes('phone')) {
+                    return this.validatePhoneNumber(value);
+                }
+                
+                return true;
             }
             return true;
         });
+    }
+
+    validateCurrentSectionWithDetails() {
+        const currentSectionId = this.enabledSections[this.currentSection].id;
+        const sectionFields = this.getSectionFields(currentSectionId);
+        
+        for (const field of sectionFields) {
+            if (field.required) {
+                const value = this.formData[field.name];
+                if (!value || value.toString().trim() === '') {
+                    return {
+                        isValid: false,
+                        message: `${field.label} is required`
+                    };
+                }
+                
+                // Special validation for phone numbers
+                if (field.type === 'tel' || field.name.includes('phone')) {
+                    if (!this.validatePhoneNumber(value)) {
+                        return {
+                            isValid: false,
+                            message: `${field.label} must be at least 10 digits long`
+                        };
+                    }
+                }
+            }
+        }
+        
+        return { isValid: true };
+    }
+
+    validatePhoneNumber(phone) {
+        // Remove all non-digit characters
+        const digitsOnly = phone.replace(/\D/g, '');
+        
+        // Check if it has at least 10 digits
+        if (digitsOnly.length < 10) {
+            return false;
+        }
+        
+        // Check if it's not too long (max 15 digits for international numbers)
+        if (digitsOnly.length > 15) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    formatPhoneNumber(phone) {
+        // Remove all non-digit characters
+        const digitsOnly = phone.replace(/\D/g, '');
+        
+        // Limit to 15 digits maximum
+        const limitedDigits = digitsOnly.substring(0, 15);
+        
+        // Format based on length
+        if (limitedDigits.length === 0) {
+            return '';
+        } else if (limitedDigits.length <= 3) {
+            return limitedDigits;
+        } else if (limitedDigits.length <= 6) {
+            return `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3)}`;
+        } else if (limitedDigits.length <= 10) {
+            return `(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}`;
+        } else {
+            // International format
+            return `+${limitedDigits.substring(0, limitedDigits.length - 10)} (${limitedDigits.substring(limitedDigits.length - 10, limitedDigits.length - 7)}) ${limitedDigits.substring(limitedDigits.length - 7, limitedDigits.length - 4)}-${limitedDigits.substring(limitedDigits.length - 4)}`;
+        }
     }
 
     showError(message) {

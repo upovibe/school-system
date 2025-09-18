@@ -49,12 +49,29 @@ class ApplicationController {
                 }
             }
 
-            // Validate IP limit
-            if (!$this->model->checkIPLimit($_SERVER['REMOTE_ADDR'] ?? '')) {
+            // Validate phone numbers
+            $phoneFields = ['phone_number', 'student_phone'];
+            foreach ($phoneFields as $phoneField) {
+                if (isset($data[$phoneField]) && !empty($data[$phoneField])) {
+                    if (!$this->validatePhoneNumber($data[$phoneField])) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false, 
+                            'message' => "Invalid phone number format. Phone number must be at least 10 digits long."
+                        ]);
+                        return;
+                    }
+                }
+            }
+
+            // Validate IP limit with detailed info
+            $ipRateLimitInfo = $this->model->getIPRateLimitInfo($_SERVER['REMOTE_ADDR'] ?? '');
+            if (!$ipRateLimitInfo['can_apply']) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false, 
-                    'message' => 'Too many applications from this IP address. Please try again later.'
+                    'message' => "You have reached the daily limit of {$ipRateLimitInfo['max_per_day']} applications. You can apply again {$ipRateLimitInfo['next_available_human']}.",
+                    'rate_limit_info' => $ipRateLimitInfo
                 ]);
                 return;
             }
@@ -302,6 +319,26 @@ class ApplicationController {
         $requiredFields[] = 'class_applying';
         
         return array_unique($requiredFields); // Remove duplicates
+    }
+
+    /**
+     * Validate phone number format
+     */
+    private function validatePhoneNumber($phone) {
+        // Remove all non-digit characters
+        $digitsOnly = preg_replace('/\D/', '', $phone);
+        
+        // Check if it has at least 10 digits
+        if (strlen($digitsOnly) < 10) {
+            return false;
+        }
+        
+        // Check if it's not too long (max 15 digits for international numbers)
+        if (strlen($digitsOnly) > 15) {
+            return false;
+        }
+        
+        return true;
     }
 
     /**

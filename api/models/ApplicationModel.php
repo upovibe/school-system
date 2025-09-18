@@ -182,6 +182,37 @@ class ApplicationModel extends BaseModel {
         return $result['count'] < $maxPerDay;
     }
 
+    // Get IP rate limit info with specific time
+    public function getIPRateLimitInfo($ip, $maxPerDay = 3) {
+        $stmt = $this->pdo->prepare("
+            SELECT COUNT(*) as count, MAX(created_at) as last_application
+            FROM applications 
+            WHERE applicant_ip = ? AND DATE(created_at) = CURDATE()
+        ");
+        $stmt->execute([$ip]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $remainingApplications = max(0, $maxPerDay - $result['count']);
+        $canApply = $remainingApplications > 0;
+        
+        // Calculate next available time
+        $nextAvailableTime = null;
+        if (!$canApply) {
+            // Next day at midnight
+            $nextAvailableTime = date('Y-m-d 00:00:00', strtotime('+1 day'));
+        }
+        
+        return [
+            'can_apply' => $canApply,
+            'remaining_applications' => $remainingApplications,
+            'max_per_day' => $maxPerDay,
+            'applications_today' => $result['count'],
+            'last_application' => $result['last_application'],
+            'next_available_time' => $nextAvailableTime,
+            'next_available_human' => $nextAvailableTime ? date('F j, Y at g:i A', strtotime($nextAvailableTime)) : null
+        ];
+    }
+
     // Get applications by date range
     public function getByDateRange($startDate, $endDate) {
         $stmt = $this->pdo->prepare("

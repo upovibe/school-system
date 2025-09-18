@@ -1065,16 +1065,16 @@ class AdmissionConfigModal extends HTMLElement {
                                     data-field-name="occupation">
                                 </ui-checkbox>
                                 <ui-checkbox 
-                                    label="Residential Address" 
-                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'residential_address') ? 'checked' : ''}
-                                    data-field="parent_guardian_fields"
-                                    data-field-name="residential_address">
-                                </ui-checkbox>
-                                <ui-checkbox 
                                     label="Emergency Contact" 
                                     ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'emergency_contact') ? 'checked' : ''}
                                     data-field="parent_guardian_fields"
                                     data-field-name="emergency_contact">
+                                </ui-checkbox>
+                                <ui-checkbox 
+                                    label="Residential Address" 
+                                    ${this.configData.parent_guardian_fields && this.isFieldEnabled('parent_guardian_fields', 'residential_address') ? 'checked' : ''}
+                                    data-field="parent_guardian_fields"
+                                    data-field-name="residential_address">
                                 </ui-checkbox>
                             </div>
                         </div>

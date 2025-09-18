@@ -159,21 +159,7 @@ class DynamicApplicationForm extends App {
     generateSchoolSetupFields() {
         const fields = [];
         
-        // School Type selection
-        if (this.admissionConfig.school_types && this.admissionConfig.school_types.length > 0) {
-            fields.push({
-                name: 'school_type',
-                label: 'School Type',
-                type: 'select',
-                required: true,
-                enabled: true,
-                options: this.admissionConfig.school_types.map(type => 
-                    type.charAt(0).toUpperCase() + type.slice(1)
-                )
-            });
-        }
-        
-        // Level Applying For
+        // Level Applying For - Moved to first position
         if (this.admissionConfig.enabled_levels && this.admissionConfig.enabled_levels.length > 0) {
             fields.push({
                 name: 'level_applying',
@@ -183,6 +169,20 @@ class DynamicApplicationForm extends App {
                 enabled: true,
                 options: this.admissionConfig.enabled_levels.map(level => 
                     level.charAt(0).toUpperCase() + level.slice(1)
+                )
+            });
+        }
+        
+        // School Type selection - Moved to second position
+        if (this.admissionConfig.school_types && this.admissionConfig.school_types.length > 0) {
+            fields.push({
+                name: 'school_type',
+                label: 'School Type',
+                type: 'select',
+                required: true,
+                enabled: true,
+                options: this.admissionConfig.school_types.map(type => 
+                    type.charAt(0).toUpperCase() + type.slice(1)
                 )
             });
         }
@@ -561,6 +561,7 @@ class DynamicApplicationForm extends App {
             'guardian_phone': 'parent_phone',
             'guardian_email': 'parent_email',
             'guardian_occupation': 'parent_occupation',
+            'emergency_contact': 'emergency_contact',
             'address': 'residential_address',
             
             // Academic Background fields

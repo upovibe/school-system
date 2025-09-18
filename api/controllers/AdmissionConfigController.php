@@ -558,26 +558,18 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'residential_address',
-                'label' => 'Residential Address',
-                'type' => 'textarea',
-                'required' => true,
-                'enabled' => true,
-                'for_levels' => ['all']
-            ],
-            [
-                'name' => 'emergency_contact_name',
-                'label' => 'Emergency Contact Name',
+                'name' => 'emergency_contact',
+                'label' => 'Emergency Contact',
                 'type' => 'text',
                 'required' => false,
                 'enabled' => true,
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'emergency_contact_phone',
-                'label' => 'Emergency Contact Phone',
-                'type' => 'tel',
-                'required' => false,
+                'name' => 'residential_address',
+                'label' => 'Residential Address',
+                'type' => 'textarea',
+                'required' => true,
                 'enabled' => true,
                 'for_levels' => ['all']
             ]

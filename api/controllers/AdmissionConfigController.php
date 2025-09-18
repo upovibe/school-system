@@ -516,7 +516,7 @@ class AdmissionConfigController {
     private function getDefaultParentGuardianFields() {
         return [
             [
-                'name' => 'parent_guardian_name',
+                'name' => 'parent_full_name',
                 'label' => 'Parent/Guardian Full Name',
                 'type' => 'text',
                 'required' => true,
@@ -534,7 +534,7 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'phone',
+                'name' => 'phone_number',
                 'label' => 'Phone Number',
                 'type' => 'tel',
                 'required' => true,
@@ -624,7 +624,7 @@ class AdmissionConfigController {
     private function getDefaultAdmissionDetailsFields() {
         return [
             [
-                'name' => 'level_applying_for',
+                'name' => 'level_applying',
                 'label' => 'Level Applying For',
                 'type' => 'select',
                 'required' => true,
@@ -633,7 +633,7 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'class_applying_for',
+                'name' => 'class_applying',
                 'label' => 'Class Applying For',
                 'type' => 'select',
                 'required' => true,
@@ -642,8 +642,8 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'shs_programme',
-                'label' => 'SHS Programme',
+                'name' => 'academic_program',
+                'label' => 'Academic Program',
                 'type' => 'select',
                 'required' => false,
                 'enabled' => true,
@@ -715,7 +715,7 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'passport_photo',
+                'name' => 'passport_photo_doc',
                 'label' => 'Passport Photo',
                 'type' => 'file',
                 'required' => true,
@@ -723,7 +723,7 @@ class AdmissionConfigController {
                 'for_levels' => ['all']
             ],
             [
-                'name' => 'report_card',
+                'name' => 'report_card_doc',
                 'label' => 'Report Card',
                 'type' => 'file',
                 'required' => false,
@@ -731,7 +731,7 @@ class AdmissionConfigController {
                 'for_levels' => ['primary', 'jhs', 'shs']
             ],
             [
-                'name' => 'transfer_letter',
+                'name' => 'transfer_letter_doc',
                 'label' => 'Transfer Letter',
                 'type' => 'file',
                 'required' => false,
@@ -739,7 +739,7 @@ class AdmissionConfigController {
                 'for_levels' => ['primary', 'jhs', 'shs']
             ],
             [
-                'name' => 'bece_results',
+                'name' => 'bece_results_doc',
                 'label' => 'BECE Results Slip',
                 'type' => 'file',
                 'required' => false,
@@ -747,7 +747,7 @@ class AdmissionConfigController {
                 'for_levels' => ['shs']
             ],
             [
-                'name' => 'immunization_card',
+                'name' => 'immunization_card_doc',
                 'label' => 'Immunization Card',
                 'type' => 'file',
                 'required' => false,

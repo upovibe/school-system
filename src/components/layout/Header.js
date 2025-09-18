@@ -378,7 +378,7 @@
               </div>
 
               <!-- Mobile Menu Button - Right side -->
-              <button data-mobile-toggle class="lg:hidden text-[${darkColor}] size-8 rounded-md">
+              <button data-mobile-toggle class="lg:hidden text-[${primaryColor}] size-8 rounded-md">
                 <i class="fas fa-bars"></i>
               </button>
             </div>

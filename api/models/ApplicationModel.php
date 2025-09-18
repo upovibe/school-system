@@ -197,9 +197,11 @@ class ApplicationModel extends BaseModel {
         
         // Calculate next available time
         $nextAvailableTime = null;
+        $nextAvailableHuman = null;
         if (!$canApply) {
             // Next day at midnight
             $nextAvailableTime = date('Y-m-d 00:00:00', strtotime('+1 day'));
+            $nextAvailableHuman = 'tomorrow from 12:00 AM';
         }
         
         return [
@@ -209,7 +211,7 @@ class ApplicationModel extends BaseModel {
             'applications_today' => $result['count'],
             'last_application' => $result['last_application'],
             'next_available_time' => $nextAvailableTime,
-            'next_available_human' => $nextAvailableTime ? date('F j, Y at g:i A', strtotime($nextAvailableTime)) : null
+            'next_available_human' => $nextAvailableHuman
         ];
     }
 

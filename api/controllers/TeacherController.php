@@ -2859,19 +2859,49 @@ class TeacherController {
             );
             
             if (!$gradeValidation['has_complete_grades']) {
-                // Format missing grades for display
-                $missingGradesText = '';
-                if (!empty($gradeValidation['missing_grades'])) {
-                    $missingGradesText = "\n\nMissing grades for:\n";
-                    foreach ($gradeValidation['missing_grades'] as $missing) {
-                        $missingGradesText .= "• {$missing['subject_name']} ({$missing['subject_code']}) - {$missing['grading_period_name']}\n";
+                // Get academic year name for better context
+                $academicYearSql = "SELECT display_name, year_code FROM academic_years WHERE id = ?";
+                $stmt = $pdo->prepare($academicYearSql);
+                $stmt->execute([$currentAcademicYear['id']]);
+                $academicYearInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                $academicYearName = $academicYearInfo['display_name'] ?? $academicYearInfo['year_code'] ?? 'Current Academic Year';
+                
+                // Count unique subjects and grading periods
+                $missingGrades = $gradeValidation['missing_grades'] ?? [];
+                $uniqueSubjects = [];
+                $uniquePeriods = [];
+                
+                foreach ($missingGrades as $missing) {
+                    $subjectName = $missing['subject_name'] ?? 'Unknown Subject';
+                    $periodName = $missing['grading_period_name'] ?? 'Unknown Period';
+                    
+                    if (!in_array($subjectName, $uniqueSubjects)) {
+                        $uniqueSubjects[] = $subjectName;
+                    }
+                    if (!in_array($periodName, $uniquePeriods)) {
+                        $uniquePeriods[] = $periodName;
                     }
                 }
+                
+                $subjectCount = count($uniqueSubjects);
+                $periodCount = count($uniquePeriods);
+                
+                // Create a clean, summarized message
+                $subjectText = '';
+                if ($subjectCount <= 3) {
+                    $subjectText = implode(', ', $uniqueSubjects);
+                } else {
+                    $firstThree = array_slice($uniqueSubjects, 0, 3);
+                    $remaining = $subjectCount - 3;
+                    $subjectText = implode(', ', $firstThree) . " and {$remaining} more subject" . ($remaining > 1 ? 's' : '');
+                }
+                
+                $message = "Cannot promote student for {$academicYearName}. Missing grades for {$subjectCount} subject" . ($subjectCount > 1 ? 's' : '') . " across {$periodCount} grading period" . ($periodCount > 1 ? 's' : '') . ": {$subjectText}. Please complete all grade entries before promoting.";
                 
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => "Cannot promote student: {$gradeValidation['message']}{$missingGradesText}",
+                    'message' => $message,
                     'validation_details' => $gradeValidation
                 ]);
                 return;

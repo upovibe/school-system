@@ -170,6 +170,7 @@ Router::delete('/classes/{id}', 'ClassController@destroy');
 
 // Academic Year Management Routes (admin only)
 Router::get('/academic-years', 'AcademicYearController@index');
+Router::get('/academic-years/public', 'AcademicYearController@getPublic');
 Router::post('/academic-years', 'AcademicYearController@store');
 Router::get('/academic-years/current', 'AcademicYearController@getCurrent');
 Router::get('/academic-years/active', 'AcademicYearController@getActive');

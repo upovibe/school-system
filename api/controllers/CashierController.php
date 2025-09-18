@@ -1738,17 +1738,28 @@ class CashierController {
             global $pdo;
             RoleMiddleware::requireCashier($pdo);
 
-            // Get current academic year
-            $academicYearSql = "SELECT id, year_code, display_name FROM academic_years WHERE is_current = 1 LIMIT 1";
-            $academicYearStmt = $pdo->prepare($academicYearSql);
-            $academicYearStmt->execute();
-            $academicYear = $academicYearStmt->fetch(PDO::FETCH_ASSOC);
+            // Get academic year (from parameter or current)
+            $academicYearId = $_GET['academic_year_id'] ?? null;
+            
+            if ($academicYearId) {
+                // Get specific academic year
+                $academicYearSql = "SELECT id, year_code, display_name FROM academic_years WHERE id = ? LIMIT 1";
+                $academicYearStmt = $pdo->prepare($academicYearSql);
+                $academicYearStmt->execute([$academicYearId]);
+                $academicYear = $academicYearStmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                // Get current academic year
+                $academicYearSql = "SELECT id, year_code, display_name FROM academic_years WHERE is_current = 1 LIMIT 1";
+                $academicYearStmt = $pdo->prepare($academicYearSql);
+                $academicYearStmt->execute();
+                $academicYear = $academicYearStmt->fetch(PDO::FETCH_ASSOC);
+            }
 
             if (!$academicYear) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'No active academic year found'
+                    'message' => 'No academic year found'
                 ]);
                 return;
             }

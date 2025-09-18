@@ -130,6 +130,32 @@ class AcademicYearController {
     }
 
     /**
+     * Get all academic years (public access for cashiers and other roles)
+     */
+    public function getPublic() {
+        try {
+            // Require authentication but allow multiple roles
+            global $pdo;
+            AuthMiddleware::requireAuth($pdo);
+
+            $academicYears = $this->academicYearModel->findAll();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $academicYears,
+                'message' => 'Academic years retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving academic years: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Create a new academic year (admin only)
      */
     public function store() {

@@ -18,6 +18,8 @@ class CashierPage extends App {
     this.collectionRateData = null;
     this.collectionRateSummary = null;
     this.classes = [];
+    this.academicYears = [];
+    this.selectedAcademicYear = null;
     this.gradingPeriods = [];
     this.paymentSummaryByPeriod = null;
   }
@@ -244,6 +246,61 @@ class CashierPage extends App {
     } catch (error) {
       console.error('❌ Error loading payment summary by period:', error);
       this.paymentSummaryByPeriod = null;
+    }
+  }
+
+  async loadAcademicYears(token) {
+    try {
+      console.log('🔄 Loading academic years...');
+      const response = await api.withToken(token).get('/academic-years/public');
+      console.log('📊 Academic years response:', response);
+      
+      if (response?.data?.success && response.data.data) {
+        this.academicYears = response.data.data;
+        // Set current academic year as default if not already set
+        if (!this.selectedAcademicYear) {
+          const currentYear = this.academicYears.find(year => year.is_current);
+          this.selectedAcademicYear = currentYear || this.academicYears[0];
+        }
+        console.log('✅ Academic years loaded:', this.academicYears);
+        console.log('✅ Selected academic year:', this.selectedAcademicYear);
+      } else {
+        console.warn('⚠️ No academic years data available');
+        this.academicYears = [];
+      }
+    } catch (error) {
+      console.error('❌ Error loading academic years:', error);
+      this.academicYears = [];
+    }
+  }
+
+  async loadPaymentSummaryForYear(token, yearId) {
+    try {
+      const response = await api.withToken(token).get(`/cashier/payment-summary-by-period?academic_year_id=${yearId}`);
+      if (response?.data?.success && response.data.data) {
+        this.paymentSummaryByPeriod = response.data;
+        console.log('✅ Payment summary loaded for academic year:', yearId, this.paymentSummaryByPeriod);
+      } else {
+        console.warn('⚠️ No payment summary data available for academic year:', yearId);
+        this.paymentSummaryByPeriod = null;
+      }
+    } catch (error) {
+      console.error('❌ Error loading payment summary for academic year:', error);
+      this.paymentSummaryByPeriod = null;
+    }
+  }
+
+  async onAcademicYearChange(event) {
+    const yearId = event.target.value;
+    const selectedYear = this.academicYears.find(year => year.id == yearId);
+    
+    if (selectedYear) {
+      this.selectedAcademicYear = selectedYear;
+      const token = localStorage.getItem('token');
+      if (token) {
+        await this.loadPaymentSummaryForYear(token, yearId);
+        this.render();
+      }
     }
   }
 
@@ -677,7 +734,8 @@ class CashierPage extends App {
       await this.loadGradingPeriods(token);
       
       // Load payment summary by period
-      await this.loadPaymentSummaryByPeriod(token);
+      await this.loadAcademicYears(token);
+    await this.loadPaymentSummaryByPeriod(token);
 
       // Fetch financial data
       const [invoicesResp, paymentsResp, receiptsResp, studentsResp] = await Promise.all([
@@ -839,16 +897,26 @@ class CashierPage extends App {
             </div>
           `}
 
-          <!-- Payment Summary by Grading Period -->
-          ${!loading && this.paymentSummaryByPeriod ? `
-            <div class="mt-6">
-              <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
-                <div class="flex items-center justify-between mb-3">
-                  <h3 class="text-lg font-semibold text-white">Payment Summary by Grading Period</h3>
-                  <div class="text-sm text-green-100">
-                    Academic Year: ${this.paymentSummaryByPeriod.academic_year?.display_name || this.paymentSummaryByPeriod.academic_year?.year_code || 'N/A'}
-                  </div>
+        <!-- Payment Summary by Grading Period -->
+        ${!loading ? `
+          <div class="mt-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-white">Payment Summary by Grading Period</h3>
+                <div class="flex items-center gap-3">
+                  <select 
+                      id="academicYearSelector" 
+                      class="px-3 py-1.5 text-sm bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      onchange="this.closest('app-cashier-page').onAcademicYearChange(event)">
+                    ${this.academicYears && this.academicYears.length > 0 ? this.academicYears.map(year => `
+                      <option value="${year.id}" ${this.selectedAcademicYear?.id == year.id ? 'selected' : ''} class="text-gray-900">
+                        ${year.display_name || year.year_code}
+                      </option>
+                    `).join('') : '<option class="text-gray-900">Loading...</option>'}
+                  </select>
                 </div>
+              </div>
+              ${this.paymentSummaryByPeriod && this.paymentSummaryByPeriod.data ? `
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
                   ${this.paymentSummaryByPeriod.data.map(period => `
                     <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-30 lg:flex-1">
@@ -899,9 +967,15 @@ class CashierPage extends App {
                     </div>
                   </div>
                 ` : ''}
-              </div>
+              ` : `
+                <div class="text-center py-8">
+                  <div class="text-white text-lg mb-2">No payment data available</div>
+                  <div class="text-green-100 text-sm">Select an academic year to view payment summary</div>
+                </div>
+              `}
             </div>
-          ` : ''}
+          </div>
+        ` : ''}
         </div>
 
         <!-- Financial Overview -->
@@ -970,7 +1044,7 @@ class CashierPage extends App {
             </div>
 
             <!-- Collection Progress Card -->
-            <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-5"></div>
+            <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg shadow-sm border border-purple-200 p-5">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                   <div class="p-2.5 rounded-lg bg-purple-500 text-white size-10 flex items-center justify-center">

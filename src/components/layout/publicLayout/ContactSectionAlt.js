@@ -317,7 +317,6 @@ class ContactSectionAlt extends App {
                                 <!-- Page Content Section -->
                                 ${this.get('pageData')?.content ? `
                                     <div class="bg-white rounded-[2rem] p-6">
-                                        <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-4">About Our School</h2>
                                         <content-display 
                                             content="${this.get('pageData').content.replace(/"/g, '&quot;')}"
                                             no-styles>

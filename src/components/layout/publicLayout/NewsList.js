@@ -138,7 +138,7 @@ class NewsList extends App {
                                         <!-- Content row with banner left and content/date right -->
                                         <div class="flex items-start gap-4">
                                             ${newsItem.banner_image ? `
-                                                <img src="/api/uploads/news/${newsItem.banner_image}" alt="${newsItem.title}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                                <img src="/api/${newsItem.banner_image}" alt="${newsItem.title}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
                                             ` : `
                                                 <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                                                     <i class="fas fa-image text-gray-400"></i>

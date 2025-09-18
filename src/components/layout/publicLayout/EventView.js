@@ -316,6 +316,17 @@ class EventView extends App {
                             </div>
                         ` : ''}
 
+                        <!-- Content -->
+                        ${event.content ? `
+                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                                <h3 class="text-lg font-semibold text-[${secondaryColor}] mb-3">Event Details</h3>
+                                <content-display 
+                                    content="${event.content.replace(/"/g, '&quot;')}"
+                                    no-styles>
+                                </content-display>
+                            </div>
+                        ` : ''}
+
                         <!-- Dates and Category -->
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                             <div class="space-y-4">

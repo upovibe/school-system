@@ -1,6 +1,7 @@
 import '@/components/ui/Modal.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Badge.js';
+import api from '@/services/api.js';
 
 /**
  * Application View Modal Component
@@ -35,6 +36,20 @@ class ApplicationViewModal extends HTMLElement {
         this.addEventListener('cancel', () => {
             this.close();
         });
+
+        // Handle status change actions
+        this.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="approve"]')) {
+                e.preventDefault();
+                this.handleStatusChange('approved');
+            } else if (e.target.matches('[data-action="reject"]')) {
+                e.preventDefault();
+                this.handleStatusChange('rejected');
+            } else if (e.target.matches('[data-action="reset"]')) {
+                e.preventDefault();
+                this.handleStatusChange('pending');
+            }
+        });
     }
 
     open() {
@@ -65,6 +80,69 @@ class ApplicationViewModal extends HTMLElement {
         }
         
         this.render();
+    }
+
+    async handleStatusChange(newStatus) {
+        if (!this.applicationData || !this.applicationData.id) {
+            Toast.show({
+                title: 'Error',
+                message: 'No application data available',
+                variant: 'error',
+                duration: 3000
+            });
+            return;
+        }
+
+        // Show confirmation for status changes
+        const statusText = newStatus === 'approved' ? 'approve' : newStatus === 'rejected' ? 'reject' : 'reset to pending';
+        const confirmMessage = `Are you sure you want to ${statusText} this application for ${this.applicationData.first_name} ${this.applicationData.last_name}?`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            // Update status via API
+            const response = await api.put(`/applications/${this.applicationData.id}/status`, {
+                status: newStatus
+            });
+
+            if (response.data.success) {
+                // Update local data
+                this.applicationData.status = newStatus;
+                
+                // Show success message
+                Toast.show({
+                    title: 'Success',
+                    message: `Application ${statusText}d successfully`,
+                    variant: 'success',
+                    duration: 3000
+                });
+
+                // Re-render to update the UI
+                this.render();
+
+                // Dispatch custom event to notify parent components
+                this.dispatchEvent(new CustomEvent('application-status-changed', {
+                    detail: {
+                        applicationId: this.applicationData.id,
+                        newStatus: newStatus,
+                        applicationData: this.applicationData
+                    },
+                    bubbles: true
+                }));
+            } else {
+                throw new Error(response.data.message || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating application status:', error);
+            Toast.show({
+                title: 'Error',
+                message: error.response?.data?.message || 'Failed to update application status',
+                variant: 'error',
+                duration: 5000
+            });
+        }
     }
 
     formatDate(dateString) {
@@ -356,7 +434,21 @@ class ApplicationViewModal extends HTMLElement {
                     `}
                 </div>
                 
-                <div slot="footer" class="flex justify-end">
+                <div slot="footer" class="flex justify-between">
+                    <div class="flex gap-3 mx-3">
+                        ${this.applicationData && this.applicationData.status === 'pending' ? `
+                            <ui-button variant="solid" color="success" data-action="approve">
+                                <i class="fas fa-check mr-2"></i>Approve
+                            </ui-button>
+                            <ui-button variant="solid" color="error" data-action="reject">
+                                <i class="fas fa-times mr-2"></i>Reject
+                            </ui-button>
+                        ` : this.applicationData && this.applicationData.status !== 'pending' ? `
+                            <ui-button variant="outline" color="warning" data-action="reset">
+                                <i class="fas fa-undo mr-2"></i>Reset to Pending
+                            </ui-button>
+                        ` : ''}
+                    </div>
                     <ui-button variant="outline" color="secondary" modal-action="cancel">Close</ui-button>
                 </div>
             </ui-modal>

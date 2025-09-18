@@ -504,14 +504,6 @@ class DynamicApplicationForm extends App {
             this.isSubmitting = true;
             this.updateSubmitButton(true);
 
-            // Show submitting toast
-            this.submittingToast = Toast.show({
-                title: 'Submitting',
-                message: 'Please wait while we process your application...',
-                variant: 'info',
-                duration: 0 // Don't auto-dismiss
-            });
-
             // Collect all form data from all sections before validation
             this.collectAllFormData();
             
@@ -520,11 +512,6 @@ class DynamicApplicationForm extends App {
             if (!validationResult.isValid) {
                 this.isSubmitting = false;
                 this.updateSubmitButton(false);
-                
-                // Dismiss submitting toast
-                if (this.submittingToast && this.submittingToast.dismiss) {
-                    this.submittingToast.dismiss();
-                }
                 
                 Toast.show({
                     title: 'Validation Error',
@@ -538,44 +525,31 @@ class DynamicApplicationForm extends App {
             // Map frontend field names to database column names
             const mappedData = this.mapFormDataToDatabase(this.formData);
 
-            // Debug: Log the data being sent
-            console.log('Form data before mapping:', this.formData);
-            console.log('Mapped data being sent:', mappedData);
-
             // Submit form data
             const response = await api.post('/applications', mappedData);
             
             if (response.data.success) {
-                // Dismiss submitting toast
-                if (this.submittingToast && this.submittingToast.dismiss) {
-                    this.submittingToast.dismiss();
-                }
+                // Show success state with application details
+                this.showSuccessState({
+                    applicant_number: response.data.applicant_number,
+                    submitted_at: new Date().toISOString(),
+                    status: 'pending'
+                });
                 
                 Toast.show({
                     title: 'Success',
-                    message: 'Application submitted successfully',
+                    message: `Application submitted successfully! Your application number is: ${response.data.applicant_number}`,
                     variant: 'success',
-                    duration: 5000
+                    duration: 8000
                 });
-                
-                // Reset form
-                this.formData = {};
-                this.initializeFormData();
-                this.currentSection = 0;
-                this.render();
             } else {
                 throw new Error(response.data.message || 'Submission failed');
             }
         } catch (error) {
             console.error('Error submitting application:', error);
             
-            // Dismiss submitting toast
-            if (this.submittingToast && this.submittingToast.dismiss) {
-                this.submittingToast.dismiss();
-            }
-            
-            // Check if user has already submitted
-            if (error.response?.data?.application_data) {
+            // Check if user has already submitted (this is an error case, not success)
+            if (error.response?.status === 400 && error.response?.data?.application_data) {
                 this.showAlreadySubmittedState(error.response.data.application_data);
                 return;
             }
@@ -723,15 +697,23 @@ class DynamicApplicationForm extends App {
         this.hasAlreadySubmitted = true;
         this.submittedApplicationData = applicationData;
         
-        // Show success toast with application details
+        // Show info toast for already submitted
         Toast.show({
-            title: 'Application Already Submitted',
-            message: `Your application number is: ${applicationData.applicant_number}`,
+            title: 'Registration Already Submitted',
+            message: 'You have already submitted your application. Please check below for your application details.',
             variant: 'info',
-            duration: 8000
+            duration: 6000
         });
         
         // Re-render to show the submitted state
+        this.render();
+    }
+
+    showSuccessState(applicationData) {
+        this.hasAlreadySubmitted = true;
+        this.submittedApplicationData = applicationData;
+        
+        // Re-render to show the success state
         this.render();
     }
 
@@ -745,6 +727,11 @@ class DynamicApplicationForm extends App {
             minute: '2-digit'
         });
 
+        // Check if this is a fresh submission or an already submitted one
+        const isNewSubmission = new Date(applicationData.submitted_at) > new Date(Date.now() - 60000); // Within last minute
+        const headerTitle = isNewSubmission ? 'Application Submitted Successfully!' : 'Application Already Submitted';
+        const headerMessage = isNewSubmission ? 'Thank you for your application. We have received your submission.' : 'You have already submitted an application for admission.';
+
         return `
             <section class="min-h-screen bg-gray-50">
                 <div class="container mx-auto py-8 px-4">
@@ -754,8 +741,8 @@ class DynamicApplicationForm extends App {
                             <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
                                 <i class="fas fa-check-circle text-4xl text-green-600"></i>
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-900 mb-2">Application Already Submitted</h1>
-                            <p class="text-gray-600">You have already submitted an application for admission.</p>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2">${headerTitle}</h1>
+                            <p class="text-gray-600">${headerMessage}</p>
                         </div>
 
                         <!-- Application Details Card -->

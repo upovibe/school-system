@@ -50,7 +50,7 @@ class ApplicationController {
             }
 
             // Validate phone numbers
-            $phoneFields = ['phone_number', 'student_phone'];
+            $phoneFields = ['phone_number', 'student_phone', 'emergency_contact'];
             foreach ($phoneFields as $phoneField) {
                 if (isset($data[$phoneField]) && !empty($data[$phoneField])) {
                     if (!$this->validatePhoneNumber($data[$phoneField])) {

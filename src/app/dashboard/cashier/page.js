@@ -901,8 +901,8 @@ class CashierPage extends App {
         ${!loading ? `
           <div class="mt-6">
             <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-semibold text-white">Payment Summary by Grading Period</h3>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-lg font-semibold text-white truncate">Payment Summary by Grading Period</h3>
                 <div class="flex items-center gap-3">
                   <select 
                       id="academicYearSelector" 

@@ -76,6 +76,17 @@ class ApplicationController {
                 return;
             }
 
+            // Process health information fields
+            $healthInfo = $this->processHealthInfo($data, $config);
+            if ($healthInfo === false) {
+                return; // Validation failed, error already sent
+            }
+            
+            // Store health info in JSON column
+            if (!empty($healthInfo)) {
+                $data['health_info'] = json_encode($healthInfo);
+            }
+
             // Add academic year ID to data
             $data['academic_year_id'] = $config['academic_year_id'];
             $id = $this->model->create($data);
@@ -297,21 +308,8 @@ class ApplicationController {
             }
         }
         
-        // Check health info fields
-        if (isset($config['health_info_fields'])) {
-            $healthFields = is_string($config['health_info_fields']) 
-                ? json_decode($config['health_info_fields'], true) 
-                : $config['health_info_fields'];
-            if (is_array($healthFields)) {
-                foreach ($healthFields as $field) {
-                    if (isset($field['required']) && isset($field['enabled']) && $field['required'] && $field['enabled']) {
-                        // Map config field name to database column name
-                        $dbFieldName = isset($fieldMapping[$field['name']]) ? $fieldMapping[$field['name']] : $field['name'];
-                        $requiredFields[] = $dbFieldName;
-                    }
-                }
-            }
-        }
+        // Note: Health info fields are processed separately and stored in health_info JSON column
+        // They are not added to requiredFields as they are handled in the store() method
         
         
         // Always require school setup fields if they exist
@@ -339,6 +337,57 @@ class ApplicationController {
         }
         
         return true;
+    }
+
+    /**
+     * Process and validate health information fields
+     */
+    private function processHealthInfo($data, $config) {
+        $healthInfo = [];
+        $healthFields = ['blood_group', 'allergies', 'medical_conditions'];
+        
+        // Get health field configuration
+        $healthFieldConfig = [];
+        if (isset($config['health_info_fields'])) {
+            $healthFieldConfig = is_string($config['health_info_fields']) 
+                ? json_decode($config['health_info_fields'], true) 
+                : $config['health_info_fields'];
+        }
+        
+        foreach ($healthFields as $field) {
+            if (isset($data[$field])) {
+                $value = $data[$field];
+                
+                // Check if field is required
+                $isRequired = false;
+                foreach ($healthFieldConfig as $fieldConfig) {
+                    if (isset($fieldConfig['name']) && $fieldConfig['name'] === $field) {
+                        $isRequired = $fieldConfig['required'] ?? false;
+                        break;
+                    }
+                }
+                
+                // Validate required fields
+                if ($isRequired && (empty($value) || $value === '')) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => "Health information field '$field' is required"
+                    ]);
+                    return false;
+                }
+                
+                // Only add non-empty values
+                if (!empty($value) && $value !== '') {
+                    $healthInfo[$field] = $value;
+                }
+                
+                // Remove from main data array
+                unset($data[$field]);
+            }
+        }
+        
+        return $healthInfo;
     }
 
     /**

@@ -34,7 +34,10 @@ class ApplicationsPage extends App {
             return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
         }).length;
         const withEmail = apps.filter(a => (a.email || '').trim().length > 0).length;
-        return { total, grades, thisMonth, withEmail };
+        const approved = apps.filter(a => a.status === 'approved').length;
+        const rejected = apps.filter(a => a.status === 'rejected').length;
+        const pending = apps.filter(a => a.status === 'pending').length;
+        return { total, grades, thisMonth, withEmail, approved, rejected, pending };
     }
 
     renderHeader() {
@@ -71,21 +74,43 @@ class ApplicationsPage extends App {
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-layer-group text-white text-lg sm:text-xl"></i>
+                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-check-circle text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.grades}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Grades</div>
+                                    <div class="text-xl sm:text-2xl font-bold">${c.approved}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Approved</div>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                <div class="size-10 flex items-center justify-center bg-red-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-times-circle text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.rejected}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Rejected</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-yellow-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-clock text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.pending}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Pending</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-blue-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-calendar-plus text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -105,17 +130,6 @@ class ApplicationsPage extends App {
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
-                            <div class="flex items-center">
-                                <div class="size-10 flex items-center justify-center bg-purple-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                                    <i class="fas fa-database text-white text-lg sm:text-xl"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Records</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -129,6 +143,7 @@ class ApplicationsPage extends App {
         this.addEventListener('click', this.handleHeaderActions.bind(this));
         this.addEventListener('table-row-click', this.onRowClick.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
+        this.addEventListener('application-status-changed', this.onStatusChanged.bind(this));
     }
 
     handleHeaderActions(event) {
@@ -234,6 +249,22 @@ class ApplicationsPage extends App {
 
     onRefresh() {
         this.loadData();
+    }
+
+    onStatusChanged(event) {
+        const { detail } = event;
+        const { applicationId, newStatus } = detail;
+        
+        // Update the local applications data
+        const applications = this.get('applications') || [];
+        const updatedApplications = applications.map(app => 
+            app.id === applicationId 
+                ? { ...app, status: newStatus }
+                : app
+        );
+        
+        // Update the state to refresh the header counts and table
+        this.set('applications', updatedApplications);
     }
 
     render() {

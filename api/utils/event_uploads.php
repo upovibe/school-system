@@ -1,11 +1,13 @@
 <?php
-// api/utils/event_uploads.php - Event upload utilities
+// api/utils/event_uploads.php - Upload utilities for events
+
+require_once __DIR__ . '/../core/UploadCore.php';
 
 /**
  * Upload event banner image
  * 
- * @param array $file The uploaded file array from $_FILES or a manually parsed request
- * @return array The uploaded file path(s)
+ * @param array $file - The uploaded file array from $_FILES
+ * @return array - Array containing original and thumbnail paths
  */
 function uploadEventBanner($file) {
     $uploadDir = __DIR__ . '/../uploads/events/';
@@ -20,24 +22,36 @@ function uploadEventBanner($file) {
     }
     
     // Validate file
-    if (!isValidImageFile($file)) {
-        throw new Exception('Invalid file. Only JPEG, PNG, GIF, and WebP images are allowed (max 5MB).');
+    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    $maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!in_array($file['type'], $allowedTypes)) {
+        throw new Exception('Invalid file type. Only JPEG, PNG, and WebP images are allowed.');
+    }
+    
+    if ($file['size'] > $maxSize) {
+        throw new Exception('File size too large. Maximum size is 5MB.');
     }
     
     // Generate unique filename
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid() . '_' . time() . '.' . $extension;
-    $filepath = $uploadDir . $filename;
+    $originalPath = $uploadDir . $filename;
     
     // Move uploaded file.
     // move_uploaded_file() is for POST requests. For PUT requests where we parse the body manually,
     // the file is already in a temporary location, so we can use rename() to move it.
-    if (!rename($file['tmp_name'], $filepath)) {
+    if (!rename($file['tmp_name'], $originalPath)) {
         throw new Exception('Failed to upload file.');
     }
     
-    // Generate thumbnails
-    $thumbnails = generateEventThumbnails($filepath, $filename, $thumbnailsDir);
+    // Create thumbnails only if GD extension is available
+    $thumbnails = [];
+    if (extension_loaded('gd')) {
+        $thumbnails = generateEventThumbnails($originalPath, $filename, $thumbnailsDir);
+    } else {
+        error_log('GD extension not available. Skipping thumbnail generation.');
+    }
     
     return [
         'original' => 'uploads/events/' . $filename,
@@ -46,68 +60,54 @@ function uploadEventBanner($file) {
 }
 
 /**
- * Upload multiple event banner images
+ * Delete event banner image and its thumbnails
  * 
- * @param array $files The uploaded files array from $_FILES
- * @return array Array of uploaded file paths
+ * @param string $imagePath - The image path to delete
+ * @return bool - True if deletion was successful
  */
-function uploadEventBanners($files) {
-    $uploadedFiles = [];
-    
-    // Handle single file
-    if (!is_array($files['name'])) {
-        return uploadEventBanner($files);
+function deleteEventBanner($imagePath) {
+    if (empty($imagePath)) {
+        return true;
     }
     
-    // Handle multiple files
-    $fileCount = count($files['name']);
-    for ($i = 0; $i < $fileCount; $i++) {
-        if ($files['error'][$i] === UPLOAD_ERR_OK) {
-            $file = [
-                'name' => $files['name'][$i],
-                'type' => $files['type'][$i],
-                'tmp_name' => $files['tmp_name'][$i],
-                'error' => $files['error'][$i],
-                'size' => $files['size'][$i]
-            ];
-            
-            try {
-                $uploadedFiles[] = uploadEventBanner($file);
-            } catch (Exception $e) {
-                // Log error but continue with other files
-                error_log('Error uploading event banner: ' . $e->getMessage());
-            }
+    $baseDir = __DIR__ . '/../';
+    $originalPath = $baseDir . $imagePath;
+    
+    // Delete original file
+    if (file_exists($originalPath)) {
+        unlink($originalPath);
+    }
+    
+    // Delete thumbnails
+    $filename = basename($imagePath);
+    $thumbnailsDir = $baseDir . 'uploads/events/thumbnails/';
+    
+    $thumbnailSizes = ['small', 'medium', 'large'];
+    foreach ($thumbnailSizes as $size) {
+        $thumbnailPath = $thumbnailsDir . str_replace('.' . pathinfo($filename, PATHINFO_EXTENSION), '_' . $size . '.' . pathinfo($filename, PATHINFO_EXTENSION), $filename);
+        if (file_exists($thumbnailPath)) {
+            unlink($thumbnailPath);
         }
     }
     
-    return $uploadedFiles;
+    return true;
 }
 
 /**
- * Validate image file
+ * Update event banner image (delete old, upload new)
  * 
- * @param array $file The uploaded file array
- * @return bool True if valid, false otherwise
+ * @param array $newFile - The new uploaded file array
+ * @param string $oldImagePath - The old image path to delete
+ * @return array - Array containing new original and thumbnail paths
  */
-function isValidImageFile($file) {
-    // Check file size (max 5MB)
-    if ($file['size'] > 5 * 1024 * 1024) {
-        return false;
+function updateEventBanner($newFile, $oldImagePath = null) {
+    // Delete old image if it exists
+    if ($oldImagePath) {
+        deleteEventBanner($oldImagePath);
     }
     
-    // Check file type
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($file['type'], $allowedTypes)) {
-        return false;
-    }
-    
-    // Additional validation using getimagesize
-    $imageInfo = getimagesize($file['tmp_name']);
-    if ($imageInfo === false) {
-        return false;
-    }
-    
-    return true;
+    // Upload new image
+    return uploadEventBanner($newFile);
 }
 
 /**
@@ -119,6 +119,12 @@ function isValidImageFile($file) {
  * @return array Array of thumbnail paths
  */
 function generateEventThumbnails($originalPath, $filename, $thumbnailsDir) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot generate thumbnails.');
+        return [];
+    }
+    
     $thumbnails = [];
     $sizes = [
         'small' => [150, 150],
@@ -152,6 +158,12 @@ function generateEventThumbnails($originalPath, $filename, $thumbnailsDir) {
  */
 function createThumbnail($sourcePath, $destPath, $width, $height) {
     try {
+        // Check if GD extension is available
+        if (!extension_loaded('gd')) {
+            error_log('GD extension not available. Cannot create thumbnail.');
+            return false;
+        }
+        
         $imageInfo = getimagesize($sourcePath);
         if ($imageInfo === false) {
             return false;
@@ -225,6 +237,12 @@ function createThumbnail($sourcePath, $destPath, $width, $height) {
  * @return GdImage|false Image resource or false on failure
  */
 function createImageResource($path, $mimeType) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot create image resource.');
+        return false;
+    }
+    
     switch ($mimeType) {
         case 'image/jpeg':
         case 'image/jpg':
@@ -249,6 +267,12 @@ function createImageResource($path, $mimeType) {
  * @return bool True if successful, false otherwise
  */
 function saveImage($image, $path, $mimeType) {
+    // Check if GD extension is available
+    if (!extension_loaded('gd')) {
+        error_log('GD extension not available. Cannot save image.');
+        return false;
+    }
+    
     switch ($mimeType) {
         case 'image/jpeg':
         case 'image/jpg':
@@ -263,78 +287,4 @@ function saveImage($image, $path, $mimeType) {
             return false;
     }
 }
-
-/**
- * Get event banner info for API response
- * 
- * @param string|array $bannerPath Banner path(s)
- * @return array|null Banner information or null if file doesn't exist
- */
-function getEventBannerInfo($bannerPath) {
-    if (empty($bannerPath)) {
-        return null;
-    }
-    
-    if (is_array($bannerPath)) {
-        $info = [];
-        foreach ($bannerPath as $path) {
-            $info[] = getEventBannerInfo($path);
-        }
-        return $info;
-    }
-    
-    $fullPath = __DIR__ . '/../' . $bannerPath;
-    if (!file_exists($fullPath)) {
-        return null;
-    }
-    
-    $imageInfo = getimagesize($fullPath);
-    if ($imageInfo === false) {
-        return null;
-    }
-    
-    return [
-        'path' => $bannerPath,
-        'url' => '/api/' . $bannerPath,
-        'width' => $imageInfo[0],
-        'height' => $imageInfo[1],
-        'size' => filesize($fullPath),
-        'mime_type' => $imageInfo['mime']
-    ];
-}
-
-/**
- * Delete event banner and thumbnails
- * 
- * @param string $bannerPath Banner path
- * @return bool True if successful, false otherwise
- */
-function deleteEventBanner($bannerPath) {
-    if (empty($bannerPath)) {
-        return true;
-    }
-    
-    $fullPath = __DIR__ . '/../' . $bannerPath;
-    $thumbnailsDir = __DIR__ . '/../uploads/events/thumbnails/';
-    
-    // Delete original file
-    if (file_exists($fullPath)) {
-        unlink($fullPath);
-    }
-    
-    // Delete thumbnails
-    $filename = basename($bannerPath);
-    $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
-    $extension = pathinfo($filename, PATHINFO_EXTENSION);
-    
-    $sizes = ['small', 'medium', 'large'];
-    foreach ($sizes as $size) {
-        $thumbnailPath = $thumbnailsDir . $nameWithoutExt . '_' . $size . '.' . $extension;
-        if (file_exists($thumbnailPath)) {
-            unlink($thumbnailPath);
-        }
-    }
-    
-    return true;
-}
-?> 
+?>

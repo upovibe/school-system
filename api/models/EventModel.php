@@ -11,6 +11,7 @@ class EventModel extends BaseModel {
         'title',
         'slug',
         'description',
+        'content',
         'start_date',
         'end_date',
         'category',

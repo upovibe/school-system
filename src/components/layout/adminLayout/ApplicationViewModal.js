@@ -242,6 +242,7 @@ class ApplicationViewModal extends HTMLElement {
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.applicationData.class_applying || 'N/A'}</p>
                                 </div>
+                                ${this.applicationData.level_applying && this.applicationData.level_applying.toLowerCase() === 'shs' ? `
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         <i class="fas fa-book mr-1"></i>Academic Programme
@@ -254,6 +255,7 @@ class ApplicationViewModal extends HTMLElement {
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.applicationData.school_type || 'N/A'}</p>
                                 </div>
+                                ` : ''}
                             </div>
                         </div>
 

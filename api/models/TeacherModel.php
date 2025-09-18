@@ -632,6 +632,8 @@ class TeacherModel extends BaseModel {
                         s.parent_name,
                         s.parent_phone,
                         s.parent_email,
+                        s.blood_group,
+                        s.medical_conditions,
                         s.status,
                         s.created_at,
                         s.updated_at,

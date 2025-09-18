@@ -173,14 +173,22 @@ class TeacherClassesSubjectsPage extends App {
         }
         
         if (foundStudent) {
-            this.set('selectedStudentData', foundStudent);
+            // Ensure we have all the student data including medical fields
+            const completeStudentData = {
+                ...foundStudent,
+                // Make sure medical fields are included
+                blood_group: foundStudent.blood_group || null,
+                medical_conditions: foundStudent.medical_conditions || null
+            };
+            
+            this.set('selectedStudentData', completeStudentData);
             this.set('showStudentModal', true);
             
             // Set the student data in the modal
             setTimeout(() => {
                 const modal = this.querySelector('teacher-student-personal-information');
                 if (modal) {
-                    modal.setStudentData(foundStudent);
+                    modal.setStudentData(completeStudentData);
                 }
             }, 0);
         }

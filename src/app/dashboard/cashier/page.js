@@ -934,7 +934,7 @@ class CashierPage extends App {
 
         <!-- Financial Overview -->
         ${!loading ? `
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 my-6">
             <!-- Invoice Status Card -->
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-5">
               <div class="flex items-center justify-between mb-4">

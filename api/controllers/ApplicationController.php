@@ -193,24 +193,27 @@ class ApplicationController {
             'first_name' => 'student_first_name',
             'middle_name' => 'student_middle_name',
             'last_name' => 'student_last_name',
+            'student_phone' => 'student_phone',
             // gender, date_of_birth, place_of_birth, nationality, religion stay the same
             
-            // Parent/Guardian fields
-            'guardian_name' => 'parent_guardian_name',
-            'guardian_phone' => 'parent_phone',
-            'guardian_email' => 'parent_email',
-            'guardian_occupation' => 'parent_occupation',
+            // Parent/Guardian fields - now match exactly
+            'parent_full_name' => 'parent_full_name',
+            'phone_number' => 'phone_number',
+            'email' => 'email',
+            'occupation' => 'occupation',
+            'relationship' => 'relationship',
             'emergency_contact' => 'emergency_contact',
-            'address' => 'residential_address',
+            'residential_address' => 'residential_address',
             
             // Academic Background fields
-            'previous_school_name' => 'previous_school',
-            'last_grade_completed' => 'last_class_completed',
+            'previous_school' => 'previous_school',
+            'last_class_completed' => 'last_class_completed',
             
-            // School Setup fields (these are handled differently)
+            // School Setup fields
             'level_applying' => 'level_applied',
             'class_applying' => 'class_applied',
-            'academic_program' => 'programme_applied',
+            'academic_programme' => 'programme_applied',
+            'school_type' => 'school_type',
         ];
         
         // Check student info fields

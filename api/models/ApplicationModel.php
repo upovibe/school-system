@@ -10,9 +10,9 @@ class ApplicationModel extends BaseModel {
     protected static $fillable = [
         'applicant_number',
         // Section A: Student Information
-        'student_first_name',
-        'student_middle_name',
-        'student_last_name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'gender',
         'date_of_birth',
         'place_of_birth',
@@ -21,20 +21,19 @@ class ApplicationModel extends BaseModel {
         'student_phone',
         'email',
         // Section B: Parent/Guardian Information
-        'parent_guardian_name',
+        'parent_full_name',
         'relationship',
-        'parent_phone',
-        'parent_email',
-        'parent_occupation',
+        'phone_number',
+        'occupation',
         'emergency_contact',
         'residential_address',
         // Section C: Academic Background
         'previous_school',
         'last_class_completed',
-        // Section D: Admission Details
-        'level_applied',
-        'class_applied',
-        'programme_applied',
+        // Section D: School Setup
+        'level_applying',
+        'class_applying',
+        'academic_programme',
         'school_type',
         // Section E: Health Information
         'health_info',
@@ -45,7 +44,8 @@ class ApplicationModel extends BaseModel {
         'reviewed_at',
         // Additional Data & Tracking
         'additional_data',
-        'applicant_ip'
+        'applicant_ip',
+        'academic_year_id'
     ];
 
     // Fields that should be cast to specific types

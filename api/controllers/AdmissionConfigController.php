@@ -167,7 +167,6 @@ class AdmissionConfigController {
                 'student_info_fields' => $this->getDefaultStudentInfoFields(),
                 'parent_guardian_fields' => $this->getDefaultParentGuardianFields(),
                 'academic_background_fields' => $this->getDefaultAcademicBackgroundFields(),
-                'admission_details_fields' => $this->getDefaultAdmissionDetailsFields(),
                 'health_info_fields' => $this->getDefaultHealthInfoFields(),
                 'document_upload_fields' => $this->getDefaultDocumentUploadFields()
             ];
@@ -279,7 +278,7 @@ class AdmissionConfigController {
                 }
             }
 
-            $validSections = ['student_info', 'parent_guardian', 'academic_background', 'admission_details', 'health_info', 'document_upload'];
+            $validSections = ['student_info', 'parent_guardian', 'academic_background', 'health_info', 'document_upload'];
             if (!in_array($data['section'], $validSections)) {
                 http_response_code(400);
                 echo json_encode([

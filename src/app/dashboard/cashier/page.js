@@ -1107,22 +1107,22 @@ class CashierPage extends App {
         <!-- Collection Rate Chart -->
         ${!loading ? `
           <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col gap-2 w-full md:flex-row md:items-center justify-between mb-4">
               <div class="flex items-center">
                 <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
                   <i class="fas fa-percentage text-white text-sm"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Fee Collection Rate by Class</h3>
+                <h3 class="text-lg font-semibold text-gray-900 truncate">Fee Collection Rate by Class</h3>
               </div>
-              <div class="flex items-center space-x-4">
+              <div class="flex flex-col gap-2 md:flex-row items-center space-x-4 w-full justify-end md:w-fit ml-auto">
                 <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Class:</label>
+                  <label class="text-sm text-gray-600 hidden lg:block">Class:</label>
                   <select id="cashierCollectionClassSelector" class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                     ${this.generateClassOptions()}
                   </select>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Grading Period:</label>
+                  <label class="text-sm text-gray-600 hidden lg:block">Grading Period:</label>
                   <ui-search-dropdown 
                     id="cashierCollectionPeriodSelector" 
                     name="grading_period_id" 

@@ -271,6 +271,8 @@ class ApplicationsPage extends App {
         this.set('applications', updatedApplications);
         // Re-apply filters to update filtered applications as well
         this.applyFilters();
+        // Force re-render to update the UI immediately
+        this.render();
     }
 
     applyFilters() {

@@ -63,16 +63,18 @@ class ApplicationViewModal extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
-        this.resetForm();
-    }
-
-    resetForm() {
         this.applicationData = null;
-        this.render();
+        
+        // Dispatch event to parent to clear viewApplicationData - PREVENT EMPTY MODAL ISSUE
+        this.dispatchEvent(new CustomEvent('application-view-closed', {
+            bubbles: true,
+            detail: {}
+        }));
     }
 
+    // Set application data for viewing - EXACT PATTERN FROM TEAM VIEW MODAL
     setApplicationData(applicationData) {
-        this.applicationData = { ...applicationData };
+        this.applicationData = applicationData;
         
         // Parse health_info if it's a JSON string
         if (this.applicationData.health_info && typeof this.applicationData.health_info === 'string') {
@@ -84,6 +86,7 @@ class ApplicationViewModal extends HTMLElement {
             }
         }
         
+        // Re-render the modal with the new data
         this.render();
     }
 

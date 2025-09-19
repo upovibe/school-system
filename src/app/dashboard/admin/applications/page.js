@@ -24,8 +24,6 @@ class ApplicationsPage extends App {
         this.viewApplicationData = null;
         this.showConfigModal = false;
         this.filters = { gender: '', status: '', class_applying: '' };
-        // Initialize reactive state for filters to avoid undefined access during first render
-        this.set('filters', { ...this.filters });
         this.filteredApplications = null;
     }
 
@@ -144,9 +142,15 @@ class ApplicationsPage extends App {
     connectedCallback() {
         super.connectedCallback();
         document.title = 'Applications | School System';
+        
+        // Ensure clean modal state on component initialization - PREVENT EMPTY MODAL ISSUE
+        this.closeAllModals();
+        
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
-        this.addEventListener('table-row-click', this.onRowClick.bind(this));
+        
+        // Add event listeners for table events - EXACT PATTERN FROM WORKING PAGES
+        this.addEventListener('table-view', this.onView.bind(this));
         this.addEventListener('table-refresh', this.onRefresh.bind(this));
         this.addEventListener('application-status-changed', this.onStatusChanged.bind(this));
 
@@ -157,8 +161,7 @@ class ApplicationsPage extends App {
 
             const name = dd.getAttribute('name');
             if (!name) return;
-            const next = { ...this.get('filters'), [name]: dd.value };
-            this.set('filters', next);
+            this.filters[name] = dd.value;
             this.applyFilters();
         });
 
@@ -168,11 +171,21 @@ class ApplicationsPage extends App {
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
-                const defaults = { gender: '', status: '', class_applying: '' };
-                this.set('filters', defaults);
-                this.set('filteredApplications', null);
+                this.filters = { gender: '', status: '', class_applying: '' };
+                this.filteredApplications = null;
                 this.render();
             }
+        });
+
+        // Listen for success events to close modals (EXACT PATTERN FROM WORKING PAGES)
+        this.addEventListener('config-saved', (event) => {
+            this.set('showConfigModal', false);
+        });
+        
+        // Listen for modal close events to clear data - PREVENT EMPTY MODAL ISSUE
+        this.addEventListener('application-view-closed', (event) => {
+            this.set('showViewModal', false);
+            this.set('viewApplicationData', null);
         });
     }
 
@@ -223,13 +236,9 @@ class ApplicationsPage extends App {
     }
 
     showSettings() {
+        // EXACT PATTERN FROM WORKING PAGES
+        this.closeAllModals();
         this.set('showConfigModal', true);
-        setTimeout(() => {
-            const configModal = this.querySelector('admission-config-modal');
-            if (configModal) {
-                configModal.open();
-            }
-        }, 0);
     }
 
     async loadData() {
@@ -261,24 +270,27 @@ class ApplicationsPage extends App {
         }
     }
 
-    onRowClick(event) {
+    // EXACT PATTERN FROM WORKING PAGES
+    onView(event) {
         const { detail } = event;
         const applications = this.get('applications') || [];
         const application = applications.find(app => app.id === detail.row.id);
         if (application) {
+            this.closeAllModals();
             this.set('viewApplicationData', application);
             this.set('showViewModal', true);
             setTimeout(() => {
                 const viewModal = this.querySelector('application-view-modal');
                 if (viewModal) {
                     viewModal.setApplicationData(application);
-                    viewModal.open();
                 }
             }, 0);
         }
     }
 
     onRefresh() {
+        // Close any open modals before refreshing - PREVENT EMPTY MODAL ISSUE
+        this.closeAllModals();
         this.loadData();
     }
 
@@ -302,21 +314,20 @@ class ApplicationsPage extends App {
 
     applyFilters() {
         const applications = this.get('applications') || [];
-        const filters = this.get('filters') || {};
         
         const filtered = applications.filter(app => {
             // Gender filter
-            if (filters.gender && app.gender !== filters.gender) {
+            if (this.filters.gender && app.gender !== this.filters.gender) {
                 return false;
             }
             
             // Status filter
-            if (filters.status && app.status !== filters.status) {
+            if (this.filters.status && app.status !== this.filters.status) {
                 return false;
             }
             
             // Class applying filter
-            if (filters.class_applying && app.class_applying !== filters.class_applying) {
+            if (this.filters.class_applying && app.class_applying !== this.filters.class_applying) {
                 return false;
             }
             
@@ -324,6 +335,13 @@ class ApplicationsPage extends App {
         });
         
         this.set('filteredApplications', filtered);
+    }
+
+    // EXACT PATTERN FROM WORKING PAGES - Close all modals and dialogs
+    closeAllModals() {
+        this.set('showViewModal', false);
+        this.set('showConfigModal', false);
+        this.set('viewApplicationData', null);
     }
 
     renderFilters() {
@@ -346,8 +364,7 @@ class ApplicationsPage extends App {
         const classes = [...new Set(applications.map(a => a.class_applying).filter(Boolean))];
         const classOptions = classes.map(c => `<ui-option value="${c}">${c}</ui-option>`).join('');
 
-        const filters = this.get('filters') || { gender: '', status: '', class_applying: '' };
-        const { gender, status, class_applying } = filters;
+        const { gender, status, class_applying } = this.filters;
         
         return `
             <div class="bg-gray-100 rounded-md p-3 mb-4 border border-gray-300">
@@ -442,11 +459,12 @@ class ApplicationsPage extends App {
                             search-placeholder="Search applications..."
                             pagination
                             page-size="50"
+                            action
+                            actions="view"
                             refresh
                             print
                             bordered
                             striped
-                            clickable
                             class="w-full">
                         </ui-table>
                     </div>

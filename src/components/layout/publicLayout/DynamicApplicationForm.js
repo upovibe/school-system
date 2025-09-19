@@ -22,8 +22,6 @@ class DynamicApplicationForm extends App {
         this.currentSection = 0;
         this.enabledSections = [];
         this.isSubmitting = false;
-        this.hasAlreadySubmitted = false;
-        this.submittedApplicationData = null;
     }
 
     static get observedAttributes() {
@@ -529,19 +527,15 @@ class DynamicApplicationForm extends App {
             const response = await api.post('/applications', mappedData);
             
             if (response.data.success) {
-                // Show success state with application details
-                this.showSuccessState({
-                    applicant_number: response.data.applicant_number,
-                    submitted_at: new Date().toISOString(),
-                    status: 'pending'
-                });
-                
                 Toast.show({
                     title: 'Success',
                     message: 'Application submitted successfully! We will get back to you through your email.',
                     variant: 'success',
                     duration: 6000
                 });
+                
+                // Reset form
+                this.resetForm();
             } else {
                 throw new Error(response.data.message || 'Submission failed');
             }
@@ -694,9 +688,6 @@ class DynamicApplicationForm extends App {
     }
 
     showAlreadySubmittedState(applicationData) {
-        this.hasAlreadySubmitted = true;
-        this.submittedApplicationData = applicationData;
-        
         // Show info toast for already submitted
         Toast.show({
             title: 'Registration Already Submitted',
@@ -704,119 +695,9 @@ class DynamicApplicationForm extends App {
             variant: 'info',
             duration: 6000
         });
-        
-        // Re-render to show the submitted state
-        this.render();
     }
 
-    showSuccessState(applicationData) {
-        this.hasAlreadySubmitted = true;
-        this.submittedApplicationData = applicationData;
-        
-        // Re-render to show the success state
-        this.render();
-    }
 
-    renderAlreadySubmittedState() {
-        const applicationData = this.submittedApplicationData;
-        const submittedDate = new Date(applicationData.submitted_at).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        // Check if this is a fresh submission or an already submitted one
-        const isNewSubmission = new Date(applicationData.submitted_at) > new Date(Date.now() - 60000); // Within last minute
-        const headerTitle = isNewSubmission ? 'Application Submitted Successfully!' : 'Application Already Submitted';
-        const headerMessage = isNewSubmission ? 'Thank you for your application. We have received your submission.' : 'You have already submitted an application for admission.';
-
-        return `
-            <section class="min-h-screen bg-gray-50">
-                <div class="container mx-auto py-8 px-4">
-                    <div class="max-w-2xl mx-auto">
-                        <!-- Success Header -->
-                        <div class="text-center mb-8">
-                            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
-                                <i class="fas fa-check-circle text-4xl text-green-600"></i>
-                            </div>
-                            <h1 class="text-3xl font-bold text-gray-900 mb-2">${headerTitle}</h1>
-                            <p class="text-gray-600">${headerMessage}</p>
-                        </div>
-
-                        <!-- Application Details Card -->
-                        <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
-                            <div class="border-b border-gray-200 pb-6 mb-6">
-                                <h2 class="text-xl font-semibold text-gray-900 mb-4">Application Details</h2>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-hashtag mr-2"></i>Application Number
-                                    </label>
-                                    <p class="text-lg font-mono font-semibold text-gray-900">${applicationData.applicant_number}</p>
-                                </div>
-                                
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-calendar mr-2"></i>Submitted Date
-                                    </label>
-                                    <p class="text-gray-900">${submittedDate}</p>
-                                </div>
-                                
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-info-circle mr-2"></i>Status
-                                    </label>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                                        applicationData.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        applicationData.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                        applicationData.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
-                                    }">
-                                        ${applicationData.status.charAt(0).toUpperCase() + applicationData.status.slice(1)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Information Card -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                            <div class="flex items-start">
-                                <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-blue-900 mb-2">What's Next?</h3>
-                                    <ul class="text-blue-800 space-y-2">
-                                        <li>• Keep your application number safe for future reference</li>
-                                        <li>• You will be contacted regarding your application status</li>
-                                        <li>• Check your email for any updates or additional requirements</li>
-                                        <li>• Contact the school if you have any questions</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="text-center mt-8">
-                            <p class="text-gray-600 mb-4">Need help or have questions?</p>
-                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                                <a href="tel:+1234567890" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-phone mr-2"></i>
-                                    Call Us
-                                </a>
-                                <a href="mailto:info@school.com" class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                                    <i class="fas fa-envelope mr-2"></i>
-                                    Email Us
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        `;
-    }
 
     validateCurrentSection() {
         const currentSectionId = this.enabledSections[this.currentSection].id;
@@ -1091,10 +972,6 @@ class DynamicApplicationForm extends App {
             `;
         }
 
-        // Show already submitted state
-        if (this.hasAlreadySubmitted && this.submittedApplicationData) {
-            return this.renderAlreadySubmittedState();
-        }
 
         const applicationLogo = this.get('applicationLogo');
         const applicationName = this.get('applicationName');

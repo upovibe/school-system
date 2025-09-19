@@ -7,7 +7,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/ui/Dialog.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/layout/adminLayout/ApplicationViewModal.js';
-import '@/components/layout/adminLayout/AdmissionConfigModal.js';
+import '@/components/layout/adminLayout/ApplicationConfigDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -22,7 +22,6 @@ class ApplicationsPage extends App {
         this.loading = false;
         this.showViewModal = false;
         this.viewApplicationData = null;
-        this.showConfigModal = false;
         this.filters = { gender: '', status: '', class_applying: '' };
         this.filteredApplications = null;
     }
@@ -177,11 +176,6 @@ class ApplicationsPage extends App {
             }
         });
 
-        // Listen for success events to close modals (EXACT PATTERN FROM WORKING PAGES)
-        this.addEventListener('config-saved', (event) => {
-            this.set('showConfigModal', false);
-        });
-        
         // Listen for modal close events to clear data - PREVENT EMPTY MODAL ISSUE
         this.addEventListener('application-view-closed', (event) => {
             this.set('showViewModal', false);
@@ -196,50 +190,17 @@ class ApplicationsPage extends App {
         if (action === 'show-applications-info') {
             this.showApplicationsInfo();
         } else if (action === 'show-settings') {
-            this.showSettings();
+            this.showApplicationsInfo();
         }
     }
 
     showApplicationsInfo() {
-        const dialog = document.createElement('ui-dialog');
-        dialog.setAttribute('open', '');
-        dialog.innerHTML = `
-            <div slot="header" class="flex items-center">
-                <i class="fas fa-file-alt text-blue-500 mr-2"></i>
-                <span class="font-semibold">About Applications</span>
-            </div>
-            <div slot="content" class="space-y-4">
-                <div>
-                    <h4 class="font-semibold text-gray-900 mb-2">What is managed here?</h4>
-                    <p class="text-gray-700">Incoming admission applications submitted by guardians/students. Review details and follow up via provided contacts.</p>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">Applicant</span>
-                        <span class="text-sm text-gray-600">Student name and application number</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">Grade</span>
-                        <span class="text-sm text-gray-600">Target class/grade level</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium">Contact</span>
-                        <span class="text-sm text-gray-600">Parent phone and email for communication</span>
-                    </div>
-                </div>
-            </div>
-            <div slot="footer" class="flex justify-end">
-                <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
-            </div>
-        `;
-        document.body.appendChild(dialog);
+        const dialog = this.querySelector('application-config-dialog');
+        if (dialog) {
+            dialog.open();
+        }
     }
 
-    showSettings() {
-        // EXACT PATTERN FROM WORKING PAGES
-        this.closeAllModals();
-        this.set('showConfigModal', true);
-    }
 
     async loadData() {
         try {
@@ -269,6 +230,7 @@ class ApplicationsPage extends App {
             });
         }
     }
+
 
     // EXACT PATTERN FROM WORKING PAGES
     onView(event) {
@@ -340,7 +302,6 @@ class ApplicationsPage extends App {
     // EXACT PATTERN FROM WORKING PAGES - Close all modals and dialogs
     closeAllModals() {
         this.set('showViewModal', false);
-        this.set('showConfigModal', false);
         this.set('viewApplicationData', null);
     }
 
@@ -408,7 +369,6 @@ class ApplicationsPage extends App {
         const displayApplications = filteredApplications || applications;
         const loading = this.get('loading');
         const showViewModal = this.get('showViewModal');
-        const showConfigModal = this.get('showConfigModal');
         const tableData = displayApplications ? displayApplications.map((app, index) => ({
             id: app.id,
             index: index + 1,
@@ -471,7 +431,7 @@ class ApplicationsPage extends App {
                 `}
             </div>
             <application-view-modal ${showViewModal ? 'open' : ''}></application-view-modal>
-            <admission-config-modal ${showConfigModal ? 'open' : ''}></admission-config-modal>
+            <application-config-dialog></application-config-dialog>
         `;
     }
 }

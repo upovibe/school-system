@@ -186,6 +186,7 @@ Router::get('/academic-year-records/academic-year/{id}', 'AcademicYearRecordCont
 Router::get('/academic-year-records/year-code/{yearCode}', 'AcademicYearRecordController@getByYearCode');
 Router::get('/academic-year-records/{id}', 'AcademicYearRecordController@show');
 Router::get('/academic-year-records/{id}/export', 'AcademicYearRecordController@export');
+Router::get('/academic-year-records/{id}/print', 'AcademicYearRecordController@print');
 Router::post('/academic-year-records/search', 'AcademicYearRecordController@search');
 
 // Teacher Management Routes (admin only)

@@ -42,6 +42,88 @@ class RecordViewDialog extends HTMLElement {
         this.removeAttribute('open');
     }
 
+    async printRecord() {
+        if (!this.recordData || !this.recordData.id) {
+            Toast.show({
+                title: 'Error',
+                message: 'No record data available for printing',
+                variant: 'error',
+                duration: 3000
+            });
+            return;
+        }
+
+        try {
+            // Get the auth token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to print records',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Show loading toast
+            const loadingToast = Toast.show({
+                title: 'Preparing Print',
+                message: 'Generating printable version...',
+                variant: 'info',
+                duration: 0
+            });
+
+            // Build the print URL
+            const printUrl = `/api/academic-year-records/${this.recordData.id}/print`;
+            
+            // Fetch the report HTML with authentication first
+            const response = await fetch(printUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/html'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Open new window and write the HTML content
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(`Print failed with status: ${response.status}`);
+            }
+
+            // Dismiss loading toast
+            if (loadingToast) {
+                loadingToast.dismiss();
+            }
+
+            // Close the dialog
+            this.close();
+
+        } catch (error) {
+            console.error('❌ Error printing record:', error);
+            
+            Toast.show({
+                title: 'Print Error',
+                message: error.message || 'Failed to generate print report',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
     formatRecordData(data) {
         if (!data) return {};
         
@@ -248,7 +330,14 @@ class RecordViewDialog extends HTMLElement {
                     </div>
                 </div>
                 
-                <div slot="footer" class="flex justify-end">
+                <div slot="footer" class="flex justify-between">
+                    <ui-button 
+                        color="primary" 
+                        onclick="this.closest('record-view-dialog').printRecord()"
+                        class="flex items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        Print Record
+                    </ui-button>
                     <ui-button variant="outline" color="secondary" dialog-action="cancel">Close</ui-button>
                 </div>
             </ui-dialog>

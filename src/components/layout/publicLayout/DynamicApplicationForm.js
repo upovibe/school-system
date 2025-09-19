@@ -1016,15 +1016,29 @@ class DynamicApplicationForm extends App {
 
                 <!-- Form Content -->
                 <div class="max-w-4xl mx-auto px-6 py-8">
-                    <form id="dynamic-application-form">
-                        <!-- Progress Bar -->
-                        ${this.renderProgressBar()}
-                        
-                        <!-- Current Section -->
-                        ${this.enabledSections[this.currentSection] ? this.renderSection(this.enabledSections[this.currentSection]) : ''}
-                        
-                        <!-- Navigation Buttons -->
-                        <div class="flex justify-between items-center mt-8">
+                    ${this.admissionConfig.admission_status === 'closed' ? `
+                        <!-- Closed Admission Message -->
+                        <div class="flex items-center justify-center p-8">
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg text-center max-w-md">
+                                <i class="fas fa-lock text-2xl mb-2"></i>
+                                <h2 class="text-xl font-semibold mb-2">Admission Closed</h2>
+                                <p class="mb-4">We are not currently accepting new applications. Please contact us for more information.</p>
+                                <a href="/public/contact" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-envelope mr-2"></i>
+                                    Contact Us
+                                </a>
+                            </div>
+                        </div>
+                    ` : `
+                        <form id="dynamic-application-form">
+                            <!-- Progress Bar -->
+                            ${this.renderProgressBar()}
+                            
+                            <!-- Current Section -->
+                            ${this.enabledSections[this.currentSection] ? this.renderSection(this.enabledSections[this.currentSection]) : ''}
+                            
+                            <!-- Navigation Buttons -->
+                            <div class="flex justify-between items-center mt-8">
                             <button 
                                 type="button" 
                                 class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors ${this.currentSection === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -1050,7 +1064,8 @@ class DynamicApplicationForm extends App {
                                 </button>
                             `}
                         </div>
-                    </form>
+                        </form>
+                    `}
                 </div>
             </section>
         `;

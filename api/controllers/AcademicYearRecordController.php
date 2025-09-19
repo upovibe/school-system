@@ -762,14 +762,21 @@ class AcademicYearRecordController {
                 
                 if (!empty($teacherAssignments)): ?>
                     <?php
+                    // Create a lookup array for teacher names
+                    $teacherLookup = [];
+                    foreach ($teachers as $teacher) {
+                        $teacherLookup[$teacher['id']] = $teacher['first_name'] . ' ' . $teacher['last_name'];
+                    }
+                    
                     // Group assignments by teacher
                     $assignmentsByTeacher = [];
                     foreach ($teacherAssignments as $assignment) {
                         $teacherId = $assignment['teacher_id'] ?? null;
                         if ($teacherId) {
                             if (!isset($assignmentsByTeacher[$teacherId])) {
+                                $teacherName = $teacherLookup[$teacherId] ?? $assignment['teacher_name'] ?? 'Unknown Teacher';
                                 $assignmentsByTeacher[$teacherId] = [
-                                    'teacher_name' => $assignment['teacher_name'] ?? 'Unknown Teacher',
+                                    'teacher_name' => $teacherName,
                                     'assignments' => []
                                 ];
                             }

@@ -440,66 +440,176 @@ class ApplicationController {
      */
     private function sendStatusChangeEmail($application, $status) {
         try {
+            error_log("Starting sendStatusChangeEmail for status: " . $status);
+            
             $emailService = new EmailService();
             $schoolName = $this->getSchoolName();
             $parentEmail = $application['email'];
             $studentName = $application['first_name'] . ' ' . $application['last_name'];
+            $parentName = $application['parent_full_name'] ?? 'Parent/Guardian';
             $applicantNumber = $application['applicant_number'];
             
-            $subject = $status === 'approved' 
-                ? "Application Approved - {$schoolName}"
-                : "Application Status Update - {$schoolName}";
-                
-            $statusText = $status === 'approved' ? 'approved' : 'rejected';
-            $statusMessage = $status === 'approved' 
-                ? 'Congratulations! Your child\'s application has been approved.'
-                : 'We regret to inform you that your child\'s application was not successful at this time.';
-                
-            $nextSteps = $status === 'approved'
-                ? 'Please contact the school office for enrollment procedures and required documents.'
-                : 'Thank you for your interest in our school. You may apply again in the next admission period.';
+            error_log("Email details - To: $parentEmail, Student: $studentName, Parent: $parentName, Number: $applicantNumber");
             
-            $htmlBody = "
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
-                    <div style='background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
-                        <h2 style='color: #333; margin: 0;'>{$schoolName}</h2>
-                        <h3 style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; margin: 10px 0;'>Application {$statusText}</h3>
-                    </div>
-                    
-                    <div style='background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
-                        <p>Dear Parent/Guardian,</p>
-                        
-                        <p><strong>{$statusMessage}</strong></p>
-                        
-                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-                            <h4 style='margin: 0 0 10px 0; color: #333;'>Application Details:</h4>
-                            <p style='margin: 5px 0;'><strong>Student Name:</strong> {$studentName}</p>
-                            <p style='margin: 5px 0;'><strong>Application Number:</strong> {$applicantNumber}</p>
-                            <p style='margin: 5px 0;'><strong>Level:</strong> {$application['level_applying']}</p>
-                            <p style='margin: 5px 0;'><strong>Class:</strong> {$application['class_applying']}</p>
-                            <p style='margin: 5px 0;'><strong>Status:</strong> <span style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; font-weight: bold;'>" . ucfirst($statusText) . "</span></p>
-                        </div>
-                        
-                        <p><strong>Next Steps:</strong><br>{$nextSteps}</p>
-                        
-                        <p>If you have any questions, please don't hesitate to contact us.</p>
-                        
-                        <p>Best regards,<br>
-                        <strong>{$schoolName} Admissions Team</strong></p>
-                    </div>
-                    
-                    <div style='text-align: center; margin-top: 20px; padding: 10px; font-size: 12px; color: #666;'>
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            ";
+            // Get academic year name
+            $academicYear = $this->getAcademicYearName($application['academic_year_id']);
             
-            return $emailService->sendEmail($parentEmail, $subject, $htmlBody);
+            if ($status === 'approved') {
+                $subject = "Admission Approval Letter - {$schoolName}";
+                $template = 'admission-approved.php';
+            } else {
+                $subject = "Admission Decision Letter - {$schoolName}";
+                $template = 'admission-rejected.php';
+            }
+            
+            error_log("Using template: $template with subject: $subject");
+            
+            // Get school settings for logo
+            $schoolSettings = $this->getSchoolSettings();
+            
+            // Prepare template variables
+            $templateVars = [
+                'parentName' => $parentName,
+                'studentName' => $studentName,
+                'schoolName' => $schoolName,
+                'applicantNumber' => $applicantNumber,
+                'level' => $application['level_applying'] ?? 'N/A',
+                'class' => $application['class_applying'] ?? 'N/A',
+                'programme' => $application['academic_programme'] ?? '',
+                'schoolType' => $application['school_type'] ?? 'N/A',
+                'academicYear' => $academicYear,
+                'schoolSettings' => $schoolSettings
+            ];
+            
+            error_log("Template variables: " . json_encode($templateVars));
+            
+            // Load and render template
+            $templatePath = __DIR__ . '/../email/templates/' . $template;
+            error_log("Looking for template at: $templatePath");
+            
+            if (file_exists($templatePath)) {
+                error_log("Template found, rendering...");
+                ob_start();
+                extract($templateVars);
+                include $templatePath;
+                $htmlBody = ob_get_clean();
+                error_log("Template rendered successfully, body length: " . strlen($htmlBody));
+            } else {
+                error_log("Template not found, using fallback");
+                // Fallback to simple email if template not found
+                $htmlBody = $this->getFallbackEmailBody($application, $status, $schoolName, $academicYear);
+            }
+            
+            error_log("Sending email via EmailService...");
+            $result = $emailService->sendEmail($parentEmail, $subject, $htmlBody);
+            error_log("EmailService result: " . ($result ? 'SUCCESS' : 'FAILED'));
+            
+            return $result;
             
         } catch (Exception $e) {
             error_log('Failed to send status change email: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             return false;
         }
+    }
+    
+    /**
+     * Get academic year name by ID
+     */
+    private function getAcademicYearName($academicYearId) {
+        try {
+            $stmt = $this->pdo->prepare('SELECT year_code, display_name FROM academic_years WHERE id = ?');
+            $stmt->execute([$academicYearId]);
+            $year = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($year) {
+                return $year['display_name'] ? $year['display_name'] : $year['year_code'];
+            }
+            return 'Current Academic Year';
+        } catch (Exception $e) {
+            return 'Current Academic Year';
+        }
+    }
+    
+    /**
+     * Get school settings for logo and other details
+     */
+    private function getSchoolSettings() {
+        try {
+            $stmt = $this->pdo->prepare('SELECT setting_key, setting_value FROM settings WHERE setting_key IN (?, ?, ?, ?, ?, ?)');
+            $stmt->execute(['application_logo', 'application_name', 'application_tagline', 'contact_address', 'contact_phone', 'contact_email']);
+            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            
+            return [
+                'application_logo' => $settings['application_logo'] ?? '',
+                'application_name' => $settings['application_name'] ?? 'School Management System',
+                'application_tagline' => $settings['application_tagline'] ?? 'Excellence in Education',
+                'contact_address' => $settings['contact_address'] ?? '',
+                'contact_phone' => $settings['contact_phone'] ?? '',
+                'contact_email' => $settings['contact_email'] ?? ''
+            ];
+        } catch (Exception $e) {
+            return [
+                'application_logo' => '',
+                'application_name' => 'School Management System',
+                'application_tagline' => 'Excellence in Education',
+                'contact_address' => '',
+                'contact_phone' => '',
+                'contact_email' => ''
+            ];
+        }
+    }
+    
+    /**
+     * Fallback email body if template is not found
+     */
+    private function getFallbackEmailBody($application, $status, $schoolName, $academicYear) {
+        $studentName = $application['first_name'] . ' ' . $application['last_name'];
+        $applicantNumber = $application['applicant_number'];
+        $statusText = $status === 'approved' ? 'approved' : 'rejected';
+        $statusMessage = $status === 'approved' 
+            ? 'Congratulations! Your child\'s application has been approved.'
+            : 'We regret to inform you that your child\'s application was not successful at this time.';
+            
+        $nextSteps = $status === 'approved'
+            ? 'Please contact the school office for enrollment procedures and required documents.'
+            : 'Thank you for your interest in our school. You may apply again in the next admission period.';
+        
+        return "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
+                    <h2 style='color: #333; margin: 0;'>{$schoolName}</h2>
+                    <h3 style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; margin: 10px 0;'>Application {$statusText}</h3>
+                </div>
+                
+                <div style='background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+                    <p>Dear Parent/Guardian,</p>
+                    
+                    <p><strong>{$statusMessage}</strong></p>
+                    
+                    <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <h4 style='margin: 0 0 10px 0; color: #333;'>Application Details:</h4>
+                        <p style='margin: 5px 0;'><strong>Student Name:</strong> {$studentName}</p>
+                        <p style='margin: 5px 0;'><strong>Application Number:</strong> {$applicantNumber}</p>
+                        <p style='margin: 5px 0;'><strong>Level:</strong> {$application['level_applying']}</p>
+                        <p style='margin: 5px 0;'><strong>Class:</strong> {$application['class_applying']}</p>
+                        <p style='margin: 5px 0;'><strong>Academic Year:</strong> {$academicYear}</p>
+                        <p style='margin: 5px 0;'><strong>Status:</strong> <span style='color: " . ($status === 'approved' ? '#28a745' : '#dc3545') . "; font-weight: bold;'>" . ucfirst($statusText) . "</span></p>
+                    </div>
+                    
+                    <p><strong>Next Steps:</strong><br>{$nextSteps}</p>
+                    
+                    <p>If you have any questions, please don't hesitate to contact us.</p>
+                    
+                    <p>Best regards,<br>
+                    <strong>{$schoolName} Admissions Team</strong></p>
+                </div>
+                
+                <div style='text-align: center; margin-top: 20px; padding: 10px; font-size: 12px; color: #666;'>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        ";
     }
 
     /**
@@ -603,7 +713,11 @@ class ApplicationController {
             
             // Send email notification to parent if status changed to approved or rejected
             if (in_array($backendStatus, ['approved', 'rejected']) && !empty($application['email'])) {
-                $this->sendStatusChangeEmail($application, $backendStatus);
+                error_log("Attempting to send status change email to: " . $application['email'] . " for status: " . $backendStatus);
+                $emailSent = $this->sendStatusChangeEmail($application, $backendStatus);
+                error_log("Email send result: " . ($emailSent ? 'SUCCESS' : 'FAILED'));
+            } else {
+                error_log("Skipping email send - Status: " . $backendStatus . ", Email: " . ($application['email'] ?? 'EMPTY'));
             }
             
             http_response_code(200);

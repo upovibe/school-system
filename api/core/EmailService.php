@@ -96,6 +96,13 @@ class EmailService {
     }
 
     /**
+     * Direct email sending method for custom emails
+     */
+    public function sendEmail($to, $subject, $message) {
+        return $this->sendViaSmtp($to, $subject, $message, $this->config['smtp']);
+    }
+
+    /**
      * Send email using SMTP
      */
     private function sendViaSmtp($to, $subject, $message, $config) {

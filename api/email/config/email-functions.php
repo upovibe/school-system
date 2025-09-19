@@ -65,6 +65,18 @@ return [
         'subject' => 'New Contact Form Submission - School System',
         'template' => 'contact-form',
         'variables' => ['name', 'email', 'phone', 'message', 'submissionDate']
+    ],
+    
+    'admission-approved' => [
+        'subject' => '🎉 Admission Approved - School System',
+        'template' => 'admission-approved',
+        'variables' => ['parentName', 'studentName', 'schoolName', 'applicantNumber', 'level', 'class', 'programme', 'schoolType', 'academicYear']
+    ],
+    
+    'admission-rejected' => [
+        'subject' => 'Application Status Update - School System',
+        'template' => 'admission-rejected',
+        'variables' => ['parentName', 'studentName', 'schoolName', 'applicantNumber', 'level', 'class', 'programme', 'academicYear']
     ]
 ]; 
 

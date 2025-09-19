@@ -751,6 +751,73 @@ class AcademicYearRecordController {
             </div>
             <?php endif; ?>
 
+            <!-- Teacher Subject Assignments -->
+            <?php if (!empty($teachers) && !empty($classes) && !empty($subjects)): ?>
+            <div class="details-section">
+                <div class="details-title">Teacher Subject Assignments</div>
+                
+                <?php
+                // Get teacher assignments from the record data
+                $teacherAssignments = $recordData['teacher_assignments'] ?? [];
+                
+                if (!empty($teacherAssignments)): ?>
+                    <?php
+                    // Group assignments by teacher
+                    $assignmentsByTeacher = [];
+                    foreach ($teacherAssignments as $assignment) {
+                        $teacherId = $assignment['teacher_id'] ?? null;
+                        if ($teacherId) {
+                            if (!isset($assignmentsByTeacher[$teacherId])) {
+                                $assignmentsByTeacher[$teacherId] = [
+                                    'teacher_name' => $assignment['teacher_name'] ?? 'Unknown Teacher',
+                                    'assignments' => []
+                                ];
+                            }
+                            $assignmentsByTeacher[$teacherId]['assignments'][] = $assignment;
+                        }
+                    }
+                    
+                    // Sort by teacher name
+                    uasort($assignmentsByTeacher, function($a, $b) {
+                        return strcmp($a['teacher_name'], $b['teacher_name']);
+                    });
+                    ?>
+                    
+                    <?php foreach ($assignmentsByTeacher as $teacherId => $teacherData): ?>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #333; background: #f0f0f0; padding: 8px; border-left: 4px solid #28a745;">
+                            <?= htmlspecialchars($teacherData['teacher_name']) ?> (<?= count($teacherData['assignments']) ?> assignments)
+                        </h4>
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($teacherData['assignments'] as $index => $assignment): ?>
+                                <tr>
+                                    <td><?= $index + 1 ?></td>
+                                    <td><?= htmlspecialchars($assignment['class_name'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($assignment['subject_name'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($assignment['status'] ?? 'Active') ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="no-data">
+                        <p>No teacher assignments found in this record.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
             <div class="section-separator"></div>
 
             <!-- Subjects Details -->

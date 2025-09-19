@@ -301,10 +301,6 @@ class AcademicYearRecordController {
      * Generate print HTML for academic year record
      */
     private function generatePrintHTML($archivedRecord, $recordData, $schoolSettings) {
-        $schoolName = $schoolSettings['school_name'] ?? 'School Name';
-        $schoolTagline = $schoolSettings['school_tagline'] ?? 'Excellence in Education';
-        $schoolLogo = $schoolSettings['school_logo'] ?? '';
-        
         $yearCode = $archivedRecord['year_code'];
         $archiveDate = date('F j, Y', strtotime($archivedRecord['archive_date']));
         $archivedBy = $archivedRecord['archived_by_name'] ?? 'System';
@@ -333,91 +329,140 @@ class AcademicYearRecordController {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Academic Year Record - <?php echo htmlspecialchars($yearCode); ?></title>
             <style>
+                @media print {
+                    body {
+                        margin: 0;
+                    }
+
+                    .no-print {
+                        display: none !important;
+                    }
+                }
+
                 body {
-                    font-family: Arial, sans-serif;
+                    font-family: 'Times New Roman', serif;
                     margin: 0;
                     padding: 20px;
-                    line-height: 1.6;
-                    color: #333;
+                    background-color: white;
+                    color: #000;
+                    line-height: 1.4;
                 }
-                .print-header {
+
+                .report-container {
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background: white;
+                }
+
+                .report-header {
                     display: flex;
-                    justify-content: space-between;
+                    flex-direction: row;
                     align-items: center;
+                    justify-content: space-between;
                     margin-bottom: 30px;
                     border-bottom: 2px solid #000;
                     padding-bottom: 20px;
                 }
+
+                .header-top {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 20px;
+                }
+
                 .school-logo {
                     max-width: 80px;
                     max-height: 60px;
+                    object-fit: contain;
                 }
+
                 .school-info {
-                    text-align: right;
+                    text-align: center;
                 }
+
                 .school-name {
                     font-size: 24px;
                     font-weight: bold;
                     margin: 0;
                 }
+
                 .school-tagline {
                     font-size: 14px;
                     color: #666;
                     margin: 0;
                     font-style: italic;
                 }
-                .title {
+
+                .report-title-container {
+                    text-align: right;
+                }
+
+                .report-title {
                     font-size: 20px;
                     font-weight: bold;
-                    text-align: center;
-                    margin: 30px 0;
-                    text-decoration: underline;
                 }
+
+                .report-subtitle {
+                    font-size: 14px;
+                }
+
                 .record-info {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    border-radius: 8px;
                     margin-bottom: 30px;
                 }
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 15px;
-                    margin-bottom: 20px;
+
+                .info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                    font-size: 14px;
                 }
-                .info-item {
-                    background: white;
-                    padding: 15px;
-                    border-radius: 5px;
-                    border-left: 4px solid #007bff;
+
+                .info-left {
+                    flex: 0 0 auto;
                 }
+
+                .info-right {
+                    flex: 0 0 auto;
+                    text-align: left;
+                }
+
                 .info-label {
                     font-weight: bold;
-                    color: #666;
-                    font-size: 12px;
-                    text-transform: uppercase;
-                    margin-bottom: 5px;
+                    margin-right: 10px;
+                    text-align: left;
+                    display: inline-block;
                 }
+
+                .info-right .info-label {
+                    text-align: left;
+                }
+
                 .info-value {
-                    font-size: 16px;
-                    color: #333;
+                    min-width: 50px;
+                    display: inline-block;
+                    text-align: left;
                 }
+
                 .summary-section {
-                    margin-bottom: 30px;
+                    margin-top: 30px;
                 }
-                .summary-title {
-                    font-size: 18px;
+
+                .section-title {
+                    font-size: 16px;
                     font-weight: bold;
-                    margin-bottom: 15px;
-                    color: #333;
-                    border-bottom: 2px solid #007bff;
-                    padding-bottom: 5px;
+                    margin-bottom: 20px;
+                    text-align: center;
+                    text-decoration: underline;
                 }
+
                 .summary-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                     gap: 15px;
+                    margin-bottom: 20px;
                 }
+
                 .summary-item {
                     background: #f8f9fa;
                     padding: 20px;
@@ -425,117 +470,144 @@ class AcademicYearRecordController {
                     border-radius: 8px;
                     border: 1px solid #dee2e6;
                 }
+
                 .summary-number {
                     font-size: 24px;
                     font-weight: bold;
-                    color: #007bff;
+                    color: #000;
                     margin-bottom: 5px;
                 }
+
                 .summary-label {
                     font-size: 12px;
                     color: #666;
                     text-transform: uppercase;
                 }
+
                 .details-section {
                     margin-bottom: 30px;
                 }
+
+                .section-separator {
+                    border-top: 2px solid #000;
+                    margin: 30px 0;
+                }
+
                 .details-title {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     margin-bottom: 15px;
-                    color: #333;
-                    border-bottom: 2px solid #28a745;
-                    padding-bottom: 5px;
+                    text-align: center;
+                    text-decoration: underline;
                 }
+
                 .details-table {
                     width: 100%;
                     border-collapse: collapse;
                     margin-bottom: 20px;
+                    font-size: 12px;
                 }
-                .details-table th,
+
+                .details-table th {
+                    border: 1px solid #000;
+                    padding: 8px;
+                    text-align: left;
+                    font-weight: bold;
+                    background-color: #f0f0f0;
+                }
+
                 .details-table td {
-                    border: 1px solid #dee2e6;
-                    padding: 12px;
+                    border: 1px solid #000;
+                    padding: 8px;
                     text-align: left;
                 }
-                .details-table th {
-                    background: #f8f9fa;
-                    font-weight: bold;
-                    color: #333;
-                }
+
                 .details-table tr:nth-child(even) {
-                    background: #f8f9fa;
+                    background-color: #f9f9f9;
                 }
-                .footer {
-                    margin-top: 40px;
+
+                .no-data {
                     text-align: center;
+                    padding: 40px;
+                    font-style: italic;
+                }
+
+                .school-contact {
+                    border-top: 1px solid #ddd;
+                    padding-top: 20px;
+                    margin-top: 30px;
+                    text-align: center;
+                }
+
+                .school-contact p {
+                    margin: 5px 0;
                     font-size: 12px;
                     color: #666;
-                    border-top: 1px solid #dee2e6;
-                    padding-top: 20px;
                 }
-                @media print {
-                    body { margin: 0; padding: 15px; }
-                    .print-header { page-break-inside: avoid; }
-                    .summary-section { page-break-inside: avoid; }
-                    .details-section { page-break-inside: avoid; }
+
+                .report-footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 12px;
+                    border-top: 1px solid #000;
+                    padding-top: 20px;
                 }
             </style>
         </head>
         <body>
-            <!-- Header -->
-            <div class="print-header">
-                <div class="school-logo">
-                    <?php if ($schoolLogo): ?>
-                        <img src="<?php echo htmlspecialchars($schoolLogo); ?>" alt="School Logo" class="school-logo">
-                    <?php else: ?>
-                        <div class="school-logo" style="width: 80px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666;">LOGO</div>
-                    <?php endif; ?>
+            <div class="report-container">
+                <div class="report-header">
+                    <div class="header-top">
+                        <?php if (!empty($schoolSettings['application_logo'])): ?>
+                            <img src="<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
+                        <?php endif; ?>
+                        <div class="school-info">
+                            <div class="school-name"><?= htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') ?></div>
+                            <div class="school-tagline"><?= htmlspecialchars($schoolSettings['application_tagline'] ?? 'Excellence in Education') ?></div>
+                        </div>
+                    </div>
+                    <div class="report-title-container">
+                        <div class="report-title">Academic Year Record</div>
+                        <div class="report-subtitle"><?= htmlspecialchars($yearCode) ?></div>
+                    </div>
                 </div>
-                <div class="school-info">
-                    <div class="school-name"><?php echo htmlspecialchars($schoolName); ?></div>
-                    <div class="school-tagline"><?php echo htmlspecialchars($schoolTagline); ?></div>
+
+                <div class="record-info">
+                    <div class="info-row">
+                        <div class="info-left">
+                            <span class="info-label">Year Code:</span>
+                            <span class="info-value"><?php echo htmlspecialchars($yearCode); ?></span>
+                        </div>
+                        <div class="info-right">
+                            <span class="info-label">Record Type:</span>
+                            <span class="info-value"><?php echo htmlspecialchars($recordType); ?></span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-left">
+                            <span class="info-label">Archive Date:</span>
+                            <span class="info-value"><?php echo htmlspecialchars($archiveDate); ?></span>
+                        </div>
+                        <div class="info-right">
+                            <span class="info-label">Archived By:</span>
+                            <span class="info-value"><?php echo htmlspecialchars($archivedBy); ?></span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-left">
+                            <span class="info-label">Total Records:</span>
+                            <span class="info-value"><?php echo number_format($totalRecords); ?></span>
+                        </div>
+                        <div class="info-right">
+                            <span class="info-label">Generated Date:</span>
+                            <span class="info-value"><?php echo date('F j, Y g:i A'); ?></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Title -->
-            <div class="title">ACADEMIC YEAR RECORD</div>
-
-            <!-- Record Information -->
-            <div class="record-info">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Year Code</div>
-                        <div class="info-value"><?php echo htmlspecialchars($yearCode); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Record Type</div>
-                        <div class="info-value"><?php echo htmlspecialchars($recordType); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Total Records</div>
-                        <div class="info-value"><?php echo number_format($totalRecords); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Archive Date</div>
-                        <div class="info-value"><?php echo htmlspecialchars($archiveDate); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Archived By</div>
-                        <div class="info-value"><?php echo htmlspecialchars($archivedBy); ?></div>
-                    </div>
-                    <?php if ($notes): ?>
-                    <div class="info-item">
-                        <div class="info-label">Notes</div>
-                        <div class="info-value"><?php echo htmlspecialchars($notes); ?></div>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Summary Section -->
-            <div class="summary-section">
-                <div class="summary-title">Data Summary</div>
+                <!-- Summary Section -->
+                <div class="summary-section">
+                    <div class="section-title">Data Summary</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-number"><?php echo count($classes); ?></div>
@@ -597,39 +669,60 @@ class AcademicYearRecordController {
             </div>
             <?php endif; ?>
 
+            <div class="section-separator"></div>
+
             <!-- Students Details -->
             <?php if (!empty($students)): ?>
             <div class="details-section">
                 <div class="details-title">Students (<?php echo count($students); ?>)</div>
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>Admission Number</th>
-                            <th>Full Name</th>
-                            <th>Class</th>
-                            <th>Section</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (array_slice($students, 0, 50) as $student): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($student['admission_number'] ?? $student['student_id'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($student['full_name'] ?? $student['first_name'] . ' ' . $student['last_name']); ?></td>
-                            <td><?php echo htmlspecialchars($student['class_name'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($student['class_section'] ?? '—'); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <?php if (count($students) > 50): ?>
-                        <tr>
-                            <td colspan="4" style="text-align: center; font-style: italic; color: #666;">
-                                ... and <?php echo count($students) - 50; ?> more students
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                
+                <?php
+                // Group students by class
+                $studentsByClass = [];
+                foreach ($students as $student) {
+                    $className = $student['class_name'] ?? 'Unknown Class';
+                    $classSection = $student['class_section'] ?? '';
+                    $classKey = $className . ($classSection ? ' - ' . $classSection : '');
+                    
+                    if (!isset($studentsByClass[$classKey])) {
+                        $studentsByClass[$classKey] = [];
+                    }
+                    $studentsByClass[$classKey][] = $student;
+                }
+                
+                // Sort classes alphabetically
+                ksort($studentsByClass);
+                ?>
+                
+                <?php foreach ($studentsByClass as $classKey => $classStudents): ?>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #333; background: #f0f0f0; padding: 8px; border-left: 4px solid #007bff;">
+                        <?= htmlspecialchars($classKey) ?> (<?= count($classStudents) ?> students)
+                    </h4>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Admission Number</th>
+                                <th>Full Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($classStudents as $index => $student): ?>
+                            <tr>
+                                <td><?= $index + 1 ?></td>
+                                <td><?= htmlspecialchars($student['admission_number'] ?? $student['student_id'] ?? '—') ?></td>
+                                <td><?= htmlspecialchars($student['full_name'] ?? $student['first_name'] . ' ' . $student['last_name']) ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endforeach; ?>
             </div>
             <?php endif; ?>
+
+            <div class="section-separator"></div>
 
             <!-- Teachers Details -->
             <?php if (!empty($teachers)): ?>
@@ -658,6 +751,8 @@ class AcademicYearRecordController {
             </div>
             <?php endif; ?>
 
+            <div class="section-separator"></div>
+
             <!-- Subjects Details -->
             <?php if (!empty($subjects)): ?>
             <div class="details-section">
@@ -682,6 +777,8 @@ class AcademicYearRecordController {
                 </table>
             </div>
             <?php endif; ?>
+
+            <div class="section-separator"></div>
 
             <!-- Grading Periods Details -->
             <?php if (!empty($gradingPeriods)): ?>
@@ -710,10 +807,24 @@ class AcademicYearRecordController {
             </div>
             <?php endif; ?>
 
-            <!-- Footer -->
-            <div class="footer">
-                <p><strong>This is an official academic year record. Please keep it safe for your records.</strong></p>
-                <p>Generated on <?php echo date('F j, Y \a\t g:i A'); ?> | For inquiries, please contact the school office directly.</p>
+                <div class="school-contact">
+                    <?php if (!empty($schoolSettings['contact_address'])): ?>
+                        <p><?= htmlspecialchars($schoolSettings['contact_address']) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($schoolSettings['contact_phone'])): ?>
+                        <p>Phone: <?= htmlspecialchars($schoolSettings['contact_phone']) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($schoolSettings['contact_email'])): ?>
+                        <p>Email: <?= htmlspecialchars($schoolSettings['contact_email']) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($schoolSettings['contact_website'])): ?>
+                        <p>Website: <?= htmlspecialchars($schoolSettings['contact_website']) ?></p>
+                    <?php endif; ?>
+                </div>
+
+                <div class="report-footer">
+                    <strong>Generated by:</strong> <?= htmlspecialchars($schoolSettings['application_name'] ?? 'School Management System') ?> | <strong>Report Type:</strong> Academic Year Record
+                </div>
             </div>
 
             <script>

@@ -148,8 +148,8 @@ class AcademicYearRecordModel extends BaseModel {
         // Get unique subjects (avoid duplicates)
         $data['subjects'] = $this->getUniqueSubjectsByYear($academicYearId);
         
-        // Get grades
-        $data['grades'] = $this->getGradesByYear($academicYearId);
+        // Get comprehensive grades (all students for all subjects and periods)
+        $data['grades'] = $this->getComprehensiveGradesByYear($academicYearId);
         
         // Get fees
         $data['fees'] = $this->getFeesByYear($academicYearId);
@@ -267,7 +267,97 @@ class AcademicYearRecordModel extends BaseModel {
     }
     
     /**
-     * Get grades by academic year
+     * Get comprehensive grades by academic year - includes ALL students for ALL subjects and periods
+     */
+    private function getComprehensiveGradesByYear($academicYearId) {
+        try {
+            // Get all students in classes for this academic year
+            $students = $this->getStudentEnrollmentsByYear($academicYearId);
+            
+            // Get all grading periods for this academic year
+            $gradingPeriods = $this->getGradingPeriodsByYear($academicYearId);
+            
+            // Get all class-subject relationships for this academic year
+            $classSubjects = $this->getClassSubjectRelationships($academicYearId);
+            
+            // Get existing grades for this academic year
+            $existingGrades = $this->getGradesByYear($academicYearId);
+            
+            // Create a lookup for existing grades
+            $gradeLookup = [];
+            foreach ($existingGrades as $grade) {
+                $key = $grade['student_id'] . '_' . $grade['subject_id'] . '_' . $grade['grading_period_id'];
+                $gradeLookup[$key] = $grade;
+            }
+            
+            $comprehensiveGrades = [];
+            
+            // Generate comprehensive grade records for all students, subjects, and periods
+            foreach ($students as $student) {
+                $classId = $student['current_class_id'];
+                
+                // Get subjects for this student's class
+                $studentClassSubjects = array_filter($classSubjects, function($cs) use ($classId) {
+                    return $cs['class_id'] == $classId;
+                });
+                
+                foreach ($studentClassSubjects as $classSubject) {
+                    foreach ($gradingPeriods as $period) {
+                        $key = $student['id'] . '_' . $classSubject['subject_id'] . '_' . $period['id'];
+                        
+                        if (isset($gradeLookup[$key])) {
+                            // Use existing grade data
+                            $comprehensiveGrades[] = $gradeLookup[$key];
+                        } else {
+                            // Create empty grade record
+                            $comprehensiveGrades[] = [
+                                'id' => null,
+                                'student_id' => $student['id'],
+                                'class_id' => $classId,
+                                'subject_id' => $classSubject['subject_id'],
+                                'grading_period_id' => $period['id'],
+                                'assignment_total' => null,
+                                'exam_total' => null,
+                                'final_percentage' => null,
+                                'final_letter_grade' => null,
+                                'remarks' => null,
+                                'created_at' => null,
+                                'updated_at' => null,
+                                'created_by' => null,
+                                'updated_by' => null,
+                                'grading_policy_id' => null,
+                                'period_name' => $period['name'],
+                                'period_start' => $period['start_date'],
+                                'period_end' => $period['end_date'],
+                                'class_name' => $student['class_name'],
+                                'class_section' => $student['class_section'],
+                                'student_name' => $student['full_name'],
+                                'student_first_name' => $student['first_name'],
+                                'student_last_name' => $student['last_name'],
+                                'admission_number' => $student['admission_number'],
+                                'subject_name' => $classSubject['subject_name'],
+                                'subject_code' => $classSubject['subject_code'],
+                                'grading_period_name' => $period['name']
+                            ];
+                        }
+                    }
+                }
+            }
+            
+            error_log("Generated " . count($comprehensiveGrades) . " comprehensive grade records for academic year $academicYearId");
+            if (!empty($comprehensiveGrades)) {
+                error_log("Sample comprehensive grade: " . json_encode($comprehensiveGrades[0]));
+            }
+            
+            return $comprehensiveGrades;
+        } catch (PDOException $e) {
+            error_log("Error getting comprehensive grades: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get grades by academic year (existing grades only)
      */
     private function getGradesByYear($academicYearId) {
         try {
@@ -275,7 +365,9 @@ class AcademicYearRecordModel extends BaseModel {
                 SELECT sg.*, gp.name as period_name, gp.start_date as period_start, gp.end_date as period_end,
                        c.name as class_name, c.section as class_section,
                        CONCAT(s.first_name, ' ', s.last_name) as student_name, s.student_id as admission_number,
-                       sub.name as subject_name, sub.code as subject_code
+                       sub.name as subject_name, sub.code as subject_code,
+                       s.first_name as student_first_name, s.last_name as student_last_name,
+                       gp.name as grading_period_name
                 FROM student_grades sg
                 JOIN grading_periods gp ON sg.grading_period_id = gp.id
                 JOIN students s ON sg.student_id = s.id
@@ -288,7 +380,7 @@ class AcademicYearRecordModel extends BaseModel {
             $stmt->execute([$academicYearId, $academicYearId]);
             $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            error_log("Found " . count($grades) . " grades for academic year $academicYearId");
+            error_log("Found " . count($grades) . " existing grades for academic year $academicYearId");
             if (!empty($grades)) {
                 error_log("Sample grade: " . json_encode($grades[0]));
             }

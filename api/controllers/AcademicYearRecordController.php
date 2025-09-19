@@ -526,6 +526,11 @@ class AcademicYearRecordController {
                     background-color: #f9f9f9;
                 }
 
+                .grade-cell {
+                    text-align: left;
+                    font-weight: bold;
+                }
+
                 .no-data {
                     text-align: center;
                     padding: 40px;
@@ -822,6 +827,86 @@ class AcademicYearRecordController {
                         <p>No teacher assignments found in this record.</p>
                     </div>
                 <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <div class="section-separator"></div>
+
+            <!-- Grades Details -->
+            <?php if (!empty($grades) && !empty($classes) && !empty($subjects)): ?>
+            <div class="details-section">
+                <div class="details-title">Student Grades Summary</div>
+                
+                <?php
+                // Group grades by class
+                $gradesByClass = [];
+                foreach ($grades as $grade) {
+                    $classId = $grade['class_id'] ?? null;
+                    $studentId = $grade['student_id'] ?? null;
+                    
+                    if ($classId && $studentId) {
+                        $classKey = $grade['class_name'] ?? 'Unknown Class';
+                        $classSection = $grade['class_section'] ?? '';
+                        $fullClassKey = $classKey . ($classSection ? ' - ' . $classSection : '');
+                        
+                        if (!isset($gradesByClass[$fullClassKey])) {
+                            $gradesByClass[$fullClassKey] = [];
+                        }
+                        
+                        $gradesByClass[$fullClassKey][] = $grade;
+                    }
+                }
+                
+                // Sort classes alphabetically
+                ksort($gradesByClass);
+                ?>
+                
+                <?php foreach ($gradesByClass as $classKey => $classGrades): ?>
+                <div style="margin-bottom: 30px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #333; background: #e9ecef; padding: 12px; border-left: 4px solid #007bff;">
+                        <?= htmlspecialchars($classKey) ?> (<?= count($classGrades) ?> grade records)
+                    </h3>
+                    
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Student ID</th>
+                                <th>Student Name</th>
+                                <th>Subject</th>
+                                <th>Period</th>
+                                <th>Assignment Total</th>
+                                <th>Exam Total</th>
+                                <th>Final %</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            // Sort grades by student name
+                            usort($classGrades, function($a, $b) {
+                                $nameA = ($a['student_first_name'] ?? '') . ' ' . ($a['student_last_name'] ?? '');
+                                $nameB = ($b['student_first_name'] ?? '') . ' ' . ($b['student_last_name'] ?? '');
+                                return strcmp($nameA, $nameB);
+                            });
+                            
+                            foreach ($classGrades as $index => $grade): ?>
+                            <tr>
+                                <td><?= $index + 1 ?></td>
+                                <td><?= htmlspecialchars($grade['student_id'] ?? '—') ?></td>
+                                <td><?= htmlspecialchars(($grade['student_first_name'] ?? '') . ' ' . ($grade['student_last_name'] ?? '')) ?></td>
+                                <td><?= htmlspecialchars($grade['subject_name'] ?? '—') ?></td>
+                                <td><?= htmlspecialchars($grade['grading_period_name'] ?? '—') ?></td>
+                                <td class="grade-cell"><?= $grade['assignment_total'] !== null ? number_format($grade['assignment_total'], 2) : '—' ?></td>
+                                <td class="grade-cell"><?= $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—' ?></td>
+                                <td class="grade-cell"><?= $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—' ?></td>
+                                <td class="grade-cell"><?= $grade['final_letter_grade'] ? htmlspecialchars($grade['final_letter_grade']) : '—' ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endforeach; ?>
             </div>
             <?php endif; ?>
 

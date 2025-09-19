@@ -168,7 +168,7 @@
             </div>
 
             <div class="content-paragraph">
-                Thank you for your interest in <strong><?= htmlspecialchars($schoolName) ?></strong> and for taking the time to submit an application for your child, <strong><?= htmlspecialchars($studentName) ?></strong>. After careful consideration of all applications received for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year, we regret to inform you that we are unable to offer admission to your child at this time. Your application for <strong><?= htmlspecialchars($studentName) ?></strong> applying for <strong><?= htmlspecialchars($level) ?> - <?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> was not successful.
+                Thank you for your interest in <strong><?= htmlspecialchars($schoolName) ?></strong> and for taking the time to submit an application for your child, <strong><?= htmlspecialchars($studentName) ?></strong>. After careful consideration of all applications received for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year, we regret to inform you that we are unable to offer admission to your child at this time. Your application for <strong><?= htmlspecialchars($level) ?> - <?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> was not successful.
             </div>
 
             <div class="decision-explanation">

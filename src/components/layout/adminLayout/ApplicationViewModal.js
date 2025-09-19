@@ -133,8 +133,8 @@ class ApplicationViewModal extends HTMLElement {
                     duration: 3000
                 });
 
-                // Re-render to update the UI
-                this.render();
+                // Close modal immediately after success
+                this.close();
 
                 // Dispatch custom event to notify parent components
                 this.dispatchEvent(new CustomEvent('application-status-changed', {

@@ -739,20 +739,37 @@ class ApplicationController {
             // Update status
             $this->model->updateStatus($id, $backendStatus);
             
-            // Send email notification to parent if status changed to approved or rejected
-            if (in_array($backendStatus, ['approved', 'rejected']) && !empty($application['email'])) {
-                error_log("Attempting to send status change email to: " . $application['email'] . " for status: " . $backendStatus);
-                $emailSent = $this->sendStatusChangeEmail($application, $backendStatus);
-                error_log("Email send result: " . ($emailSent ? 'SUCCESS' : 'FAILED'));
-            } else {
-                error_log("Skipping email send - Status: " . $backendStatus . ", Email: " . ($application['email'] ?? 'EMPTY'));
-            }
-            
+            // Send response immediately for fast UI update
             http_response_code(200);
             echo json_encode([
                 'success' => true,
                 'message' => 'Application status updated successfully'
             ]);
+            
+            // Send email notification asynchronously (after response) if status changed to approved or rejected
+            if (in_array($backendStatus, ['approved', 'rejected']) && !empty($application['email'])) {
+                // Use output buffering to prevent any output after response
+                if (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                // Start output buffering for the email process
+                ob_start();
+                
+                // Send email in background
+                try {
+                    error_log("Attempting to send status change email to: " . $application['email'] . " for status: " . $backendStatus);
+                    $emailSent = $this->sendStatusChangeEmail($application, $backendStatus);
+                    error_log("Email send result: " . ($emailSent ? 'SUCCESS' : 'FAILED'));
+                } catch (Exception $e) {
+                    error_log("Email sending failed: " . $e->getMessage());
+                }
+                
+                // Clean any output from email process
+                ob_end_clean();
+            } else {
+                error_log("Skipping email send - Status: " . $backendStatus . ", Email: " . ($application['email'] ?? 'EMPTY'));
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([

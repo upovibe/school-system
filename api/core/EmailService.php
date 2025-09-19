@@ -98,14 +98,14 @@ class EmailService {
     /**
      * Direct email sending method for custom emails
      */
-    public function sendEmail($to, $subject, $message) {
-        return $this->sendViaSmtp($to, $subject, $message, $this->config['smtp']);
+    public function sendEmail($to, $subject, $message, $attachments = []) {
+        return $this->sendViaSmtp($to, $subject, $message, $this->config['smtp'], $attachments);
     }
 
     /**
      * Send email using SMTP
      */
-    private function sendViaSmtp($to, $subject, $message, $config) {
+    private function sendViaSmtp($to, $subject, $message, $config, $attachments = []) {
         if (!$config['host'] || !$config['username'] || !$config['password']) {
             error_log('SMTP configuration incomplete. Please check your configuration.');
             return false;
@@ -280,18 +280,53 @@ class EmailService {
             return false;
         }
 
-        // Send message
-        $headers = [
-            'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
-            'Reply-To: ' . $this->config['from']['address'],
-            'Subject: ' . $subject,
-            'MIME-Version: 1.0',
-            'Content-Type: text/html; charset=UTF-8',
-            'X-Mailer: PHP/' . phpversion()
-        ];
+        // Send message with attachments
+        if (!empty($attachments)) {
+            $boundary = md5(uniqid(time()));
+            $headers = [
+                'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
+                'Reply-To: ' . $this->config['from']['address'],
+                'Subject: ' . $subject,
+                'MIME-Version: 1.0',
+                'Content-Type: multipart/mixed; boundary="' . $boundary . '"',
+                'X-Mailer: PHP/' . phpversion()
+            ];
+            
+            $body = "--$boundary\r\n";
+            $body .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+            $body .= $message . "\r\n";
+            
+            // Add attachments
+            foreach ($attachments as $attachment) {
+                if (file_exists($attachment['path'])) {
+                    $fileContent = file_get_contents($attachment['path']);
+                    $fileContent = chunk_split(base64_encode($fileContent));
+                    
+                    $body .= "--$boundary\r\n";
+                    $body .= "Content-Type: " . $attachment['type'] . "; name=\"" . $attachment['name'] . "\"\r\n";
+                    $body .= "Content-Transfer-Encoding: base64\r\n";
+                    $body .= "Content-Disposition: attachment; filename=\"" . $attachment['name'] . "\"\r\n\r\n";
+                    $body .= $fileContent . "\r\n";
+                }
+            }
+            
+            $body .= "--$boundary--\r\n";
+        } else {
+            $headers = [
+                'From: ' . $this->config['from']['name'] . ' <' . $this->config['from']['address'] . '>',
+                'Reply-To: ' . $this->config['from']['address'],
+                'Subject: ' . $subject,
+                'MIME-Version: 1.0',
+                'Content-Type: text/html; charset=UTF-8',
+                'X-Mailer: PHP/' . phpversion()
+            ];
+            
+            $body = $message;
+        }
         
         $headerString = implode("\r\n", $headers);
-        fputs($smtp, $headerString . "\r\n\r\n" . $message . "\r\n.\r\n");
+        fputs($smtp, $headerString . "\r\n\r\n" . $body . "\r\n.\r\n");
         $response = fgets($smtp, 515);
         if (substr($response, 0, 3) != '250') {
             error_log("Message sending failed: $response");

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../models/ApplicationModel.php';
 require_once __DIR__ . '/../models/AdmissionConfigModel.php';
 require_once __DIR__ . '/../core/EmailService.php';
+require_once __DIR__ . '/../utils/pdf_generator.php';
 
 class ApplicationController {
     private $pdo;
@@ -500,9 +501,36 @@ class ApplicationController {
                 $htmlBody = $this->getFallbackEmailBody($application, $status, $schoolName, $academicYear);
             }
             
+            // Generate PDF attachment for approval emails
+            $attachments = [];
+            if ($status === 'approved') {
+                try {
+                    $pdfPath = generateAdmissionApprovalPDF($templateVars);
+                    if ($pdfPath && file_exists($pdfPath)) {
+                        $attachments[] = [
+                            'path' => $pdfPath,
+                            'name' => 'Admission_Approval_Letter_' . $applicantNumber . '.pdf',
+                            'type' => 'application/pdf'
+                        ];
+                        error_log("PDF generated successfully: $pdfPath");
+                    }
+                } catch (Exception $e) {
+                    error_log("Failed to generate PDF: " . $e->getMessage());
+                }
+            }
+            
             error_log("Sending email via EmailService...");
-            $result = $emailService->sendEmail($parentEmail, $subject, $htmlBody);
+            $result = $emailService->sendEmail($parentEmail, $subject, $htmlBody, $attachments);
             error_log("EmailService result: " . ($result ? 'SUCCESS' : 'FAILED'));
+            
+            // Clean up temporary PDF file
+            if (!empty($attachments)) {
+                foreach ($attachments as $attachment) {
+                    if (file_exists($attachment['path'])) {
+                        unlink($attachment['path']);
+                    }
+                }
+            }
             
             return $result;
             

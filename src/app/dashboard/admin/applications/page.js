@@ -51,20 +51,14 @@ class ApplicationsPage extends App {
                         <div>
                             <div class="flex items-center gap-2">
                                 <h1 class="text-2xl sm:text-3xl font-bold">Applications</h1>
-                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-applications-info" title="About Applications">
-                                    <i class="fas fa-question-circle text-lg"></i>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-applications-info" title="Application Configuration">
+                                    <i class="fas fa-cog text-lg"></i>
                                 </button>
                                 <button 
                                     onclick="this.closest('app-applications-page').loadData()"
                                     class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
                                     title="Refresh data">
                                     <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
-                                </button>
-                                <button 
-                                    class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
-                                    data-action="show-settings"
-                                    title="Application Settings">
-                                    <i class="fas fa-cog text-lg group-hover:scale-110 transition-transform duration-200"></i>
                                 </button>
                             </div>
                             <p class="text-blue-100 text-base sm:text-lg">Manage guest/student applications</p>
@@ -188,8 +182,6 @@ class ApplicationsPage extends App {
         if (!button) return;
         const action = button.getAttribute('data-action');
         if (action === 'show-applications-info') {
-            this.showApplicationsInfo();
-        } else if (action === 'show-settings') {
             this.showApplicationsInfo();
         }
     }

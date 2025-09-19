@@ -25,14 +25,18 @@
             margin-bottom: 30px;
             border-bottom: 2px solid #000;
             padding-bottom: 20px;
+            width: 100%;
         }
         .school-logo {
             max-width: 80px;
             max-height: 60px;
             object-fit: contain;
+            flex-shrink: 0;
         }
         .school-info {
             text-align: right;
+            flex-grow: 1;
+            margin-left: 20px;
         }
         .school-name {
             font-size: 24px;
@@ -139,7 +143,11 @@
     <div class="letter-container">
         <!-- Letter Header -->
         <div class="letter-header">
-            <img src="<?= htmlspecialchars($schoolSettings['application_logo'] ?? '') ?>" alt="School Logo" class="school-logo">
+            <?php if (!empty($schoolSettings['application_logo'])): ?>
+            <img src="<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
+            <?php else: ?>
+            <div class="school-logo"></div>
+            <?php endif; ?>
             <div class="school-info">
                 <div class="school-name"><?= htmlspecialchars($schoolName) ?></div>
                 <div class="school-tagline">Excellence in Education</div>
@@ -160,39 +168,7 @@
             </div>
 
             <div class="content-paragraph">
-                Thank you for your interest in <strong><?= htmlspecialchars($schoolName) ?></strong> and for taking the time to submit an application for your child, <strong><?= htmlspecialchars($studentName) ?></strong>.
-            </div>
-
-            <div class="content-paragraph">
-                After careful consideration of all applications received for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year, we regret to inform you that we are unable to offer admission to your child at this time.
-            </div>
-
-            <div class="decision-notice">
-                <div class="decision-text">ADMISSION NOT OFFERED</div>
-            </div>
-
-            <div class="application-details">
-                <h4 style="margin: 0 0 15px 0; text-decoration: underline;">Application Details</h4>
-                <table class="details-table">
-                    <tr>
-                        <td class="label">Student Name:</td>
-                        <td><?= htmlspecialchars($studentName) ?></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Level Applied:</td>
-                        <td><?= htmlspecialchars($level) ?></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Class Applied:</td>
-                        <td><?= htmlspecialchars($class) ?></td>
-                    </tr>
-                    <?php if (!empty($programme)): ?>
-                    <tr>
-                        <td class="label">Programme:</td>
-                        <td><?= htmlspecialchars($programme) ?></td>
-                    </tr>
-                    <?php endif; ?>
-                </table>
+                Thank you for your interest in <strong><?= htmlspecialchars($schoolName) ?></strong> and for taking the time to submit an application for your child, <strong><?= htmlspecialchars($studentName) ?></strong>. After careful consideration of all applications received for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year, we regret to inform you that we are unable to offer admission to your child at this time. Your application for <strong><?= htmlspecialchars($studentName) ?></strong> applying for <strong><?= htmlspecialchars($level) ?> - <?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> was not successful.
             </div>
 
             <div class="decision-explanation">

@@ -25,14 +25,18 @@
             margin-bottom: 30px;
             border-bottom: 2px solid #000;
             padding-bottom: 20px;
+            width: 100%;
         }
         .school-logo {
             max-width: 80px;
             max-height: 60px;
             object-fit: contain;
+            flex-shrink: 0;
         }
         .school-info {
             text-align: right;
+            flex-grow: 1;
+            margin-left: 20px;
         }
         .school-name {
             font-size: 24px;
@@ -139,7 +143,11 @@
     <div class="letter-container">
         <!-- Letter Header -->
         <div class="letter-header">
-            <img src="<?= htmlspecialchars($schoolSettings['application_logo'] ?? '') ?>" alt="School Logo" class="school-logo">
+            <?php if (!empty($schoolSettings['application_logo'])): ?>
+            <img src="<?= htmlspecialchars($schoolSettings['application_logo']) ?>" alt="School Logo" class="school-logo">
+            <?php else: ?>
+            <div class="school-logo"></div>
+            <?php endif; ?>
             <div class="school-info">
                 <div class="school-name"><?= htmlspecialchars($schoolName) ?></div>
                 <div class="school-tagline">Excellence in Education</div>
@@ -160,44 +168,9 @@
             </div>
 
             <div class="content-paragraph">
-                We are pleased to inform you that after careful consideration of your child's application, we are delighted to offer admission to <strong><?= htmlspecialchars($studentName) ?></strong> for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year.
+                We are pleased to inform you that after careful consideration of your child's application, we are delighted to offer admission to <strong><?= htmlspecialchars($studentName) ?></strong> for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year. Your application number <strong><?= htmlspecialchars($applicantNumber) ?></strong> for <strong><?= htmlspecialchars($studentName) ?></strong> applying for <strong><?= htmlspecialchars($level) ?> - <?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> as a <strong><?= htmlspecialchars($schoolType) ?></strong> student has been approved.
             </div>
 
-            <div class="approval-notice">
-                <div class="approval-text">ADMISSION APPROVED</div>
-            </div>
-
-            <div class="application-details">
-                <h4 style="margin: 0 0 15px 0; text-decoration: underline;">Application Details</h4>
-                <table class="details-table">
-                    <tr>
-                        <td class="label">Student Name:</td>
-                        <td><?= htmlspecialchars($studentName) ?></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Application Number:</td>
-                        <td><strong><?= htmlspecialchars($applicantNumber) ?></strong></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Level:</td>
-                        <td><?= htmlspecialchars($level) ?></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Class:</td>
-                        <td><?= htmlspecialchars($class) ?></td>
-                    </tr>
-                    <?php if (!empty($programme)): ?>
-                    <tr>
-                        <td class="label">Programme:</td>
-                        <td><?= htmlspecialchars($programme) ?></td>
-                    </tr>
-                    <?php endif; ?>
-                    <tr>
-                        <td class="label">School Type:</td>
-                        <td><?= htmlspecialchars($schoolType) ?></td>
-                    </tr>
-                </table>
-            </div>
 
             <div class="next-steps">
                 <h4>Next Steps for Enrollment:</h4>

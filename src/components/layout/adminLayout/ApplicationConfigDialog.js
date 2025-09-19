@@ -50,6 +50,11 @@ class ApplicationConfigDialog extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.loadCurrentConfig();
+        
+        // Listen for ui-dialog close events
+        this.addEventListener('dialog-closed', () => {
+            this.removeAttribute('open');
+        });
     }
 
     setupEventListeners() {
@@ -125,11 +130,21 @@ class ApplicationConfigDialog extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // Also open the ui-dialog element
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.setAttribute('open', '');
+        }
         this.loadCurrentConfig();
     }
 
     close() {
         this.removeAttribute('open');
+        // Also close the ui-dialog element
+        const dialog = this.querySelector('ui-dialog');
+        if (dialog) {
+            dialog.close();
+        }
         this.dispatchEvent(new CustomEvent('dialog-closed', {
             bubbles: true,
             composed: true
@@ -528,6 +543,7 @@ class ApplicationConfigDialog extends HTMLElement {
                 response = await api.withToken(token).post('/admission-configs', saveData);
             }
             
+            // Show success message first
             Toast.show({
                 title: 'Success',
                 message: 'Admission configuration saved successfully',
@@ -535,8 +551,12 @@ class ApplicationConfigDialog extends HTMLElement {
                 duration: 3000
             });
 
-            // Close dialog and dispatch event
-            this.close();
+            // Close dialog after a brief delay
+            setTimeout(() => {
+                this.close();
+            }, 100);
+
+            // Dispatch event
             this.dispatchEvent(new CustomEvent('config-saved', {
                 detail: { config: response.data.data },
                 bubbles: true,

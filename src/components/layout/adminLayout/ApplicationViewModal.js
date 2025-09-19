@@ -109,15 +109,15 @@ class ApplicationViewModal extends HTMLElement {
             return;
         }
 
-        try {
-            // Show loading toast
-            const loadingToast = Toast.show({
-                title: 'Processing',
-                message: `${newStatus === 'approved' ? 'Approving' : newStatus === 'rejected' ? 'Rejecting' : 'Resetting'} application...`,
-                variant: 'info',
-                duration: 0 // Don't auto-dismiss
-            });
+        // Show processing toast
+        const loadingToast = Toast.show({
+            title: 'Processing',
+            message: `${newStatus === 'approved' ? 'Approving' : newStatus === 'rejected' ? 'Rejecting' : 'Resetting'} application...`,
+            variant: 'info',
+            duration: 0 // Don't auto-dismiss
+        });
 
+        try {
             // Get authentication token
             const token = localStorage.getItem('token');
             if (!token) {
@@ -129,13 +129,17 @@ class ApplicationViewModal extends HTMLElement {
                 status: newStatus
             });
 
-            if (response.data.success) {
+            if (response.data && response.data.success) {
                 // Update local data
                 this.applicationData.status = newStatus;
                 
-                // Dismiss loading toast
-                if (loadingToast && loadingToast.dismiss) {
-                    loadingToast.dismiss();
+                // Save application data before closing modal (since close() sets it to null)
+                const applicationId = this.applicationData.id;
+                const applicationData = { ...this.applicationData };
+                
+                // Dismiss processing toast
+                if (loadingToast && loadingToast.hide) {
+                    loadingToast.hide();
                 }
                 
                 // Show success message
@@ -149,12 +153,12 @@ class ApplicationViewModal extends HTMLElement {
                 // Close modal immediately after success
                 this.close();
 
-                // Dispatch custom event to notify parent components
+                // Dispatch custom event to notify parent components (using saved data)
                 this.dispatchEvent(new CustomEvent('application-status-changed', {
                     detail: {
-                        applicationId: this.applicationData.id,
+                        applicationId: applicationId,
                         newStatus: newStatus,
-                        applicationData: this.applicationData
+                        applicationData: applicationData
                     },
                     bubbles: true
                 }));
@@ -162,14 +166,14 @@ class ApplicationViewModal extends HTMLElement {
                 throw new Error(response.data.message || 'Failed to update status');
             }
         } catch (error) {
-            // Dismiss loading toast
-            if (loadingToast && loadingToast.dismiss) {
-                loadingToast.dismiss();
+            // Dismiss processing toast
+            if (loadingToast && loadingToast.hide) {
+                loadingToast.hide();
             }
             
             Toast.show({
                 title: 'Error',
-                message: error.response?.data?.message || 'Failed to update application status',
+                message: error.message || 'Failed to update application status',
                 variant: 'error',
                 duration: 5000
             });

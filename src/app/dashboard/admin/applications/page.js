@@ -175,6 +175,13 @@ class ApplicationsPage extends App {
             this.set('showViewModal', false);
             this.set('viewApplicationData', null);
         });
+
+        // Listen for status changes to close modal
+        this.addEventListener('application-status-changed', (event) => {
+            // Close the modal after status change
+            this.set('showViewModal', false);
+            this.set('viewApplicationData', null);
+        });
     }
 
     handleHeaderActions(event) {

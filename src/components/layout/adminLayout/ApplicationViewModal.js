@@ -110,6 +110,14 @@ class ApplicationViewModal extends HTMLElement {
         }
 
         try {
+            // Show loading toast
+            const loadingToast = Toast.show({
+                title: 'Processing',
+                message: `${newStatus === 'approved' ? 'Approving' : newStatus === 'rejected' ? 'Rejecting' : 'Resetting'} application...`,
+                variant: 'info',
+                duration: 0 // Don't auto-dismiss
+            });
+
             // Get authentication token
             const token = localStorage.getItem('token');
             if (!token) {
@@ -124,6 +132,11 @@ class ApplicationViewModal extends HTMLElement {
             if (response.data.success) {
                 // Update local data
                 this.applicationData.status = newStatus;
+                
+                // Dismiss loading toast
+                if (loadingToast && loadingToast.dismiss) {
+                    loadingToast.dismiss();
+                }
                 
                 // Show success message
                 Toast.show({
@@ -149,6 +162,11 @@ class ApplicationViewModal extends HTMLElement {
                 throw new Error(response.data.message || 'Failed to update status');
             }
         } catch (error) {
+            // Dismiss loading toast
+            if (loadingToast && loadingToast.dismiss) {
+                loadingToast.dismiss();
+            }
+            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to update application status',

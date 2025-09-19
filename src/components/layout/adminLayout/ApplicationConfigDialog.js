@@ -925,7 +925,7 @@ class ApplicationConfigDialog extends HTMLElement {
                 </div>
                 
                 <div slot="footer" class="flex justify-end space-x-3">
-                    <ui-button variant="outline" data-action="close-dialog">Cancel</ui-button>
+                    <ui-button variant="outline" color="secondary" data-action="close-dialog">Cancel</ui-button>
                     <ui-button color="primary" data-action="save-config">Save Configuration</ui-button>
                 </div>
             </ui-dialog>

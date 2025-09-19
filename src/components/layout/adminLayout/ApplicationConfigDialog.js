@@ -559,7 +559,7 @@ class ApplicationConfigDialog extends HTMLElement {
             <ui-dialog 
                 ${this.hasAttribute('open') ? 'open' : ''} 
                 close-button="true">
-                <div slot="title">Admission Configuration</div>                
+                <div slot="title">Application Config Dialog</div>                
                 <div slot="content" class="">
                     <form id="admission-config-form" class="space-y-6">
                         <!-- Basic Configuration -->
@@ -761,30 +761,6 @@ class ApplicationConfigDialog extends HTMLElement {
                                         ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'last_class_completed') ? 'checked' : ''}
                                         data-field="academic_background_fields"
                                         data-field-name="last_class_completed">
-                                    </ui-checkbox>
-                                    <ui-checkbox 
-                                        label="Level Applying For" 
-                                        ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'level_applying') ? 'checked' : ''}
-                                        data-field="academic_background_fields"
-                                        data-field-name="level_applying">
-                                    </ui-checkbox>
-                                    <ui-checkbox 
-                                        label="Class Applying For" 
-                                        ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'class_applying') ? 'checked' : ''}
-                                        data-field="academic_background_fields"
-                                        data-field-name="class_applying">
-                                    </ui-checkbox>
-                                    <ui-checkbox 
-                                        label="Academic Programme" 
-                                        ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'academic_programme') ? 'checked' : ''}
-                                        data-field="academic_background_fields"
-                                        data-field-name="academic_programme">
-                                    </ui-checkbox>
-                                    <ui-checkbox 
-                                        label="School Type" 
-                                        ${this.configData.academic_background_fields && this.isFieldEnabled('academic_background_fields', 'school_type') ? 'checked' : ''}
-                                        data-field="academic_background_fields"
-                                        data-field-name="school_type">
                                     </ui-checkbox>
                                 </div>
                             </div>

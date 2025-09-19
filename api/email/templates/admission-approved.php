@@ -168,7 +168,7 @@
             </div>
 
             <div class="content-paragraph">
-                We are pleased to inform you that after careful consideration of your child's application, we are delighted to offer admission to <strong><?= htmlspecialchars($studentName) ?></strong> for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year. Your application number <strong><?= htmlspecialchars($applicantNumber) ?></strong> for <strong><?= htmlspecialchars($level) ?> - <?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> as a <strong><?= htmlspecialchars($schoolType) ?></strong> student has been approved.
+                We are pleased to inform you that after careful consideration of your child's application, we are delighted to offer admission to <strong><?= htmlspecialchars($studentName) ?></strong> for the <strong><?= htmlspecialchars($academicYear) ?></strong> academic year. Your application number <strong><?= htmlspecialchars($applicantNumber) ?></strong> for <strong><?= htmlspecialchars($class) ?></strong><?= !empty($programme) ? ' in the <strong>' . htmlspecialchars($programme) . '</strong> programme' : '' ?> as a <strong><?= htmlspecialchars($schoolType) ?></strong> student has been approved.
             </div>
 
 

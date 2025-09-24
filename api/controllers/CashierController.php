@@ -1730,6 +1730,7 @@ class CashierController {
         }
     }
 
+
     /**
      * Get total payment summary by grading period (cashier only)
      */
@@ -1769,11 +1770,13 @@ class CashierController {
             $periodsStmt = $pdo->prepare($periodsSql);
             $periodsStmt->execute();
             $periods = $periodsStmt->fetchAll(PDO::FETCH_ASSOC);
+            
 
             $summaryData = [];
 
             foreach ($periods as $period) {
                 // Get total payments for this grading period
+                // Try with academic year filter first, then fallback to no year filter
                 $paymentsSql = "
                     SELECT 
                         COALESCE(SUM(fp.amount), 0) as total_received,
@@ -1782,13 +1785,42 @@ class CashierController {
                     FROM fee_payments fp
                     INNER JOIN fee_invoices fi ON fp.invoice_id = fi.id
                     WHERE fi.grading_period = ? 
-                    AND fi.academic_year = ?
+                    AND (
+                        fi.academic_year = ? 
+                        OR fi.academic_year = ? 
+                        OR fi.academic_year LIKE CONCAT('%', ?, '%')
+                        OR fi.academic_year LIKE CONCAT('%', ?, '%')
+                    )
                     AND (fp.status IS NULL OR fp.status != 'voided')
                 ";
                 
                 $paymentsStmt = $pdo->prepare($paymentsSql);
-                $paymentsStmt->execute([$period['name'], $academicYear['year_code']]);
+                $paymentsStmt->execute([
+                    $period['name'], 
+                    $academicYear['year_code'], 
+                    $academicYear['display_name'],
+                    $academicYear['year_code'],
+                    $academicYear['display_name']
+                ]);
                 $paymentData = $paymentsStmt->fetch(PDO::FETCH_ASSOC);
+                
+                // If no payments found with year filter, try without year filter
+                if ($paymentData['total_received'] == 0) {
+                    $paymentsSqlNoYear = "
+                        SELECT 
+                            COALESCE(SUM(fp.amount), 0) as total_received,
+                            COUNT(DISTINCT fp.id) as payment_count,
+                            COUNT(DISTINCT fp.student_id) as students_paid
+                        FROM fee_payments fp
+                        INNER JOIN fee_invoices fi ON fp.invoice_id = fi.id
+                        WHERE fi.grading_period = ? 
+                        AND (fp.status IS NULL OR fp.status != 'voided')
+                    ";
+                    
+                    $paymentsStmtNoYear = $pdo->prepare($paymentsSqlNoYear);
+                    $paymentsStmtNoYear->execute([$period['name']]);
+                    $paymentData = $paymentsStmtNoYear->fetch(PDO::FETCH_ASSOC);
+                }
 
                 // Get total expected collection for this grading period
                 $expectedSql = "
@@ -1800,11 +1832,18 @@ class CashierController {
                     INNER JOIN fee_schedules fs ON fs.class_id = c.id 
                         AND fs.grading_period = ?
                         AND (s.student_type = fs.student_type OR fs.student_type = 'all')
+                        AND (fs.academic_year = ? OR fs.academic_year = ? OR fs.academic_year LIKE CONCAT('%', ?, '%') OR fs.academic_year LIKE CONCAT('%', ?, '%'))
                     WHERE s.status = 'active'
                 ";
                 
                 $expectedStmt = $pdo->prepare($expectedSql);
-                $expectedStmt->execute([$period['name']]);
+                $expectedStmt->execute([
+                    $period['name'], 
+                    $academicYear['year_code'], 
+                    $academicYear['display_name'],
+                    $academicYear['year_code'],
+                    $academicYear['display_name']
+                ]);
                 $expectedData = $expectedStmt->fetch(PDO::FETCH_ASSOC);
 
                 // Calculate collection rate

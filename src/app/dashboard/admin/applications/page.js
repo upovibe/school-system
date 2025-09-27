@@ -164,9 +164,20 @@ class ApplicationsPage extends App {
             const clearBtn = e.target.closest('[data-action="clear-filters"]');
             if (clearBtn) {
                 e.preventDefault();
+                this.closeAllModals();
                 this.filters = { gender: '', status: '', class_applying: '' };
-                this.filteredApplications = null;
+                this.applyFilters(); // Use applyFilters to ensure consistency
                 this.render();
+                
+                // Reset dropdown values after render
+                setTimeout(() => {
+                    const dropdowns = this.querySelectorAll('ui-search-dropdown');
+                    dropdowns.forEach(dropdown => {
+                        dropdown.value = '';
+                    });
+                    // Force another render to ensure UI is properly reset
+                    this.render();
+                }, 0);
             }
         });
 
@@ -278,6 +289,21 @@ class ApplicationsPage extends App {
     applyFilters() {
         const applications = this.get('applications') || [];
         
+        // Check if all filters are empty
+        const allFiltersEmpty = !this.filters.gender && !this.filters.status && !this.filters.class_applying;
+        
+        console.log('Apply filters debug:', {
+            allFiltersEmpty,
+            filters: this.filters,
+            applicationsCount: applications.length
+        });
+        
+        if (allFiltersEmpty) {
+            // If all filters are empty, clear the filtered results to show all applications
+            this.set('filteredApplications', null);
+            return;
+        }
+        
         const filtered = applications.filter(app => {
             // Gender filter
             if (this.filters.gender && app.gender !== this.filters.gender) {
@@ -297,6 +323,7 @@ class ApplicationsPage extends App {
             return true;
         });
         
+        console.log('Filtered results:', filtered.length);
         this.set('filteredApplications', filtered);
     }
 
@@ -355,6 +382,8 @@ class ApplicationsPage extends App {
                         <ui-button type="button" data-action="apply-filters" variant="primary" size="sm">
                             <i class="fas fa-filter mr-1"></i> Apply Filters
                         </ui-button>
+                    </div>
+                    <div class="flex gap-2">
                         <ui-button type="button" data-action="clear-filters" variant="secondary" size="sm">
                             <i class="fas fa-times mr-1"></i> Clear Filters
                         </ui-button>
@@ -367,9 +396,19 @@ class ApplicationsPage extends App {
     render() {
         const applications = this.get('applications');
         const filteredApplications = this.get('filteredApplications');
-        const displayApplications = filteredApplications || applications;
+        // If filteredApplications is null (cleared), show all applications
+        // If filteredApplications is an array (has filters), show filtered results
+        const displayApplications = filteredApplications === null ? applications : (filteredApplications || applications);
         const loading = this.get('loading');
         const showViewModal = this.get('showViewModal');
+        
+        // Debug logging
+        console.log('Render debug:', {
+            applications: applications?.length || 0,
+            filteredApplications: filteredApplications?.length || 'null',
+            displayApplications: displayApplications?.length || 0,
+            filters: this.filters
+        });
         const tableData = displayApplications ? displayApplications.map((app, index) => ({
             id: app.id,
             index: index + 1,

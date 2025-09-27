@@ -185,15 +185,24 @@ class OurTeamSection extends App {
                             ${teamMembers.map(member => `
                                 <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                                     <!-- Team Member Image/Avatar -->
-                                    <div class="relative h-48 overflow-hidden">
-                                        <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}]">
-                                            <ui-avatar 
-                                                name="${member.name}" 
-                                                size="3xl" 
-                                                color="${primaryColor}"
-                                                alt="${member.name}"
-                                                ${member.profile_image ? `src="${this.getImageUrl(member.profile_image)}"` : ''}
-                                            ></ui-avatar>
+                                    <div class="relative w-full aspect-square overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-[${secondaryColor}] to-[${primaryColor}] rounded-t-xl"></div>
+                                        <div class="absolute inset-2 rounded-lg overflow-hidden">
+                                            ${member.profile_image ? `
+                                                <img 
+                                                    src="${this.getImageUrl(member.profile_image)}" 
+                                                    alt="${member.name}"
+                                                    class="w-full h-full object-cover"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                >
+                                            ` : ''}
+                                            <!-- Fallback for no image -->
+                                            <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center ${member.profile_image ? 'hidden' : ''}">
+                                                <div class="text-center text-white">
+                                                    <i class="fas fa-user text-6xl mb-2 opacity-70"></i>
+                                                    <p class="text-sm font-medium">${member.name.split(' ').map(n => n[0]).join('')}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                         
                                         <!-- Department Badge -->
@@ -204,6 +213,9 @@ class OurTeamSection extends App {
                                                 </span>
                                             </div>
                                         ` : ''}
+                                        
+                                        <!-- Hover overlay effect -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     </div>
                                     
                                     <!-- Team Member Info -->

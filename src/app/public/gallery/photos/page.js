@@ -51,10 +51,25 @@ class PhotoGalleryPage extends App {
     async fetchPageData(slug) {
         try {
             const response = await api.get(`/pages/slug/${slug}`);
-            return response.data.success ? response.data.data : null;
+            if (response.data.success && response.data.data) {
+                return response.data.data;
+            }
+            // Return fallback page data if page doesn't exist
+            return {
+                title: 'Photo Gallery',
+                subtitle: 'Explore our photo collections',
+                content: '',
+                banner_image: null
+            };
         } catch (error) {
             console.error(`Error fetching ${slug} page data:`, error);
-            return null;
+            // Return fallback page data on error
+            return {
+                title: 'Photo Gallery',
+                subtitle: 'Explore our photo collections',
+                content: '',
+                banner_image: null
+            };
         }
     }
 

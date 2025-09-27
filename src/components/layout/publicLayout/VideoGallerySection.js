@@ -61,6 +61,57 @@ class VideoGallerySection extends App {
         }
     }
 
+    // Helper method to get proper image URL
+    getImageUrl(imagePath) {
+        if (!imagePath || typeof imagePath !== 'string') return '';
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+        
+        // If it's a relative path starting with /, construct the full URL
+        if (imagePath.startsWith('/')) {
+            const baseUrl = window.location.origin;
+            return baseUrl + imagePath;
+        }
+        
+        // If it's a relative path without /, construct the URL
+        const baseUrl = window.location.origin;
+        const apiPath = '/api';
+        return baseUrl + apiPath + '/' + imagePath;
+    }
+
+    // Helper method to parse banner images from various formats
+    getBannerImages(pageData) {
+        if (!pageData || !pageData.banner_image) {
+            return [];
+        }
+
+        let bannerImages = pageData.banner_image;
+
+        // If it's a string, try to parse as JSON
+        if (typeof bannerImages === 'string') {
+            try {
+                const parsed = JSON.parse(bannerImages);
+                if (Array.isArray(parsed)) {
+                    bannerImages = parsed;
+                } else {
+                    bannerImages = [bannerImages];
+                }
+            } catch (e) {
+                // If parsing fails, treat as single path
+                bannerImages = [bannerImages];
+            }
+        } else if (!Array.isArray(bannerImages)) {
+            // If it's not an array, wrap in array
+            bannerImages = [bannerImages];
+        }
+
+        // Filter out empty/null values
+        return bannerImages.filter(img => img && img.trim() !== '');
+    }
+
     // Helper function to get video platform from URL
     getVideoPlatform(videoUrl) {
         if (!videoUrl) return 'unknown';
@@ -115,38 +166,92 @@ class VideoGallerySection extends App {
         const hoverSecondary = this.get('hover_secondary');
         const hoverAccent = this.get('hover_accent');
 
+        const bannerImages = this.getBannerImages(pageData);
+
         return `
             <!-- Video Gallery Section -->
             <section class="mx-auto py-10">
                 
-                <!-- Creative Header -->
-                <div class="relative mb-16">
-                    <!-- Animated Background Shapes -->
-                    <div class="absolute inset-0 overflow-hidden">
-                        <div class="absolute top-0 left-1/4 w-32 h-32 bg-[${primaryColor}]/10 rounded-full blur-xl animate-pulse"></div>
-                        <div class="absolute top-20 right-1/4 w-24 h-24 bg-[${accentColor}]/15 rounded-full blur-lg animate-pulse delay-1000"></div>
-                        <div class="absolute bottom-10 left-1/3 w-20 h-20 bg-[${secondaryColor}]/10 rounded-full blur-md animate-pulse delay-500"></div>
-                    </div>
-                    
-                    <div class="relative text-center">
-                        <div class="inline-block mb-6">
-                            <div class="w-24 h-24 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                                <i class="fas fa-video text-white text-3xl"></i>
+                <!-- Video Gallery Banner (matching ContactSection) -->
+                ${bannerImages.length > 0 ? `
+                    <div class="relative group rounded-3xl overflow-hidden shadow-2xl mb-16">
+                        <!-- Banner Background -->
+                        <div class="relative h-80 lg:h-96 overflow-hidden">
+                            <img src="${this.getImageUrl(bannerImages[0])}" 
+                                 alt="Video Gallery" 
+                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                                <div class="text-center">
+                                    <i class="fas fa-video text-gray-400 text-4xl mb-2"></i>
+                                    <p class="text-gray-500 font-medium">Video gallery banner</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Overlay with content -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                            
+                            <!-- Content overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center p-6">
+                                <div class="text-center text-white relative z-10">
+                                    <!-- Header with animated icon -->
+                                    <div class="flex justify-center mb-6">
+                                        <div class="size-10 bg-[${primaryColor}]/20 backdrop-blur-md rounded-lg flex items-center justify-center shadow-lg transform hover:rotate-12 transition-transform duration-300 border border-white/30">
+                                            <i class="fas fa-video text-white animate-pulse"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Title and Subtitle -->
+                                    <h1 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                                        ${pageData.title || ''}
+                                    </h1>
+                                    <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
+                                        ${pageData.subtitle || ''}
+                                    </p>
+                                    
+                                    <!-- Mouse Scroll Indicator -->
+                                    <div class="flex justify-center">
+                                        <div class="flex flex-col items-center text-white cursor-pointer group" onclick="const target = document.getElementById('video-galleries'); if (target) target.scrollIntoView({behavior: 'smooth'});">
+                                            <div class="w-6 h-10 border-2 border-white rounded-full flex justify-center transition-all duration-300 group-hover:scale-110">
+                                                <div class="w-1.5 h-3 bg-white rounded-full mt-2 animate-bounce transition-all duration-300"></div>
+                                            </div>
+                                            <span class="text-sm mt-3 opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105 font-medium">Scroll</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                            ${pageData.title || ''}
-                        </h1>
-                        <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            ${pageData.subtitle || ''}
-                        </p>
-                        <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>
-                </div>
+                ` : `
+                    <!-- Creative Header (fallback when no banner) -->
+                    <div class="relative mb-16">
+                        <!-- Animated Background Shapes -->
+                        <div class="absolute inset-0 overflow-hidden">
+                            <div class="absolute top-0 left-1/4 w-32 h-32 bg-[${primaryColor}]/10 rounded-full blur-xl animate-pulse"></div>
+                            <div class="absolute top-20 right-1/4 w-24 h-24 bg-[${accentColor}]/15 rounded-full blur-lg animate-pulse delay-1000"></div>
+                            <div class="absolute bottom-10 left-1/3 w-20 h-20 bg-[${secondaryColor}]/10 rounded-full blur-md animate-pulse delay-500"></div>
+                        </div>
+                        
+                        <div class="relative text-center">
+                            <div class="inline-block mb-6">
+                                <div class="w-24 h-24 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                                    <i class="fas fa-video text-white text-3xl"></i>
+                                </div>
+                            </div>
+                            <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
+                                ${pageData.title || 'Video Gallery'}
+                            </h1>
+                            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+                                ${pageData.subtitle || 'Watch our video collections'}
+                            </p>
+                            <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
+                        </div>
+                    </div>
+                `}
 
                 <!-- Video Galleries Grid -->
                 ${videoGalleries.length > 0 ? `
-                    <div class="relative">
+                    <div id="video-galleries" class="relative">
                         <!-- Animated Background -->
                         <div class="absolute inset-0">
                             <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[${primaryColor}]/5 via-transparent to-[${accentColor}]/5 rounded-[3rem]"></div>

@@ -264,11 +264,11 @@
 
       // Social icons array
       const socialIcons = [
-        { key: 'facebook_url', icon: 'fab fa-facebook-f' },
-        { key: 'twitter_url', icon: 'fab fa-twitter' },
-        { key: 'instagram_url', icon: 'fab fa-instagram' },
-        { key: 'linkedin_url', icon: 'fab fa-linkedin-in' },
-        { key: 'youtube_url', icon: 'fab fa-youtube' }
+        { key: 'facebook_url', icon: 'fab fa-facebook-f', name: 'Facebook' },
+        { key: 'twitter_url', icon: 'fab fa-twitter', name: 'Twitter' },
+        { key: 'instagram_url', icon: 'fab fa-instagram', name: 'Instagram' },
+        { key: 'linkedin_url', icon: 'fab fa-linkedin-in', name: 'LinkedIn' },
+        { key: 'youtube_url', icon: 'fab fa-youtube', name: 'YouTube' }
       ];
 
       // Helper function to render navigation links
@@ -335,11 +335,17 @@
 
       // Helper function to render social icons
       const renderSocialIcons = (isMobile = false) => {
-        return socialIcons.map(social => `
-          <a href="${this.get(social.key) || '#'}" class="text-[${textColor}] hover:text-[${accentColor}] transition-colors">
-            <i class="${social.icon} ${isMobile ? '' : 'text-sm lg:text-base'}"></i>
-          </a>
-        `).join('');
+        return socialIcons
+          .filter(social => this.get(social.key))
+          .map(social => `
+            <a href="${this.get(social.key)}" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="text-[${textColor}] hover:text-[${accentColor}] transition-colors"
+               title="${social.name || social.key.replace('_url', '').replace('_', ' ').toUpperCase()}">
+              <i class="${social.icon} ${isMobile ? '' : 'text-sm lg:text-base'}"></i>
+            </a>
+          `).join('');
       };
 
       // Add styles for active link

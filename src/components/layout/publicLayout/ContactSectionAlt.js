@@ -264,6 +264,7 @@ class ContactSectionAlt extends App {
 
     render() {
         const loading = this.get('loading');
+        const pageData = this.get('pageData');
         
         // Get colors from state
         const primaryColor = this.get('primary_color');
@@ -275,30 +276,82 @@ class ContactSectionAlt extends App {
             <!-- Contact Section Alt -->
             <section class="mx-auto py-10">
                 
-                <!-- Creative Header -->
-                <div class="relative mb-16">
-                    <!-- Animated Background Shapes -->
-                    <div class="absolute inset-0 overflow-hidden">
-                        <div class="absolute top-0 left-1/4 w-32 h-32 bg-[${primaryColor}]/10 rounded-full blur-xl animate-pulse"></div>
-                        <div class="absolute top-20 right-1/4 w-24 h-24 bg-[${accentColor}]/15 rounded-full blur-lg animate-pulse delay-1000"></div>
-                        <div class="absolute bottom-10 left-1/3 w-20 h-20 bg-[${secondaryColor}]/10 rounded-full blur-md animate-pulse delay-500"></div>
-                    </div>
-                    
-                    <div class="relative text-center">
-                        <div class="inline-block mb-6">
-                            <div class="w-24 h-24 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                                <i class="fas fa-envelope text-white text-3xl"></i>
+                <!-- Contact Banner (matching ContactSection) -->
+                ${pageData?.banner_image ? `
+                    <div class="relative group rounded-3xl overflow-hidden shadow-2xl mb-16">
+                        <!-- Banner Background -->
+                        <div class="relative h-80 lg:h-96 overflow-hidden">
+                            <img src="/api/${pageData.banner_image}" 
+                                 alt="Contact Us" 
+                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="absolute inset-0 hidden items-center justify-center bg-gray-100">
+                                <div class="text-center">
+                                    <i class="fas fa-envelope text-gray-400 text-4xl mb-2"></i>
+                                    <p class="text-gray-500 font-medium">Contact banner</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Overlay with content -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                            
+                            <!-- Content overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center p-6">
+                                <div class="text-center text-white relative z-10">
+                                    <!-- Header with animated icon -->
+                                    <div class="flex justify-center mb-6">
+                                        <div class="size-10 bg-[${primaryColor}]/20 backdrop-blur-md rounded-lg flex items-center justify-center shadow-lg transform hover:rotate-12 transition-transform duration-300 border border-white/30">
+                                            <i class="fas fa-envelope text-white animate-pulse"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Title and Subtitle -->
+                                    <h1 class="text-3xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                                        ${pageData.title || ''}
+                                    </h1>
+                                    <p class="text-lg lg:text-xl mb-8 max-w-2xl mx-auto opacity-90 drop-shadow-md">
+                                        ${pageData.subtitle || ''}
+                                    </p>
+                                    
+                                    <!-- Mouse Scroll Indicator -->
+                                    <div class="flex justify-center">
+                                        <div class="flex flex-col items-center text-white cursor-pointer group" onclick="document.getElementById('contact-form').scrollIntoView({behavior: 'smooth'})">
+                                            <div class="w-6 h-10 border-2 border-white rounded-full flex justify-center transition-all duration-300 group-hover:scale-110">
+                                                <div class="w-1.5 h-3 bg-white rounded-full mt-2 animate-bounce transition-all duration-300"></div>
+                                            </div>
+                                            <span class="text-sm mt-3 opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105 font-medium">Scroll</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
-                            ${(this.get('pageData') && this.get('pageData').title) ? this.get('pageData').title : ''}
-                        </h1>
-                        <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                            ${(this.get('pageData') && this.get('pageData').subtitle) ? this.get('pageData').subtitle : ''}
-                        </p>
-                        <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
                     </div>
-                </div>
+                ` : `
+                    <!-- Creative Header (fallback when no banner) -->
+                    <div class="relative mb-16">
+                        <!-- Animated Background Shapes -->
+                        <div class="absolute inset-0 overflow-hidden">
+                            <div class="absolute top-0 left-1/4 w-32 h-32 bg-[${primaryColor}]/10 rounded-full blur-xl animate-pulse"></div>
+                            <div class="absolute top-20 right-1/4 w-24 h-24 bg-[${accentColor}]/15 rounded-full blur-lg animate-pulse delay-1000"></div>
+                            <div class="absolute bottom-10 left-1/3 w-20 h-20 bg-[${secondaryColor}]/10 rounded-full blur-md animate-pulse delay-500"></div>
+                        </div>
+                        
+                        <div class="relative text-center">
+                            <div class="inline-block mb-6">
+                                <div class="w-24 h-24 bg-gradient-to-br from-[${primaryColor}] to-[${accentColor}] rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                                    <i class="fas fa-envelope text-white text-3xl"></i>
+                                </div>
+                            </div>
+                            <h1 class="text-4xl lg:text-5xl font-bold text-[${secondaryColor}] mb-4 bg-gradient-to-r from-[${primaryColor}] to-[${accentColor}] bg-clip-text text-transparent">
+                                ${pageData?.title || 'Contact Us'}
+                            </h1>
+                            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+                                ${pageData?.subtitle || 'Get in touch with us today'}
+                            </p>
+                            <div class="w-32 h-1 bg-gradient-to-r from-[${primaryColor}] via-[${accentColor}] to-[${secondaryColor}] mx-auto rounded-full"></div>
+                        </div>
+                    </div>
+                `}
 
                 <!-- Contact Content -->
                 <div class="relative">
@@ -384,7 +437,7 @@ class ContactSectionAlt extends App {
                             </div>
                             
                             <!-- Contact Form -->
-                            <div class="bg-white rounded-[2rem] p-6">
+                            <div id="contact-form" class="bg-white rounded-[2rem] p-6">
                                 <h2 class="text-2xl font-bold text-[${secondaryColor}] mb-6">Send us a Message</h2>
                                 
                                 <form class="space-y-6">

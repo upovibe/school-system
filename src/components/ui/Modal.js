@@ -418,6 +418,14 @@ class Modal extends HTMLElement {
                     flex-shrink: 0;
                     min-height: 60px;
                 }
+                
+                /* Mobile footer safety */
+                @media (max-width: 768px) {
+                    .modal-footer {
+                        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+                        margin-bottom: env(safe-area-inset-bottom);
+                    }
+                }
 
                 .modal-footer button {
                     padding: 0.5rem 1rem;
@@ -464,15 +472,18 @@ class Modal extends HTMLElement {
                     .modal-content[data-position="right"] {
                         width: 100vw;
                         height: 100vh;
+                        height: 100dvh; /* Use dynamic viewport height for mobile */
                     }
 
                     .modal-content[data-position="top"],
                     .modal-content[data-position="bottom"] {
                         height: 50vh;
+                        height: 50dvh; /* Use dynamic viewport height for mobile */
                     }
                     
                     .modal-body {
                         max-height: calc(100vh - 120px);
+                        max-height: calc(100dvh - 120px); /* Use dynamic viewport height for mobile */
                     }
                 }
 

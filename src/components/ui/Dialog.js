@@ -170,6 +170,14 @@ class Dialog extends HTMLElement {
                     min-height: 60px;
                 }
                 
+                /* Mobile footer safety */
+                @media (max-width: 640px) {
+                    .dialog-footer {
+                        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+                        margin-bottom: env(safe-area-inset-bottom);
+                    }
+                }
+                
                 .dialog-footer button {
                     padding: 0.5rem 1rem;
                     font-size: 0.875rem;
@@ -215,6 +223,7 @@ class Dialog extends HTMLElement {
                         width: 95%;
                         margin: 1rem;
                         max-height: calc(100vh - 2rem);
+                        max-height: calc(100dvh - 2rem); /* Use dynamic viewport height for mobile */
                     }
                     
                     .dialog-header,
@@ -225,6 +234,7 @@ class Dialog extends HTMLElement {
                     
                     .dialog-content {
                         max-height: calc(100vh - 180px);
+                        max-height: calc(100dvh - 180px); /* Use dynamic viewport height for mobile */
                     }
                 }
             </style>

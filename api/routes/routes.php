@@ -129,6 +129,9 @@ Router::post('/applications', 'ApplicationController@store');
 Router::put('/applications/{id}/status', 'ApplicationController@updateStatus');
 Router::get('/applications/statistics', 'ApplicationController@getStatistics');
 
+// Public Statistics (no auth required)
+Router::get('/public/stats', 'PublicStatsController@getCommunityStats');
+
 // Admission Configuration (public for form display)
 Router::get('/admission/config', 'ApplicationController@getConfig');
 

@@ -10,11 +10,18 @@ import '@/components/ui/ContentDisplay.js';
 class CommunitySection extends App {
     constructor() {
         super();
+        this.set('communityStats', {
+            students: 0,
+            teachers: 0,
+            families: 0
+        });
+        this.set('loading', true);
     }
 
     connectedCallback() {
         super.connectedCallback();
         this.loadDataFromProps();
+        this.loadCommunityStats();
     }
 
     loadDataFromProps() {
@@ -53,8 +60,76 @@ class CommunitySection extends App {
         this.render();
     }
 
+    async loadCommunityStats() {
+        try {
+            const response = await fetch('/api/public/stats');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    this.set('communityStats', data.data);
+                    this.animateCounts();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading community stats:', error);
+        } finally {
+            this.set('loading', false);
+            this.render();
+        }
+    }
+
+    animateCounts() {
+        const stats = this.get('communityStats');
+        const duration = 2000; // 2 seconds
+        const steps = 60; // 60 steps for smooth animation
+        const stepDuration = duration / steps;
+
+        // Animate students count
+        this.animateNumber('students', 0, stats.students, steps, stepDuration);
+        
+        // Animate teachers count with delay
+        setTimeout(() => {
+            this.animateNumber('teachers', 0, stats.teachers, steps, stepDuration);
+        }, 200);
+
+        // Animate families count with more delay
+        setTimeout(() => {
+            this.animateNumber('families', 0, stats.families, steps, stepDuration);
+        }, 400);
+    }
+
+    animateNumber(statType, start, end, steps, stepDuration) {
+        let current = start;
+        const increment = (end - start) / steps;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= end) {
+                current = end;
+                clearInterval(timer);
+            }
+            
+            // Update the specific stat
+            const currentStats = this.get('communityStats');
+            currentStats[statType] = Math.floor(current);
+            this.set('communityStats', currentStats);
+            
+            // Only update the specific number element instead of re-rendering everything
+            this.updateNumberDisplay(statType, Math.floor(current));
+        }, stepDuration);
+    }
+
+    updateNumberDisplay(statType, value) {
+        // Find the specific number element and update only that
+        const numberElement = this.querySelector(`[data-stat="${statType}"] .text-2xl`);
+        if (numberElement) {
+            numberElement.textContent = value.toLocaleString() + '+';
+        }
+    }
+
     render() {
         const pageData = this.get('pageData');
+        const communityStats = this.get('communityStats');
+        const loading = this.get('loading');
         
         // Get colors from state
         const primaryColor = this.get('primary_color');
@@ -102,21 +177,27 @@ class CommunitySection extends App {
                             
                             <!-- Animated overlay with community stats -->
                             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                            <div class="absolute bottom-2 gap-2 gap-y-4 galeft-4 right-4">
-                                <div class="flex flex-wrap gap-2 text-white">
-                                    <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
-                                        <div class="text-2xl font-bold animate-pulse">500+</div>
-                                        <div class="text-sm opacity-90">Students</div>
-                                    </div>
-                                    <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
-                                        <div class="text-2xl font-bold animate-pulse delay-300">50+</div>
-                                        <div class="text-sm opacity-90">Teachers</div>
-                                    </div>
-                                    <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300">
-                                        <div class="text-2xl font-bold animate-pulse delay-700">1000+</div>
-                                        <div class="text-sm opacity-90">Families</div>
-                                    </div>
-                                </div>
+                            <div class="absolute bottom-2 gap-2 gap-y-4 right-4">
+           <div class="flex flex-wrap gap-2 text-white justify-end">
+               <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300" data-stat="students">
+                   <div class="text-2xl font-bold ${loading ? 'animate-pulse' : ''}">
+                       ${loading ? '...' : communityStats.students.toLocaleString()}+
+                   </div>
+                   <div class="text-sm opacity-90">Students</div>
+               </div>
+               <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300" data-stat="teachers">
+                   <div class="text-2xl font-bold ${loading ? 'animate-pulse delay-300' : ''}">
+                       ${loading ? '...' : communityStats.teachers.toLocaleString()}+
+                   </div>
+                   <div class="text-sm opacity-90">Teachers</div>
+               </div>
+               <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 transform hover:scale-105 transition-all duration-300" data-stat="families">
+                   <div class="text-2xl font-bold ${loading ? 'animate-pulse delay-700' : ''}">
+                       ${loading ? '...' : communityStats.families.toLocaleString()}+
+                   </div>
+                   <div class="text-sm opacity-90">Families</div>
+               </div>
+           </div>
                             </div>
                             
                             <!-- Floating action indicator -->

@@ -31,6 +31,9 @@ RewriteRule ^uploads/assignments/(.*)$ index.php [QSA,L]
 # Route assignment submission files through PHP (for authentication)
 RewriteRule ^uploads/assignments/submissions/(.*)$ index.php [QSA,L]
 
+# Allow direct access to uploads directory
+RewriteRule ^uploads/ - [L]
+
 # Allow direct access to other uploaded files (settings, pages, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^uploads/(.*)$ index.php [QSA,L]
@@ -56,7 +59,7 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 
 <IfModule mod_php.c>
     php_flag display_errors off
-    php_value max_execution_time 300
+    php_value max_execution_time 900
     php_value memory_limit 128M
     php_flag session.cookie_httponly on
     php_flag session.use_only_cookies on

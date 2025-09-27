@@ -1,5 +1,6 @@
 import App from '@/core/App.js';
 import { unescapeJsonFromAttribute } from '@/utils/jsonUtils.js';
+import '@/components/ui/ContentDisplay.js';
 
 /**
  * Hero Section Component
@@ -218,6 +219,16 @@ class HeroSection extends App {
                             `).join('')}
                         </div>
                     </div>
+                ` : ''}
+                
+                <!-- Page Content Section -->
+                ${pageData?.content && pageData.content.trim() !== '' ? `
+                    <div class="container shadow-lg rounded-3xl mx-auto p-5 lg:p-12 mt-5">
+                            <content-display 
+                                content="${pageData.content.replace(/"/g, '&quot;')}"
+                                no-styles>
+                            </content-display>
+                        </div>
                 ` : ''}
             </div>
         `;

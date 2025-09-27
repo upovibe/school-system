@@ -306,7 +306,7 @@ class DashboardLayout extends App {
                         { label: 'Applications', icon: 'fas fa-file-signature', href: '/dashboard/admin/applications' },
                         { label: 'Events', icon: 'fas fa-calendar-alt', href: '/dashboard/admin/events' },
                         { label: 'News', icon: 'fas fa-newspaper', href: '/dashboard/admin/news' },
-                        { label: 'Gallery', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
+                        { label: 'Photo Gallery', icon: 'fas fa-images', href: '/dashboard/admin/galleries' },
                         { label: 'Video Gallery', icon: 'fas fa-video', href: '/dashboard/admin/video-galleries' },
                     ]
                 },
@@ -420,8 +420,9 @@ class DashboardLayout extends App {
             'system-settings': 'System Settings', 'users': 'User Management', 'teams': 'Team Management', 'reports': 'Reports',
             'classes': 'Classes', 'grades': 'Grades',
             'courses': 'Courses', 'assignments': 'Assignments', 'children': 'My Children',
-            'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Gallery Management',
-            'subjects': 'Subject Management', 'classes': 'Class Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
+            'messages': 'Messages', 'user-role': 'User Roles', 'galleries': 'Photo Gallery Management',
+            'video-galleries': 'Video Gallery Management',
+            'subjects': 'Subject Management', 'teachers': 'Teacher Management', 'students': 'Student Management',
             'class-subjects': 'Class Subject Management', 'teacher-assignments': 'Teacher Assignment Management',
             'timetable-resources': 'Timetable Resources',
             'academic-years': 'Academic Year Management',
@@ -430,23 +431,26 @@ class DashboardLayout extends App {
             'grading-policies': 'Grading Policy Management',
             'student-grades': 'Student Grades Management',
             'student-grade-report': 'Student Grade Report',
+            'applications': 'Applications Management',
+            'events': 'Events Management',
+            'news': 'News Management',
+            'announcements': 'Announcements',
+            'announcements-view': 'Teacher Announcements',
+            'all-announcements': 'All Announcements',
+            'system-report': 'System Reports',
             // Finance
             'finance': 'Finance',
             'schedules': 'Fee Schedules',
             'invoices': 'Invoices',
             'payments': 'Payments',
             'receipts': 'Receipts',
-                         'class': 'My Class',
-             'class-subjects': 'My Classes & Subjects',
-             'announcements': 'Announcements',
-             'all-announcements': 'All Announcements',
+            // Teacher specific
+            'class': 'My Class',
+            // Student specific
+            'class': 'My Class',
             // Cashier specific
             'payment-scheduler': 'Payment Scheduler',
-            'invoices': 'Invoices',
-            'payment': 'Payment',
-            'receipts': 'Receipts',
-            // Student specific
-            'finance': 'My Payments'
+            'payment': 'Payment'
         };
         return titles[lastSegment] || 'Dashboard';
     }

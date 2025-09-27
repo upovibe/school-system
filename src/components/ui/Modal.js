@@ -192,6 +192,8 @@ class Modal extends HTMLElement {
                     transition: all 0.3s ease;
                     max-height: 100vh;
                     max-width: 100vw;
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 /* Position variants */
@@ -371,6 +373,8 @@ class Modal extends HTMLElement {
                     padding: 1rem;
                     overflow-y: auto;
                     max-height: calc(100vh - 135px);
+                    flex: 1;
+                    min-height: 0;
                 }
 
                 /* Custom scrollbar styles */
@@ -411,6 +415,8 @@ class Modal extends HTMLElement {
                     padding: 0.5rem 1.5rem;
                     border-top: 1px solid #e5e7eb;
                     background: #f9fafb;
+                    flex-shrink: 0;
+                    min-height: 60px;
                 }
 
                 .modal-footer button {
@@ -457,11 +463,16 @@ class Modal extends HTMLElement {
                     .modal-content[data-position="left"],
                     .modal-content[data-position="right"] {
                         width: 100vw;
+                        height: 100vh;
                     }
 
                     .modal-content[data-position="top"],
                     .modal-content[data-position="bottom"] {
                         height: 50vh;
+                    }
+                    
+                    .modal-body {
+                        max-height: calc(100vh - 120px);
                     }
                 }
 

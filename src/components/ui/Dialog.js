@@ -101,6 +101,7 @@ class Dialog extends HTMLElement {
                     flex-direction: column;
                     transform: scale(0.95);
                     transition: transform 0.3s ease;
+                    min-height: 0;
                 }
                 
                 .dialog-overlay.open .dialog {
@@ -153,6 +154,7 @@ class Dialog extends HTMLElement {
                     overflow-y: auto;
                     color: #374151;
                     line-height: 1.6;
+                    min-height: 0;
                 }
                 
                 .dialog-footer {
@@ -164,6 +166,8 @@ class Dialog extends HTMLElement {
                     border-top: 1px solid #e5e7eb;
                     background-color: #f9fafb;
                     border-radius: 0 0 0.5rem 0.5rem;
+                    flex-shrink: 0;
+                    min-height: 60px;
                 }
                 
                 .dialog-footer button {
@@ -210,12 +214,17 @@ class Dialog extends HTMLElement {
                     .dialog {
                         width: 95%;
                         margin: 1rem;
+                        max-height: calc(100vh - 2rem);
                     }
                     
                     .dialog-header,
                     .dialog-content,
                     .dialog-footer {
                         padding: 1rem;
+                    }
+                    
+                    .dialog-content {
+                        max-height: calc(100vh - 180px);
                     }
                 }
             </style>

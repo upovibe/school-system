@@ -84,7 +84,7 @@ class Table extends HTMLElement {
     }
 
     /**
-     * Parse JSON attribute safely
+     * Parse JSON attribute safely with data cleaning
      * @param {string} attrName - The attribute name
      * @param {any} defaultValue - Default value if parsing fails
      * @returns {any} Parsed value or default
@@ -92,12 +92,45 @@ class Table extends HTMLElement {
     parseJSONAttribute(attrName, defaultValue) {
         const value = this.getAttribute(attrName);
         if (!value) return defaultValue;
+        
         try {
+            // First try to parse as-is
             return JSON.parse(value);
         } catch (e) {
-            console.warn(`Failed to parse ${attrName} attribute:`, e);
-            return defaultValue;
+            console.warn(`Failed to parse ${attrName} attribute, attempting to clean data:`, e);
+            
+            try {
+                // Try to clean the JSON string and parse again
+                const cleanedValue = this.cleanJSONString(value);
+                return JSON.parse(cleanedValue);
+            } catch (e2) {
+                console.error(`Failed to parse ${attrName} attribute even after cleaning:`, e2);
+                return defaultValue;
+            }
         }
+    }
+
+    /**
+     * Clean JSON string to fix common parsing issues
+     * @param {string} jsonString - The JSON string to clean
+     * @returns {string} Cleaned JSON string
+     */
+    cleanJSONString(jsonString) {
+        if (typeof jsonString !== 'string') return jsonString;
+        
+        return jsonString
+            // Fix common HTML entity issues
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            // Remove any remaining problematic characters
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+            // Fix any malformed quotes or commas
+            .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+            .replace(/([{\[])\s*,/g, '$1') // Remove leading commas
+            .trim();
     }
 
     /**

@@ -507,6 +507,7 @@ class DynamicApplicationForm extends App {
             
             // Validate current section before submission
             const validationResult = this.validateCurrentSectionWithDetails();
+            
             if (!validationResult.isValid) {
                 this.isSubmitting = false;
                 this.updateSubmitButton(false);
@@ -622,6 +623,49 @@ class DynamicApplicationForm extends App {
         });
         
         return mappedData;
+    }
+
+    /**
+     * Reset the form to initial state
+     */
+    resetForm() {
+        // Reset form data
+        this.formData = {};
+        
+        // Reset current section to first section
+        this.currentSection = 0;
+        
+        // Clear all form inputs
+        const inputs = this.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+        
+        // Reset dropdowns
+        const dropdowns = this.querySelectorAll('ui-dropdown, ui-search-dropdown');
+        dropdowns.forEach(dropdown => {
+            if (dropdown.reset) {
+                dropdown.reset();
+            }
+        });
+        
+        // Reset textareas
+        const textareas = this.querySelectorAll('ui-textarea');
+        textareas.forEach(textarea => {
+            if (textarea.reset) {
+                textarea.reset();
+            }
+        });
+        
+        // Update progress bar
+        this.updateProgress();
+        
+        // Update submit button state
+        this.updateSubmitButton(false);
     }
 
     collectCurrentFormData() {

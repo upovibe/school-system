@@ -25,6 +25,12 @@ class ApplicationController {
         try {
             // Check if admission is open
             $config = $this->admissionConfigModel->getCurrentConfig();
+            
+            // If no config exists for current academic year, auto-update existing config
+            if (!$config) {
+                $config = $this->autoUpdateConfigToCurrentYear();
+            }
+            
             if (!$config || $config['admission_status'] !== 'open') {
                 http_response_code(400);
                 echo json_encode([

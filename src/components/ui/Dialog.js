@@ -162,18 +162,19 @@ class Dialog extends HTMLElement {
                     align-items: center;
                     justify-content: flex-end;
                     gap: 0.75rem;
-                    padding: 1rem 1.5rem;
+                    padding: 0.75rem 1.5rem;
                     border-top: 1px solid #e5e7eb;
                     background-color: #f9fafb;
                     border-radius: 0 0 0.5rem 0.5rem;
                     flex-shrink: 0;
-                    min-height: 60px;
+                    min-height: 20px;
                 }
                 
                 /* Mobile footer safety */
                 @media (max-width: 640px) {
                     .dialog-footer {
-                        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+                        padding: 0.5rem 1rem;
+                        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                         margin-bottom: env(safe-area-inset-bottom);
                     }
                 }

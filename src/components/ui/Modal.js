@@ -412,16 +412,17 @@ class Modal extends HTMLElement {
                     align-items: center;
                     justify-content: flex-end;
                     gap: 0.75rem;
-                    padding: 0.5rem 1.5rem;
+                    padding: 0.75rem 1.5rem;
                     border-top: 1px solid #e5e7eb;
                     background: #f9fafb;
                     flex-shrink: 0;
-                    min-height: 60px;
+                    min-height: 30px;
                 }
                 
                 /* Mobile footer safety */
                 @media (max-width: 768px) {
                     .modal-footer {
+                        padding: 0.5rem 1rem;
                         padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                         margin-bottom: env(safe-area-inset-bottom);
                     }

@@ -98,9 +98,40 @@ class AcademicYearModel extends BaseModel {
             ");
             $stmt->execute([$id]);
             
+            // Update admission config to follow the new current academic year
+            $this->updateAdmissionConfigToCurrentYear($id);
+            
             return true;
         } catch (PDOException $e) {
             throw new Exception('Error setting academic year as current: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Update admission config to point to the new current academic year
+     */
+    private function updateAdmissionConfigToCurrentYear($newAcademicYearId) {
+        try {
+            // Get the most recent admission config (any academic year)
+            $configStmt = $this->pdo->query("
+                SELECT id FROM admission_config 
+                ORDER BY id DESC 
+                LIMIT 1
+            ");
+            $existingConfig = $configStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // If config exists, update it to point to new academic year
+            if ($existingConfig) {
+                $updateStmt = $this->pdo->prepare("
+                    UPDATE admission_config 
+                    SET academic_year_id = ?, updated_at = NOW()
+                    WHERE id = ?
+                ");
+                $updateStmt->execute([$newAcademicYearId, $existingConfig['id']]);
+            }
+        } catch (PDOException $e) {
+            // Log error but don't fail the academic year switch
+            error_log('Warning: Could not update admission config to new academic year: ' . $e->getMessage());
         }
     }
     

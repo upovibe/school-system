@@ -402,13 +402,6 @@ class ApplicationsPage extends App {
         const loading = this.get('loading');
         const showViewModal = this.get('showViewModal');
         
-        // Debug logging
-        console.log('Render debug:', {
-            applications: applications?.length || 0,
-            filteredApplications: filteredApplications?.length || 'null',
-            displayApplications: displayApplications?.length || 0,
-            filters: this.filters
-        });
         const tableData = displayApplications ? displayApplications.map((app, index) => ({
             id: app.id,
             index: index + 1,

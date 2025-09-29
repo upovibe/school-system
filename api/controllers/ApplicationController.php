@@ -631,6 +631,12 @@ class ApplicationController {
         try {
             $config = $this->admissionConfigModel->getCurrentConfig();
             
+            // If no config exists for current academic year, auto-update existing config
+            if (!$config) {
+                $config = $this->autoUpdateConfigToCurrentYear();
+            }
+            
+            // If still no config, return 404
             if (!$config) {
                 http_response_code(404);
                 echo json_encode([
@@ -669,6 +675,69 @@ class ApplicationController {
                 'success' => false,
                 'message' => 'Error retrieving admission configuration: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Automatically update existing admission config to current academic year
+     */
+    private function autoUpdateConfigToCurrentYear() {
+        try {
+            // Get current academic year
+            $currentYearStmt = $this->pdo->query("
+                SELECT id, year_code, display_name 
+                FROM academic_years 
+                WHERE is_current = 1 AND status = 'active' 
+                LIMIT 1
+            ");
+            $currentYear = $currentYearStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$currentYear) {
+                return null; // No current academic year found
+            }
+
+            // Get the most recent admission config (any academic year)
+            $configStmt = $this->pdo->query("
+                SELECT ac.*, ay.year_code, ay.display_name as academic_year_name
+                FROM admission_config ac
+                LEFT JOIN academic_years ay ON ac.academic_year_id = ay.id
+                ORDER BY ac.id DESC
+                LIMIT 1
+            ");
+            $existingConfig = $configStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$existingConfig) {
+                return null; // No config exists at all
+            }
+
+            // Update the config to point to current academic year
+            $updateStmt = $this->pdo->prepare("
+                UPDATE admission_config 
+                SET academic_year_id = ?, updated_at = NOW()
+                WHERE id = ?
+            ");
+            $updateStmt->execute([$currentYear['id'], $existingConfig['id']]);
+
+            // Return the updated config with current academic year info
+            return [
+                'id' => $existingConfig['id'],
+                'academic_year_id' => $currentYear['id'],
+                'academic_year_name' => $currentYear['display_name'],
+                'year_code' => $currentYear['year_code'],
+                'admission_status' => $existingConfig['admission_status'],
+                'max_applications_per_ip_per_day' => $existingConfig['max_applications_per_ip_per_day'],
+                'enabled_levels' => $existingConfig['enabled_levels'],
+                'level_classes' => $existingConfig['level_classes'],
+                'shs_programmes' => $existingConfig['shs_programmes'],
+                'school_types' => $existingConfig['school_types'],
+                'student_info_fields' => $existingConfig['student_info_fields'],
+                'parent_guardian_fields' => $existingConfig['parent_guardian_fields'],
+                'academic_background_fields' => $existingConfig['academic_background_fields'],
+                'health_info_fields' => $existingConfig['health_info_fields']
+            ];
+        } catch (Exception $e) {
+            error_log('Error auto-updating admission config: ' . $e->getMessage());
+            return null;
         }
     }
 

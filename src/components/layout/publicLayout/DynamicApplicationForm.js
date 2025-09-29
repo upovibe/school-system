@@ -374,22 +374,27 @@ class DynamicApplicationForm extends App {
                     variant: 'error',
                     duration: 3000
                 });
-                return;
+                return; // This will stop execution here
             }
 
-            // Show success message and proceed to next section
-            Toast.show({
-                title: 'Section Complete',
-                message: 'Great! Moving to the next section',
-                variant: 'success',
-                duration: 2000
-            });
-
-            // Small delay to show the toast before navigation
-            setTimeout(() => {
-                this.navigateToSection(this.currentSection + 1);
-            }, 500);
+            // Only proceed if validation passed
+            this.proceedToNextSection();
         }, 100);
+    }
+
+    proceedToNextSection() {
+        // Show success message and proceed to next section
+        Toast.show({
+            title: 'Section Complete',
+            message: 'Great! Moving to the next section',
+            variant: 'success',
+            duration: 2000
+        });
+
+        // Small delay to show the toast before navigation
+        setTimeout(() => {
+            this.navigateToSection(this.currentSection + 1);
+        }, 500);
     }
 
     handlePreviousSection() {
@@ -772,6 +777,7 @@ class DynamicApplicationForm extends App {
         for (const field of sectionFields) {
             if (field.required) {
                 const value = this.formData[field.name];
+                
                 if (!value || value.toString().trim() === '') {
                     return {
                         isValid: false,

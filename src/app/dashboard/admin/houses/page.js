@@ -6,6 +6,7 @@ import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/HouseViewDialog.js';
 import '@/components/layout/adminLayout/HouseDeleteDialog.js';
+import '@/components/layout/adminLayout/HouseAddDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -178,8 +179,8 @@ class HouseManagementPage extends App {
                 `}
             </div>
             
-            <!-- Add House Modal -->
-            <house-add-modal ${showAddModal ? 'open' : ''}></house-add-modal>
+            <!-- Add House Dialog -->
+            <house-add-dialog ${showAddModal ? 'open' : ''}></house-add-dialog>
             
             <!-- Update House Modal -->
             <house-update-modal ${showUpdateModal ? 'open' : ''}></house-update-modal>
@@ -395,17 +396,10 @@ class HouseManagementPage extends App {
         });
         
         this.addEventListener('house-saved', (event) => {
-            // Add the new house to the existing data
-            const newHouse = event.detail.house;
-            if (newHouse) {
-                const currentHouses = this.get('houses') || [];
-                this.set('houses', [...currentHouses, newHouse]);
-                this.updateTableData();
-                // Close the add modal
-                this.set('showAddModal', false);
-            } else {
-                this.loadData();
-            }
+            // Reload all data to get the complete house with teachers
+            this.loadData();
+            // Close the add modal
+            this.set('showAddModal', false);
         });
         
         this.addEventListener('house-updated', (event) => {

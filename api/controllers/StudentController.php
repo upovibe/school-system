@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../models/StudentModel.php';
 require_once __DIR__ . '/../models/ClassModel.php';
+require_once __DIR__ . '/../models/HouseModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../models/ClassAssignmentModel.php';
 require_once __DIR__ . '/../models/StudentAssignmentModel.php';
@@ -14,6 +15,7 @@ require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
 class StudentController {
     private $studentModel;
     private $classModel;
+    private $houseModel;
     private $classAssignmentModel;
     private $studentAssignmentModel;
     private $userModel;
@@ -23,6 +25,7 @@ class StudentController {
         $this->pdo = $pdo;
         $this->studentModel = new StudentModel($pdo);
         $this->classModel = new ClassModel($pdo);
+        $this->houseModel = new HouseModel($pdo);
         $this->classAssignmentModel = new ClassAssignmentModel($pdo);
         $this->studentAssignmentModel = new StudentAssignmentModel($pdo);
         $this->userModel = new UserModel($pdo);
@@ -37,7 +40,7 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $students = $this->studentModel->getStudentsWithClassInfo();
+            $students = $this->studentModel->getStudentsWithHouseInfo();
             
             http_response_code(200);
             echo json_encode([
@@ -166,6 +169,24 @@ class StudentController {
                 }
             }
 
+            // Validate house assignment for boarding students
+            if (!empty($data['student_type']) && $data['student_type'] === 'Boarding') {
+                if (!empty($data['house_id'])) {
+                    $house = $this->houseModel->findById($data['house_id']);
+                    if (!$house) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Invalid house ID'
+                        ]);
+                        return;
+                    }
+                }
+            } else {
+                // Day students should not have house assignment
+                $data['house_id'] = null;
+            }
+
             // Set default values
             if (!isset($data['status'])) {
                 $data['status'] = 'active';
@@ -210,7 +231,7 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $student = $this->studentModel->findByIdWithClassInfo($id);
+            $student = $this->studentModel->findByIdWithHouseInfo($id);
             
             if (!$student) {
                 http_response_code(404);
@@ -302,6 +323,24 @@ class StudentController {
                     ]);
                     return;
                 }
+            }
+
+            // Validate house assignment for boarding students
+            if (isset($data['student_type']) && $data['student_type'] === 'Boarding') {
+                if (!empty($data['house_id'])) {
+                    $house = $this->houseModel->findById($data['house_id']);
+                    if (!$house) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Invalid house ID'
+                        ]);
+                        return;
+                    }
+                }
+            } else if (isset($data['student_type']) && $data['student_type'] === 'Day') {
+                // Day students should not have house assignment
+                $data['house_id'] = null;
             }
 
             // Validate date_of_birth if provided: not future and at least 3 months old
@@ -2401,6 +2440,264 @@ class StudentController {
             echo json_encode([
                 'success' => false,
                 'message' => 'Error retrieving announcements: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get students by house (admin only)
+     */
+    public function getByHouse() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $houseId = $_GET['house_id'] ?? null;
+            
+            if (!$houseId) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'House ID is required'
+                ]);
+                return;
+            }
+            
+            // Validate house exists
+            $house = $this->houseModel->findById($houseId);
+            if (!$house) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'House not found'
+                ]);
+                return;
+            }
+            
+            $students = $this->studentModel->getStudentsByHouse($houseId);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $students,
+                'message' => 'Students retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving students by house: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get boarding students with house information (admin only)
+     */
+    public function getBoardingStudents() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $students = $this->studentModel->getBoardingStudentsWithHouseInfo();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $students,
+                'message' => 'Boarding students retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving boarding students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Assign student to house (admin only)
+     */
+    public function assignToHouse() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (empty($data['student_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student ID is required'
+                ]);
+                return;
+            }
+
+            if (empty($data['house_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'House ID is required'
+                ]);
+                return;
+            }
+
+            // Validate student exists
+            $student = $this->studentModel->findById($data['student_id']);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+
+            // Validate house exists
+            $house = $this->houseModel->findById($data['house_id']);
+            if (!$house) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'House not found'
+                ]);
+                return;
+            }
+
+            // Check if student is boarding type
+            if ($student['student_type'] !== 'Boarding') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only boarding students can be assigned to houses'
+                ]);
+                return;
+            }
+
+            // Update house assignment
+            $success = $this->studentModel->updateHouseAssignment($data['student_id'], $data['house_id']);
+            
+            if ($success) {
+                // Log the action
+                $this->logAction('student_house_assigned', 'Student assigned to house', [
+                    'student_id' => $data['student_id'],
+                    'student_name' => $student['first_name'] . ' ' . $student['last_name'],
+                    'house_id' => $data['house_id'],
+                    'house_name' => $house['name']
+                ]);
+
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Student assigned to house successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to assign student to house'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error assigning student to house: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Remove student from house (admin only)
+     */
+    public function removeFromHouse() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (empty($data['student_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student ID is required'
+                ]);
+                return;
+            }
+
+            // Validate student exists
+            $student = $this->studentModel->findById($data['student_id']);
+            if (!$student) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student not found'
+                ]);
+                return;
+            }
+
+            // Remove house assignment (set to null)
+            $success = $this->studentModel->updateHouseAssignment($data['student_id'], null);
+            
+            if ($success) {
+                // Log the action
+                $this->logAction('student_house_removed', 'Student removed from house', [
+                    'student_id' => $data['student_id'],
+                    'student_name' => $student['first_name'] . ' ' . $student['last_name']
+                ]);
+
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Student removed from house successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to remove student from house'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error removing student from house: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get house statistics for students (admin only)
+     */
+    public function getHouseStatistics() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            $statistics = $this->studentModel->getHouseStatistics();
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $statistics,
+                'message' => 'House statistics retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving house statistics: ' . $e->getMessage()
             ]);
         }
     }

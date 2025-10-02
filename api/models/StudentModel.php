@@ -20,6 +20,7 @@ class StudentModel extends BaseModel {
         'admission_date',
         'current_class_id',
         'student_type',
+        'house_id',
         'parent_name',
         'parent_phone',
         'parent_email',
@@ -38,6 +39,7 @@ class StudentModel extends BaseModel {
         'admission_date' => 'date',
         'current_class_id' => 'integer',
         'student_type' => 'string',
+        'house_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -301,13 +303,13 @@ class StudentModel extends BaseModel {
             // Insert student record
             $studentSql = "INSERT INTO students (
                 student_id, first_name, last_name, email, phone, address, 
-                date_of_birth, gender, admission_date, current_class_id, student_type,
+                date_of_birth, gender, admission_date, current_class_id, student_type, house_id,
                 parent_name, parent_phone, parent_email, emergency_contact,
                 emergency_phone, blood_group, medical_conditions, password,
                 status, created_at, updated_at
             ) VALUES (
                 :student_id, :first_name, :last_name, :email, :phone, :address,
-                :date_of_birth, :gender, :admission_date, :current_class_id, :student_type,
+                :date_of_birth, :gender, :admission_date, :current_class_id, :student_type, :house_id,
                 :parent_name, :parent_phone, :parent_email, :emergency_contact,
                 :emergency_phone, :blood_group, :medical_conditions, :password,
                 :status, :created_at, :updated_at
@@ -601,6 +603,163 @@ class StudentModel extends BaseModel {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get students with house information
+     */
+    public function getStudentsWithHouseInfo() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, c.name as class_name, c.section as class_section, h.name as house_name
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                LEFT JOIN houses h ON s.house_id = h.id
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching students with house info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get boarding students with house information
+     */
+    public function getBoardingStudentsWithHouseInfo() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, c.name as class_name, c.section as class_section, h.name as house_name
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                LEFT JOIN houses h ON s.house_id = h.id
+                WHERE s.student_type = 'Boarding' AND s.status = 'active'
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching boarding students with house info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get students by house
+     */
+    public function getStudentsByHouse($houseId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, c.name as class_name, c.section as class_section
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                WHERE s.house_id = ? AND s.status = 'active'
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $stmt->execute([$houseId]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching students by house: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get student with house information by ID
+     */
+    public function findByIdWithHouseInfo($id) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, c.name as class_name, c.section as class_section, h.name as house_name
+                FROM {$this->getTableName()} s
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                LEFT JOIN houses h ON s.house_id = h.id
+                WHERE s.id = ?
+            ");
+            $stmt->execute([$id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching student with house info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get house statistics for students
+     */
+    public function getHouseStatistics() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    h.id as house_id,
+                    h.name as house_name,
+                    COUNT(s.id) as student_count,
+                    COUNT(CASE WHEN s.gender = 'male' THEN 1 END) as male_count,
+                    COUNT(CASE WHEN s.gender = 'female' THEN 1 END) as female_count
+                FROM houses h
+                LEFT JOIN students s ON h.id = s.house_id AND s.status = 'active'
+                GROUP BY h.id, h.name
+                ORDER BY h.name ASC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching house statistics: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update student house assignment
+     */
+    public function updateHouseAssignment($studentId, $houseId) {
+        try {
+            // Validate that student exists and is boarding type
+            $student = $this->findById($studentId);
+            if (!$student) {
+                throw new Exception('Student not found');
+            }
+            
+            if ($student['student_type'] !== 'Boarding') {
+                throw new Exception('Only boarding students can be assigned to houses');
+            }
+            
+            // Update house assignment
+            $stmt = $this->pdo->prepare("
+                UPDATE {$this->getTableName()} 
+                SET house_id = ?, updated_at = NOW() 
+                WHERE id = ?
+            ");
+            $stmt->execute([$houseId, $studentId]);
+            
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            throw new Exception('Error updating house assignment: ' . $e->getMessage());
+        }
     }
 }
 ?> 

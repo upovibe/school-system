@@ -253,6 +253,9 @@ Router::post('/students', 'StudentController@store');
 Router::get('/students/active', 'StudentController@getActive');
 Router::get('/students/search', 'StudentController@search');
 Router::get('/students/by-class', 'StudentController@getByClass');
+Router::get('/students/by-house', 'StudentController@getByHouse');
+Router::get('/students/boarding', 'StudentController@getBoardingStudents');
+Router::get('/students/house-statistics', 'StudentController@getHouseStatistics');
 Router::get('/students/current-class', 'StudentController@getCurrentClass');
 Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
 Router::get('/students/gender-statistics', 'StudentController@getGenderStatistics');
@@ -281,6 +284,8 @@ Router::get('/students/{id}', 'StudentController@show');
 Router::put('/students/{id}', 'StudentController@update');
 Router::delete('/students/{id}', 'StudentController@destroy');
 Router::post('/students/promote', 'StudentController@promoteStudent');
+Router::post('/students/assign-house', 'StudentController@assignToHouse');
+Router::post('/students/remove-house', 'StudentController@removeFromHouse');
 
 // Class Subject Management Routes (admin only for create/update/delete, public for view)
 Router::get('/class-subjects', 'ClassSubjectController@index');

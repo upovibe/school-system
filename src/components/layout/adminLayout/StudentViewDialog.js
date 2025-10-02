@@ -162,6 +162,14 @@ class StudentViewDialog extends HTMLElement {
                                     </label>
                                     <p class="text-gray-900 text-sm">${this.studentData.student_type || 'Day'}</p>
                                 </div>
+                                ${this.studentData.student_type === 'Boarding' && this.studentData.house_name ? `
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-home mr-1"></i>House
+                                    </label>
+                                    <p class="text-gray-900 text-sm font-medium">${this.studentData.house_name}</p>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
 

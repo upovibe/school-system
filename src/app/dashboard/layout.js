@@ -282,6 +282,7 @@ class DashboardLayout extends App {
                         { label: 'Teachers', icon: 'fas fa-chalkboard-teacher', href: '/dashboard/admin/teachers' },
                         { label: 'Subject Teachers', icon: 'fas fa-user-tie', href: '/dashboard/admin/teacher-assignments' },
                         { label: 'Timetable Resources', icon: 'fas fa-file-alt', href: '/dashboard/admin/timetable-resources' },
+                        { label: 'Houses', icon: 'fas fa-home', href: '/dashboard/admin/houses' },
                         { label: 'Students', icon: 'fas fa-user-graduate', href: '/dashboard/admin/students' },
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/admin/student-grades' },
                         { label: 'Student Report Sheet', icon: 'fas fa-clipboard-list', href: '/dashboard/admin/student-grade-report' },

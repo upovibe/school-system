@@ -35,6 +35,18 @@ Router::get('/roles/{id}', 'RoleController@show');
 Router::put('/roles/{id}', 'RoleController@update');
 Router::delete('/roles/{id}', 'RoleController@destroy');
 
+// House management routes (admin only)
+// Note: Controllers will use RoleMiddleware::requireAdmin($pdo);
+Router::get('/houses', 'HouseController@index');
+Router::post('/houses', 'HouseController@store');
+Router::get('/houses/{id}', 'HouseController@show');
+Router::put('/houses/{id}', 'HouseController@update');
+Router::delete('/houses/{id}', 'HouseController@destroy');
+Router::get('/houses/{id}/teachers', 'HouseController@getTeachers');
+Router::post('/houses/{id}/assign-teacher', 'HouseController@assignTeacher');
+Router::post('/houses/{id}/remove-teacher', 'HouseController@removeTeacher');
+Router::get('/houses/statistics', 'HouseController@getStatistics');
+
 // Audit logs (admin only)
 // Note: Controllers will use RoleMiddleware::requireAdmin($pdo);
 Router::get('/logs', 'LogController@index');

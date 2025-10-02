@@ -18,6 +18,7 @@ class Seed {
         $this->seedNews();
         $this->seedGalleries();
         $this->seedTeams();
+        $this->seedHouses();
         $this->seedAcademicYears();
         $this->seedSubjects();
         $this->seedTeachers();
@@ -100,6 +101,15 @@ class Seed {
         require_once __DIR__ . '/team_seeder.php';
         $teamSeeder = new TeamSeeder($this->pdo);
         $teamSeeder->run();
+    }
+    
+    private function seedHouses() {
+        echo "🏠 Seeding houses...\n";
+        
+        // Include the house seeder
+        require_once __DIR__ . '/house_seeder.php';
+        $houseSeeder = new HouseSeeder($this->pdo);
+        $houseSeeder->run();
     }
     
     private function seedAcademicYears() {

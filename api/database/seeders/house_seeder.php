@@ -13,6 +13,7 @@ class HouseSeeder
         echo "🌱 Seeding default houses...\n";
         
         $this->seedHouses();
+        $this->assignTeachersToHouses();
         
         echo "✅ Default houses seeded successfully!\n";
     }
@@ -22,28 +23,24 @@ class HouseSeeder
         
         $houses = [
             [
-                'name' => 'Lion House',
-                'description' => 'The house of courage, leadership, and strength. Lions represent bravery and determination.'
+                'name' => 'House 1',
+                'description' => 'The first house representing excellence, leadership, and academic achievement.'
             ],
             [
-                'name' => 'Eagle House',
-                'description' => 'The house of vision, freedom, and excellence. Eagles soar high and see far.'
+                'name' => 'House 2',
+                'description' => 'The second house representing creativity, innovation, and artistic expression.'
             ],
             [
-                'name' => 'Phoenix House',
-                'description' => 'The house of resilience, renewal, and transformation. Phoenix rises from ashes stronger.'
+                'name' => 'House 3',
+                'description' => 'The third house representing teamwork, collaboration, and community spirit.'
             ],
             [
-                'name' => 'Tiger House',
-                'description' => 'The house of power, focus, and determination. Tigers are fierce and unstoppable.'
+                'name' => 'House 4',
+                'description' => 'The fourth house representing determination, resilience, and personal growth.'
             ],
             [
-                'name' => 'Dragon House',
-                'description' => 'The house of wisdom, mystery, and ancient power. Dragons are legendary and wise.'
-            ],
-            [
-                'name' => 'Wolf House',
-                'description' => 'The house of loyalty, teamwork, and family bonds. Wolves work together as a pack.'
+                'name' => 'House 5',
+                'description' => 'The fifth house representing wisdom, integrity, and moral character.'
             ]
         ];
         
@@ -74,6 +71,63 @@ class HouseSeeder
         
         echo "📊 Total houses seeded: " . count($houses) . "\n";
         echo "🏠 Houses represent different values and characteristics for student development\n";
+    }
+    
+    private function assignTeachersToHouses() {
+        echo "👨‍🏫 Assigning teachers to houses...\n";
+        
+        // Get all teachers
+        $stmt = $this->pdo->prepare('SELECT id, first_name, last_name FROM teachers ORDER BY id');
+        $stmt->execute();
+        $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (empty($teachers)) {
+            echo "⚠️  No teachers found to assign to houses\n";
+            return;
+        }
+        
+        // Get all houses
+        $stmt = $this->pdo->prepare('SELECT id, name FROM houses ORDER BY id');
+        $stmt->execute();
+        $houses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (empty($houses)) {
+            echo "⚠️  No houses found to assign teachers to\n";
+            return;
+        }
+        
+        // Assign teachers to houses (distribute evenly)
+        $teachersPerHouse = ceil(count($teachers) / count($houses));
+        $teacherIndex = 0;
+        
+        foreach ($houses as $house) {
+            $assignedCount = 0;
+            
+            // Assign teachers to this house
+            for ($i = 0; $i < $teachersPerHouse && $teacherIndex < count($teachers); $i++) {
+                $teacher = $teachers[$teacherIndex];
+                
+                // Check if teacher is already assigned to this house
+                $stmt = $this->pdo->prepare('SELECT id FROM house_teachers WHERE house_id = ? AND teacher_id = ?');
+                $stmt->execute([$house['id'], $teacher['id']]);
+                $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$existing) {
+                    // Assign teacher to house
+                    $stmt = $this->pdo->prepare('INSERT INTO house_teachers (house_id, teacher_id, created_at) VALUES (?, ?, NOW())');
+                    $stmt->execute([$house['id'], $teacher['id']]);
+                    
+                    echo "✅ Assigned {$teacher['first_name']} {$teacher['last_name']} to {$house['name']}\n";
+                    $assignedCount++;
+                }
+                
+                $teacherIndex++;
+            }
+            
+            echo "📊 {$house['name']}: {$assignedCount} teacher(s) assigned\n";
+        }
+        
+        echo "👨‍🏫 Teacher assignments completed!\n";
     }
 }
 ?>

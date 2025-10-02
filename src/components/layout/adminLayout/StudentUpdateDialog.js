@@ -10,6 +10,7 @@ class StudentUpdateDialog extends HTMLElement {
         super();
         this.studentData = null;
         this.classes = [];
+        this.houses = [];
     }
 
     static get observedAttributes() {
@@ -26,6 +27,7 @@ class StudentUpdateDialog extends HTMLElement {
         this.render();
         this.setupEventListeners();
         this.loadClasses();
+        this.loadHouses();
     }
 
     setupEventListeners() {
@@ -43,6 +45,16 @@ class StudentUpdateDialog extends HTMLElement {
         }
     }
 
+    // Handle student type change to show/hide house selection
+    handleStudentTypeChange(value) {
+        const houseSection = this.querySelector('#house-selection-section');
+        if (value === 'Boarding') {
+            houseSection.classList.remove('hidden');
+        } else {
+            houseSection.classList.add('hidden');
+        }
+    }
+
     async loadClasses() {
         try {
             const token = localStorage.getItem('token');
@@ -52,6 +64,22 @@ class StudentUpdateDialog extends HTMLElement {
             
             if (response.status === 200 && response.data.success) {
                 this.classes = response.data.data;
+                this.render();
+            }
+        } catch (error) {
+            // Silent error handling
+        }
+    }
+
+    async loadHouses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/houses');
+            
+            if (response.status === 200 && response.data.success) {
+                this.houses = response.data.data;
                 this.render();
             }
         } catch (error) {
@@ -78,6 +106,7 @@ class StudentUpdateDialog extends HTMLElement {
             const studentTypeDropdown = this.querySelector('ui-search-dropdown[name="student_type"]');
             const bloodGroupDropdown = this.querySelector('ui-search-dropdown[name="blood_group"]');
             const medicalConditionsDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
+            const houseDropdown = this.querySelector('ui-search-dropdown[name="house_id"]');
             
             if (classDropdown && student?.current_class_id) {
                 // Find the class option and set its text as the display value
@@ -98,6 +127,15 @@ class StudentUpdateDialog extends HTMLElement {
             
             if (medicalConditionsDropdown && student?.medical_conditions) {
                 medicalConditionsDropdown.value = student.medical_conditions;
+            }
+            
+            if (houseDropdown && student?.house_id) {
+                houseDropdown.value = student.house_id;
+            }
+            
+            // Handle student type change to show/hide house section
+            if (student?.student_type) {
+                this.handleStudentTypeChange(student.student_type);
             }
         }, 200);
     }
@@ -127,6 +165,7 @@ class StudentUpdateDialog extends HTMLElement {
             const emergencyPhoneInput = this.querySelector('ui-input[data-field="emergency_phone"]');
             const bloodGroupDropdown = this.querySelector('ui-search-dropdown[name="blood_group"]');
             const medicalConditionsDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
+            const houseDropdown = this.querySelector('ui-search-dropdown[name="house_id"]');
             const passwordInput = this.querySelector('ui-input[data-field="password"]');
             const statusSwitch = this.querySelector('ui-switch[name="status"]');
 
@@ -159,6 +198,7 @@ class StudentUpdateDialog extends HTMLElement {
                 emergency_phone: emergencyPhoneInput ? emergencyPhoneInput.value : '',
                 blood_group: bloodGroupDropdown ? bloodGroupDropdown.value : '',
                 medical_conditions: finalMedicalConditions,
+                house_id: houseDropdown ? houseDropdown.value : null,
                 status: statusSwitch ? (statusSwitch.hasAttribute('checked') ? 'active' : 'inactive') : 'active'
             };
 
@@ -258,10 +298,28 @@ class StudentUpdateDialog extends HTMLElement {
                                 name="student_type" 
                                 placeholder="Select student type..."
                                 value="${student?.student_type || 'Day'}"
-                                class="w-full">
+                                class="w-full"
+                                onchange="this.closest('student-update-dialog').handleStudentTypeChange(this.value)">
                                 <ui-option value="Day" ${student && student.student_type === 'Day' ? 'selected' : ''}>Day</ui-option>
                                 <ui-option value="Boarding" ${student && student.student_type === 'Boarding' ? 'selected' : ''}>Boarding</ui-option>
                             </ui-search-dropdown>
+                        </div>
+                        
+                        <div id="house-selection-section" class="${student && student.student_type === 'Boarding' ? '' : 'hidden'}">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">House</label>
+                            ${this.houses.length > 0 ? `
+                                <ui-search-dropdown 
+                                    name="house_id" 
+                                    placeholder="Select house..."
+                                    value="${student?.house_id || ''}"
+                                    class="w-full">
+                                    ${this.houses.map(house => `
+                                        <ui-option value="${house.id}" ${student && student.house_id == house.id ? 'selected' : ''}>${house.name}</ui-option>
+                                    `).join('')}
+                                </ui-search-dropdown>
+                            ` : `
+                                <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
+                            `}
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>

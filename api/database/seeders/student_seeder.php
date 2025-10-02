@@ -120,15 +120,21 @@ class StudentSeeder
         $classId = $studentData['class_id'];
         echo "🔍 Using class ID {$classId} for class '{$studentData['class_name']}'\n";
         
+        // Get house ID for boarding students
+        $houseId = null;
+        if ($studentData['student_type'] === 'Boarding') {
+            $houseId = $this->getRandomHouseId();
+        }
+        
         // Insert student
         $stmt = $this->pdo->prepare('
             INSERT INTO students (
                 user_id, student_id, first_name, last_name, email, phone, address, 
-                date_of_birth, gender, admission_date, current_class_id, student_type, parent_name, 
+                date_of_birth, gender, admission_date, current_class_id, student_type, house_id, parent_name, 
                 parent_phone, parent_email, emergency_contact, emergency_phone, 
                 blood_group, medical_conditions, password, status, created_at, updated_at
             ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
         
         $stmt->execute([
@@ -144,6 +150,7 @@ class StudentSeeder
             $studentData['admission_date'],
             $classId,
             ($studentData['student_type'] ?? 'Day'),
+            $houseId,
             $studentData['parent_name'],
             $studentData['parent_phone'],
             $studentData['parent_email'],
@@ -277,6 +284,22 @@ class StudentSeeder
         ];
         
         return $ageRanges[$className] ?? ['min' => 2010, 'max' => 2011];
+    }
+    
+    private function getRandomHouseId() {
+        // Get all available houses
+        $stmt = $this->pdo->prepare('SELECT id FROM houses ORDER BY id');
+        $stmt->execute();
+        $houses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (empty($houses)) {
+            echo "⚠️  No houses available for boarding student assignment\n";
+            return null;
+        }
+        
+        // Return a random house ID
+        $randomHouse = $houses[array_rand($houses)];
+        return $randomHouse['id'];
     }
 }
 ?> 

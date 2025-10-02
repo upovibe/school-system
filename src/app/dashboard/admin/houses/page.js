@@ -7,6 +7,7 @@ import '@/components/ui/Skeleton.js';
 import '@/components/layout/adminLayout/HouseViewDialog.js';
 import '@/components/layout/adminLayout/HouseDeleteDialog.js';
 import '@/components/layout/adminLayout/HouseAddDialog.js';
+import '@/components/layout/adminLayout/HouseUpdateDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -182,8 +183,8 @@ class HouseManagementPage extends App {
             <!-- Add House Dialog -->
             <house-add-dialog ${showAddModal ? 'open' : ''}></house-add-dialog>
             
-            <!-- Update House Modal -->
-            <house-update-modal ${showUpdateModal ? 'open' : ''}></house-update-modal>
+            <!-- Update House Dialog -->
+            <house-update-dialog></house-update-dialog>
             
             <!-- View House Dialog -->
             <house-view-dialog ${showViewModal ? 'open' : ''}></house-view-dialog>
@@ -293,8 +294,14 @@ class HouseManagementPage extends App {
         const editHouse = this.get('houses').find(house => house.id === detail.row.id);
         if (editHouse) {
             this.closeAllModals();
-            this.set('updateHouseData', editHouse);
-            this.set('showUpdateModal', true);
+            
+            // Set the house data in the dialog and let it handle opening
+            setTimeout(() => {
+                const updateDialog = this.querySelector('house-update-dialog');
+                if (updateDialog) {
+                    updateDialog.setHouseData(editHouse);
+                }
+            }, 100);
         }
     }
 

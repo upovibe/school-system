@@ -104,8 +104,6 @@ class HouseDeleteDialog extends HTMLElement {
             }
 
         } catch (error) {
-            console.error('❌ Error deleting house:', error);
-            
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to delete house',

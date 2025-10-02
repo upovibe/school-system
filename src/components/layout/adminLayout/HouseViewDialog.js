@@ -49,7 +49,6 @@ class HouseViewDialog extends HTMLElement {
         if (target.closest('.remove-teacher-btn')) {
             const button = target.closest('.remove-teacher-btn');
             const teacherData = button.dataset;
-            console.log('Remove teacher clicked:', teacherData);
             this.onRemoveTeacher(
                 teacherData.teacherId,
                 teacherData.teacherName,
@@ -224,7 +223,6 @@ class HouseViewDialog extends HTMLElement {
     }
 
     onRemoveTeacher(teacherId, teacherName, houseName) {
-        console.log('Dispatching remove-teacher event:', { teacherId, teacherName, houseName });
         
         // Dispatch event to parent component
         this.dispatchEvent(new CustomEvent('remove-teacher', {

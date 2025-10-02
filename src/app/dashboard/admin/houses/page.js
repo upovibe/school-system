@@ -4,6 +4,8 @@ import '@/components/ui/Button.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Table.js';
 import '@/components/ui/Skeleton.js';
+import '@/components/layout/adminLayout/HouseViewDialog.js';
+import '@/components/layout/adminLayout/HouseDeleteDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -182,8 +184,8 @@ class HouseManagementPage extends App {
             <!-- Update House Modal -->
             <house-update-modal ${showUpdateModal ? 'open' : ''}></house-update-modal>
             
-            <!-- View House Modal -->
-            <house-view-modal ${showViewModal ? 'open' : ''}></house-view-modal>
+            <!-- View House Dialog -->
+            <house-view-dialog ${showViewModal ? 'open' : ''}></house-view-dialog>
             
             <!-- Delete House Dialog -->
             <house-delete-dialog ${showDeleteDialog ? 'open' : ''}></house-delete-dialog>
@@ -274,6 +276,14 @@ class HouseManagementPage extends App {
             this.closeAllModals();
             this.set('viewHouseData', viewHouse);
             this.set('showViewModal', true);
+            
+            // Set the house data in the dialog
+            setTimeout(() => {
+                const viewDialog = this.querySelector('house-view-dialog');
+                if (viewDialog) {
+                    viewDialog.setHouseData(viewHouse);
+                }
+            }, 0);
         }
     }
 
@@ -294,6 +304,14 @@ class HouseManagementPage extends App {
             this.closeAllModals();
             this.set('deleteHouseData', deleteHouse);
             this.set('showDeleteDialog', true);
+            
+            // Set the house data in the dialog
+            setTimeout(() => {
+                const deleteDialog = this.querySelector('house-delete-dialog');
+                if (deleteDialog) {
+                    deleteDialog.setHouseData(deleteHouse);
+                }
+            }, 0);
         }
     }
 
@@ -405,6 +423,12 @@ class HouseManagementPage extends App {
             } else {
                 this.loadData();
             }
+        });
+
+        // Listen for teacher removal from house
+        this.addEventListener('remove-teacher', (event) => {
+            const { teacherId, teacherName, houseName } = event.detail;
+            this.showToast(`Teacher removal feature coming soon! (${teacherName} from ${houseName})`, 'info');
         });
     }
 }

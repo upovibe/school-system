@@ -91,18 +91,8 @@ class HouseAddDialog extends HTMLElement {
                 teacherIds = Array.isArray(value) ? value : [];
             }
             
-            console.log('Validation check:', { 
-                name, 
-                teacherIds, 
-                nameLength: name.trim().length,
-                nameInputExists: !!nameInput,
-                teacherDropdownExists: !!teacherDropdown
-            });
-            
             const isValid = !!name && name.trim().length >= 2 && 
                            Array.isArray(teacherIds) && teacherIds.length > 0;
-            
-            console.log('Form is valid:', isValid);
             
             // Get the confirm button by dialog-action attribute
             const confirmBtn = this.querySelector('ui-button[dialog-action="confirm"]');
@@ -113,12 +103,9 @@ class HouseAddDialog extends HTMLElement {
                 } else {
                     confirmBtn.setAttribute('disabled', '');
                 }
-                console.log('Button disabled state:', !isValid);
-            } else {
-                console.log('Confirm button not found');
             }
         } catch (error) {
-            console.error('Error validating form:', error);
+            // Silent error handling for validation
         }
     }
 
@@ -127,26 +114,20 @@ class HouseAddDialog extends HTMLElement {
         const nameInput = this.querySelector('ui-input[data-field="name"]');
         const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_ids"]');
         
-        console.log('Setting up event listeners:', { nameInput, teacherDropdown });
-        
         if (nameInput) {
             nameInput.addEventListener('input', () => {
-                console.log('Name input changed');
                 this.validateForm();
             });
             nameInput.addEventListener('change', () => {
-                console.log('Name input changed (change event)');
                 this.validateForm();
             });
         }
         
         if (teacherDropdown) {
             teacherDropdown.addEventListener('change', () => {
-                console.log('Teacher dropdown changed');
                 this.validateForm();
             });
             teacherDropdown.addEventListener('input', () => {
-                console.log('Teacher dropdown input changed');
                 this.validateForm();
             });
         }
@@ -155,7 +136,6 @@ class HouseAddDialog extends HTMLElement {
         const form = this.querySelector('div.flex.flex-col.space-y-4');
         if (form) {
             form.addEventListener('change', () => {
-                console.log('Form change detected');
                 this.validateForm();
             });
         }
@@ -231,7 +211,6 @@ class HouseAddDialog extends HTMLElement {
                 description: description || null
             };
             
-            console.log('Creating house:', houseData);
             const houseResponse = await api.withToken(token).post('/houses', houseData);
             
             if (!houseResponse.data.success) {
@@ -239,19 +218,16 @@ class HouseAddDialog extends HTMLElement {
             }
             
             const houseId = houseResponse.data.data.id;
-            console.log('House created with ID:', houseId);
             
             // Then assign teachers to the house
             const teacherPromises = validTeacherIds.map(teacherId => {
                 const assignmentData = {
                     teacher_id: parseInt(teacherId)
                 };
-                console.log('Assigning teacher:', assignmentData);
                 return api.withToken(token).post(`/houses/${houseId}/assign-teacher`, assignmentData);
             });
 
             const teacherResponses = await Promise.all(teacherPromises);
-            console.log('Teacher assignment responses:', teacherResponses);
             
             // Check if all teacher assignments were successful
             const allTeacherAssignmentsSuccessful = teacherResponses.every(response => response.data.success);
@@ -293,12 +269,6 @@ class HouseAddDialog extends HTMLElement {
                 }));
             }
         } catch (error) {
-            console.error('Error creating house:', error);
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-            });
             Toast.show({
                 title: 'Error',
                 message: error.response?.data?.message || 'Failed to create house',

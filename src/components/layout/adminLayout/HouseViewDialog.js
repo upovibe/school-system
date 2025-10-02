@@ -145,7 +145,7 @@ class HouseViewDialog extends HTMLElement {
                                                         <i class="fas fa-user text-blue-600 text-sm"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-900">${teacher.first_name} ${teacher.last_name}</p>
+                                                        <p class="text-sm font-medium text-gray-900">${teacher.name || 'N/A'}</p>
                                                         <p class="text-xs text-gray-600">${teacher.email || 'No email'}</p>
                                                     </div>
                                                 </div>

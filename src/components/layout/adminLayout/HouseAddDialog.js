@@ -340,7 +340,7 @@ class HouseAddDialog extends HTMLElement {
                                     multiple
                                     class="w-full">
                                     ${this.teachers.map(teacher => `
-                                        <ui-option value="${teacher.id}">${teacher.first_name} ${teacher.last_name} (${teacher.email})</ui-option>
+                                        <ui-option value="${teacher.id}">${teacher.first_name} ${teacher.last_name}</ui-option>
                                     `).join('')}
                                 </ui-search-dropdown>
                             ` : `

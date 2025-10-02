@@ -172,29 +172,13 @@ class HouseUpdateDialog extends HTMLElement {
             descriptionInput.setAttribute('value', this.houseData.description || '');
         }
 
-        // Set selected teachers - only if teachers are loaded
-        if (this.teachers && this.teachers.length > 0) {
-            const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_ids"]');
-            if (teacherDropdown) {
-                if (this.houseData.teachers && this.houseData.teachers.length > 0) {
-                    const teacherIds = this.houseData.teachers.map(teacher => teacher.id);
-                    // Wait a bit for the component to be fully initialized
-                    setTimeout(() => {
-                        teacherDropdown.value = teacherIds;
-                        teacherDropdown.setAttribute('value', JSON.stringify(teacherIds));
-                        // Trigger input event to update the display
-                        teacherDropdown.dispatchEvent(new Event('input', { bubbles: true }));
-                        teacherDropdown.dispatchEvent(new Event('change', { bubbles: true }));
-                    }, 50);
-                } else {
-                    teacherDropdown.value = [];
-                    teacherDropdown.setAttribute('value', '[]');
-                }
-            }
-        } else {
-            // If teachers aren't loaded yet, try again in a moment
+        // Teacher dropdown is now set directly in the HTML template
+        // Just trigger validation
+        const teacherDropdown = this.querySelector('ui-search-dropdown[data-field="teacher_ids"]');
+        if (teacherDropdown) {
+            // Trigger change event to ensure validation runs
             setTimeout(() => {
-                this.populateForm();
+                teacherDropdown.dispatchEvent(new Event('change', { bubbles: true }));
             }, 100);
         }
 
@@ -402,7 +386,8 @@ class HouseUpdateDialog extends HTMLElement {
                                     data-field="teacher_ids" 
                                     placeholder="Search and select multiple teachers..."
                                     multiple
-                                    class="w-full">
+                                    class="w-full"
+                                    ${this.houseData && this.houseData.teachers ? `value='${JSON.stringify(this.houseData.teachers.map(t => t.id))}'` : ''}>
                                     ${this.teachers.map(teacher => `
                                         <ui-option value="${teacher.id}">${teacher.first_name} ${teacher.last_name}</ui-option>
                                     `).join('')}

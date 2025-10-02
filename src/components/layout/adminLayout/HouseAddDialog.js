@@ -332,7 +332,7 @@ class HouseAddDialog extends HTMLElement {
 
                         <!-- Teacher Selection -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Teachers *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">HouseMasters *</label>
                             ${this.teachers.length > 0 ? `
                                 <ui-search-dropdown 
                                     data-field="teacher_ids" 
@@ -364,9 +364,9 @@ class HouseAddDialog extends HTMLElement {
                                     <p class="font-medium">How this works</p>
                                     <ul class="list-disc pl-5 mt-1 space-y-1">
                                         <li>Enter a unique house name and optional description.</li>
-                                        <li>Select one or more teachers from the full list.</li>
-                                        <li>It creates the house and assigns all selected teachers to it.</li>
-                                        <li>Teachers can be assigned to multiple houses.</li>
+                                        <li>Select one or more HouseMasters from the full list.</li>
+                                        <li>It creates the house and assigns all selected HouseMasters to it.</li>
+                                        <li>HouseMasters can be assigned to multiple houses.</li>
                                     </ul>
                                 </div>
                             </div>

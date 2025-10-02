@@ -127,15 +127,15 @@ class HouseDeleteDialog extends HTMLElement {
                         Are you sure you want to delete <strong>${houseName}</strong>?
                     </p>
                     <p class="text-sm text-gray-500 mb-4">
-                        This action cannot be undone. All associated teacher assignments will also be removed.
+                        This action cannot be undone. All associated HouseMaster assignments will also be removed.
                     </p>
                     ${teacherCount > 0 ? `
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                             <div class="flex items-center">
                                 <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
                                 <p class="text-sm text-yellow-800">
-                                    <strong>Warning:</strong> This house has ${teacherCount} teacher${teacherCount !== 1 ? 's' : ''} assigned. 
-                                    All teacher assignments will be removed.
+                                    <strong>Warning:</strong> This house has ${teacherCount} HouseMaster${teacherCount !== 1 ? 's' : ''} assigned. 
+                                    All HouseMaster assignments will be removed.
                                 </p>
                             </div>
                         </div>

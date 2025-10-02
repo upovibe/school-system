@@ -117,7 +117,7 @@ class HouseViewDialog extends HTMLElement {
                                     </div>
                                     <div class="bg-gray-50 p-3 rounded-lg">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            <i class="fas fa-users mr-1"></i>Teachers Count
+                                            <i class="fas fa-users mr-1"></i>HouseMasters Count
                                         </label>
                                         <p class="text-gray-900 text-sm font-medium">${house.teacher_count || 0}</p>
                                     </div>
@@ -134,7 +134,7 @@ class HouseViewDialog extends HTMLElement {
                             <div class="border-b pb-4">
                                 <div class="flex items-center gap-2 mb-3">
                                     <i class="fas fa-chalkboard-teacher text-green-500"></i>
-                                    <h4 class="text-md font-semibold text-gray-800">Assigned Teachers</h4>
+                                    <h4 class="text-md font-semibold text-gray-800">Assigned HouseMasters</h4>
                                 </div>
                                 ${house.teachers && house.teachers.length > 0 ? `
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -145,7 +145,7 @@ class HouseViewDialog extends HTMLElement {
                                                         <i class="fas fa-user text-blue-600 text-sm"></i>
                                                     </div>
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-900">${teacher.name || 'N/A'}</p>
+                                                        <p class="text-sm font-medium text-gray-900">${teacher.first_name} ${teacher.last_name}</p>
                                                         <p class="text-xs text-gray-600">${teacher.email || 'No email'}</p>
                                                     </div>
                                                 </div>
@@ -157,7 +157,7 @@ class HouseViewDialog extends HTMLElement {
                                         <div class="text-gray-400 text-4xl mb-3">
                                             <i class="fas fa-user-slash"></i>
                                         </div>
-                                        <p class="text-gray-500">No teachers assigned to this house</p>
+                                        <p class="text-gray-500">No HouseMasters assigned to this house</p>
                                     </div>
                                 `}
                             </div>

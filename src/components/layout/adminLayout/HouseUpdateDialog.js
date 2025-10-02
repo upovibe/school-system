@@ -380,7 +380,7 @@ class HouseUpdateDialog extends HTMLElement {
 
                         <!-- Teacher Selection -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Teachers *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">HouseMasters *</label>
                             ${this.teachers.length > 0 ? `
                                 <ui-search-dropdown 
                                     data-field="teacher_ids" 
@@ -414,9 +414,9 @@ class HouseUpdateDialog extends HTMLElement {
                                     <p class="font-medium">How this works</p>
                                     <ul class="list-disc pl-5 mt-1 space-y-1">
                                         <li>Modify the house name and description as needed.</li>
-                                        <li>Select/deselect teachers to update assignments.</li>
-                                        <li>Teachers not selected will be removed from this house.</li>
-                                        <li>New teachers selected will be added to this house.</li>
+                                        <li>Select/deselect HouseMasters to update assignments.</li>
+                                        <li>HouseMasters not selected will be removed from this house.</li>
+                                        <li>New HouseMasters selected will be added to this house.</li>
                                     </ul>
                                 </div>
                             </div>

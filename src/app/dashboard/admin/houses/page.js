@@ -141,8 +141,8 @@ class HouseManagementPage extends App {
         const tableColumns = [
             { key: 'name', label: 'House Name', sortable: true },
             { key: 'description', label: 'Description', sortable: false },
-            { key: 'teacher_count', label: 'Teachers', sortable: true, type: 'number' },
-            { key: 'teachers', label: 'Assigned Teachers', sortable: false },
+            { key: 'teacher_count', label: 'HouseMasters Count', sortable: true, type: 'number' },
+            { key: 'teachers', label: 'HouseMasters', sortable: false },
             { key: 'created_at', label: 'Created', sortable: true, type: 'date' }
         ];
 

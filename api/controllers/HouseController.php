@@ -27,7 +27,7 @@ class HouseController {
         try {
             $userId = $this->getCurrentUserId();
             if ($userId) {
-                $this->logModel->logAction($userId, 'admin', $action, $description, $metadata);
+                $this->logModel->logAction($userId, $action, $description, $metadata);
             }
         } catch (Exception $e) {
             // Silently fail logging

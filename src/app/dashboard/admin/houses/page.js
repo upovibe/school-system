@@ -426,11 +426,6 @@ class HouseManagementPage extends App {
             }
         });
 
-        // Listen for teacher removal from house
-        this.addEventListener('remove-teacher', (event) => {
-            const { teacherId, teacherName, houseName } = event.detail;
-            this.showToast(`Teacher removal feature coming soon! (${teacherName} from ${houseName})`, 'info');
-        });
     }
 }
 

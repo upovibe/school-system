@@ -12,7 +12,6 @@ import '@/components/ui/Toast.js';
  * 
  * Events:
  * - dialog-closed: Fired when dialog is closed
- * - remove-teacher: Fired when a teacher is removed from house
  */
 class HouseViewDialog extends HTMLElement {
     constructor() {
@@ -35,27 +34,8 @@ class HouseViewDialog extends HTMLElement {
             this.close();
         });
 
-        // Remove existing listeners to avoid duplicates
-        this.removeEventListener('click', this.handleClick);
-        
-        // Add click listener
-        this.addEventListener('click', this.handleClick.bind(this));
     }
 
-    handleClick(event) {
-        const target = event.target;
-        
-        // Handle teacher remove
-        if (target.closest('.remove-teacher-btn')) {
-            const button = target.closest('.remove-teacher-btn');
-            const teacherData = button.dataset;
-            this.onRemoveTeacher(
-                teacherData.teacherId,
-                teacherData.teacherName,
-                teacherData.houseName
-            );
-        }
-    }
 
     open() {
         this.setAttribute('open', '');
@@ -159,7 +139,7 @@ class HouseViewDialog extends HTMLElement {
                                 ${house.teachers && house.teachers.length > 0 ? `
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         ${house.teachers.map(teacher => `
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                                                 <div class="flex items-center space-x-3">
                                                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                                         <i class="fas fa-user text-blue-600 text-sm"></i>
@@ -169,14 +149,6 @@ class HouseViewDialog extends HTMLElement {
                                                         <p class="text-xs text-gray-600">${teacher.email || 'No email'}</p>
                                                     </div>
                                                 </div>
-                                                <button 
-                                                    class="remove-teacher-btn inline-flex items-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                                    data-teacher-id="${teacher.id}"
-                                                    data-teacher-name="${teacher.name}"
-                                                    data-house-name="${house.name}"
-                                                    title="Remove this teacher from house">
-                                                    <i class="fas fa-times text-xs"></i>
-                                                </button>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -222,22 +194,6 @@ class HouseViewDialog extends HTMLElement {
         `;
     }
 
-    onRemoveTeacher(teacherId, teacherName, houseName) {
-        
-        // Dispatch event to parent component
-        this.dispatchEvent(new CustomEvent('remove-teacher', {
-            detail: {
-                teacherId: teacherId,
-                teacherName: teacherName,
-                houseName: houseName
-            },
-            bubbles: true,
-            composed: true
-        }));
-        
-        // Close the dialog
-        this.close();
-    }
 }
 
 customElements.define('house-view-dialog', HouseViewDialog);

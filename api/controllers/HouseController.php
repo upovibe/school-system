@@ -242,30 +242,31 @@ class HouseController {
                 return;
             }
 
-            // Check if house has teachers assigned
+            // Get teachers assigned to this house for logging
             $teachers = $this->houseModel->getHouseTeachers($id);
-            if (!empty($teachers)) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Cannot delete house with assigned teachers. Please remove teachers first.'
-                ]);
-                return;
-            }
-
-            // Delete house
+            
+            // Delete house (this will automatically remove teacher assignments due to CASCADE DELETE)
             $this->houseModel->delete($id);
             
             // Log the action
             $this->logAction('house_deleted', 'House deleted successfully', [
                 'house_id' => $id,
-                'house_name' => $house['name']
+                'house_name' => $house['name'],
+                'teachers_unassigned' => count($teachers),
+                'teacher_names' => array_map(function($teacher) {
+                    return $teacher['first_name'] . ' ' . $teacher['last_name'];
+                }, $teachers)
             ]);
+            
+            $message = 'House deleted successfully';
+            if (!empty($teachers)) {
+                $message .= ' and ' . count($teachers) . ' teacher assignment(s) removed';
+            }
             
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'message' => 'House deleted successfully'
+                'message' => $message
             ]);
 
         } catch (Exception $e) {

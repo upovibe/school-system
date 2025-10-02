@@ -42,7 +42,7 @@ class HouseManagementPage extends App {
         const c = this.getHeaderCounts();
         return `
             <div class="space-y-8 mb-4">
-                <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-5 text-white">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
                             <div class="flex items-center gap-2">
@@ -57,12 +57,12 @@ class HouseManagementPage extends App {
                                     <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
                                 </button>
                             </div>
-                            <p class="text-green-100 text-base sm:text-lg">Manage school houses and teacher assignments</p>
+                            <p class="text-blue-100 text-base sm:text-lg">Manage school houses and teacher assignments</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
                                 <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
-                                <div class="text-green-100 text-xs sm:text-sm">Total Houses</div>
+                                <div class="text-blue-100 text-xs sm:text-sm">Total Houses</div>
                             </div>
                         </div>
                     </div>
@@ -74,7 +74,7 @@ class HouseManagementPage extends App {
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${c.total}</div>
-                                    <div class="text-green-100 text-xs sm:text-sm">Total Houses</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Houses</div>
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@ class HouseManagementPage extends App {
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${c.withTeachers}</div>
-                                    <div class="text-green-100 text-xs sm:text-sm">With Teachers</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">With Teachers</div>
                                 </div>
                             </div>
                         </div>
@@ -96,7 +96,7 @@ class HouseManagementPage extends App {
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${c.withoutTeachers}</div>
-                                    <div class="text-green-100 text-xs sm:text-sm">No Teachers</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">No Teachers</div>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +107,7 @@ class HouseManagementPage extends App {
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${c.totalTeachers}</div>
-                                    <div class="text-green-100 text-xs sm:text-sm">Total Teachers</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Teachers</div>
                                 </div>
                             </div>
                         </div>

@@ -11,6 +11,8 @@ require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../middlewares/StudentMiddleware.php';
+require_once __DIR__ . '/../utils/student_uploads.php';
+require_once __DIR__ . '/../core/MultipartFormParser.php';
 
 class StudentController {
     private $studentModel;
@@ -66,7 +68,15 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle multipart form data for file uploads
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'multipart/form-data') !== false) {
+                $rawData = file_get_contents('php://input');
+                MultipartFormParser::processRequest($rawData, $contentType);
+                $data = $_POST; // Get parsed form data
+            } else {
+                $data = json_decode(file_get_contents('php://input'), true);
+            }
             
             // Validate required fields
             if (empty($data['student_id'])) {
@@ -200,10 +210,28 @@ class StudentController {
             // Create student with user account
             $result = $this->studentModel->createStudentWithUser($data);
             
+            // Handle passport photo upload if present
+            $passportPhotoPath = null;
+            if (!empty($_FILES['passport_photo']) && $_FILES['passport_photo']['error'] === UPLOAD_ERR_OK) {
+                try {
+                    $uploadResult = uploadStudentPassport($_FILES['passport_photo']);
+                    
+                    if ($uploadResult['original']) {
+                        $passportPhotoPath = $uploadResult['original'];
+                        // Update student with passport photo path
+                        $this->studentModel->update($result['id'], ['passport_photo' => $passportPhotoPath]);
+                    }
+                } catch (Exception $e) {
+                    // Log the upload error but don't fail the student creation
+                    error_log("Passport photo upload failed for student {$result['student_id']}: " . $e->getMessage());
+                }
+            }
+            
             // Log the action
             $this->logAction('create', 'Student created successfully', [
                 'student_id' => $result['student_id'],
-                'user_id' => $result['user_id']
+                'user_id' => $result['user_id'],
+                'passport_photo_uploaded' => $passportPhotoPath ? true : false
             ]);
 
             http_response_code(201);
@@ -266,7 +294,15 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
-            $data = json_decode(file_get_contents('php://input'), true);
+            // Handle multipart form data for file uploads
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'multipart/form-data') !== false) {
+                $rawData = file_get_contents('php://input');
+                MultipartFormParser::processRequest($rawData, $contentType);
+                $data = $_POST; // Get parsed form data
+            } else {
+                $data = json_decode(file_get_contents('php://input'), true);
+            }
             
             // Check if student exists
             $existingStudent = $this->studentModel->findById($id);
@@ -368,10 +404,28 @@ class StudentController {
             // Update student with user account
             $this->studentModel->updateStudentWithUser($id, $data);
             
+            // Handle passport photo upload if present
+            $passportPhotoPath = null;
+            if (!empty($_FILES['passport_photo']) && $_FILES['passport_photo']['error'] === UPLOAD_ERR_OK) {
+                try {
+                    $uploadResult = updateStudentPassport($_FILES['passport_photo'], $existingStudent['passport_photo'] ?? null);
+                    
+                    if ($uploadResult['original']) {
+                        $passportPhotoPath = $uploadResult['original'];
+                        // Update student with new passport photo path
+                        $this->studentModel->update($id, ['passport_photo' => $passportPhotoPath]);
+                    }
+                } catch (Exception $e) {
+                    // Log the upload error but don't fail the student update
+                    error_log("Passport photo upload failed for student {$id}: " . $e->getMessage());
+                }
+            }
+            
             // Log the action
             $this->logAction('update', 'Student updated successfully', [
                 'student_id' => $id,
-                'updated_fields' => array_keys($data)
+                'updated_fields' => array_keys($data),
+                'passport_photo_updated' => $passportPhotoPath ? true : false
             ]);
 
             http_response_code(200);
@@ -2701,6 +2755,7 @@ class StudentController {
             ]);
         }
     }
+
 
 }
 ?> 

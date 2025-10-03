@@ -178,39 +178,20 @@ class StudentManagementPage extends App {
             }
         });
 
-        // Listen for student-saved event to add new student to the list
+        // Listen for student-saved event to reload data
         this.addEventListener('student-saved', (event) => {
-            // Close the add modal first
+            // Reload all data to get the complete student with all fields
+            this.loadData();
+            // Close the add modal
             this.set('showAddModal', false);
-
-            // Add the new student to the existing data
-            const newStudent = event.detail.student;
-            if (newStudent) {
-                const currentStudents = this.get('students') || [];
-                this.set('students', [...currentStudents, newStudent]);
-                this.updateTableData();
-            } else {
-                this.loadData();
-            }
         });
 
-        // Listen for student-updated event to update student in the list
+        // Listen for student-updated event to reload data
         this.addEventListener('student-updated', (event) => {
-            // Close the update modal first
+            // Reload all data to get the complete student with all fields
+            this.loadData();
+            // Close the update modal
             this.set('showUpdateModal', false);
-
-            // Update the existing student in the data
-            const updatedStudent = event.detail.student;
-            if (updatedStudent) {
-                const currentStudents = this.get('students') || [];
-                const updatedStudents = currentStudents.map(student => 
-                    student.id === updatedStudent.id ? updatedStudent : student
-                );
-                this.set('students', updatedStudents);
-                this.updateTableData();
-            } else {
-                this.loadData();
-            }
         });
 
         // Listen for student-promoted event to refresh data

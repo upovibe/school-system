@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/TeacherModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/UserLogModel.php';
 require_once __DIR__ . '/../models/SettingModel.php';
+require_once __DIR__ . '/../models/HouseModel.php'; // Added for house management
 require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
 require_once __DIR__ . '/../middlewares/RoleMiddleware.php';
 require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
@@ -911,7 +912,6 @@ class TeacherController {
             $teacher = $_REQUEST['current_teacher'];
             
             // Check if teacher has an assigned house
-            require_once __DIR__ . '/../models/HouseModel.php';
             $houseModel = new HouseModel($pdo);
             $house = $houseModel->getHouseByTeacher($teacher['id']);
             

@@ -24,6 +24,8 @@ class TeacherHousePage extends App {
         this.error = null;
         this.showStudentModal = false;
         this.selectedStudentData = null;
+        this.selectedClassFilter = 'all';
+        this.availableClasses = [];
     }
 
     async connectedCallback() {
@@ -35,6 +37,7 @@ class TeacherHousePage extends App {
         // Add event listeners for table events
         this.addEventListener('table-row-click', this.onStudentClick.bind(this));
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        this.addEventListener('change', this.handleClassFilterChange.bind(this));
     }
 
     handleHeaderActions(event) {
@@ -43,6 +46,13 @@ class TeacherHousePage extends App {
         const action = button.getAttribute('data-action');
         if (action === 'show-teacher-house-info') {
             this.showTeacherHouseInfo();
+        }
+    }
+
+    handleClassFilterChange(event) {
+        if (event.target.id === 'class-filter') {
+            this.set('selectedClassFilter', event.target.value);
+            this.render();
         }
     }
 
@@ -85,6 +95,15 @@ class TeacherHousePage extends App {
             
             if (response.data && response.data.success) {
                 this.set('houseData', response.data.data);
+                
+                // Extract available classes from students
+                const students = response.data.data?.students || [];
+                const classes = [...new Set(students.map(student => ({
+                    id: student.current_class_id,
+                    name: student.class_name || `Class ${student.current_class_id}`,
+                    section: student.class_section || ''
+                })))];
+                this.set('availableClasses', classes);
                 
                 // Store house data in localStorage for dialog access
                 localStorage.setItem('teacherHouseData', JSON.stringify(response.data.data));
@@ -157,6 +176,36 @@ class TeacherHousePage extends App {
         this.set('selectedStudentData', null);
     }
 
+    getFilteredStudents() {
+        const houseData = this.get('houseData');
+        const selectedClassFilter = this.get('selectedClassFilter') || 'all';
+        
+        if (!houseData?.students) return [];
+        
+        if (selectedClassFilter === 'all') {
+            return houseData.students;
+        }
+        
+        return houseData.students.filter(student => 
+            student.current_class_id == selectedClassFilter
+        );
+    }
+
+    setDropdownValue() {
+        // Set the selected value of the dropdown after render
+        setTimeout(() => {
+            const dropdown = this.querySelector('#class-filter');
+            if (dropdown) {
+                dropdown.value = this.get('selectedClassFilter') || 'all';
+            }
+        }, 100);
+    }
+
+    clearFilter() {
+        this.set('selectedClassFilter', 'all');
+        this.render();
+    }
+
     render() {
         const loading = this.get('loading');
         const error = this.get('error');
@@ -209,8 +258,11 @@ class TeacherHousePage extends App {
             `;
         }
 
-        const { house_name, house_description, students, student_count } = houseData;
-        const current_students = (student_count != null ? student_count : (Array.isArray(students) ? students.length : 0));
+        const { house_name, house_description } = houseData;
+        const students = this.getFilteredStudents();
+        const allStudents = houseData.students || [];
+        const current_students = students.length;
+        const total_students = allStudents.length;
 
         // Prepare table data with separate columns
         const tableData = students ? students.map(student => ({
@@ -278,8 +330,8 @@ class TeacherHousePage extends App {
                                     <i class="fas fa-users text-white text-lg sm:text-xl"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="text-xl sm:text-2xl font-bold">${student_count || 0}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Enrolled Student${(student_count || 0) > 1 ? 's' : ''}</div>
+                                    <div class="text-xl sm:text-2xl font-bold">${total_students}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Total Students</div>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +343,7 @@ class TeacherHousePage extends App {
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${current_students}</div>
-                                    <div class="text-blue-100 text-xs sm:text-sm">Current Student${current_students === 1 ? '' : 's'}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">Filtered Students</div>
                                 </div>
                             </div>
                         </div>
@@ -324,8 +376,38 @@ class TeacherHousePage extends App {
                     
                     <!-- Students Section with Accordion -->
                     <div class="p-5">
+                        <!-- Class Filter -->
+                        <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <label for="class-filter" class="text-sm font-medium text-gray-700 hidden lg:block">
+                                    Filter by Class:
+                                </label>
+                                <select 
+                                    id="class-filter" 
+                                    class="px-3 py-0.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    value="${this.get('selectedClassFilter') || 'all'}"
+                                >
+                                    <option value="all">All Classes (${total_students})</option>
+                                    ${this.get('availableClasses').map(cls => `
+                                        <option value="${cls.id}">${cls.name} ${cls.section ? `- ${cls.section}` : ''}</option>
+                                    `).join('')}
+                                </select>
+                                <button 
+                                    onclick="this.closest('app-teacher-house-page').clearFilter()"
+                                    class="px-3 py-0.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors duration-200"
+                                    title="Clear filter and show all students"
+                                >
+                                    <i class="fas fa-times lg:mr-1"></i>
+                                    <span class="hidden lg:inline">Clear</span>
+                                </button>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                Showing ${current_students} of ${total_students} students
+                            </div>
+                        </div>
+                        
                         <ui-accordion>
-                            <ui-accordion-item title="House Students (${student_count || 0} Student${(student_count || 0) > 1 ? 's' : ''})">
+                            <ui-accordion-item title="House Students (${current_students} Student${current_students > 1 ? 's' : ''})">
                                 ${students && students.length > 0 ? `
                                     <ui-table 
                                         data='${JSON.stringify(tableData)}'
@@ -360,6 +442,9 @@ class TeacherHousePage extends App {
             <!-- Student Information Modal -->
             <teacher-student-personal-information ${showStudentModal ? 'open' : ''}></teacher-student-personal-information>
         `;
+        
+        // Set dropdown value after rendering
+        this.setDropdownValue();
     }
 }
 

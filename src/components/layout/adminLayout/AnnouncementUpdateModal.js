@@ -54,6 +54,7 @@ class AnnouncementUpdateModal extends HTMLElement {
         const contentInput = this.querySelector('ui-textarea[data-field="content"]');
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         const updateBtn = this.querySelector('#update-announcement-btn');
 
         if (titleInput) {
@@ -73,6 +74,13 @@ class AnnouncementUpdateModal extends HTMLElement {
         // Add event listener for target class dropdown when it becomes available
         this.addEventListener('change', (e) => {
             if (e.target.matches('ui-search-dropdown[data-field="target_class_id"]')) {
+                // No validation needed for update modal
+            }
+        });
+
+        // Add event listener for target house dropdown when it becomes available
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-search-dropdown[data-field="target_house_id"]')) {
                 // No validation needed for update modal
             }
         });
@@ -137,7 +145,7 @@ class AnnouncementUpdateModal extends HTMLElement {
             }
         }
 
-        // Handle target class field visibility and population
+        // Handle target class and house field visibility and population
         this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
         
         // If targeting specific class, populate the class dropdown and set the correct display value
@@ -152,38 +160,73 @@ class AnnouncementUpdateModal extends HTMLElement {
                     // First, populate the dropdown with options
                     this.populateClassDropdown(this.availableClasses);
                     
-                                         // Then set the value - this should now display the formatted name
-                     
-                     // Try to find and select the correct option
-                     const targetOption = targetClassDropdown.querySelector(`ui-option[value="${this.announcementData.target_class_id}"]`);
-                     if (targetOption) {
-                         // Set the value - this should trigger the component's internal logic
-                         targetClassDropdown.value = this.announcementData.target_class_id;
-                         
-                         // Force the component to re-render by dispatching a custom event
-                         targetClassDropdown.dispatchEvent(new CustomEvent('value-changed', {
-                             detail: { value: this.announcementData.target_class_id },
-                             bubbles: true,
-                             composed: true
-                         }));
-                         
-                         // Also try to trigger the component's attribute change callback
-                         targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
-                      } else {
-                          console.error('Target option not found for value:', this.announcementData.target_class_id);
-                      }
-                  }
-              }, 150); // Increased delay for better rendering
-          }
+                    // Then set the value - this should now display the formatted name
+                    // Try to find and select the correct option
+                    const targetOption = targetClassDropdown.querySelector(`ui-option[value="${this.announcementData.target_class_id}"]`);
+                    if (targetOption) {
+                        // Set the value - this should trigger the component's internal logic
+                        targetClassDropdown.value = this.announcementData.target_class_id;
+                        
+                        // Force the component to re-render by dispatching a custom event
+                        targetClassDropdown.dispatchEvent(new CustomEvent('value-changed', {
+                            detail: { value: this.announcementData.target_class_id },
+                            bubbles: true,
+                            composed: true
+                        }));
+                        
+                        // Also try to trigger the component's attribute change callback
+                        targetClassDropdown.setAttribute('value', this.announcementData.target_class_id);
+                    } else {
+                        console.error('Target option not found for value:', this.announcementData.target_class_id);
+                    }
+                }
+            }, 150); // Increased delay for better rendering
+        }
+        
+        // If targeting specific house, populate the house dropdown and set the correct display value
+        if (this.announcementData.target_audience === 'specific_house' && this.announcementData.target_house_id) {
+            // Load houses first, then populate and set value
+            await this.loadAvailableHouses();
+            
+            // Ensure the dropdown is fully rendered before setting value
+            setTimeout(() => {
+                const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
+                if (targetHouseDropdown && this.availableHouses) {
+                    // First, populate the dropdown with options
+                    this.populateHouseDropdown(this.availableHouses);
+                    
+                    // Then set the value
+                    const targetOption = targetHouseDropdown.querySelector(`ui-option[value="${this.announcementData.target_house_id}"]`);
+                    if (targetOption) {
+                        // Set the value - this should trigger the component's internal logic
+                        targetHouseDropdown.value = this.announcementData.target_house_id;
+                        
+                        // Force the component to re-render by dispatching a custom event
+                        targetHouseDropdown.dispatchEvent(new CustomEvent('value-changed', {
+                            detail: { value: this.announcementData.target_house_id },
+                            bubbles: true,
+                            composed: true
+                        }));
+                        
+                        // Also try to trigger the component's attribute change callback
+                        targetHouseDropdown.setAttribute('value', this.announcementData.target_house_id);
+                    } else {
+                        console.error('Target house option not found for value:', this.announcementData.target_house_id);
+                    }
+                }
+            }, 150); // Increased delay for better rendering
+        }
           
           // Content field is now updated using setValue() method
     }
 
-    // Handle target audience change to show/hide target class field
+    // Handle target audience change to show/hide target class and house fields
     async handleTargetAudienceChange(event) {
         const targetAudience = event.target.value;
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         
+        // Handle class field visibility
         if (targetClassField) {
             if (targetAudience === 'specific_class') {
                 targetClassField.classList.remove('hidden');
@@ -191,6 +234,17 @@ class AnnouncementUpdateModal extends HTMLElement {
                 await this.loadAvailableClasses();
             } else {
                 targetClassField.classList.add('hidden');
+            }
+        }
+        
+        // Handle house field visibility
+        if (targetHouseField) {
+            if (targetAudience === 'specific_house') {
+                targetHouseField.classList.remove('hidden');
+                // Load available houses when showing the field
+                await this.loadAvailableHouses();
+            } else {
+                targetHouseField.classList.add('hidden');
             }
         }
     }
@@ -249,6 +303,61 @@ class AnnouncementUpdateModal extends HTMLElement {
         }
     }
 
+    // Load available houses from API
+    async loadAvailableHouses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/houses');
+            
+            if (response.data.success) {
+                const houses = response.data.data || [];
+                this.availableHouses = houses; // Store for later use
+                this.populateHouseDropdown(houses);
+            }
+        } catch (error) {
+            console.error('Error loading houses:', error);
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to load available houses',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
+    // Populate the house dropdown with available houses
+    populateHouseDropdown(houses) {
+        const houseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
+        if (!houseDropdown) return;
+
+        // Clear existing options
+        houseDropdown.innerHTML = '';
+
+        // Add default option
+        const defaultOption = document.createElement('ui-option');
+        defaultOption.setAttribute('value', '');
+        defaultOption.textContent = 'Select a house...';
+        houseDropdown.appendChild(defaultOption);
+
+        // Add house options
+        houses.forEach(house => {
+            const option = document.createElement('ui-option');
+            option.setAttribute('value', house.id);
+            option.textContent = house.name;
+            houseDropdown.appendChild(option);
+        });
+
+        // Add change event listener (no validation needed for update modal)
+        if (!houseDropdown._changeHandlerAdded) {
+            houseDropdown.addEventListener('change', () => {
+                // No validation needed for update modal
+            });
+            houseDropdown._changeHandlerAdded = true;
+        }
+    }
+
 
     
 
@@ -277,6 +386,7 @@ class AnnouncementUpdateModal extends HTMLElement {
             const isActiveSwitch = this.querySelector('ui-switch[name="is_active"]');
             const isPinnedSwitch = this.querySelector('ui-switch[name="is_pinned"]');
             const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+            const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
 
             const announcementData = {
                 title: titleInput ? titleInput.value : '',
@@ -291,6 +401,11 @@ class AnnouncementUpdateModal extends HTMLElement {
             // Add target_class_id if specific_class is selected
             if (announcementData.target_audience === 'specific_class') {
                 announcementData.target_class_id = targetClassDropdown ? targetClassDropdown.value : '';
+            }
+
+            // Add target_house_id if specific_house is selected
+            if (announcementData.target_audience === 'specific_house') {
+                announcementData.target_house_id = targetHouseDropdown ? targetHouseDropdown.value : '';
             }
 
             // Validate required fields
@@ -320,6 +435,19 @@ class AnnouncementUpdateModal extends HTMLElement {
                     Toast.show({
                         title: 'Validation Error',
                         message: 'Please select a target class when targeting specific class',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
+            }
+
+            // Validate target_house_id if specific_house is selected
+            if (announcementData.target_audience === 'specific_house') {
+                if (!announcementData.target_house_id) {
+                    Toast.show({
+                        title: 'Validation Error',
+                        message: 'Please select a target house when targeting specific house',
                         variant: 'error',
                         duration: 3000
                     });
@@ -363,6 +491,7 @@ class AnnouncementUpdateModal extends HTMLElement {
                     is_active: announcementData.is_active,
                     is_pinned: announcementData.is_pinned,
                     target_class_id: announcementData.target_class_id || null,
+                    target_house_id: announcementData.target_house_id || null,
                     updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
                     // creator_name is preserved from this.announcementData
                 };
@@ -436,6 +565,7 @@ class AnnouncementUpdateModal extends HTMLElement {
                             <ui-option value="admin">Admin Only</ui-option>
                             <ui-option value="cashier">Cashier Only</ui-option>
                             <ui-option value="specific_class">Specific Class</ui-option>
+                            <ui-option value="specific_house">Specific House</ui-option>
                         </ui-search-dropdown>
                     </div>
                     
@@ -446,6 +576,16 @@ class AnnouncementUpdateModal extends HTMLElement {
                             data-field="target_class_id" 
                             class="w-full"
                             placeholder="Search for a class...">
+                        </ui-search-dropdown>
+                    </div>
+                    
+                    <!-- Conditional Target House Field -->
+                    <div id="target-house-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Target House <span class="text-red-500">*</span></label>
+                        <ui-search-dropdown 
+                            data-field="target_house_id" 
+                            class="w-full"
+                            placeholder="Search for a house...">
                         </ui-search-dropdown>
                     </div>
                     
@@ -504,7 +644,7 @@ class AnnouncementUpdateModal extends HTMLElement {
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Title</strong>: Clear, concise title for the announcement.</li>
                                 <li><strong>Content</strong>: Detailed information about the announcement.</li>
-                                <li><strong>Target Audience</strong>: Who should see this announcement.</li>
+                                <li><strong>Target Audience</strong>: Who should see this announcement (all, students, teachers, specific class, or specific house).</li>
                                 <li><strong>Type</strong>: Categorizes the announcement for better organization.</li>
                                 <li><strong>Priority</strong>: Sets importance level (urgent announcements are highlighted).</li>
                                 <li><strong>Active</strong>: Only active announcements are visible to users.</li>

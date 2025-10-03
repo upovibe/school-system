@@ -134,6 +134,11 @@ class AnnouncementViewModal extends HTMLElement {
                 icon = 'fa-chalkboard';
                 label = 'Specific Class';
                 break;
+            case 'specific_house':
+                badgeColor = 'bg-teal-100 text-teal-800';
+                icon = 'fa-home';
+                label = 'Specific House';
+                break;
         }
         
         return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeColor}">
@@ -251,6 +256,32 @@ class AnnouncementViewModal extends HTMLElement {
                                                 ${this.announcementData.class_name || 'Unknown Class'} (${this.announcementData.class_section || 'Unknown Section'})
                                             </div>
                                             <div class="text-indigo-600 text-sm">Class ID: ${this.announcementData.target_class_id}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Target House Information (if applicable) -->
+                        ${this.announcementData.target_audience === 'specific_house' && this.announcementData.target_house_id ? `
+                            <div class="border-b pb-4 mt-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fas fa-home text-teal-500"></i>
+                                    <h4 class="text-md font-semibold text-gray-800">Target House</h4>
+                                </div>
+                                <div class="bg-teal-50 p-4 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center text-white flex-shrink-0">
+                                            <i class="fas fa-home"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-teal-900 font-semibold">
+                                                ${this.announcementData.house_name || 'Unknown House'}
+                                            </div>
+                                            ${this.announcementData.house_description ? `
+                                                <div class="text-teal-700 text-sm mt-1">${this.announcementData.house_description}</div>
+                                            ` : ''}
+                                            <div class="text-teal-600 text-sm">House ID: ${this.announcementData.target_house_id}</div>
                                         </div>
                                     </div>
                                 </div>

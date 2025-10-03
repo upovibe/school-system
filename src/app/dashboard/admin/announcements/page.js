@@ -303,12 +303,12 @@ class AdminAnnouncementsPage extends App {
             <div slot="content" class="space-y-4">
                 <div>
                     <h4 class="font-semibold text-gray-900 mb-2">What are Announcements?</h4>
-                    <p class="text-gray-700">Announcements are school-wide communications that can be targeted to specific audiences like students, teachers, parents, or specific classes.</p>
+                    <p class="text-gray-700">Announcements are school-wide communications that can be targeted to specific audiences like students, teachers, parents, specific classes, or specific houses.</p>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Target Audience</span>
-                        <span class="text-sm text-gray-600">all, students, teachers, admin, cashier, specific_class</span>
+                        <span class="text-sm text-gray-600">all, students, teachers, admin, cashier, specific_class, specific_house</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Priority Levels</span>
@@ -387,12 +387,23 @@ class AdminAnnouncementsPage extends App {
                     announcement.content.substring(0, 100) + '...' : 
                     announcement.content) : 'No content';
             
+            // Determine target details based on audience type
+            let targetInfo = '';
+            if (announcement.target_audience === 'specific_class' && announcement.class_name) {
+                targetInfo = `${announcement.class_name} ${announcement.class_section || ''}`.trim();
+            } else if (announcement.target_audience === 'specific_house' && announcement.house_name) {
+                targetInfo = announcement.house_name;
+            } else {
+                targetInfo = '-';
+            }
+
             return {
                 id: announcement.id,
                 index: index + 1,
                 title: announcement.title || 'No Title',
                 content: safeContent,
                 target_audience: announcement.target_audience || 'all',
+                target_info: targetInfo,
                 announcement_type: announcement.announcement_type || 'general',
                 priority: announcement.priority || 'normal',
                 is_active: announcement.is_active ? 'Active' : 'Inactive',
@@ -656,6 +667,7 @@ class AdminAnnouncementsPage extends App {
                                         { key: 'title', label: 'Title' },
                                         { key: 'content', label: 'Content' },
                                         { key: 'target_audience', label: 'Target Audience' },
+                                        { key: 'target_info', label: 'Target Details' },
                                         { key: 'announcement_type', label: 'Type' },
                                         { key: 'priority', label: 'Priority' },
                                         { key: 'is_active', label: 'Status' },

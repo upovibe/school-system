@@ -56,18 +56,25 @@ class AnnouncementAddModal extends HTMLElement {
             const contentInput = this.querySelector('ui-textarea[data-field="content"]');
             const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
             const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+            const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
             const saveBtn = this.querySelector('#save-announcement-btn');
             
             const title = titleInput ? String(titleInput.value || '').trim() : '';
             const content = contentInput ? String(contentInput.value || '').trim() : '';
             const targetAudience = targetAudienceDropdown ? targetAudienceDropdown.value : '';
             const targetClass = targetClassDropdown ? targetClassDropdown.value : '';
+            const targetHouse = targetHouseDropdown ? targetHouseDropdown.value : '';
             
             let isValid = !!title && !!content && !!targetAudience;
             
             // Additional validation for specific class selection
             if (targetAudience === 'specific_class') {
                 isValid = isValid && !!targetClass;
+            }
+            
+            // Additional validation for specific house selection
+            if (targetAudience === 'specific_house') {
+                isValid = isValid && !!targetHouse;
             }
             
             if (saveBtn) {
@@ -86,6 +93,7 @@ class AnnouncementAddModal extends HTMLElement {
         const contentInput = this.querySelector('ui-textarea[data-field="content"]');
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         const saveBtn = this.querySelector('#save-announcement-btn');
 
         if (titleInput) {
@@ -110,6 +118,13 @@ class AnnouncementAddModal extends HTMLElement {
             }
         });
 
+        // Add event listener for target house dropdown when it becomes available
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-search-dropdown[data-field="target_house_id"]')) {
+                this.validateForm();
+            }
+        });
+
         // Add event listeners for search dropdowns
         this.addEventListener('change', (e) => {
             if (e.target.matches('ui-search-dropdown[data-field="announcement_type"]')) {
@@ -124,11 +139,13 @@ class AnnouncementAddModal extends HTMLElement {
         this.validateForm();
     }
 
-    // Handle target audience change to show/hide target class field
+    // Handle target audience change to show/hide target class and house fields
     async handleTargetAudienceChange(event) {
         const targetAudience = event.target.value;
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         
+        // Handle class field visibility
         if (targetClassField) {
             if (targetAudience === 'specific_class') {
                 targetClassField.classList.remove('hidden');
@@ -136,6 +153,17 @@ class AnnouncementAddModal extends HTMLElement {
                 await this.loadAvailableClasses();
             } else {
                 targetClassField.classList.add('hidden');
+            }
+        }
+        
+        // Handle house field visibility
+        if (targetHouseField) {
+            if (targetAudience === 'specific_house') {
+                targetHouseField.classList.remove('hidden');
+                // Load available houses when showing the field
+                await this.loadAvailableHouses();
+            } else {
+                targetHouseField.classList.add('hidden');
             }
         }
     }
@@ -184,6 +212,50 @@ class AnnouncementAddModal extends HTMLElement {
         });
     }
 
+    // Load available houses from API
+    async loadAvailableHouses() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await api.withToken(token).get('/houses');
+            
+            if (response.data.success) {
+                const houses = response.data.data || [];
+                this.populateHouseDropdown(houses);
+            }
+        } catch (error) {
+            console.error('Error loading houses:', error);
+            Toast.show({
+                title: 'Error',
+                message: 'Failed to load available houses',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
+    // Populate the house dropdown with available houses
+    populateHouseDropdown(houses) {
+        const houseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
+        if (!houseDropdown) return;
+
+        // Clear existing options except the first "Select a house..." option
+        const firstOption = houseDropdown.querySelector('ui-option[value=""]');
+        houseDropdown.innerHTML = '';
+        if (firstOption) {
+            houseDropdown.appendChild(firstOption);
+        }
+
+        // Add house options
+        houses.forEach(house => {
+            const option = document.createElement('ui-option');
+            option.setAttribute('value', house.id);
+            option.textContent = house.name;
+            houseDropdown.appendChild(option);
+        });
+    }
+
     // Save the new announcement
     async saveAnnouncement() {
         try {
@@ -197,6 +269,7 @@ class AnnouncementAddModal extends HTMLElement {
             const isPinnedSwitch = this.querySelector('ui-switch[name="is_pinned"]');
 
             const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+            const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
             
             const announcementData = {
                 title: titleInput ? titleInput.value : '',
@@ -211,6 +284,11 @@ class AnnouncementAddModal extends HTMLElement {
             // Add target_class_id if specific_class is selected
             if (announcementData.target_audience === 'specific_class') {
                 announcementData.target_class_id = targetClassDropdown ? targetClassDropdown.value : '';
+            }
+
+            // Add target_house_id if specific_house is selected
+            if (announcementData.target_audience === 'specific_house') {
+                announcementData.target_house_id = targetHouseDropdown ? targetHouseDropdown.value : '';
             }
 
             // Validate required fields
@@ -240,6 +318,19 @@ class AnnouncementAddModal extends HTMLElement {
                     Toast.show({
                         title: 'Validation Error',
                         message: 'Please select a target class when targeting specific class',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
+            }
+
+            // Validate target_house_id if specific_house is selected
+            if (announcementData.target_audience === 'specific_house') {
+                if (!announcementData.target_house_id) {
+                    Toast.show({
+                        title: 'Validation Error',
+                        message: 'Please select a target house when targeting specific house',
                         variant: 'error',
                         duration: 3000
                     });
@@ -366,6 +457,7 @@ class AnnouncementAddModal extends HTMLElement {
                             <ui-option value="admin">Admin Only</ui-option>
                             <ui-option value="cashier">Cashier Only</ui-option>
                             <ui-option value="specific_class">Specific Class</ui-option>
+                            <ui-option value="specific_house">Specific House</ui-option>
                         </ui-search-dropdown>
                     </div>
                     
@@ -375,6 +467,15 @@ class AnnouncementAddModal extends HTMLElement {
                         <ui-search-dropdown data-field="target_class_id" value="" placeholder="Search for a class...">
                             <ui-option value="">Select a class...</ui-option>
                             <!-- Classes will be loaded dynamically -->
+                        </ui-search-dropdown>
+                    </div>
+                    
+                    <!-- Conditional Target House Field -->
+                    <div id="target-house-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Target House <span class="text-red-500">*</span></label>
+                        <ui-search-dropdown data-field="target_house_id" value="" placeholder="Search for a house...">
+                            <ui-option value="">Select a house...</ui-option>
+                            <!-- Houses will be loaded dynamically -->
                         </ui-search-dropdown>
                     </div>
                     
@@ -434,7 +535,7 @@ class AnnouncementAddModal extends HTMLElement {
                             <ul class="list-disc pl-5 mt-1 space-y-1">
                                 <li><strong>Title</strong>: Clear, concise title for the announcement.</li>
                                 <li><strong>Content</strong>: Detailed information about the announcement.</li>
-                                <li><strong>Target Audience</strong>: Who should see this announcement.</li>
+                                <li><strong>Target Audience</strong>: Who should see this announcement (all, students, teachers, specific class, or specific house).</li>
                                 <li><strong>Type</strong>: Categorizes the announcement for better organization.</li>
                                 <li><strong>Priority</strong>: Sets importance level (urgent announcements are highlighted).</li>
                                 <li><strong>Active</strong>: Only active announcements are visible to users.</li>

@@ -367,6 +367,17 @@ class HouseController {
                 return;
             }
 
+            // Check if teacher is already assigned to any other house
+            $existingHouse = $this->houseModel->getHouseByTeacher($data['teacher_id']);
+            if ($existingHouse) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Teacher is already assigned to ' . $existingHouse['name'] . '. Please remove them from their current house before assigning to a new one.'
+                ]);
+                return;
+            }
+
             // Assign teacher to house
             $this->houseModel->assignTeacher($houseId, $data['teacher_id']);
             

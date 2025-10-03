@@ -11,7 +11,7 @@ require_once __DIR__ . '/../core/UploadCore.php';
  */
 function uploadStudentPassport($file) {
     $config = [
-        'upload_path' => 'uploads/profiles/',
+        'upload_path' => 'uploads/student-passport/',
         'max_size' => 2097152, // 2MB - smaller than news/events since it's a profile photo
         'create_thumbnails' => true,
         'thumbnail_sizes' => [
@@ -31,7 +31,7 @@ function uploadStudentPassport($file) {
     }
     
     return [
-        'original' => 'uploads/profiles/' . $result['filename'],
+        'original' => 'uploads/student-passport/' . $result['filename'],
         'thumbnails' => $result['thumbnails'] ?? []
     ];
 }

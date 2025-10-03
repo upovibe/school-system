@@ -4,6 +4,7 @@ import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
 import '@/components/ui/Button.js';
+import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
 /**
@@ -628,8 +629,27 @@ class StudentAddDialog extends HTMLElement {
                 return;
             }
 
+            // Prepare form data for multipart request
+            const formData = new FormData();
+            
+            // Add all form fields
+            Object.keys(studentData).forEach(key => {
+                formData.append(key, studentData[key]);
+            });
+            
+            // Add passport photo file if selected
+            const passportFileUpload = this.querySelector('ui-file-upload[data-field="passport_photo"]');
+            if (passportFileUpload && passportFileUpload.getFiles().length > 0) {
+                const files = passportFileUpload.getFiles();
+                // Filter out existing files (which are strings/paths) and only include new File objects
+                const newFiles = files.filter(file => file instanceof File);
+                newFiles.forEach(file => {
+                    formData.append('passport_photo', file, file.name);
+                });
+            }
+
             // Send API request
-            const response = await api.withToken(token).post('/students', studentData);
+            const response = await api.withToken(token).post('/students', formData);
 
             if (response.status === 201 || response.data.success) {
                 Toast.show({
@@ -725,6 +745,18 @@ class StudentAddDialog extends HTMLElement {
                                 <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
                             `}
                         </div>
+                        
+                        <!-- Passport Photo Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Passport Photo</label>
+                            <ui-file-upload 
+                                data-field="passport_photo" 
+                                accept="image/*" 
+                                max-size="2097152"
+                                class="w-full">
+                            </ui-file-upload>
+                        </div>
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
                             ${this.classes.length > 0 ? `

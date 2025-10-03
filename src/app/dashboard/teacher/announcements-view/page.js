@@ -7,8 +7,8 @@ import api from '@/services/api.js';
 /**
  * Teacher Announcements View Page
  * 
- * Displays all announcements for teachers to view (not just their own)
- * Shows both class-specific and general announcements
+ * Displays announcements for teachers in a readable view format
+ * Shows both general announcements and house-specific announcements if teacher is a house master
  */
 class TeacherAnnouncementsViewPage extends App {
     constructor() {
@@ -25,9 +25,27 @@ class TeacherAnnouncementsViewPage extends App {
             const userData = localStorage.getItem('userData');
             if (userData) {
                 const user = JSON.parse(userData);
+                
+                // Extract class information from profileData
+                const classId = user.profileData?.current_class_id || user.current_class_id || null;
+                const className = classId ? `Class ID: ${classId}` : 'Unknown Class';
+                
+                // Extract house information from profileData
+                const houseId = user.profileData?.house_id || user.house_id || null;
+                const houseName = user.profileData?.house_name || user.house_name || null;
+                const houseDescription = user.profileData?.house_description || user.house_description || null;
+                
+                // Debug logging
+                console.log('Teacher user data:', user);
+                console.log('Teacher house info:', { houseId, houseName, houseDescription });
+                
                 return {
                     name: user.name || 'Unknown Teacher',
-                    role: user.role || 'teacher'
+                    class_name: className,
+                    class_id: classId,
+                    house_id: houseId,
+                    house_name: houseName,
+                    house_description: houseDescription
                 };
             }
         } catch (error) {
@@ -36,14 +54,49 @@ class TeacherAnnouncementsViewPage extends App {
         return null;
     }
 
+    // Format creator name with appropriate title based on role
+    formatCreatorName(announcement) {
+        if (!announcement.creator_name) {
+            return 'Unknown';
+        }
+
+        // Check role from the announcement data
+        if (announcement.creator_role === 'admin') {
+            return 'Administrator';
+        }
+
+        // For teachers, check gender from teacher data
+        if (announcement.creator_role === 'teacher') {
+            // Check if we have gender information
+            if (announcement.creator_gender === 'female') {
+                return `Madam ${announcement.creator_name}`;
+            } else {
+                // Default to male or if gender is not specified
+                return `Sir ${announcement.creator_name}`;
+            }
+        }
+
+        // Fallback for unknown roles
+        return announcement.creator_name;
+    }
+
     // Get announcements by type for tabs
     getAnnouncementsByType(type) {
         const announcements = this.get('announcements') || [];
+        const currentTeacher = this.getCurrentTeacher();
         
         // Filter announcements to only show those meant for teachers
         const teacherAnnouncements = announcements.filter(a => 
             a.target_audience === 'all' || 
-            a.target_audience === 'teachers'
+            a.target_audience === 'teachers' ||
+            (a.target_audience === 'specific_class' && 
+             currentTeacher && 
+             currentTeacher.class_id && 
+             a.target_class_id == currentTeacher.class_id) ||
+            (a.target_audience === 'specific_house' && 
+             currentTeacher && 
+             currentTeacher.house_id && 
+             a.target_house_id == currentTeacher.house_id)
         );
         
         switch (type) {
@@ -79,6 +132,13 @@ class TeacherAnnouncementsViewPage extends App {
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
+            case 'my_house':
+                return teacherAnnouncements.filter(a => 
+                    a.target_audience === 'specific_house' && 
+                    currentTeacher && 
+                    currentTeacher.house_id && 
+                    a.target_house_id == currentTeacher.house_id
+                );
             default:
                 return teacherAnnouncements;
         }
@@ -93,18 +153,28 @@ class TeacherAnnouncementsViewPage extends App {
             academic: this.getAnnouncementsByType('academic').length,
             events: this.getAnnouncementsByType('events').length,
             reminders: this.getAnnouncementsByType('reminders').length,
-            emergency: this.getAnnouncementsByType('emergency').length
+            emergency: this.getAnnouncementsByType('emergency').length,
+            my_house: this.getAnnouncementsByType('my_house').length
         };
     }
 
     // Summary counts for header
     getHeaderCounts() {
         const announcements = this.get('announcements') || [];
+        const currentTeacher = this.getCurrentTeacher();
         
         // Filter announcements to only show those meant for teachers
         const teacherAnnouncements = announcements.filter(a => 
             a.target_audience === 'all' || 
-            a.target_audience === 'teachers'
+            a.target_audience === 'teachers' ||
+            (a.target_audience === 'specific_class' && 
+             currentTeacher && 
+             currentTeacher.class_id && 
+             a.target_class_id == currentTeacher.class_id) ||
+            (a.target_audience === 'specific_house' && 
+             currentTeacher && 
+             currentTeacher.house_id && 
+             a.target_house_id == currentTeacher.house_id)
         );
         
         const total = teacherAnnouncements.length;
@@ -112,22 +182,31 @@ class TeacherAnnouncementsViewPage extends App {
         let pinned = 0;
         let highPriority = 0;
         let classAnnouncements = 0;
+        let houseAnnouncements = 0;
         let generalAnnouncements = 0;
         
         teacherAnnouncements.forEach((announcement) => {
             const isActive = Number(announcement.is_active) === 1;
             const isPinned = Number(announcement.is_pinned) === 1;
             const isHighPriority = announcement.priority === 'high';
-            const isClassSpecific = announcement.target_audience === 'specific_class';
+            const isClassSpecific = announcement.target_audience === 'specific_class' && 
+                                  currentTeacher && 
+                                  currentTeacher.class_id && 
+                                  announcement.target_class_id == currentTeacher.class_id;
+            const isHouseSpecific = announcement.target_audience === 'specific_house' && 
+                                  currentTeacher && 
+                                  currentTeacher.house_id && 
+                                  announcement.target_house_id == currentTeacher.house_id;
             
             if (isActive) active += 1;
             if (isPinned) pinned += 1;
             if (isHighPriority) highPriority += 1;
             if (isClassSpecific) classAnnouncements += 1;
+            else if (isHouseSpecific) houseAnnouncements += 1;
             else generalAnnouncements += 1;
         });
         
-        return { total, active, pinned, highPriority, classAnnouncements, generalAnnouncements };
+        return { total, active, pinned, highPriority, classAnnouncements, houseAnnouncements, generalAnnouncements };
     }
 
     // Gradient header with teacher-focused design
@@ -141,19 +220,24 @@ class TeacherAnnouncementsViewPage extends App {
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
                         <div>
                             <div class="flex items-center gap-2">
-                                                             <h1 class="text-2xl sm:text-3xl font-bold">Teacher Announcements</h1>
-                             <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-announcements-info" title="About Teacher Announcements">
-                                 <i class="fas fa-question-circle text-lg"></i>
-                             </button>
-                             <button 
-                                 onclick="this.closest('app-teacher-announcements-view-page').refreshData()"
-                                 class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
-                                 title="Refresh data">
-                                 <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
-                             </button>
-                         </div>
-                         <p class="text-green-100 text-base sm:text-lg">View announcements relevant to you and your class</p>
-                            ${teacher ? `<p class="text-green-200 text-sm mt-1">Teacher: ${teacher.name}</p>` : ''}
+                                <h1 class="text-2xl sm:text-3xl font-bold">Announcements</h1>
+                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-announcements-info" title="About Teacher Announcements">
+                                    <i class="fas fa-question-circle text-lg"></i>
+                                </button>
+                                <button 
+                                    onclick="this.closest('app-teacher-announcements-view-page').loadData()"
+                                    class="size-8 mt-2 flex items-center justify-center text-white/90 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg group"
+                                    title="Refresh data">
+                                    <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
+                                </button>
+                            </div>
+                            <p class="text-green-100 text-base sm:text-lg">Stay updated with important school, class, and house announcements</p>
+                            ${teacher ? `
+                                <div class="flex flex-wrap gap-4 mt-1">
+                                    <p class="text-green-200 text-sm">Class: ${teacher.class_name}</p>
+                                    ${teacher.house_name ? `<p class="text-green-200 text-sm">House: ${teacher.house_name}</p>` : ''}
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -162,7 +246,7 @@ class TeacherAnnouncementsViewPage extends App {
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -209,6 +293,17 @@ class TeacherAnnouncementsViewPage extends App {
                         </div>
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-teal-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-home text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.houseAnnouncements}</div>
+                                    <div class="text-green-100 text-xs sm:text-sm">House Specific</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-indigo-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
                                     <i class="fas fa-school text-white text-lg sm:text-xl"></i>
                                 </div>
@@ -237,7 +332,7 @@ class TeacherAnnouncementsViewPage extends App {
 
     connectedCallback() {
         super.connectedCallback();
-        document.title = 'Teacher Announcements | School System';
+        document.title = 'Announcements | School System';
         this.currentTeacher = this.getCurrentTeacher();
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
@@ -265,36 +360,40 @@ class TeacherAnnouncementsViewPage extends App {
         const dialog = document.createElement('ui-dialog');
         dialog.setAttribute('open', '');
         dialog.innerHTML = `
-                         <div slot="header" class="flex items-center">
-                 <i class="fas fa-bullhorn text-green-500 mr-2"></i>
-                 <span class="font-semibold">About Teacher Announcements</span>
-             </div>
-             <div slot="content" class="space-y-4">
-                 <div>
-                     <h4 class="font-semibold text-gray-900 mb-2">What are Teacher Announcements?</h4>
-                     <p class="text-gray-700">View announcements relevant to you as a teacher, including your own announcements and those for your class.</p>
-                 </div>
-                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                     <div class="flex justify-between">
-                         <span class="text-sm font-medium">Your Announcements</span>
-                         <span class="text-sm text-gray-600">Announcements you created</span>
-                     </div>
-                     <div class="flex justify-between">
-                         <span class="text-sm font-medium">Class Announcements</span>
-                         <span class="text-sm text-gray-600">Specific to your assigned class</span>
-                     </div>
-                     <div class="flex justify-between">
-                         <span class="text-sm font-medium">General Announcements</span>
-                         <span class="text-sm text-gray-600">For all teachers and staff</span>
-                     </div>
-                 </div>
-                 <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                     <p class="text-sm text-blue-800">
-                         <i class="fas fa-info-circle mr-1"></i>
-                         This page shows announcements relevant to you. To manage your own announcements, use the "My Announcements" page.
-                     </p>
-                 </div>
-             </div>
+            <div slot="header" class="flex items-center">
+                <i class="fas fa-bullhorn text-green-500 mr-2"></i>
+                <span class="font-semibold">About Teacher Announcements</span>
+            </div>
+            <div slot="content" class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">What are Teacher Announcements?</h4>
+                    <p class="text-gray-700">Stay informed about important school updates, class activities, house events, and general information.</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Class Announcements</span>
+                        <span class="text-sm text-gray-600">Specific to your assigned class</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">House Announcements</span>
+                        <span class="text-sm text-gray-600">Specific to your assigned house (if house master)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">General Announcements</span>
+                        <span class="text-sm text-gray-600">For all teachers in the school</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Priority Levels</span>
+                        <span class="text-sm text-gray-600">Normal, High, Urgent</span>
+                    </div>
+                </div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Pinned announcements appear at the top. High priority announcements are highlighted for your attention.
+                    </p>
+                </div>
+            </div>
             <div slot="footer" class="flex justify-end">
                 <ui-button color="primary" onclick="this.closest('ui-dialog').close()">Got it</ui-button>
             </div>
@@ -318,7 +417,35 @@ class TeacherAnnouncementsViewPage extends App {
                 return;
             }
 
-            // Load teacher announcements data using teacher-specific endpoint
+            // Load teacher house information if not available in user data
+            const currentTeacher = this.getCurrentTeacher();
+            if (!currentTeacher?.house_id) {
+                try {
+                    const houseResponse = await api.withToken(token).get('/teachers/my-house');
+                    if (houseResponse?.data?.success && houseResponse.data.data) {
+                        const houseData = houseResponse.data.data;
+                        // Update the teacher data with house information
+                        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                        userData.profileData = userData.profileData || {};
+                        userData.profileData.house_id = houseData.house_id;
+                        userData.profileData.house_name = houseData.house_name;
+                        userData.profileData.house_description = houseData.house_description;
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                        
+                        // Update current teacher data
+                        this.currentTeacher = {
+                            ...currentTeacher,
+                            house_id: houseData.house_id,
+                            house_name: houseData.house_name,
+                            house_description: houseData.house_description
+                        };
+                    }
+                } catch (houseError) {
+                    console.log('No house assigned to teacher or error loading house data:', houseError);
+                }
+            }
+
+            // Load teacher announcements data
             const response = await api.withToken(token).get('/teacher/announcements');
             const rawAnnouncements = response?.data?.data || [];
             
@@ -354,33 +481,13 @@ class TeacherAnnouncementsViewPage extends App {
         }
     }
 
-    // Refresh data method for the refresh button
-    async refreshData() {
-        try {
-            await this.loadData();
-            Toast.show({
-                title: 'Success',
-                message: 'Data refreshed successfully',
-                variant: 'success',
-                duration: 2000
-            });
-        } catch (error) {
-            console.error('Error refreshing data:', error);
-            Toast.show({
-                title: 'Error',
-                message: 'Failed to refresh data',
-                variant: 'error',
-                duration: 3000
-            });
-        }
-    }
-
     // Render announcement card with proper labeling
     renderAnnouncementCard(announcement, index) {
         const isPinned = Number(announcement.is_pinned) === 1;
         const isHighPriority = announcement.priority === 'high';
         const isUrgent = announcement.priority === 'urgent';
         const isClassSpecific = announcement.target_audience === 'specific_class';
+        const isHouseSpecific = announcement.target_audience === 'specific_house';
         
         // Priority badge styling
         let priorityBadge = '';
@@ -391,8 +498,19 @@ class TeacherAnnouncementsViewPage extends App {
         }
         
         // Audience label
-        const audienceLabel = isClassSpecific ? 'Class Announcement' : 'All Users';
-        const audienceColor = isClassSpecific ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
+        let audienceLabel = 'All Teachers';
+        let audienceColor = 'bg-blue-100 text-blue-800';
+        let audienceIcon = 'fa-school';
+        
+        if (isClassSpecific) {
+            audienceLabel = 'Class Announcement';
+            audienceColor = 'bg-purple-100 text-purple-800';
+            audienceIcon = 'fa-users';
+        } else if (isHouseSpecific) {
+            audienceLabel = 'House Announcement';
+            audienceColor = 'bg-teal-100 text-teal-800';
+            audienceIcon = 'fa-home';
+        }
         
         // Status indicator
         const statusColor = Number(announcement.is_active) === 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
@@ -415,7 +533,7 @@ class TeacherAnnouncementsViewPage extends App {
                         </div>
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${audienceColor}">
-                                <i class="fas ${isClassSpecific ? 'fa-users' : 'fa-school'} mr-1"></i>
+                                <i class="fas ${audienceIcon} mr-1"></i>
                                 ${audienceLabel}
                             </span>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
@@ -438,7 +556,7 @@ class TeacherAnnouncementsViewPage extends App {
                 <div class="mt-4 pt-4 border-t border-gray-200">
                     <div class="flex items-center justify-between text-sm text-gray-500">
                         <div class="text-left">
-                            <span>By: <span class="font-medium text-gray-700">${announcement.creator_name || 'Unknown'}</span></span>
+                            <span>By: <span class="font-medium text-gray-700">${this.formatCreatorName(announcement)}</span></span>
                         </div>
                         <div class="text-right">
                             <div>Created: ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : 'N/A'}</div>
@@ -483,7 +601,8 @@ class TeacherAnnouncementsViewPage extends App {
             'academic': 'fa-graduation-cap',
             'events': 'fa-calendar-alt',
             'reminders': 'fa-bell',
-            'emergency': 'fa-exclamation-triangle'
+            'emergency': 'fa-exclamation-triangle',
+            'my_house': 'fa-home'
         };
         return icons[type] || 'fa-bullhorn';
     }
@@ -496,7 +615,8 @@ class TeacherAnnouncementsViewPage extends App {
             'academic': 'Academic',
             'events': 'Events',
             'reminders': 'Reminders',
-            'emergency': 'Emergency'
+            'emergency': 'Emergency',
+            'my_house': 'My House'
         };
         return labels[type] || 'General';
     }
@@ -553,10 +673,16 @@ class TeacherAnnouncementsViewPage extends App {
                                     <i class="fas fa-bell text-amber-600 text-lg lg:text-base"></i>
                                     <span class="hidden lg:inline ml-1 font-medium">Reminders (${tabCounts.reminders})</span>
                                 </ui-tab>
-                                 <ui-tab value="emergency">
-                                     <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
-                                     <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
-                                 </ui-tab>
+                                <ui-tab value="emergency">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
+                                    <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
+                                </ui-tab>
+                                ${this.getCurrentTeacher()?.house_id ? `
+                                    <ui-tab value="my_house">
+                                        <i class="fas fa-home text-teal-600 text-lg lg:text-base"></i>
+                                        <span class="hidden lg:inline ml-1 font-medium">My House (${tabCounts.my_house})</span>
+                                    </ui-tab>
+                                ` : ''}
                             </ui-tab-list>
                             
                             <!-- Pinned Tab -->
@@ -584,10 +710,17 @@ class TeacherAnnouncementsViewPage extends App {
                                 ${this.renderTabContent('reminders', announcements)}
                             </ui-tab-panel>
                             
-                                                         <!-- Emergency Tab -->
-                             <ui-tab-panel value="emergency">
-                                 ${this.renderTabContent('emergency', announcements)}
-                             </ui-tab-panel>
+                            <!-- Emergency Tab -->
+                            <ui-tab-panel value="emergency">
+                                ${this.renderTabContent('emergency', announcements)}
+                            </ui-tab-panel>
+                            
+                            <!-- My House Tab (only show if teacher has a house) -->
+                            ${this.getCurrentTeacher()?.house_id ? `
+                                <ui-tab-panel value="my_house">
+                                    ${this.renderTabContent('my_house', announcements)}
+                                </ui-tab-panel>
+                            ` : ''}
                         </ui-tabs>
                     </div>
                 </div>

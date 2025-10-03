@@ -3682,7 +3682,7 @@ class TeacherController {
 
     /**
      * Get announcements for teacher (teacher only)
-     * Teachers can see announcements they created and announcements relevant to their class
+     * Teachers can see announcements they created, announcements relevant to their class, and house-specific announcements if they are a house master
      */
     public function getMyAnnouncements() {
         try {
@@ -3716,15 +3716,42 @@ class TeacherController {
             // 1. Announcements they created
             // 2. Announcements for their class
             // 3. General announcements (all, teachers)
+            // 4. House-specific announcements if they are a house master
             $teacherConditions = [
                 'created_by = ?', // Their own announcements
                 'target_audience = "all"', // General announcements
                 'target_audience = "teachers"', // Teacher-specific announcements
-                '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
+                '(target_audience = "specific_class" AND target_class_id = ?)', // Their class announcements
+                '(target_audience = "specific_house" AND target_house_id = ?)' // Their house announcements
             ];
             $conditions[] = '(' . implode(' OR ', $teacherConditions) . ')';
             $params[] = $teacher['user_id']; // created_by
             $params[] = $teacher['class_id']; // target_class_id
+            
+            // Get teacher's house ID from house_teachers table
+            $houseId = null;
+            try {
+                require_once __DIR__ . '/../models/HouseModel.php';
+                $houseModel = new HouseModel($this->pdo);
+                $house = $houseModel->getHouseByTeacher($teacher['id']);
+                if ($house) {
+                    $houseId = $house['id'];
+                }
+            } catch (Exception $e) {
+                // If error getting house, continue without house-specific announcements
+                error_log('Error getting teacher house: ' . $e->getMessage());
+            }
+            
+            if ($houseId) {
+                $params[] = $houseId; // target_house_id
+            } else {
+                // If no house ID, remove house-specific condition
+                $teacherConditions = array_filter($teacherConditions, function($condition) {
+                    return !str_contains($condition, 'specific_house');
+                });
+                $conditions = array_slice($conditions, 0, -1); // Remove the last condition
+                $conditions[] = '(' . implode(' OR ', $teacherConditions) . ')';
+            }
             
             $where = '';
             if (!empty($conditions)) {

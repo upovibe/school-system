@@ -302,6 +302,11 @@ class TeacherDashboardPage extends App {
                 <div class="font-medium">My Class Grades</div>
                 <div class="text-xs opacity-90">View & update</div>
               </a>
+              <a href="/dashboard/teacher/announcements-view" class="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-bullhorn text-xl mb-2 block"></i>
+                <div class="font-medium">View Announcements</div>
+                <div class="text-xs opacity-90">Read announcements</div>
+              </a>
               <a href="/dashboard/profile" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
                 <i class="fas fa-user text-xl mb-2 block"></i>
                 <div class="font-medium">My Profile</div>

@@ -1053,6 +1053,45 @@ class StudentController {
     }
 
     /**
+     * Get current student's house information (student only)
+     */
+    public function getCurrentHouse() {
+        try {
+            // Require student authentication and validation
+            global $pdo;
+            StudentMiddleware::requireStudent($pdo);
+            
+            // Student info is now available from middleware
+            $student = $_REQUEST['current_student'];
+            
+            // Extract house information from student data
+            $houseInfo = null;
+            
+            if (!empty($student['house_id'])) {
+                $houseInfo = [
+                    'id' => $student['house_id'],
+                    'name' => $student['house_name'],
+                    'description' => $student['house_description']
+                ];
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $houseInfo,
+                'message' => $houseInfo ? 'Current house retrieved successfully' : 'No house assigned'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving current house: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get current student's personal information (student only)
      */
     public function getPersonalInfo() {

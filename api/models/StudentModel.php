@@ -57,10 +57,16 @@ class StudentModel extends BaseModel {
      */
     public function findByStudentId($studentId) {
         try {
-            $stmt = $this->pdo->prepare("
-                SELECT * FROM {$this->getTableName()} 
-                WHERE student_id = ?
-            ");
+            $query = "SELECT s.*, c.id as class_id, c.name as class_name, c.section as class_section, 
+                            c.academic_year_id, ay.year_code as class_academic_year, ay.display_name as class_academic_year_display,
+                            h.id as house_id, h.name as house_name, h.description as house_description
+                     FROM students s
+                     LEFT JOIN classes c ON s.current_class_id = c.id
+                     LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
+                     LEFT JOIN houses h ON s.house_id = h.id
+                     WHERE s.student_id = ?";
+            
+            $stmt = $this->pdo->prepare($query);
             $stmt->execute([$studentId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -515,10 +521,12 @@ class StudentModel extends BaseModel {
     public function findByUserId($userId) {
         try {
             $query = "SELECT s.*, c.id as class_id, c.name as class_name, c.section as class_section, 
-                            c.academic_year_id, ay.year_code as class_academic_year, ay.display_name as class_academic_year_display
+                            c.academic_year_id, ay.year_code as class_academic_year, ay.display_name as class_academic_year_display,
+                            h.id as house_id, h.name as house_name, h.description as house_description
                      FROM students s
                      LEFT JOIN classes c ON s.current_class_id = c.id
                      LEFT JOIN academic_years ay ON c.academic_year_id = ay.id
+                     LEFT JOIN houses h ON s.house_id = h.id
                      WHERE s.user_id = :user_id
                      LIMIT 1";
 

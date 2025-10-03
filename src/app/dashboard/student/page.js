@@ -22,6 +22,7 @@ class StudentDashboardPage extends App {
         this.set('loading', true);
         this.set('currentUser', null);
         this.set('classData', null);
+        this.set('houseData', null);
         this.set('gradesData', null);
         this.set('assignmentsData', null);
         this.set('financeData', null);
@@ -77,11 +78,12 @@ class StudentDashboardPage extends App {
                 requests.push(Promise.resolve(null));
             }
             requests.push(api.withToken(token).get('/students/current-class').catch(() => null));
+            requests.push(api.withToken(token).get('/students/current-house').catch(() => null));
             requests.push(api.withToken(token).get('/student/my-grades').catch(() => ({ data: { data: [] } })));
             requests.push(api.withToken(token).get('/students/my-assignments').catch(() => ({ data: { data: [] } })));
             requests.push(api.withToken(token).get('/student/finance/summary').catch(() => ({ data: { data: null } })));
 
-            const [userResp, classResp, gradesResp, assignmentsResp, financeResp] = await Promise.all(requests);
+            const [userResp, classResp, houseResp, gradesResp, assignmentsResp, financeResp] = await Promise.all(requests);
 
             if (userResp?.data) {
                 this.set('currentUser', userResp.data);
@@ -93,6 +95,12 @@ class StudentDashboardPage extends App {
                 this.set('classData', classResp.data.data);
             } else {
                 this.set('classData', null);
+            }
+
+            if (houseResp?.data?.success) {
+                this.set('houseData', houseResp.data.data);
+            } else {
+                this.set('houseData', null);
             }
 
             this.set('gradesData', gradesResp?.data?.data || []);
@@ -121,9 +129,10 @@ class StudentDashboardPage extends App {
                 <span class="font-semibold">About Student Dashboard</span>
             </div>
             <div slot="content" class="space-y-4">
-                <p class="text-gray-700">Overview of your class info, grades, assignments, achievements and level.</p>
+                <p class="text-gray-700">Overview of your class info, house info, grades, assignments, achievements and level.</p>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-2">
                     <div class="flex justify-between"><span class="text-sm font-medium">Class Info</span><span class="text-sm text-gray-600">Your class, section, academic year</span></div>
+                    <div class="flex justify-between"><span class="text-sm font-medium">House Info</span><span class="text-sm text-gray-600">Your boarding house and description</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Performance</span><span class="text-sm text-gray-600">Average grade and subject counts</span></div>
                     <div class="flex justify-between"><span class="text-sm font-medium">Assignments</span><span class="text-sm text-gray-600">Pending, submitted, graded</span></div>
                 </div>
@@ -534,6 +543,7 @@ class StudentDashboardPage extends App {
         const loading = this.get('loading');
         const currentUser = this.get('currentUser');
         const classData = this.get('classData');
+        const houseData = this.get('houseData');
         const userName = (currentUser && (
             currentUser.name ||
             currentUser.full_name ||
@@ -543,6 +553,7 @@ class StudentDashboardPage extends App {
             currentUser.displayName
         )) || null;
         const classInfo = classData?.class || {};
+        const houseInfo = houseData || {};
         const gradeStats = this.calculateGradeStats();
         const assignmentStats = this.calculateAssignmentStats();
         const financeStats = this.calculateFinanceStats();
@@ -588,18 +599,37 @@ class StudentDashboardPage extends App {
                         </div>
                 </div>
 
-                    ${classInfo.name ? `
-                        <!-- Class Information -->
-                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 w-full border border-white border-opacity-20">
-                        <div class="flex items-center">
-                                <div class="size-12 flex items-center justify-center bg-blue-500 rounded-lg mr-4 flex-shrink-0">
-                                    <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    ${(classInfo.name || houseInfo.name) ? `
+                        <!-- Class and House Information Row -->
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            ${classInfo.name ? `
+                                <!-- Class Information -->
+                                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 flex-1 border border-white border-opacity-20">
+                                    <div class="flex items-center h-full px-4">
+                                        <div class="size-12 flex items-center justify-center bg-blue-500 rounded-lg mr-4 flex-shrink-0">
+                                            <i class="fas fa-graduation-cap text-white text-xl"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-lg font-semibold">${classInfo.name} ${classInfo.section}</div>
+                                            <div class="text-blue-100 text-sm">Academic Year: ${classInfo.academic_year}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-lg font-semibold">${classInfo.name} ${classInfo.section}</div>
-                                    <div class="text-blue-100 text-sm">Academic Year: ${classInfo.academic_year}</div>
+                            ` : ''}
+                            ${houseInfo.name ? `
+                                <!-- House Information -->
+                                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg h-14 flex-1 border border-white border-opacity-20">
+                                    <div class="flex items-center h-full px-4">
+                                        <div class="size-12 flex items-center justify-center mr-4 flex-shrink-0">
+                                            <i class="fas fa-home text-white text-xl"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-lg font-semibold">${houseInfo.name}</div>
+                                            <div class="text-blue-100 text-sm">${houseInfo.description || 'Boarding House'}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>

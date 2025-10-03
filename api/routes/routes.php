@@ -258,6 +258,7 @@ Router::get('/students/by-house', 'StudentController@getByHouse');
 Router::get('/students/boarding', 'StudentController@getBoardingStudents');
 Router::get('/students/house-statistics', 'StudentController@getHouseStatistics');
 Router::get('/students/current-class', 'StudentController@getCurrentClass');
+Router::get('/students/current-house', 'StudentController@getCurrentHouse');
 Router::get('/students/personal-info', 'StudentController@getPersonalInfo');
 Router::get('/students/gender-statistics', 'StudentController@getGenderStatistics');
 

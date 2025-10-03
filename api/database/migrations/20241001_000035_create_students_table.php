@@ -24,6 +24,7 @@ class Migration_20241001000035createstudentstable {
                 current_class_id INT,
                 student_type ENUM('Day','Boarding') NOT NULL DEFAULT 'Day',
                 house_id INT NULL,
+                passport_photo VARCHAR(255) NULL,
                 parent_name VARCHAR(100),
                 parent_phone VARCHAR(20),
                 parent_email VARCHAR(255),

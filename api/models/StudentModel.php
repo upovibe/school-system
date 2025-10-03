@@ -21,6 +21,7 @@ class StudentModel extends BaseModel {
         'current_class_id',
         'student_type',
         'house_id',
+        'passport_photo',
         'parent_name',
         'parent_phone',
         'parent_email',

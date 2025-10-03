@@ -130,11 +130,11 @@ class StudentSeeder
         $stmt = $this->pdo->prepare('
             INSERT INTO students (
                 user_id, student_id, first_name, last_name, email, phone, address, 
-                date_of_birth, gender, admission_date, current_class_id, student_type, house_id, parent_name, 
+                date_of_birth, gender, admission_date, current_class_id, student_type, house_id, passport_photo, parent_name, 
                 parent_phone, parent_email, emergency_contact, emergency_phone, 
                 blood_group, medical_conditions, password, status, created_at, updated_at
             ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
         
         $stmt->execute([
@@ -151,6 +151,7 @@ class StudentSeeder
             $classId,
             ($studentData['student_type'] ?? 'Day'),
             $houseId,
+            null, // passport_photo - will be uploaded later
             $studentData['parent_name'],
             $studentData['parent_phone'],
             $studentData['parent_email'],

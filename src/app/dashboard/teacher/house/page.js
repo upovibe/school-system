@@ -205,53 +205,6 @@ class TeacherHousePage extends App {
                             </ui-button>
                         </div>
                     </div>
-
-                    <!-- Information Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- What This Means -->
-                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
-                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fas fa-info-circle text-orange-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">What This Means</h3>
-                            <p class="text-gray-600 text-sm">You haven't been assigned as a house master to any specific house yet. This usually happens when:</p>
-                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
-                                <li>• You're a new teacher</li>
-                                <li>• House assignments are pending</li>
-                                <li>• You're between house assignments</li>
-                            </ul>
-                        </div>
-
-                        <!-- What You Can Do -->
-                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
-                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fas fa-lightbulb text-green-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">What You Can Do</h3>
-                            <p class="text-gray-600 text-sm">While waiting for house assignment:</p>
-                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
-                                <li>• Update your profile information</li>
-                                <li>• Review teaching materials</li>
-                                <li>• Contact administration</li>
-                                <li>• Check other dashboard features</li>
-                            </ul>
-                        </div>
-
-                        <!-- Next Steps -->
-                        <div class="bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-xl p-6 border border-gray-100">
-                            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fas fa-arrow-right text-amber-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Next Steps</h3>
-                            <p class="text-gray-600 text-sm">To get assigned to a house:</p>
-                            <ul class="text-gray-600 text-sm mt-3 space-y-1">
-                                <li>• Contact your department head</li>
-                                <li>• Check with administration</li>
-                                <li>• Wait for semester planning</li>
-                                <li>• Refresh this page regularly</li>
-                            </ul>
-                        </div>
-                    </div>
                 </div>
             `;
         }

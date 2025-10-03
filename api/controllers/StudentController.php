@@ -71,12 +71,14 @@ class StudentController {
             // Handle multipart form data or JSON data
             $data = [];
             $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $data = $_POST;
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
                 // Fall back to JSON
-                $rawData = file_get_contents('php://input');
                 $data = json_decode($rawData, true) ?? [];
             }
             
@@ -222,8 +224,24 @@ class StudentController {
                 }
             }
             
+            // Filter data to only include valid student fields
+            $validStudentFields = [
+                'user_id', 'student_id', 'first_name', 'last_name', 'email', 'phone', 'address',
+                'date_of_birth', 'gender', 'admission_date', 'current_class_id', 'student_type',
+                'house_id', 'parent_name', 'parent_phone', 'parent_email', 'emergency_contact',
+                'emergency_phone', 'blood_group', 'medical_conditions', 'password', 'status',
+                'passport_photo', 'updated_at'
+            ];
+            
+            $studentData = [];
+            foreach ($data as $key => $value) {
+                if (in_array($key, $validStudentFields)) {
+                    $studentData[$key] = $value;
+                }
+            }
+            
             // Create student with user account
-            $result = $this->studentModel->createStudentWithUser($data);
+            $result = $this->studentModel->createStudentWithUser($studentData);
             
             // Log the action
             $this->logAction('create', 'Student created successfully', [
@@ -295,12 +313,14 @@ class StudentController {
             // Handle multipart form data or JSON data
             $data = [];
             $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+            $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $data = $_POST;
+                $parsed = MultipartFormParser::parse($rawData, $content_type);
+                $data = $parsed['data'] ?? [];
+                $_FILES = $parsed['files'] ?? [];
             } else {
                 // Fall back to JSON
-                $rawData = file_get_contents('php://input');
                 $data = json_decode($rawData, true) ?? [];
             }
             
@@ -414,8 +434,24 @@ class StudentController {
                 }
             }
             
+            // Filter data to only include valid student fields
+            $validStudentFields = [
+                'user_id', 'student_id', 'first_name', 'last_name', 'email', 'phone', 'address',
+                'date_of_birth', 'gender', 'admission_date', 'current_class_id', 'student_type',
+                'house_id', 'parent_name', 'parent_phone', 'parent_email', 'emergency_contact',
+                'emergency_phone', 'blood_group', 'medical_conditions', 'password', 'status',
+                'passport_photo', 'updated_at'
+            ];
+            
+            $studentData = [];
+            foreach ($data as $key => $value) {
+                if (in_array($key, $validStudentFields)) {
+                    $studentData[$key] = $value;
+                }
+            }
+            
             // Update student with user account
-            $this->studentModel->updateStudentWithUser($id, $data);
+            $this->studentModel->updateStudentWithUser($id, $studentData);
             
             // Log the action
             $this->logAction('update', 'Student updated successfully', [

@@ -19,7 +19,9 @@ function uploadStudentPassport($file) {
             'medium' => [200, 200],  // Medium for cards
             'large' => [400, 400]    // Large for profile views
         ],
-        'allowed_types' => ['jpg', 'jpeg', 'png', 'webp'],
+        'allowed_types' => [
+            'images' => ['jpg', 'jpeg', 'png', 'webp']
+        ],
         'aspect_ratio' => 'square' // Force square aspect ratio for passport photos
     ];
     

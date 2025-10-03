@@ -898,6 +898,62 @@ class TeacherController {
     }
 
     /**
+     * Get current teacher's assigned house (teacher only)
+     */
+    public function getMyHouse() {
+        try {
+            // Require teacher authentication
+            global $pdo;
+            require_once __DIR__ . '/../middlewares/TeacherMiddleware.php';
+            TeacherMiddleware::requireTeacher($pdo);
+            
+            // Get current teacher from middleware
+            $teacher = $_REQUEST['current_teacher'];
+            
+            // Check if teacher has an assigned house
+            require_once __DIR__ . '/../models/HouseModel.php';
+            $houseModel = new HouseModel($pdo);
+            $house = $houseModel->getHouseByTeacher($teacher['id']);
+            
+            if (!$house) {
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'data' => null,
+                    'message' => 'No house assigned to this teacher'
+                ]);
+                return;
+            }
+
+            // Get students in this house
+            require_once __DIR__ . '/../models/StudentModel.php';
+            $studentModel = new StudentModel($pdo);
+            $students = $studentModel->getStudentsByHouse($house['id']);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'teacher_id' => $teacher['id'],
+                    'teacher_name' => $teacher['first_name'] . ' ' . $teacher['last_name'],
+                    'house_id' => $house['id'],
+                    'house_name' => $house['name'],
+                    'house_description' => $house['description'],
+                    'students' => $students,
+                    'student_count' => count($students)
+                ],
+                'message' => 'Teacher house retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error retrieving teacher house: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get current teacher's assignments (teacher only)
      */
     public function getMyAssignments() {

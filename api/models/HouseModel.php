@@ -275,5 +275,24 @@ class HouseModel extends BaseModel {
             throw new Exception('Error checking teacher assignment: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get house assigned to a specific teacher
+     */
+    public function getHouseByTeacher($teacherId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT h.* 
+                FROM houses h
+                INNER JOIN house_teachers ht ON h.id = ht.house_id
+                WHERE ht.teacher_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$teacherId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching house by teacher: ' . $e->getMessage());
+        }
+    }
 }
 ?>

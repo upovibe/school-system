@@ -217,6 +217,7 @@ Router::get('/teachers/gender-statistics', 'TeacherController@getGenderStatistic
 Router::get('/teachers/class-teachers', 'TeacherController@getClassTeachers');
 Router::get('/teachers/available-classes', 'TeacherController@getAvailableClasses');
 Router::get('/teachers/my-class', 'TeacherController@getMyClass');
+Router::get('/teachers/my-house', 'TeacherController@getMyHouse');
 Router::get('/teachers/my-assignments', 'TeacherController@getMyAssignments');
 Router::get('/teachers/my-class-assignments', 'TeacherController@getMyClassAssignments');
 Router::get('/teachers/debug-assignments', 'TeacherController@debugTeacherAssignments');

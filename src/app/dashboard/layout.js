@@ -336,6 +336,7 @@ class DashboardLayout extends App {
                     group: 'Teaching',
                     items: [
                         { label: 'My Class', icon: 'fas fa-chalkboard', href: '/dashboard/teacher/class' },
+                        { label: 'My House', icon: 'fas fa-home', href: '/dashboard/teacher/house' },
                         { label: 'My Classes & Subjects', icon: 'fas fa-calendar-alt', href: '/dashboard/teacher/class-subjects' },
                         { label: 'My Class Assignments', icon: 'fas fa-tasks', href: '/dashboard/teacher/assignments' },
                         { label: 'Grade Students', icon: 'fas fa-graduation-cap', href: '/dashboard/teacher/student-grades' },
@@ -447,6 +448,7 @@ class DashboardLayout extends App {
             'receipts': 'Receipts',
             // Teacher specific
             'class': 'My Class',
+            'house': 'My House',
             // Student specific
             'class': 'My Class',
             // Cashier specific

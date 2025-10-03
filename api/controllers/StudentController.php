@@ -71,19 +71,19 @@ class StudentController {
             // Handle multipart form data or JSON data
             $data = [];
             $content_type = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
-            $rawData = file_get_contents('php://input');
 
             if (strpos($content_type, 'multipart/form-data') !== false) {
-                $parsed = MultipartFormParser::parse($rawData, $content_type);
-                $data = $parsed['data'] ?? [];
-                $_FILES = $parsed['files'] ?? [];
+                // For store method, use simple $_POST approach that was working before
+                $data = $_POST;
             } else {
                 // Fall back to JSON
+                $rawData = file_get_contents('php://input');
                 $data = json_decode($rawData, true) ?? [];
             }
             
             // Validate required fields
-            if (empty($data['student_id'])) {
+            if (!isset($data['student_id']) || trim($data['student_id']) === '') {
+                error_log("Student ID validation failed - student_id: " . ($data['student_id'] ?? 'NOT_SET'));
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -91,6 +91,7 @@ class StudentController {
                 ]);
                 return;
             }
+            
 
             if (empty($data['first_name'])) {
                 http_response_code(400);
@@ -224,13 +225,13 @@ class StudentController {
                 }
             }
             
-            // Filter data to only include valid student fields
+            // Filter data to only include valid student fields (exclude passport_photo as it's handled separately)
             $validStudentFields = [
                 'user_id', 'student_id', 'first_name', 'last_name', 'email', 'phone', 'address',
                 'date_of_birth', 'gender', 'admission_date', 'current_class_id', 'student_type',
                 'house_id', 'parent_name', 'parent_phone', 'parent_email', 'emergency_contact',
                 'emergency_phone', 'blood_group', 'medical_conditions', 'password', 'status',
-                'passport_photo', 'updated_at'
+                'updated_at'
             ];
             
             $studentData = [];
@@ -240,8 +241,15 @@ class StudentController {
                 }
             }
             
+            
             // Create student with user account
             $result = $this->studentModel->createStudentWithUser($studentData);
+            
+            // Handle passport photo upload after student creation
+            if ($passportData && $passportData['original']) {
+                // Update student with passport photo path
+                $this->studentModel->update($result['student_id'], ['passport_photo' => $passportData['original']]);
+            }
             
             // Log the action
             $this->logAction('create', 'Student created successfully', [

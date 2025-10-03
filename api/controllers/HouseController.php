@@ -373,7 +373,7 @@ class HouseController {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Teacher is already assigned to ' . $existingHouse['name'] . '.'
+                    'message' => 'Teacher(s) is already assigned to ' . $existingHouse['name'] . '.'
                 ]);
                 return;
             }

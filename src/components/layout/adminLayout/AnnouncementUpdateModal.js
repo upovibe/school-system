@@ -146,7 +146,24 @@ class AnnouncementUpdateModal extends HTMLElement {
         }
 
         // Handle target class and house field visibility and population
-        this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
+        // First, ensure the target audience dropdown has the correct value
+        if (targetAudienceDropdown) {
+            targetAudienceDropdown.value = this.announcementData.target_audience || 'all';
+            // Also set the attribute to ensure the component recognizes the value
+            targetAudienceDropdown.setAttribute('value', this.announcementData.target_audience || 'all');
+            
+            // Force the component to re-render by dispatching a custom event
+            targetAudienceDropdown.dispatchEvent(new CustomEvent('value-changed', {
+                detail: { value: this.announcementData.target_audience || 'all' },
+                bubbles: true,
+                composed: true
+            }));
+        }
+        
+        // Use a small timeout to ensure the target audience value is properly set before handling field visibility
+        setTimeout(() => {
+            this.handleTargetAudienceChange({ target: { value: this.announcementData.target_audience } });
+        }, 50);
         
         // If targeting specific class, populate the class dropdown and set the correct display value
         if (this.announcementData.target_audience === 'specific_class' && this.announcementData.target_class_id) {

@@ -270,7 +270,8 @@ class TeacherDashboardPage extends App {
         ${loading ? `
           <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
               <ui-skeleton class="h-28 w-full"></ui-skeleton>
@@ -280,11 +281,16 @@ class TeacherDashboardPage extends App {
         ` : `
           <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <a href="/dashboard/teacher/class" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
                 <i class="fas fa-chalkboard text-xl mb-2 block"></i>
                 <div class="font-medium">My Class</div>
                 <div class="text-xs opacity-90">View students & subjects</div>
+              </a>
+              <a href="/dashboard/teacher/house" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
+                <i class="fas fa-home text-xl mb-2 block"></i>
+                <div class="font-medium">My House</div>
+                <div class="text-xs opacity-90">View house students</div>
               </a>
               <a href="/dashboard/teacher/assignments" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg text-center transition-all duration-200 transform hover:scale-105 shadow-md">
                 <i class="fas fa-tasks text-xl mb-2 block"></i>

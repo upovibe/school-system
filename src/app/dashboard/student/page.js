@@ -625,7 +625,7 @@ class StudentDashboardPage extends App {
                                         </div>
                                         <div class="min-w-0 flex-1">
                                             <div class="text-lg font-semibold">${houseInfo.name}</div>
-                                            <div class="text-blue-100 text-sm">${houseInfo.description || 'Boarding House'}</div>
+                                            <div class="text-blue-100 text-sm truncate" title="${houseInfo.description || 'Boarding House'}">${houseInfo.description || 'Boarding House'}</div>
                                         </div>
                                     </div>
                                 </div>

@@ -113,6 +113,14 @@ class StudentUpdateDialog extends HTMLElement {
             // Set passport photo if available
             if (passportFileUpload && student?.passport_photo) {
                 passportFileUpload.setValue(student.passport_photo);
+                // Also set the value attribute to ensure it's displayed
+                passportFileUpload.setAttribute('value', student.passport_photo);
+                // Trigger change event to refresh the display
+                passportFileUpload.dispatchEvent(new Event('change'));
+                // Force refresh the component
+                if (passportFileUpload.updateFileList) {
+                    passportFileUpload.updateFileList();
+                }
             }
             
             if (classDropdown && student?.current_class_id) {

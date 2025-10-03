@@ -15,8 +15,9 @@ class Migration_20241001000074createannouncementstable {
                 content LONGTEXT NOT NULL,
                 announcement_type ENUM('general', 'academic', 'event', 'reminder', 'emergency', 'financial', 'payment', 'fee', 'billing') DEFAULT 'general',
                 priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
-                target_audience ENUM('all', 'students', 'teachers', 'admin', 'cashier', 'specific_class') DEFAULT 'all',
+                target_audience ENUM('all', 'students', 'teachers', 'admin', 'cashier', 'specific_class', 'specific_house') DEFAULT 'all',
                 target_class_id INT NULL,
+                target_house_id INT NULL,
                 is_active BOOLEAN DEFAULT 1,
                 is_pinned BOOLEAN DEFAULT 0,
                 expires_at TIMESTAMP NULL,
@@ -27,12 +28,14 @@ class Migration_20241001000074createannouncementstable {
                 INDEX idx_priority (priority),
                 INDEX idx_target_audience (target_audience),
                 INDEX idx_target_class_id (target_class_id),
+                INDEX idx_target_house_id (target_house_id),
                 INDEX idx_is_active (is_active),
                 INDEX idx_is_pinned (is_pinned),
                 INDEX idx_expires_at (expires_at),
                 INDEX idx_created_by (created_by),
                 INDEX idx_created_at (created_at),
                 FOREIGN KEY (target_class_id) REFERENCES classes(id) ON DELETE SET NULL,
+                FOREIGN KEY (target_house_id) REFERENCES houses(id) ON DELETE SET NULL,
                 FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
             )
         ");

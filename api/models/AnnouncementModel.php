@@ -14,6 +14,7 @@ class AnnouncementModel extends BaseModel {
         'priority',
         'target_audience',
         'target_class_id',
+        'target_house_id',
         'is_active',
         'is_pinned',
         'expires_at',
@@ -23,6 +24,7 @@ class AnnouncementModel extends BaseModel {
     // Fields that should be cast to specific types
     protected static $casts = [
         'target_class_id' => 'integer',
+        'target_house_id' => 'integer',
         'created_by' => 'integer',
         'is_active' => 'boolean',
         'is_pinned' => 'boolean',
@@ -41,7 +43,7 @@ class AnnouncementModel extends BaseModel {
     /**
      * Get active announcements for a specific audience
      */
-    public function getActiveAnnouncements($audience = 'all', $classId = null, $limit = null) {
+    public function getActiveAnnouncements($audience = 'all', $classId = null, $houseId = null, $limit = null) {
         try {
             $sql = "
                 SELECT 
@@ -49,11 +51,14 @@ class AnnouncementModel extends BaseModel {
                     u.name as creator_name,
                     r.name as creator_role,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.is_active = 1 
                 AND (a.expires_at IS NULL OR a.expires_at > NOW())
             ";
@@ -67,6 +72,11 @@ class AnnouncementModel extends BaseModel {
                     $params[] = $classId;
                 } elseif ($audience === 'specific_class') {
                     $sql .= " AND a.target_audience = 'specific_class'";
+                } elseif ($audience === 'specific_house' && $houseId) {
+                    $sql .= " AND (a.target_audience = 'specific_house' AND a.target_house_id = ?)";
+                    $params[] = $houseId;
+                } elseif ($audience === 'specific_house') {
+                    $sql .= " AND a.target_audience = 'specific_house'";
                 } else {
                     $sql .= " AND (a.target_audience = ? OR a.target_audience = 'all')";
                     $params[] = $audience;
@@ -103,9 +113,12 @@ class AnnouncementModel extends BaseModel {
                 SELECT 
                     a.*,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.created_by = ?
                 ORDER BY a.created_at DESC
             ";
@@ -140,11 +153,14 @@ class AnnouncementModel extends BaseModel {
                     u.name as creator_name,
                     r.name as creator_role,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.announcement_type = ? 
                 AND a.is_active = 1
                 AND (a.expires_at IS NULL OR a.expires_at > NOW())
@@ -173,7 +189,7 @@ class AnnouncementModel extends BaseModel {
     /**
      * Get pinned announcements
      */
-    public function getPinnedAnnouncements($audience = 'all', $classId = null) {
+    public function getPinnedAnnouncements($audience = 'all', $classId = null, $houseId = null) {
         try {
             $sql = "
                 SELECT 
@@ -181,7 +197,9 @@ class AnnouncementModel extends BaseModel {
                     u.name as creator_name,
                     r.name as creator_role,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
@@ -200,6 +218,11 @@ class AnnouncementModel extends BaseModel {
                     $params[] = $classId;
                 } elseif ($audience === 'specific_class') {
                     $sql .= " AND a.target_audience = 'specific_class'";
+                } elseif ($audience === 'specific_house' && $houseId) {
+                    $sql .= " AND (a.target_audience = 'specific_house' AND a.target_house_id = ?)";
+                    $params[] = $houseId;
+                } elseif ($audience === 'specific_house') {
+                    $sql .= " AND a.target_audience = 'specific_house'";
                 } else {
                     $sql .= " AND (a.target_audience = ? OR a.target_audience = 'all')";
                     $params[] = $audience;
@@ -234,11 +257,14 @@ class AnnouncementModel extends BaseModel {
                     u.name as creator_name,
                     r.name as creator_role,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.is_active = 1
             ";
             
@@ -316,11 +342,14 @@ class AnnouncementModel extends BaseModel {
                     r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.id = ?
             ";
             
@@ -416,11 +445,14 @@ class AnnouncementModel extends BaseModel {
                     r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
             ";
             
             if ($where) {
@@ -456,11 +488,14 @@ class AnnouncementModel extends BaseModel {
                     r.name as creator_role,
                     u.email as creator_email,
                     c.name as class_name,
-                    c.section as class_section
+                    c.section as class_section,
+                    h.name as house_name,
+                    h.description as house_description
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN classes c ON a.target_class_id = c.id
+                LEFT JOIN houses h ON a.target_house_id = h.id
                 WHERE a.id = ?
             ";
             

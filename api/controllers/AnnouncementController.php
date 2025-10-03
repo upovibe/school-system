@@ -49,6 +49,10 @@ class AnnouncementController {
                 $conditions[] = 'target_class_id = ?';
                 $params[] = $_GET['target_class_id'];
             }
+            if (isset($_GET['target_house_id']) && $_GET['target_house_id'] !== '') {
+                $conditions[] = 'target_house_id = ?';
+                $params[] = $_GET['target_house_id'];
+            }
             if (isset($_GET['is_active']) && $_GET['is_active'] !== '') {
                 $conditions[] = 'is_active = ?';
                 $params[] = (int) (!!$_GET['is_active']);
@@ -107,7 +111,7 @@ class AnnouncementController {
             }
 
             // Validate target_audience
-            $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class'];
+            $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class', 'specific_house'];
             if (!in_array($data['target_audience'], $validAudiences)) {
                 http_response_code(400);
                 echo json_encode([
@@ -148,6 +152,31 @@ class AnnouncementController {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Target class not found'
+                    ]);
+                    return;
+                }
+            }
+
+            // Validate target_house_id if specific_house is selected
+            if ($data['target_audience'] === 'specific_house') {
+                if (!isset($data['target_house_id']) || $data['target_house_id'] === '') {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Target house ID is required when targeting specific house'
+                    ]);
+                    return;
+                }
+                
+                // Verify house exists
+                require_once __DIR__ . '/../models/HouseModel.php';
+                $houseModel = new HouseModel($pdo);
+                $house = $houseModel->findById($data['target_house_id']);
+                if (!$house) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Target house not found'
                     ]);
                     return;
                 }
@@ -250,7 +279,7 @@ class AnnouncementController {
 
             // Validate target_audience if provided
             if (isset($data['target_audience'])) {
-                $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class'];
+                $validAudiences = ['all', 'students', 'teachers', 'admin', 'cashier', 'specific_class', 'specific_house'];
                 if (!in_array($data['target_audience'], $validAudiences)) {
                     http_response_code(400);
                     echo json_encode([
@@ -278,6 +307,31 @@ class AnnouncementController {
                         echo json_encode([
                             'success' => false,
                             'message' => 'Target class not found'
+                        ]);
+                        return;
+                    }
+                }
+
+                // Validate target_house_id if specific_house is selected
+                if ($data['target_audience'] === 'specific_house') {
+                    if (!isset($data['target_house_id']) || $data['target_house_id'] === '') {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Target house ID is required when targeting specific house'
+                        ]);
+                        return;
+                    }
+                    
+                    // Verify house exists
+                    require_once __DIR__ . '/../models/HouseModel.php';
+                    $houseModel = new HouseModel($pdo);
+                    $house = $houseModel->findById($data['target_house_id']);
+                    if (!$house) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Target house not found'
                         ]);
                         return;
                     }

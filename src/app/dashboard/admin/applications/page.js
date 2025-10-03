@@ -51,8 +51,12 @@ class ApplicationsPage extends App {
                         <div>
                             <div class="flex items-center gap-2">
                                 <h1 class="text-2xl sm:text-3xl font-bold">Applications</h1>
-                                <button class="text-white/90 mt-2 hover:text-white transition-colors" data-action="show-applications-info" title="Application Configuration">
+                                <button 
+                                    class="bg-white/20 hover:bg-white/30 text-white px-3 py-0.5 rounded-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 shadow-lg border border-white/20" 
+                                    data-action="show-applications-info" 
+                                    title="Application Configuration">
                                     <i class="fas fa-cog text-lg"></i>
+                                    <span class="text-sm font-medium">Settings</span>
                                 </button>
                                 <button 
                                     onclick="this.closest('app-applications-page').loadData()"

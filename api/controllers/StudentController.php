@@ -2492,6 +2492,7 @@ class StudentController {
      * 1. Announcements for all students (target_audience = 'all')
      * 2. Announcements for students (target_audience = 'students')
      * 3. Announcements specific to their class (target_audience = 'specific_class')
+     * 4. Announcements specific to their house (target_audience = 'specific_house')
      */
     public function getAnnouncements() {
         try {
@@ -2527,15 +2528,19 @@ class StudentController {
             // 1. Announcements for all students
             // 2. Announcements specifically for students
             // 3. Announcements for their specific class
+            // 4. Announcements for their specific house
             $studentConditions = [
                 'target_audience = "all"', // General announcements
                 'target_audience = "students"', // Student-specific announcements
-                '(target_audience = "specific_class" AND target_class_id = ?)' // Their class announcements
+                '(target_audience = "specific_class" AND target_class_id = ?)', // Their class announcements
+                '(target_audience = "specific_house" AND target_house_id = ?)' // Their house announcements
             ];
             $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
             
             // Try different possible field names for class ID
             $classId = $student['current_class_id'] ?? $student['class_id'] ?? null;
+            // Try different possible field names for house ID
+            $houseId = $student['house_id'] ?? null;
             
             if ($classId) {
                 $params[] = $classId; // target_class_id
@@ -2543,8 +2548,20 @@ class StudentController {
                 // If no class ID, remove class-specific condition
                 $studentConditions = [
                     'target_audience = "all"', // General announcements
-                    'target_audience = "students"' // Student-specific announcements
+                    'target_audience = "students"', // Student-specific announcements
+                    '(target_audience = "specific_house" AND target_house_id = ?)' // Their house announcements
                 ];
+                $conditions = array_slice($conditions, 0, -1); // Remove the last condition
+                $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
+            }
+            
+            if ($houseId) {
+                $params[] = $houseId; // target_house_id
+            } else {
+                // If no house ID, remove house-specific condition
+                $studentConditions = array_filter($studentConditions, function($condition) {
+                    return !str_contains($condition, 'specific_house');
+                });
                 $conditions = array_slice($conditions, 0, -1); // Remove the last condition
                 $conditions[] = '(' . implode(' OR ', $studentConditions) . ')';
             }

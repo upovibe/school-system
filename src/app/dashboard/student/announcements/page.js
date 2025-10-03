@@ -30,12 +30,18 @@ class StudentAnnouncementsPage extends App {
                 const classId = user.profileData?.current_class_id || user.current_class_id || null;
                 const className = classId ? `Class ID: ${classId}` : 'Unknown Class';
                 
-
+                // Extract house information from profileData
+                const houseId = user.profileData?.house_id || user.house_id || null;
+                const houseName = user.profileData?.house_name || user.house_name || null;
+                const houseDescription = user.profileData?.house_description || user.house_description || null;
                 
                 return {
                     name: user.name || 'Unknown Student',
                     class_name: className,
-                    class_id: classId
+                    class_id: classId,
+                    house_id: houseId,
+                    house_name: houseName,
+                    house_description: houseDescription
                 };
             }
         } catch (error) {
@@ -82,7 +88,11 @@ class StudentAnnouncementsPage extends App {
             (a.target_audience === 'specific_class' && 
              currentStudent && 
              currentStudent.class_id && 
-             a.target_class_id == currentStudent.class_id)
+             a.target_class_id == currentStudent.class_id) ||
+            (a.target_audience === 'specific_house' && 
+             currentStudent && 
+             currentStudent.house_id && 
+             a.target_house_id == currentStudent.house_id)
         );
         
         switch (type) {
@@ -118,6 +128,13 @@ class StudentAnnouncementsPage extends App {
                     a.announcement_type === 'emergency' || 
                     a.priority === 'urgent'
                 );
+            case 'my_house':
+                return studentAnnouncements.filter(a => 
+                    a.target_audience === 'specific_house' && 
+                    currentStudent && 
+                    currentStudent.house_id && 
+                    a.target_house_id == currentStudent.house_id
+                );
             default:
                 return studentAnnouncements;
         }
@@ -132,7 +149,8 @@ class StudentAnnouncementsPage extends App {
             academic: this.getAnnouncementsByType('academic').length,
             events: this.getAnnouncementsByType('events').length,
             reminders: this.getAnnouncementsByType('reminders').length,
-            emergency: this.getAnnouncementsByType('emergency').length
+            emergency: this.getAnnouncementsByType('emergency').length,
+            my_house: this.getAnnouncementsByType('my_house').length
         };
     }
 
@@ -148,7 +166,11 @@ class StudentAnnouncementsPage extends App {
             (a.target_audience === 'specific_class' && 
              currentStudent && 
              currentStudent.class_id && 
-             a.target_class_id == currentStudent.class_id)
+             a.target_class_id == currentStudent.class_id) ||
+            (a.target_audience === 'specific_house' && 
+             currentStudent && 
+             currentStudent.house_id && 
+             a.target_house_id == currentStudent.house_id)
         );
         
         const total = studentAnnouncements.length;
@@ -156,6 +178,7 @@ class StudentAnnouncementsPage extends App {
         let pinned = 0;
         let highPriority = 0;
         let classAnnouncements = 0;
+        let houseAnnouncements = 0;
         let generalAnnouncements = 0;
         
         studentAnnouncements.forEach((announcement) => {
@@ -166,15 +189,20 @@ class StudentAnnouncementsPage extends App {
                                   currentStudent && 
                                   currentStudent.class_id && 
                                   announcement.target_class_id == currentStudent.class_id;
+            const isHouseSpecific = announcement.target_audience === 'specific_house' && 
+                                  currentStudent && 
+                                  currentStudent.house_id && 
+                                  announcement.target_house_id == currentStudent.house_id;
             
             if (isActive) active += 1;
             if (isPinned) pinned += 1;
             if (isHighPriority) highPriority += 1;
             if (isClassSpecific) classAnnouncements += 1;
+            else if (isHouseSpecific) houseAnnouncements += 1;
             else generalAnnouncements += 1;
         });
         
-        return { total, active, pinned, highPriority, classAnnouncements, generalAnnouncements };
+        return { total, active, pinned, highPriority, classAnnouncements, houseAnnouncements, generalAnnouncements };
     }
 
     // Gradient header with student-focused design
@@ -199,8 +227,13 @@ class StudentAnnouncementsPage extends App {
                                     <i class="fas fa-sync-alt text-lg ${this.get('loading') ? 'animate-spin' : ''} group-hover:scale-110 transition-transform duration-200"></i>
                                 </button>
                             </div>
-                            <p class="text-blue-100 text-base sm:text-lg">Stay updated with important school and class announcements</p>
-                            ${student ? `<p class="text-blue-200 text-sm mt-1">Class: ${student.class_name}</p>` : ''}
+                            <p class="text-blue-100 text-base sm:text-lg">Stay updated with important school, class, and house announcements</p>
+                            ${student ? `
+                                <div class="flex flex-wrap gap-4 mt-1">
+                                    <p class="text-blue-200 text-sm">Class: ${student.class_name}</p>
+                                    ${student.house_name ? `<p class="text-blue-200 text-sm">House: ${student.house_name}</p>` : ''}
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <div class="text-right">
@@ -209,7 +242,7 @@ class StudentAnnouncementsPage extends App {
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 sm:gap-6">
                         <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
                             <div class="flex items-center">
                                 <div class="size-10 flex items-center justify-center bg-green-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
@@ -251,6 +284,17 @@ class StudentAnnouncementsPage extends App {
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xl sm:text-2xl font-bold">${c.classAnnouncements}</div>
                                     <div class="text-blue-100 text-xs sm:text-sm">Class Specific</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white border-opacity-20">
+                            <div class="flex items-center">
+                                <div class="size-10 flex items-center justify-center bg-teal-500 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                                    <i class="fas fa-home text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xl sm:text-2xl font-bold">${c.houseAnnouncements}</div>
+                                    <div class="text-blue-100 text-xs sm:text-sm">House Specific</div>
                                 </div>
                             </div>
                         </div>
@@ -319,12 +363,16 @@ class StudentAnnouncementsPage extends App {
             <div slot="content" class="space-y-4">
                 <div>
                     <h4 class="font-semibold text-gray-900 mb-2">What are Student Announcements?</h4>
-                    <p class="text-gray-700">Stay informed about important school updates, class activities, and general information.</p>
+                    <p class="text-gray-700">Stay informed about important school updates, class activities, house events, and general information.</p>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Class Announcements</span>
                         <span class="text-sm text-gray-600">Specific to your assigned class</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">House Announcements</span>
+                        <span class="text-sm text-gray-600">Specific to your assigned house</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">General Announcements</span>
@@ -407,6 +455,7 @@ class StudentAnnouncementsPage extends App {
         const isHighPriority = announcement.priority === 'high';
         const isUrgent = announcement.priority === 'urgent';
         const isClassSpecific = announcement.target_audience === 'specific_class';
+        const isHouseSpecific = announcement.target_audience === 'specific_house';
         
         // Priority badge styling
         let priorityBadge = '';
@@ -417,8 +466,19 @@ class StudentAnnouncementsPage extends App {
         }
         
         // Audience label
-        const audienceLabel = isClassSpecific ? 'Class Announcement' : 'All Students';
-        const audienceColor = isClassSpecific ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
+        let audienceLabel = 'All Students';
+        let audienceColor = 'bg-blue-100 text-blue-800';
+        let audienceIcon = 'fa-school';
+        
+        if (isClassSpecific) {
+            audienceLabel = 'Class Announcement';
+            audienceColor = 'bg-purple-100 text-purple-800';
+            audienceIcon = 'fa-users';
+        } else if (isHouseSpecific) {
+            audienceLabel = 'House Announcement';
+            audienceColor = 'bg-teal-100 text-teal-800';
+            audienceIcon = 'fa-home';
+        }
         
         // Status indicator
         const statusColor = Number(announcement.is_active) === 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
@@ -441,7 +501,7 @@ class StudentAnnouncementsPage extends App {
                         </div>
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${audienceColor}">
-                                <i class="fas ${isClassSpecific ? 'fa-users' : 'fa-school'} mr-1"></i>
+                                <i class="fas ${audienceIcon} mr-1"></i>
                                 ${audienceLabel}
                             </span>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
@@ -509,7 +569,8 @@ class StudentAnnouncementsPage extends App {
             'academic': 'fa-graduation-cap',
             'events': 'fa-calendar-alt',
             'reminders': 'fa-bell',
-            'emergency': 'fa-exclamation-triangle'
+            'emergency': 'fa-exclamation-triangle',
+            'my_house': 'fa-home'
         };
         return icons[type] || 'fa-bullhorn';
     }
@@ -522,7 +583,8 @@ class StudentAnnouncementsPage extends App {
             'academic': 'Academic',
             'events': 'Events',
             'reminders': 'Reminders',
-            'emergency': 'Emergency'
+            'emergency': 'Emergency',
+            'my_house': 'My House'
         };
         return labels[type] || 'General';
     }
@@ -583,6 +645,12 @@ class StudentAnnouncementsPage extends App {
                                     <i class="fas fa-exclamation-triangle text-red-600 text-lg lg:text-base"></i>
                                     <span class="hidden lg:inline ml-1 font-medium">Emergency (${tabCounts.emergency})</span>
                                 </ui-tab>
+                                ${this.getCurrentStudent()?.house_id ? `
+                                    <ui-tab value="my_house">
+                                        <i class="fas fa-home text-teal-600 text-lg lg:text-base"></i>
+                                        <span class="hidden lg:inline ml-1 font-medium">My House (${tabCounts.my_house})</span>
+                                    </ui-tab>
+                                ` : ''}
                             </ui-tab-list>
                             
                             <!-- Pinned Tab -->
@@ -614,6 +682,13 @@ class StudentAnnouncementsPage extends App {
                             <ui-tab-panel value="emergency">
                                 ${this.renderTabContent('emergency', announcements)}
                             </ui-tab-panel>
+                            
+                            <!-- My House Tab (only show if student has a house) -->
+                            ${this.getCurrentStudent()?.house_id ? `
+                                <ui-tab-panel value="my_house">
+                                    ${this.renderTabContent('my_house', announcements)}
+                                </ui-tab-panel>
+                            ` : ''}
                         </ui-tabs>
                     </div>
                 </div>

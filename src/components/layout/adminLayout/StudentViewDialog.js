@@ -95,6 +95,33 @@ class StudentViewDialog extends HTMLElement {
                             </ui-badge>
                         </div>
 
+                        <!-- Passport Photo Section -->
+                        <div class="border-b pb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-camera text-purple-500"></i>
+                                <h4 class="text-md font-semibold text-gray-800">Passport Photo</h4>
+                            </div>
+                            <div class="flex justify-center">
+                                <div class="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                                    ${this.studentData.passport_photo ? `
+                                        <div class="text-center">
+                                            <img src="/api/${this.studentData.passport_photo}" 
+                                                 alt="Passport Photo" 
+                                                 class="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 mx-auto mb-2 shadow-sm"
+                                                 onerror="this.src='/api/uploads/profiles/default-avatar.png'">
+                                            <p class="text-sm text-gray-600 font-medium">Passport Photo</p>
+                                        </div>
+                                    ` : `
+                                        <div class="text-center text-gray-500">
+                                            <i class="fas fa-user-circle text-6xl mb-2"></i>
+                                            <p class="text-sm font-medium">No Passport Photo</p>
+                                            <p class="text-xs text-gray-400">Photo not uploaded yet</p>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Student Information -->
                         <div class="border-b pb-4">
                             <div class="flex items-center gap-2 mb-3">

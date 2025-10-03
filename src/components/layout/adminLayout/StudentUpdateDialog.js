@@ -3,6 +3,7 @@ import '@/components/ui/Input.js';
 import '@/components/ui/SearchDropdown.js';
 import '@/components/ui/Switch.js';
 import '@/components/ui/Toast.js';
+import '@/components/ui/FileUpload.js';
 import api from '@/services/api.js';
 
 class StudentUpdateDialog extends HTMLElement {
@@ -107,6 +108,12 @@ class StudentUpdateDialog extends HTMLElement {
             const bloodGroupDropdown = this.querySelector('ui-search-dropdown[name="blood_group"]');
             const medicalConditionsDropdown = this.querySelector('ui-search-dropdown[name="medical_conditions"]');
             const houseDropdown = this.querySelector('ui-search-dropdown[name="house_id"]');
+            const passportFileUpload = this.querySelector('ui-file-upload[data-field="passport_photo"]');
+            
+            // Set passport photo if available
+            if (passportFileUpload && student?.passport_photo) {
+                passportFileUpload.setValue(student.passport_photo);
+            }
             
             if (classDropdown && student?.current_class_id) {
                 // Find the class option and set its text as the display value
@@ -255,7 +262,26 @@ class StudentUpdateDialog extends HTMLElement {
                 return;
             }
 
-            const response = await api.withToken(token).put(`/students/${this.studentData.id}`, updatedData);
+            // Prepare form data for multipart request
+            const formData = new FormData();
+            
+            // Add all form fields
+            Object.keys(updatedData).forEach(key => {
+                formData.append(key, updatedData[key]);
+            });
+            
+            // Add passport photo file if selected
+            const passportFileUpload = this.querySelector('ui-file-upload[data-field="passport_photo"]');
+            if (passportFileUpload && passportFileUpload.getFiles().length > 0) {
+                const files = passportFileUpload.getFiles();
+                // Filter out existing files (which are strings/paths) and only include new File objects
+                const newFiles = files.filter(file => file instanceof File);
+                newFiles.forEach(file => {
+                    formData.append('passport_photo', file, file.name);
+                });
+            }
+
+            const response = await api.withToken(token).put(`/students/${this.studentData.id}`, formData);
 
             if (response.status === 200 || response.data.success) {
                 Toast.show({ title: 'Success', message: 'Student updated successfully', variant: 'success' });
@@ -321,6 +347,19 @@ class StudentUpdateDialog extends HTMLElement {
                                 <div class="w-full h-8 bg-gray-200 rounded mr-2"></div>
                             `}
                         </div>
+                        
+                        <!-- Passport Photo Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Passport Photo</label>
+                            <ui-file-upload 
+                                data-field="passport_photo" 
+                                accept="image/*" 
+                                max-size="2097152"
+                                value="${student?.passport_photo || ''}"
+                                class="w-full">
+                            </ui-file-upload>
+                        </div>
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>
                             ${this.classes.length > 0 ? `

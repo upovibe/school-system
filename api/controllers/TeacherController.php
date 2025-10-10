@@ -3490,12 +3490,12 @@ class TeacherController {
             }
             
             // Validate target_audience for teachers
-            $validAudiences = ['students', 'specific_class'];
+            $validAudiences = ['students', 'specific_class', 'specific_house'];
             if (!in_array($data['target_audience'], $validAudiences)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Invalid target audience. Teachers can only target: students or specific_class'
+                    'message' => 'Invalid target audience. Teachers can only target: students, specific_class, or specific_house'
                 ]);
                 return;
             }
@@ -3535,6 +3535,32 @@ class TeacherController {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Access denied. You can only create announcements for your assigned class or classes where you teach subjects.'
+                    ]);
+                    return;
+                }
+            }
+            
+            // Validate target_house_id if specific_house is selected
+            if ($data['target_audience'] === 'specific_house') {
+                if (!isset($data['target_house_id']) || $data['target_house_id'] === '') {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Target house ID is required when targeting specific house'
+                    ]);
+                    return;
+                }
+                
+                // Verify teacher is assigned to this house (house master)
+                require_once __DIR__ . '/../models/HouseModel.php';
+                $houseModel = new HouseModel($this->pdo);
+                $teacherHouse = $houseModel->getHouseByTeacher($teacher['id']);
+                
+                if (!$teacherHouse || $teacherHouse['id'] != $data['target_house_id']) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Access denied. You can only create announcements for your assigned house.'
                     ]);
                     return;
                 }
@@ -3582,7 +3608,8 @@ class TeacherController {
                 'announcement_id' => $announcementId,
                 'title' => $data['title'],
                 'target_audience' => $data['target_audience'],
-                'target_class_id' => $data['target_class_id'] ?? null
+                'target_class_id' => $data['target_class_id'] ?? null,
+                'target_house_id' => $data['target_house_id'] ?? null
             ]);
             
             http_response_code(201);

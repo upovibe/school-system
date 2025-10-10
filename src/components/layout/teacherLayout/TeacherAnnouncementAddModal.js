@@ -26,7 +26,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         super();
         this.teacherClass = null;
         this.teacherAssignments = null;
+        this.teacherHouse = null;
         this.isClassTeacher = false;
+        this.isHouseMaster = false;
     }
 
     static get observedAttributes() {
@@ -86,20 +88,24 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             const contentInput = this.querySelector('ui-textarea[data-field="content"]');
             const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
             const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+            const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
             const saveBtn = this.querySelector('#save-announcement-btn');
             
             const title = titleInput ? String(titleInput.value || '').trim() : '';
             const content = contentInput ? String(contentInput.value || '').trim() : '';
             const targetAudience = targetAudienceDropdown ? targetAudienceDropdown.value : '';
             const targetClass = targetClassDropdown ? targetClassDropdown.value : '';
+            const targetHouse = targetHouseDropdown ? targetHouseDropdown.value : '';
             
             let isValid = !!title && !!content && !!targetAudience;
             
             // Check if teacher has assignments
-            if (!this.teacherClass && !this.teacherAssignments) {
+            if (!this.teacherClass && !this.teacherAssignments && !this.isHouseMaster) {
                 isValid = false; // No assignments, cannot create announcements
             } else if (targetAudience === 'specific_class') {
                 isValid = isValid && !!targetClass;
+            } else if (targetAudience === 'specific_house') {
+                isValid = isValid && !!targetHouse;
             } else if (targetAudience === 'students' && !this.isClassTeacher) {
                 // Only class teachers can target students only
                 isValid = false;
@@ -121,6 +127,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         const contentInput = this.querySelector('ui-textarea[data-field="content"]');
         const targetAudienceDropdown = this.querySelector('ui-search-dropdown[data-field="target_audience"]');
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         const saveBtn = this.querySelector('#save-announcement-btn');
 
         if (titleInput) {
@@ -145,6 +152,13 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             }
         });
 
+        // Add event listener for target house dropdown when it becomes available
+        this.addEventListener('change', (e) => {
+            if (e.target.matches('ui-search-dropdown[data-field="target_house_id"]')) {
+                this.validateForm();
+            }
+        });
+
         // Add event listeners for search dropdowns
         this.addEventListener('change', (e) => {
             if (e.target.matches('ui-search-dropdown[data-field="announcement_type"]')) {
@@ -165,10 +179,11 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            // Load both class assignment and subject assignments
-            const [classResponse, assignmentsResponse] = await Promise.all([
+            // Load class assignment, subject assignments, and house assignment
+            const [classResponse, assignmentsResponse, houseResponse] = await Promise.all([
                 api.withToken(token).get('/teachers/my-class'),
-                api.withToken(token).get('/teachers/my-assignments')
+                api.withToken(token).get('/teachers/my-assignments'),
+                api.withToken(token).get('/teachers/my-house').catch(() => ({ data: { success: false } }))
             ]);
             
             // Check if teacher is a class teacher
@@ -180,6 +195,12 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             // Check if teacher has subject assignments
             if (assignmentsResponse.data.success && assignmentsResponse.data.data && assignmentsResponse.data.data.assignments) {
                 this.teacherAssignments = assignmentsResponse.data.data.assignments;
+            }
+            
+            // Check if teacher is a house master
+            if (houseResponse.data.success && houseResponse.data.data) {
+                this.teacherHouse = houseResponse.data.data;
+                this.isHouseMaster = true;
             }
             
             // Determine what classes to show based on teacher's roles
@@ -195,6 +216,9 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             } else if (this.teacherAssignments) {
                 // Teacher is only a subject teacher (no class assignment)
                 this.populateClassDropdown(this.teacherAssignments);
+                this.setDefaultTargetAudience();
+            } else if (this.isHouseMaster) {
+                // Teacher is only a house master (no class or subject assignments)
                 this.setDefaultTargetAudience();
             } else {
                 // No assignments at all
@@ -241,7 +265,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         if (targetAudienceDropdown) {
             if (this.isClassTeacher && this.teacherAssignments) {
                 // Teacher is both class teacher AND has subject assignments
-                // Show both options: "My Class Students" and "My Subject Students"
+                // Show options: "My Class Students", "My Subject Students", and "My House Students" (if house master)
                 this.updateTargetAudienceOptions('both');
                 // Set value after dropdown is shown and options are populated
                 setTimeout(() => {
@@ -267,6 +291,15 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                     this.showTargetClassField();
                     this.updateHelpText('subject');
                 }, 150); // Longer delay to ensure dropdown is fully rendered
+            } else if (this.isHouseMaster) {
+                // House master can target their assigned house
+                this.updateTargetAudienceOptions('house');
+                // Set value after dropdown is shown and options are populated
+                setTimeout(() => {
+                    targetAudienceDropdown.value = 'specific_house';
+                    this.showTargetHouseField();
+                    this.updateHelpText('house');
+                }, 150); // Longer delay to ensure dropdown is fully rendered
             }
         }
     }
@@ -281,6 +314,8 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 helpText.textContent = 'This is automatically set to your assigned class';
             } else if (teacherType === 'subject') {
                 helpText.textContent = 'Where you teach subjects to target announcements';
+            } else if (teacherType === 'house') {
+                helpText.textContent = 'This is automatically set to your assigned house';
             }
         }
     }
@@ -309,6 +344,14 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             classMembersOption.setAttribute('value', 'specific_class');
             classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
+
+            // Add house option if teacher is also a house master
+            if (this.isHouseMaster) {
+                const houseOption = document.createElement('ui-option');
+                houseOption.setAttribute('value', 'specific_house');
+                houseOption.textContent = 'My House Students';
+                targetAudienceDropdown.appendChild(houseOption);
+            }
         } else if (teacherType === 'class') {
             // Class teacher can target both students and class members
             const studentsOption = document.createElement('ui-option');
@@ -320,12 +363,34 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             classMembersOption.setAttribute('value', 'specific_class');
             classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
+
+            // Add house option if teacher is also a house master
+            if (this.isHouseMaster) {
+                const houseOption = document.createElement('ui-option');
+                houseOption.setAttribute('value', 'specific_house');
+                houseOption.textContent = 'My House Students';
+                targetAudienceDropdown.appendChild(houseOption);
+            }
         } else if (teacherType === 'subject') {
             // Subject teacher can only target class members (must select specific class)
             const classMembersOption = document.createElement('ui-option');
             classMembersOption.setAttribute('value', 'specific_class');
             classMembersOption.textContent = 'My Subject Students';
             targetAudienceDropdown.appendChild(classMembersOption);
+
+            // Add house option if teacher is also a house master
+            if (this.isHouseMaster) {
+                const houseOption = document.createElement('ui-option');
+                houseOption.setAttribute('value', 'specific_house');
+                houseOption.textContent = 'My House Students';
+                targetAudienceDropdown.appendChild(houseOption);
+            }
+        } else if (teacherType === 'house') {
+            // House master can target their assigned house
+            const houseOption = document.createElement('ui-option');
+            houseOption.setAttribute('value', 'specific_house');
+            houseOption.textContent = 'My House Students';
+            targetAudienceDropdown.appendChild(houseOption);
         }
 
         // Hide skeleton and show dropdown after a small delay to ensure proper rendering
@@ -333,6 +398,40 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             if (skeleton) skeleton.classList.add('hidden');
             targetAudienceDropdown.classList.remove('hidden');
         }, 100);
+    }
+
+    // Show target house field and populate with teacher's house
+    showTargetHouseField() {
+        const targetHouseField = this.querySelector('#target-house-field');
+        if (targetHouseField) {
+            targetHouseField.classList.remove('hidden');
+            this.populateHouseDropdown();
+        }
+    }
+
+    // Populate the house dropdown with teacher's assigned house
+    populateHouseDropdown() {
+        const houseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
+        if (!houseDropdown || !this.teacherHouse) return;
+
+        // Clear existing options
+        houseDropdown.innerHTML = '';
+
+        // Add teacher's assigned house
+        const option = document.createElement('ui-option');
+        option.setAttribute('value', this.teacherHouse.house_id);
+        option.textContent = this.teacherHouse.house_name;
+        houseDropdown.appendChild(option);
+
+        // Reset dropdown - let user select
+        houseDropdown.value = '';
+        houseDropdown.disabled = false; // Allow user to select
+        
+        // Set simple placeholder
+        houseDropdown.setAttribute('placeholder', 'Select target house');
+
+        // Trigger validation
+        this.validateForm();
     }
 
     // Show target class field and populate with teacher's class
@@ -343,10 +442,11 @@ class TeacherAnnouncementAddModal extends HTMLElement {
         }
     }
 
-    // Handle target audience change to show/hide target class field
+    // Handle target audience change to show/hide target class and house fields
     async handleTargetAudienceChange(event) {
         const targetAudience = event.target.value;
         const targetClassField = this.querySelector('#target-class-field');
+        const targetHouseField = this.querySelector('#target-house-field');
         
         if (targetClassField) {
             if (targetAudience === 'specific_class') {
@@ -357,6 +457,16 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 }
             } else {
                 targetClassField.classList.add('hidden');
+            }
+        }
+
+        if (targetHouseField) {
+            if (targetAudience === 'specific_house') {
+                targetHouseField.classList.remove('hidden');
+                // Always populate the house dropdown when showing the field
+                this.populateHouseDropdown();
+            } else {
+                targetHouseField.classList.add('hidden');
             }
         }
     }
@@ -456,6 +566,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
             const isPinnedSwitch = this.querySelector('ui-switch[name="is_pinned"]');
 
             const targetClassDropdown = this.querySelector('ui-search-dropdown[data-field="target_class_id"]');
+            const targetHouseDropdown = this.querySelector('ui-search-dropdown[data-field="target_house_id"]');
             
             const announcementData = {
                 title: titleInput ? titleInput.value : '',
@@ -490,6 +601,19 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 } else if (this.teacherAssignments && targetClassDropdown) {
                     announcementData.target_class_id = targetClassDropdown.value;
                 }
+            } else if (targetAudience === 'specific_house') {
+                // House members - must be house master
+                if (this.isHouseMaster && this.teacherHouse && targetHouseDropdown) {
+                    announcementData.target_house_id = targetHouseDropdown.value;
+                } else {
+                    Toast.show({
+                        title: 'Validation Error',
+                        message: 'Only house masters can target house-specific announcements',
+                        variant: 'error',
+                        duration: 3000
+                    });
+                    return;
+                }
             }
 
             // Validate required fields
@@ -513,11 +637,21 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                 return;
             }
 
-            // Validate target_class_id
-            if (!announcementData.target_class_id) {
+            // Validate target_class_id or target_house_id based on audience
+            if (targetAudience === 'specific_class' && !announcementData.target_class_id) {
                 Toast.show({
                     title: 'Validation Error',
                     message: 'Please select a target class',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            if (targetAudience === 'specific_house' && !announcementData.target_house_id) {
+                Toast.show({
+                    title: 'Validation Error',
+                    message: 'Please select a target house',
                     variant: 'error',
                     duration: 3000
                 });
@@ -658,6 +792,16 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                         <p class="text-sm text-gray-500 mt-1" id="class-help-text">Loading...</p>
                     </div>
                     
+                    <!-- Target House Field -->
+                    <div id="target-house-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Target House <span class="text-red-500">*</span></label>
+                        <ui-search-dropdown data-field="target_house_id" value="" placeholder="Select house">
+                            <ui-option value="">Loading...</ui-option>
+                            <!-- House will be loaded dynamically -->
+                        </ui-search-dropdown>
+                        <p class="text-sm text-gray-500 mt-1" id="house-help-text">This is automatically set to your assigned house</p>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Announcement Type <span class="text-red-500">*</span></label>
                         <ui-search-dropdown data-field="announcement_type" value="general" placeholder="Search announcement type...">
@@ -716,6 +860,7 @@ class TeacherAnnouncementAddModal extends HTMLElement {
                                 <li><strong>Content</strong>: Detailed information about the announcement.</li>
                                 <li><strong>Target Audience</strong>: Who should see this announcement (varies by teacher type).</li>
                                 <li><strong>Target Class</strong>: Select from your teaching assignments (e.g., JHS (A), JHS (B)).</li>
+                                <li><strong>Target House</strong>: Select your assigned house (if you're a house master).</li>
                                 <li><strong>Type</strong>: Categorizes the announcement for better organization.</li>
                                 <li><strong>Priority</strong>: Sets importance level (urgent announcements are highlighted).</li>
                                 <li><strong>Active</strong>: Only active announcements are visible to users.</li>

@@ -233,11 +233,15 @@ class TeacherAnnouncementsPage extends App {
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Target Audience</span>
-                        <span class="text-sm text-gray-600">all, students, teachers, specific_class</span>
+                        <span class="text-sm text-gray-600">students, specific_class, specific_house (if house master)</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm font-medium">Class Restrictions</span>
-                        <span class="text-sm text-gray-600">You can only target your assigned class</span>
+                        <span class="text-sm text-gray-600">You can only target your assigned class or classes you teach</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">House Restrictions</span>
+                        <span class="text-sm text-gray-600">You can only target your assigned house (if house master)</span>
                     </div>
                 </div>
                 <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">

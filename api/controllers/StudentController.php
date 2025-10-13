@@ -2872,34 +2872,31 @@ class StudentController {
             header('Expires: 0');
             header('Content-Transfer-Encoding: binary');
             
-            // Add BOM for proper UTF-8 encoding
-            echo "\xEF\xBB\xBF";
-            
             // Open output stream
             $output = fopen('php://output', 'w');
             
             // CSV headers
             $headers = [
-                'Student ID',
-                'First Name',
-                'Last Name',
+                'StudentID',
+                'FirstName',
+                'LastName',
                 'Email',
                 'Phone',
                 'Address',
-                'Date of Birth',
+                'DateOfBirth',
                 'Gender',
-                'Admission Date',
-                'Student Type',
-                'Current Class',
-                'Class Section',
-                'House Name',
-                'Parent Name',
-                'Parent Phone',
-                'Parent Email',
-                'Emergency Contact',
-                'Emergency Phone',
-                'Blood Group',
-                'Medical Conditions',
+                'AdmissionDate',
+                'StudentType',
+                'CurrentClass',
+                'ClassSection',
+                'HouseName',
+                'ParentName',
+                'ParentPhone',
+                'ParentEmail',
+                'EmergencyContact',
+                'EmergencyPhone',
+                'BloodGroup',
+                'MedicalConditions',
                 'Status'
             ];
             

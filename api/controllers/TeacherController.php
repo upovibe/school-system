@@ -4066,29 +4066,26 @@ class TeacherController {
             header('Expires: 0');
             header('Content-Transfer-Encoding: binary');
             
-            // Add BOM for proper UTF-8 encoding
-            echo "\xEF\xBB\xBF";
-            
             // Open output stream
             $output = fopen('php://output', 'w');
             
             // CSV headers
             $headers = [
-                'Employee ID',
-                'First Name',
-                'Last Name',
+                'EmployeeID',
+                'FirstName',
+                'LastName',
                 'Email',
                 'Phone',
                 'Address',
-                'Date of Birth',
+                'DateOfBirth',
                 'Gender',
                 'Qualification',
                 'Specialization',
-                'Hire Date',
+                'HireDate',
                 'Salary',
                 'Status',
-                'Class Name',
-                'Class Section'
+                'ClassName',
+                'ClassSection'
             ];
             
             fputcsv($output, $headers);

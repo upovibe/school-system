@@ -191,7 +191,7 @@ class TeacherImportDialog extends HTMLElement {
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 class="font-medium text-blue-800 mb-2">CSV Format Requirements:</h4>
                             <ul class="text-sm text-blue-700 space-y-1">
-                                <li>• Required fields: Employee ID, First Name, Last Name, Email, Phone, Address, Date of Birth, Gender, Hire Date</li>
+                                <li>• Required fields: EmployeeID, FirstName, LastName, Email, Phone, Address, DateOfBirth, Gender, HireDate</li>
                                 <li>• Optional fields: Qualification, Specialization, Salary, Status</li>
                                 <li>• Date format: YYYY-MM-DD</li>
                                 <li>• Gender: male, female, or other</li>

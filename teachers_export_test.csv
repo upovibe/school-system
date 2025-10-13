@@ -1,0 +1,23 @@
+﻿             ﻿"Employee ID","First Name","Last Name",Email,Phone,Address,"Date of Birth",Gender,Qualification,Specialization,"Hire Date",Salary,Status,"Class Name","Class Section"
+T250811013,Aba,Johnson,aba.johnson@school.com,+233244123713,"852 JHS Road, Techiman, Ghana",1984-02-28,female,"MEd in Educational Leadership","Social Studies, Career Technology",2018-09-01,8500.00,active,"JHS 3",A
+T250811004,Abena,Adjei,abena.adjei.kg2@school.com,+233244123704,"457 Early Learning Road, Kumasi, Ghana",1988-11-10,female,"Diploma in Early Childhood Education","Numeracy, Motor Skills Development",2022-01-15,6400.00,active,"KG 2",A
+T250811007,Abena,Adjei,abena.adjei@school.com,+233244123707,"654 Primary Road, Tamale, Ghana",1984-09-25,female,"BEd in Primary Education","Primary Education, Social Studies",2021-09-01,6800.00,active,"P 3",A
+T250811002,Adwoa,Mensah,adwoa.mensah.kg1@school.com,+233244123702,"124 Kindergarten Avenue, Accra, Ghana",1986-08-20,female,"Certificate in Child Development","Language Development, Storytelling",2021-09-01,6300.00,active,"KG 1",A
+T250811005,Adwoa,Mensah,adwoa.mensah@school.com,+233244123705,"789 Primary Street, Cape Coast, Ghana",1983-11-10,female,"BEd in Primary Education","Primary Education, English Language",2019-09-01,7000.00,active,"P 1",A
+T250811009,Afia,Darko,afia.darko@school.com,+233244123709,"147 Primary Close, Sunyani, Ghana",1988-04-12,female,"BEd in Primary Education","Primary Education, Creative Arts",2022-01-15,6600.00,active,"P 5",A
+T250811001,Akosua,Asante,akosua.asante@school.com,+233244123701,"123 Kindergarten Street, Accra, Ghana",1985-03-15,female,"Diploma in Early Childhood Education","Early Childhood Development, Play-based Learning",2020-09-01,6500.00,active,"KG 1",A
+T250811011,Akua,Gyasi,akua.gyasi@school.com,+233244123711,"369 JHS Street, Bolgatanga, Ghana",1983-06-14,female,"MSc in Education","English Language, Literature",2019-09-01,8000.00,active,"JHS 1",A
+T250811019,Ama,Osei,ama.osei.french.lower@school.com,+233244123719,"618 French Lower Street, Konongo, Ghana",1984-09-12,female,"BA in French Language","French Language, Early Childhood French",2020-09-01,7200.00,active,,
+T250811018,"Dr. Abena",Kwarteng,abena.kwarteng.math@school.com,+233244123718,"507 Mathematics Street, Nkawkaw, Ghana",1982-06-08,female,"PhD in Mathematics","Mathematics, Statistics, Applied Mathematics",2019-01-15,8800.00,active,,
+T250811017,"Dr. Kwame",Osei,kwame.osei.science@school.com,+233244123717,"396 Science Avenue, Konongo, Ghana",1980-12-15,male,"PhD in Chemistry","Integrated Science, Chemistry, Physics",2018-09-01,9000.00,active,,
+T250811003,Efua,Boateng,efua.boateng@school.com,+233244123703,"456 Early Learning Avenue, Kumasi, Ghana",1987-07-22,female,"Certificate in Child Development","Kindergarten Education, Creative Arts",2021-01-15,6200.00,active,"KG 2",A
+T250811021,Efua,Gyasi,efua.gyasi.twi.lower@school.com,+233244123721,"830 Twi Lower Road, Mampong, Ghana",1985-11-18,female,"BA in Ghanaian Languages","Twi Language, Ghanaian Language Education",2020-09-01,7000.00,active,,
+T250811006,Kofi,Owusu,kofi.owusu@school.com,+233244123706,"321 Primary Avenue, Takoradi, Ghana",1986-05-18,male,"BSc in Mathematics Education","Mathematics, Science",2020-01-15,7200.00,active,"P 2",A
+T250811012,Kojo,Hammond,kojo.hammond@school.com,+233244123712,"741 JHS Avenue, Wa, Ghana",1981-10-08,male,"MSc in Mathematics","Mathematics, Integrated Science",2017-09-01,8200.00,active,"JHS 2",A
+T250811008,Kwame,Appiah,kwame.appiah@school.com,+233244123708,"987 Primary Lane, Koforidua, Ghana",1982-12-03,male,"BSc in Science Education","Science, Mathematics",2018-09-01,7500.00,active,"P 4",A
+T250811020,Kwame,Mensah,kwame.mensah.english.lower@school.com,+233244123720,"729 English Lower Avenue, Nkawkaw, Ghana",1983-04-25,male,"BEd in English Language","English Language, Early Literacy",2021-01-15,7100.00,active,,
+T250811014,Kweku,Kwarteng,kweku.kwarteng@school.com,+233244123714,"963 Subject Street, Kintampo, Ghana",1987-01-15,male,"BA in Creative Arts","Creative Arts, Visual Arts, Design",2021-09-01,6800.00,active,,
+T250811016,Nana,Nkrumah,nana.nkrumah@school.com,+233244123716,"285 Subject Road, Mampong, Ghana",1989-05-30,male,"BSc in Computer Science","ICT, Computing",2022-01-15,7500.00,active,,
+T250811015,Yaa,Lartey,yaa.lartey@school.com,+233244123715,"174 Subject Avenue, Nkawkaw, Ghana",1986-11-22,female,"BA in French","French Language, Foreign Languages",2020-09-01,7000.00,active,,
+T250811010,Yaw,Frimpong,yaw.frimpong@school.com,+233244123710,"258 Primary Way, Ho, Ghana",1985-08-20,male,"BSc in Mathematics Education","Mathematics, ICT",2020-09-01,7100.00,active,"P 6",A
+

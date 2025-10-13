@@ -127,9 +127,11 @@ class VideoGalleryView extends App {
 
     // Helper function to get video platform and ID from URL
     getVideoInfo(videoUrl) {
-        if (!videoUrl) return { platform: 'unknown', id: null, embedUrl: null };
+        if (!videoUrl) {
+            return { platform: 'unknown', id: null, embedUrl: null, displayType: 'link' };
+        }
         
-        // YouTube
+        // YouTube - Use embedded player (works reliably)
         if (videoUrl.includes('youtube.com/watch') || videoUrl.includes('youtu.be/')) {
             let videoId = null;
             if (videoUrl.includes('youtube.com/watch')) {
@@ -141,45 +143,98 @@ class VideoGalleryView extends App {
             return {
                 platform: 'youtube',
                 id: videoId,
-                embedUrl: videoId ? `https://www.youtube.com/embed/${videoId}` : null
+                embedUrl: videoId ? `https://www.youtube.com/embed/${videoId}` : null,
+                displayType: 'embed',
+                thumbnailUrl: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null
             };
         }
         
-        // Facebook
-        if (videoUrl.includes('facebook.com/')) {
+        // Facebook - Use thumbnail + external link (embed requires login)
+        if (videoUrl.includes('facebook.com/') && videoUrl.includes('/videos/')) {
+            const videoId = videoUrl.match(/\/videos\/(\d+)/)?.[1];
             return {
                 platform: 'facebook',
-                id: videoUrl,
-                embedUrl: videoUrl.replace('www.facebook.com', 'www.facebook.com/plugins/video.php')
+                id: videoId,
+                embedUrl: null, // Don't use embed due to login requirements
+                displayType: 'thumbnail',
+                thumbnailUrl: null, // Facebook doesn't provide public thumbnails
+                externalUrl: videoUrl
             };
         }
         
-        // Vimeo
+        // Vimeo - Use thumbnail + external link (some videos require login)
         if (videoUrl.includes('vimeo.com/')) {
-            const videoId = videoUrl.split('vimeo.com/')[1];
+            const videoId = videoUrl.match(/vimeo\.com\/(\d+)/)?.[1];
             return {
                 platform: 'vimeo',
                 id: videoId,
-                embedUrl: videoId ? `https://player.vimeo.com/video/${videoId}` : null
+                embedUrl: null, // Don't use embed due to potential login requirements
+                displayType: 'thumbnail',
+                thumbnailUrl: videoId ? `https://vumbnail.com/${videoId}.jpg` : null,
+                externalUrl: videoUrl
             };
         }
         
-        // Dailymotion
-        if (videoUrl.includes('dailymotion.com/')) {
-            const videoId = videoUrl.split('dailymotion.com/video/')[1];
+        // Dailymotion - Use thumbnail + external link (embed requires login)
+        if (videoUrl.includes('dailymotion.com/video/')) {
+            const videoId = videoUrl.match(/dailymotion\.com\/video\/([^_]+)/)?.[1];
             return {
                 platform: 'dailymotion',
                 id: videoId,
-                embedUrl: videoId ? `https://www.dailymotion.com/embed/video/${videoId}` : null
+                embedUrl: null, // Don't use embed due to login requirements
+                displayType: 'thumbnail',
+                thumbnailUrl: null, // Dailymotion doesn't provide easy thumbnail access
+                externalUrl: videoUrl
             };
         }
         
-        // Default fallback
+        // Direct video files - Use custom player or direct link
+        if (videoUrl.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
+            return {
+                platform: 'direct',
+                id: videoUrl,
+                embedUrl: null,
+                displayType: 'direct',
+                thumbnailUrl: null,
+                externalUrl: videoUrl
+            };
+        }
+        
+        // Default fallback - Use direct link
         return {
             platform: 'unknown',
             id: videoUrl,
-            embedUrl: videoUrl
+            embedUrl: null,
+            displayType: 'link',
+            thumbnailUrl: null,
+            externalUrl: videoUrl
         };
+    }
+
+    // Helper method to get platform icon
+    getPlatformIcon(platform) {
+        const icons = {
+            'youtube': 'fab fa-youtube',
+            'facebook': 'fab fa-facebook',
+            'vimeo': 'fab fa-vimeo',
+            'dailymotion': 'fas fa-play-circle',
+            'direct': 'fas fa-video',
+            'unknown': 'fas fa-link'
+        };
+        return icons[platform] || 'fas fa-video';
+    }
+
+    // Helper method to get platform display name
+    getPlatformName(platform) {
+        const names = {
+            'youtube': 'YouTube',
+            'facebook': 'Facebook',
+            'vimeo': 'Vimeo',
+            'dailymotion': 'Dailymotion',
+            'direct': 'Direct Video',
+            'unknown': 'External'
+        };
+        return names[platform] || 'Video';
     }
 
     render() {
@@ -273,10 +328,13 @@ class VideoGalleryView extends App {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         ${videoGallery.video_links.map((videoUrl, index) => {
                             const videoInfo = this.getVideoInfo(videoUrl);
-                            return `
-                                <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-                                    <div class="relative aspect-video">
-                                        ${videoInfo.embedUrl ? `
+                            
+                            // Render based on display type
+                            if (videoInfo.displayType === 'embed') {
+                                // YouTube embedded player
+                                return `
+                                    <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div class="relative aspect-video">
                                             <iframe 
                                                 src="${videoInfo.embedUrl}" 
                                                 title="${videoGallery.name} - Video ${index + 1}"
@@ -285,43 +343,137 @@ class VideoGalleryView extends App {
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                                 allowfullscreen>
                                             </iframe>
-                                        ` : `
-                                            <div class="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center">
-                                                <div class="text-center">
-                                                    <i class="fas fa-video text-gray-400 text-4xl mb-2"></i>
-                                                    <p class="text-gray-500">Video not available</p>
-                                                    <a href="${videoUrl}" target="_blank" class="text-blue-500 hover:underline mt-2 inline-block">
-                                                        View on ${videoInfo.platform}
+                                            
+                                            <!-- Video Number Badge -->
+                                            <div class="absolute top-3 left-3">
+                                                <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                                                    ${index + 1}
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Platform Badge -->
+                                            <div class="absolute top-3 right-3">
+                                                <span class="bg-[${primaryColor}] text-white text-xs px-2 py-1 rounded-full capitalize">
+                                                    ${videoInfo.platform}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (videoInfo.displayType === 'thumbnail') {
+                                // Thumbnail with external link
+                                return `
+                                    <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div class="relative aspect-video">
+                                            <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                                                ${videoInfo.thumbnailUrl ? `
+                                                    <img src="${videoInfo.thumbnailUrl}" 
+                                                         alt="${videoGallery.name} - Video ${index + 1}"
+                                                         class="w-full h-full object-cover"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                ` : ''}
+                                                <div class="absolute inset-0 flex items-center justify-center ${videoInfo.thumbnailUrl ? 'hidden' : 'flex'}">
+                                                    <div class="text-center text-gray-600">
+                                                        <i class="fas fa-${this.getPlatformIcon(videoInfo.platform)} text-4xl mb-3"></i>
+                                                        <p class="text-lg font-medium">${this.getPlatformName(videoInfo.platform)} Video</p>
+                                                        <p class="text-sm opacity-75">Click to watch on ${this.getPlatformName(videoInfo.platform)}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                    <a href="${videoInfo.externalUrl}" 
+                                                       target="_blank" 
+                                                       rel="noopener noreferrer"
+                                                       class="bg-white text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center gap-2">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                        Watch on ${this.getPlatformName(videoInfo.platform)}
                                                     </a>
                                                 </div>
+                                                
+                                                <!-- Video Number Badge -->
+                                                <div class="absolute top-3 left-3">
+                                                    <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                                                        ${index + 1}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Platform Badge -->
+                                                <div class="absolute top-3 right-3">
+                                                    <span class="bg-[${primaryColor}] text-white text-xs px-2 py-1 rounded-full capitalize">
+                                                        ${videoInfo.platform}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        `}
-                                        
-                                        <!-- Video Number Badge -->
-                                        <div class="absolute top-3 left-3">
-                                            <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
-                                                ${index + 1}
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- Platform Badge -->
-                                        <div class="absolute top-3 right-3">
-                                            <span class="bg-[${primaryColor}] text-white text-xs px-2 py-1 rounded-full capitalize">
-                                                ${videoInfo.platform}
-                                            </span>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Video Link -->
-                                    <div class="p-4">
-                                        <a href="${videoUrl}" target="_blank" 
-                                           class="inline-flex items-center gap-2 text-[${primaryColor}] hover:text-[${accentColor}] transition-colors">
-                                            <i class="fas fa-external-link-alt"></i>
-                                            <span class="text-sm">View on ${videoInfo.platform}</span>
-                                        </a>
+                                `;
+                            } else if (videoInfo.displayType === 'direct') {
+                                // Direct video file
+                                return `
+                                    <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div class="relative aspect-video">
+                                            <video 
+                                                controls 
+                                                class="w-full h-full rounded-2xl"
+                                                poster="${videoInfo.thumbnailUrl || ''}">
+                                                <source src="${videoInfo.externalUrl}" type="video/mp4">
+                                                <source src="${videoInfo.externalUrl}" type="video/webm">
+                                                <source src="${videoInfo.externalUrl}" type="video/ogg">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            
+                                            <!-- Video Number Badge -->
+                                            <div class="absolute top-3 left-3">
+                                                <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                                                    ${index + 1}
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Platform Badge -->
+                                            <div class="absolute top-3 right-3">
+                                                <span class="bg-[${primaryColor}] text-white text-xs px-2 py-1 rounded-full capitalize">
+                                                    ${videoInfo.platform}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
+                            } else {
+                                // Fallback for unknown/other links
+                                return `
+                                    <div class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div class="relative aspect-video">
+                                            <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                                                <div class="text-center text-gray-600">
+                                                    <i class="fas fa-link text-4xl mb-3"></i>
+                                                    <p class="text-lg font-medium">Video Link</p>
+                                                    <p class="text-sm opacity-75 mb-4">Click to open video</p>
+                                                    <a href="${videoInfo.externalUrl}" 
+                                                       target="_blank" 
+                                                       rel="noopener noreferrer"
+                                                       class="bg-white text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center gap-2 mx-auto w-fit">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                        Open Video
+                                                    </a>
+                                                </div>
+                                                
+                                                <!-- Video Number Badge -->
+                                                <div class="absolute top-3 left-3">
+                                                    <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                                                        ${index + 1}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Platform Badge -->
+                                                <div class="absolute top-3 right-3">
+                                                    <span class="bg-[${primaryColor}] text-white text-xs px-2 py-1 rounded-full capitalize">
+                                                        ${videoInfo.platform}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
                         }).join('')}
                     </div>
                 </div>

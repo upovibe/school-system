@@ -8,6 +8,7 @@ import '@/components/layout/adminLayout/TeacherAddDialog.js';
 import '@/components/layout/adminLayout/TeacherUpdateDialog.js';
 import '@/components/layout/adminLayout/TeacherViewDialog.js';
 import '@/components/layout/adminLayout/TeacherDeleteDialog.js';
+import '@/components/layout/adminLayout/TeacherImportDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -125,6 +126,18 @@ class TeacherManagementPage extends App {
         document.title = 'Teacher Management | School System';
         this.loadData();
         this.addEventListener('click', this.handleHeaderActions.bind(this));
+        
+        // Add event listener for table menu actions
+        this.addEventListener('table-menu-action', (event) => {
+            this.handleMenuAction(event.detail.action, event.detail.item);
+        });
+        
+        // Add event listeners for import dialog
+        this.addEventListener('import-completed', (event) => {
+            if (event.detail.success) {
+                this.loadData(); // Refresh the table
+            }
+        });
         
         // Add event listeners for table events
         this.addEventListener('table-view', this.onView.bind(this));
@@ -369,6 +382,138 @@ class TeacherManagementPage extends App {
         this.set('deleteTeacherData', null);
     }
 
+    handleMenuAction(action, item) {
+        switch (action) {
+            case 'export':
+                this.exportTeachers();
+                break;
+            case 'import':
+                this.openImportModal();
+                break;
+            case 'refresh':
+                this.loadData();
+                break;
+            case 'print':
+                // The table component handles printing automatically
+                break;
+            default:
+                console.log('Unknown menu action:', action);
+        }
+    }
+
+    async exportTeachers() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to export data',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            // Show loading state
+            Toast.show({
+                title: 'Exporting...',
+                message: 'Preparing teachers data for download',
+                variant: 'info',
+                duration: 2000
+            });
+
+            // Fetch the CSV data
+            const response = await fetch('/api/teachers/export', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/csv'
+                }
+            });
+
+            if (response.ok) {
+                // Get the blob data
+                const blob = await response.blob();
+                
+                // Use a more reliable download method
+                const fileName = `teachers_export_${new Date().toISOString().split('T')[0]}.csv`;
+                
+                // Check if browser supports the File System Access API
+                if ('showSaveFilePicker' in window) {
+                    try {
+                        const fileHandle = await window.showSaveFilePicker({
+                            suggestedName: fileName,
+                            types: [{
+                                description: 'CSV files',
+                                accept: { 'text/csv': ['.csv'] }
+                            }]
+                        });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            throw err;
+                        }
+                    }
+                } else {
+                    // Fallback for browsers that don't support File System Access API
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    // Create a temporary iframe for download
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = url;
+                    document.body.appendChild(iframe);
+                    
+                    // Clean up after a short delay
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        window.URL.revokeObjectURL(url);
+                    }, 1000);
+                }
+
+                Toast.show({
+                    title: 'Export Successful',
+                    message: 'Teachers data exported successfully',
+                    variant: 'success',
+                    duration: 3000
+                });
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Export failed');
+            }
+        } catch (error) {
+            Toast.show({
+                title: 'Export Error',
+                message: error.message || 'Failed to export teachers data',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
+    openImportModal() {
+        this.closeAllModals();
+        const importDialog = this.querySelector('teacher-import-dialog');
+        
+        if (importDialog) {
+            // Check if dialog is already open
+            if (importDialog.hasAttribute('open')) {
+                console.log('Dialog is already open, closing first...');
+                importDialog.close();
+            }
+            
+            // Open the dialog
+            setTimeout(() => {
+                importDialog.open();
+            }, 100);
+        } else {
+            console.error('Import dialog not found');
+        }
+    }
+
+
     render() {
         const teachers = this.get('teachers');
         const loading = this.get('loading');
@@ -407,6 +552,40 @@ class TeacherManagementPage extends App {
             { key: 'salary', label: 'Salary' },
             { key: 'updated', label: 'Updated' }
         ];
+
+        const menuItems = [
+            {
+                type: 'title',
+                label: 'Data Management'
+            },
+            {
+                action: 'export',
+                label: 'Export CSV',
+                icon: 'fas fa-download'
+            },
+            {
+                action: 'import',
+                label: 'Import CSV',
+                icon: 'fas fa-upload'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                type: 'title',
+                label: 'Actions'
+            },
+            {
+                action: 'refresh',
+                label: 'Refresh Data',
+                icon: 'fas fa-sync-alt'
+            },
+            {
+                action: 'print',
+                label: 'Print Table',
+                icon: 'fas fa-print'
+            }
+        ];
         
         return `
             ${this.renderHeader()}
@@ -425,6 +604,7 @@ class TeacherManagementPage extends App {
                             title="Teachers Database"
                             data='${JSON.stringify(tableData)}'
                             columns='${JSON.stringify(tableColumns)}'
+                            menu-items='${JSON.stringify(menuItems)}'
                             sortable
                             searchable
                             search-placeholder="Search teachers..."
@@ -432,8 +612,6 @@ class TeacherManagementPage extends App {
                             page-size="50"
                             action
                             addable
-                            refresh
-                            print
                             bordered
                             striped
                             class="w-full">
@@ -453,6 +631,9 @@ class TeacherManagementPage extends App {
             
             <!-- Delete Teacher Dialog -->
             <teacher-delete-dialog ${showDeleteDialog ? 'open' : ''}></teacher-delete-dialog>
+            
+            <!-- Import Teachers Dialog -->
+            <teacher-import-dialog></teacher-import-dialog>
         `;
     }
 }

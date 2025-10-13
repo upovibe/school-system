@@ -144,6 +144,40 @@ class TeacherModel extends BaseModel {
     }
     
     /**
+     * Get all teachers with detailed information (alias for getTeachersWithUserInfo)
+     */
+    public function findAllWithDetails() {
+        return $this->getTeachersWithUserInfo();
+    }
+    
+    /**
+     * Find teacher by email
+     */
+    public function findByEmail($email) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT t.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section
+                FROM {$this->getTableName()} t
+                LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN classes c ON t.class_id = c.id
+                WHERE u.email = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$email]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                return $this->applyCasts($result);
+            }
+            
+            return null;
+        } catch (PDOException $e) {
+            throw new Exception('Error finding teacher by email: ' . $e->getMessage());
+        }
+    }
+    
+    /**
      * Search teachers by name, email, employee ID, or specialization
      */
     public function searchTeachers($query, $limit = null) {

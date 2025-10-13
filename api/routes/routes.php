@@ -244,6 +244,8 @@ Router::get('/students/download/assignments/attachments/{filename}', 'StudentCon
 Router::get('/uploads/timetable-resources/{filename}', 'TimetableResourceController@download');
 
 // Teacher Management Routes
+Router::get('/teachers/export', 'TeacherController@export');
+Router::post('/teachers/import', 'TeacherController@import');
 Router::get('/teachers/{id}', 'TeacherController@show');
 Router::put('/teachers/{id}', 'TeacherController@update');
 Router::delete('/teachers/{id}', 'TeacherController@destroy');
@@ -252,6 +254,8 @@ Router::delete('/teachers/{id}', 'TeacherController@destroy');
 Router::get('/students', 'StudentController@index');
 Router::post('/students', 'StudentController@store');
 Router::get('/students/active', 'StudentController@getActive');
+Router::get('/students/export', 'StudentController@export');
+Router::post('/students/import', 'StudentController@import');
 Router::get('/students/search', 'StudentController@search');
 Router::get('/students/by-class', 'StudentController@getByClass');
 Router::get('/students/by-house', 'StudentController@getByHouse');

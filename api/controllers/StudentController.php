@@ -2852,6 +2852,279 @@ class StudentController {
         }
     }
 
+    /**
+     * Export students to CSV (admin only)
+     */
+    public function export() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Get all students with their class and house information
+            $students = $this->studentModel->findAllWithDetails();
+            
+            // Set headers for CSV download
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d_H-i-s') . '.csv"');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            header('Content-Transfer-Encoding: binary');
+            
+            // Add BOM for proper UTF-8 encoding
+            echo "\xEF\xBB\xBF";
+            
+            // Open output stream
+            $output = fopen('php://output', 'w');
+            
+            // CSV headers
+            $headers = [
+                'Student ID',
+                'First Name',
+                'Last Name',
+                'Email',
+                'Phone',
+                'Address',
+                'Date of Birth',
+                'Gender',
+                'Admission Date',
+                'Student Type',
+                'Current Class',
+                'Class Section',
+                'House Name',
+                'Parent Name',
+                'Parent Phone',
+                'Parent Email',
+                'Emergency Contact',
+                'Emergency Phone',
+                'Blood Group',
+                'Medical Conditions',
+                'Status'
+            ];
+            
+            fputcsv($output, $headers);
+            
+            // Add student data
+            foreach ($students as $student) {
+                $row = [
+                    $student['student_id'],
+                    $student['first_name'],
+                    $student['last_name'],
+                    $student['email'],
+                    $student['phone'],
+                    $student['address'],
+                    $student['date_of_birth'],
+                    $student['gender'],
+                    $student['admission_date'],
+                    $student['student_type'],
+                    $student['class_name'] ?? '',
+                    $student['class_section'] ?? '',
+                    $student['house_name'] ?? '',
+                    $student['parent_name'],
+                    $student['parent_phone'],
+                    $student['parent_email'],
+                    $student['emergency_contact'],
+                    $student['emergency_phone'],
+                    $student['blood_group'],
+                    $student['medical_conditions'],
+                    $student['status']
+                ];
+                fputcsv($output, $row);
+            }
+            
+            fclose($output);
+            exit;
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error exporting students: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Import students from CSV (admin only)
+     */
+    public function import() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Check if file was uploaded
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No file uploaded or upload error'
+                ]);
+                return;
+            }
+            
+            $file = $_FILES['file'];
+            $fileType = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            
+            // Validate file type
+            if (!in_array($fileType, ['csv'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only CSV files are allowed'
+                ]);
+                return;
+            }
+            
+            // Read CSV file
+            $csvData = [];
+            if (($handle = fopen($file['tmp_name'], 'r')) !== FALSE) {
+                $headers = fgetcsv($handle); // Skip header row
+                
+                while (($data = fgetcsv($handle)) !== FALSE) {
+                    if (count($data) >= 8) { // Minimum required fields
+                        $csvData[] = array_combine($headers, $data);
+                    }
+                }
+                fclose($handle);
+            }
+            
+            if (empty($csvData)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No valid data found in CSV file'
+                ]);
+                return;
+            }
+            
+            $results = [
+                'total' => count($csvData),
+                'successful' => 0,
+                'failed' => 0,
+                'errors' => []
+            ];
+            
+            // Process each student record
+            foreach ($csvData as $index => $row) {
+                try {
+                    // Map CSV columns to database fields
+                    $studentData = [
+                        'student_id' => trim($row['Student ID'] ?? ''),
+                        'first_name' => trim($row['First Name'] ?? ''),
+                        'last_name' => trim($row['Last Name'] ?? ''),
+                        'email' => trim($row['Email'] ?? ''),
+                        'phone' => trim($row['Phone'] ?? ''),
+                        'address' => trim($row['Address'] ?? ''),
+                        'date_of_birth' => trim($row['Date of Birth'] ?? ''),
+                        'gender' => trim($row['Gender'] ?? ''),
+                        'admission_date' => trim($row['Admission Date'] ?? ''),
+                        'student_type' => trim($row['Student Type'] ?? 'day'),
+                        'parent_name' => trim($row['Parent Name'] ?? ''),
+                        'parent_phone' => trim($row['Parent Phone'] ?? ''),
+                        'parent_email' => trim($row['Parent Email'] ?? ''),
+                        'emergency_contact' => trim($row['Emergency Contact'] ?? ''),
+                        'emergency_phone' => trim($row['Emergency Phone'] ?? ''),
+                        'blood_group' => trim($row['Blood Group'] ?? ''),
+                        'medical_conditions' => trim($row['Medical Conditions'] ?? ''),
+                        'status' => trim($row['Status'] ?? 'active'),
+                        'password' => 'student123' // Default password for imported students
+                    ];
+                    
+                    // Validate required fields
+                    $requiredFields = ['student_id', 'first_name', 'last_name', 'email', 'phone', 'address', 'date_of_birth', 'gender', 'admission_date'];
+                    $missingFields = [];
+                    
+                    foreach ($requiredFields as $field) {
+                        if (empty($studentData[$field])) {
+                            $missingFields[] = $field;
+                        }
+                    }
+                    
+                    if (!empty($missingFields)) {
+                        throw new Exception('Missing required fields: ' . implode(', ', $missingFields));
+                    }
+                    
+                    // Validate email format
+                    if (!filter_var($studentData['email'], FILTER_VALIDATE_EMAIL)) {
+                        throw new Exception('Invalid email format');
+                    }
+                    
+                    // Validate phone (10 digits)
+                    if (!preg_match('/^\d{10}$/', $studentData['phone'])) {
+                        throw new Exception('Phone must be exactly 10 digits');
+                    }
+                    
+                    // Validate gender
+                    if (!in_array(strtolower($studentData['gender']), ['male', 'female', 'other'])) {
+                        throw new Exception('Gender must be male, female, or other');
+                    }
+                    
+                    // Validate student type
+                    if (!in_array(strtolower($studentData['student_type']), ['day', 'boarding'])) {
+                        throw new Exception('Student type must be day or boarding');
+                    }
+                    
+                    // Validate dates
+                    if (!empty($studentData['date_of_birth']) && !strtotime($studentData['date_of_birth'])) {
+                        throw new Exception('Invalid date of birth format');
+                    }
+                    
+                    if (!empty($studentData['admission_date']) && !strtotime($studentData['admission_date'])) {
+                        throw new Exception('Invalid admission date format');
+                    }
+                    
+                    // Check if student already exists
+                    $existingStudent = $this->studentModel->findByStudentId($studentData['student_id']);
+                    if ($existingStudent) {
+                        throw new Exception('Student with Student ID already exists');
+                    }
+                    
+                    $existingEmail = $this->studentModel->findByEmail($studentData['email']);
+                    if ($existingEmail) {
+                        throw new Exception('Student with email already exists');
+                    }
+                    
+                    // Create student
+                    $result = $this->studentModel->createStudentWithUser($studentData);
+                    
+                    if ($result) {
+                        $results['successful']++;
+                        $this->logAction('student_imported', 'Student imported from CSV', [
+                            'student_id' => $studentData['student_id'],
+                            'email' => $studentData['email']
+                        ]);
+                    } else {
+                        throw new Exception('Failed to create student');
+                    }
+                    
+                } catch (Exception $e) {
+                    $results['failed']++;
+                    $results['errors'][] = [
+                        'row' => $index + 2, // +2 because we skip header and arrays are 0-indexed
+                        'student_id' => $row['Student ID'] ?? 'N/A',
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $results,
+                'message' => 'Import completed. ' . $results['successful'] . ' students imported successfully, ' . $results['failed'] . ' failed.'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error importing students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 
 }
 ?> 

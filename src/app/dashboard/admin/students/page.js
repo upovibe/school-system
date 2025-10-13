@@ -9,6 +9,7 @@ import '@/components/layout/adminLayout/StudentAddDialog.js';
 import '@/components/layout/adminLayout/StudentUpdateDialog.js';
 import '@/components/layout/adminLayout/StudentViewDialog.js';
 import '@/components/layout/adminLayout/PromoteStudentDialog.js';
+import '@/components/layout/adminLayout/StudentImportDialog.js';
 import api from '@/services/api.js';
 
 /**
@@ -143,6 +144,8 @@ class StudentManagementPage extends App {
         this.addEventListener('table-delete', this.onDelete.bind(this));
         this.addEventListener('table-add', this.onAdd.bind(this));
         this.addEventListener('table-custom-action', this.onCustomAction.bind(this));
+        this.addEventListener('table-menu-action', this.handleMenuAction.bind(this));
+        this.addEventListener('import-completed', this.handleImportCompleted.bind(this));
         
         // Listen for success events to refresh data
         this.addEventListener('student-deleted', (event) => {
@@ -424,6 +427,136 @@ class StudentManagementPage extends App {
         }
     }
 
+    // Handle menu actions (export/import)
+    handleMenuAction(event) {
+        const { action, item } = event.detail;
+        
+        switch (action) {
+            case 'export':
+                this.exportStudents();
+                break;
+            case 'import':
+                this.openImportModal();
+                break;
+            case 'refresh':
+                this.loadData();
+                break;
+            case 'print':
+                window.print();
+                break;
+        }
+    }
+
+    // Export students to CSV
+    async exportStudents() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                Toast.show({
+                    title: 'Authentication Error',
+                    message: 'Please log in to export data',
+                    variant: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+
+            const response = await fetch('/api/students/export', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/csv'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to export students data');
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            
+            // Try to use showSaveFilePicker for modern browsers
+            if (window.showSaveFilePicker) {
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: `students_export_${new Date().toISOString().split('T')[0]}.csv`,
+                        types: [{
+                            description: 'CSV files',
+                            accept: { 'text/csv': ['.csv'] }
+                        }]
+                    });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    
+                    Toast.show({
+                        title: 'Export Successful',
+                        message: 'Students data exported successfully',
+                        variant: 'success',
+                        duration: 3000
+                    });
+                    return;
+                } catch (error) {
+                    // User cancelled or error occurred, fall back to direct download
+                }
+            }
+            
+            // Fallback: Direct download using iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(url);
+            }, 1000);
+            
+            Toast.show({
+                title: 'Export Successful',
+                message: 'Students data exported successfully',
+                variant: 'success',
+                duration: 3000
+            });
+            
+        } catch (error) {
+            Toast.show({
+                title: 'Export Error',
+                message: error.message || 'Failed to export students data',
+                variant: 'error',
+                duration: 3000
+            });
+        }
+    }
+
+    // Open import modal
+    openImportModal() {
+        this.closeAllModals();
+        const importDialog = this.querySelector('student-import-dialog');
+        
+        if (importDialog) {
+            // Check if dialog is already open
+            if (importDialog.hasAttribute('open')) {
+                console.log('Dialog is already open, closing first...');
+                importDialog.close();
+            }
+            
+            // Open the dialog
+            setTimeout(() => {
+                importDialog.open();
+            }, 100);
+        } else {
+            console.error('Import dialog not found');
+        }
+    }
+
+    // Handle import completion
+    handleImportCompleted(event) {
+        // Refresh the table data
+        this.loadData();
+    }
+
     // Show promote student dialog
     showPromoteStudentDialog(studentData) {
         // Find the full student data from students array
@@ -639,11 +772,42 @@ class StudentManagementPage extends App {
                             page-size="50"
                             action
                             ${!loading ? 'addable' : ''}
-                            refresh
-                            print
                             bordered
                             striped
                             ${!loading ? `custom-actions='${JSON.stringify(this.getCustomActions())}'` : ''}
+                            menu-items='${JSON.stringify([
+                                {
+                                    type: 'title',
+                                    label: 'Data Management'
+                                },
+                                {
+                                    action: 'export',
+                                    label: 'Export CSV',
+                                    icon: 'fas fa-download'
+                                },
+                                {
+                                    action: 'import',
+                                    label: 'Import CSV',
+                                    icon: 'fas fa-upload'
+                                },
+                                {
+                                    type: 'separator'
+                                },
+                                {
+                                    type: 'title',
+                                    label: 'Actions'
+                                },
+                                {
+                                    action: 'refresh',
+                                    label: 'Refresh Data',
+                                    icon: 'fas fa-sync-alt'
+                                },
+                                {
+                                    action: 'print',
+                                    label: 'Print Table',
+                                    icon: 'fas fa-print'
+                                }
+                            ])}'
                             class="w-full">
                         </ui-table>
                     </div>
@@ -664,6 +828,9 @@ class StudentManagementPage extends App {
             
             <!-- Promote Student Dialog -->
             <promote-student-dialog ${showPromoteDialog ? 'open' : ''}></promote-student-dialog>
+            
+            <!-- Import Student Dialog -->
+            <student-import-dialog></student-import-dialog>
         `;
     }
 }

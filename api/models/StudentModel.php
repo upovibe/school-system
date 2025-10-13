@@ -770,5 +770,63 @@ class StudentModel extends BaseModel {
             throw new Exception('Error updating house assignment: ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Get all students with detailed information (class and house)
+     */
+    public function findAllWithDetails() {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section,
+                       h.name as house_name, h.description as house_description
+                FROM {$this->getTableName()} s
+                LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                LEFT JOIN houses h ON s.house_id = h.id
+                ORDER BY s.first_name ASC, s.last_name ASC
+            ");
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Apply casts to each result
+            foreach ($results as &$result) {
+                $result = $this->applyCasts($result);
+            }
+            
+            return $results;
+        } catch (PDOException $e) {
+            throw new Exception('Error fetching students with details: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Find student by email
+     */
+    public function findByEmail($email) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT s.*, u.name, u.email, u.status as user_status,
+                       c.name as class_name, c.section as class_section,
+                       h.name as house_name, h.description as house_description
+                FROM {$this->getTableName()} s
+                LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN classes c ON s.current_class_id = c.id
+                LEFT JOIN houses h ON s.house_id = h.id
+                WHERE u.email = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$email]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                return $this->applyCasts($result);
+            }
+            
+            return null;
+        } catch (PDOException $e) {
+            throw new Exception('Error finding student by email: ' . $e->getMessage());
+        }
+    }
 }
 ?> 

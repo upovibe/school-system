@@ -4047,6 +4047,257 @@ class TeacherController {
     }
     
     /**
+     * Export teachers to CSV (admin only)
+     */
+    public function export() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Get all teachers with their class information
+            $teachers = $this->teacherModel->findAllWithDetails();
+            
+            // Set headers for CSV download
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="teachers_export_' . date('Y-m-d_H-i-s') . '.csv"');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            header('Content-Transfer-Encoding: binary');
+            
+            // Add BOM for proper UTF-8 encoding
+            echo "\xEF\xBB\xBF";
+            
+            // Open output stream
+            $output = fopen('php://output', 'w');
+            
+            // CSV headers
+            $headers = [
+                'Employee ID',
+                'First Name',
+                'Last Name',
+                'Email',
+                'Phone',
+                'Address',
+                'Date of Birth',
+                'Gender',
+                'Qualification',
+                'Specialization',
+                'Hire Date',
+                'Salary',
+                'Status',
+                'Class Name',
+                'Class Section'
+            ];
+            
+            fputcsv($output, $headers);
+            
+            // Add teacher data
+            foreach ($teachers as $teacher) {
+                $row = [
+                    $teacher['employee_id'],
+                    $teacher['first_name'],
+                    $teacher['last_name'],
+                    $teacher['email'],
+                    $teacher['phone'],
+                    $teacher['address'],
+                    $teacher['date_of_birth'],
+                    $teacher['gender'],
+                    $teacher['qualification'],
+                    $teacher['specialization'],
+                    $teacher['hire_date'],
+                    $teacher['salary'],
+                    $teacher['status'],
+                    $teacher['class_name'] ?? '',
+                    $teacher['class_section'] ?? ''
+                ];
+                fputcsv($output, $row);
+            }
+            
+            fclose($output);
+            exit;
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error exporting teachers: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Import teachers from CSV (admin only)
+     */
+    public function import() {
+        try {
+            // Require admin authentication
+            global $pdo;
+            RoleMiddleware::requireAdmin($pdo);
+            
+            // Check if file was uploaded
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No file uploaded or upload error'
+                ]);
+                return;
+            }
+            
+            $file = $_FILES['file'];
+            $fileType = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            
+            // Validate file type
+            if (!in_array($fileType, ['csv'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only CSV files are allowed'
+                ]);
+                return;
+            }
+            
+            // Read CSV file
+            $csvData = [];
+            if (($handle = fopen($file['tmp_name'], 'r')) !== FALSE) {
+                $headers = fgetcsv($handle); // Skip header row
+                
+                while (($data = fgetcsv($handle)) !== FALSE) {
+                    if (count($data) >= 8) { // Minimum required fields
+                        $csvData[] = array_combine($headers, $data);
+                    }
+                }
+                fclose($handle);
+            }
+            
+            if (empty($csvData)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No valid data found in CSV file'
+                ]);
+                return;
+            }
+            
+            $results = [
+                'total' => count($csvData),
+                'successful' => 0,
+                'failed' => 0,
+                'errors' => []
+            ];
+            
+            // Process each teacher record
+            foreach ($csvData as $index => $row) {
+                try {
+                    // Map CSV columns to database fields
+                    $teacherData = [
+                        'employee_id' => trim($row['Employee ID'] ?? ''),
+                        'first_name' => trim($row['First Name'] ?? ''),
+                        'last_name' => trim($row['Last Name'] ?? ''),
+                        'email' => trim($row['Email'] ?? ''),
+                        'phone' => trim($row['Phone'] ?? ''),
+                        'address' => trim($row['Address'] ?? ''),
+                        'date_of_birth' => trim($row['Date of Birth'] ?? ''),
+                        'gender' => trim($row['Gender'] ?? ''),
+                        'qualification' => trim($row['Qualification'] ?? ''),
+                        'specialization' => trim($row['Specialization'] ?? ''),
+                        'hire_date' => trim($row['Hire Date'] ?? ''),
+                        'salary' => !empty($row['Salary']) ? floatval($row['Salary']) : null,
+                        'status' => trim($row['Status'] ?? 'active'),
+                        'password' => 'default123' // Default password for imported teachers
+                    ];
+                    
+                    // Validate required fields
+                    $requiredFields = ['employee_id', 'first_name', 'last_name', 'email', 'phone', 'address', 'date_of_birth', 'gender', 'hire_date'];
+                    $missingFields = [];
+                    
+                    foreach ($requiredFields as $field) {
+                        if (empty($teacherData[$field])) {
+                            $missingFields[] = $field;
+                        }
+                    }
+                    
+                    if (!empty($missingFields)) {
+                        throw new Exception('Missing required fields: ' . implode(', ', $missingFields));
+                    }
+                    
+                    // Validate email format
+                    if (!filter_var($teacherData['email'], FILTER_VALIDATE_EMAIL)) {
+                        throw new Exception('Invalid email format');
+                    }
+                    
+                    // Validate phone (10 digits)
+                    if (!preg_match('/^\d{10}$/', $teacherData['phone'])) {
+                        throw new Exception('Phone must be exactly 10 digits');
+                    }
+                    
+                    // Validate gender
+                    if (!in_array(strtolower($teacherData['gender']), ['male', 'female', 'other'])) {
+                        throw new Exception('Gender must be male, female, or other');
+                    }
+                    
+                    // Validate dates
+                    if (!empty($teacherData['date_of_birth']) && !strtotime($teacherData['date_of_birth'])) {
+                        throw new Exception('Invalid date of birth format');
+                    }
+                    
+                    if (!empty($teacherData['hire_date']) && !strtotime($teacherData['hire_date'])) {
+                        throw new Exception('Invalid hire date format');
+                    }
+                    
+                    // Check if teacher already exists
+                    $existingTeacher = $this->teacherModel->findByEmployeeId($teacherData['employee_id']);
+                    if ($existingTeacher) {
+                        throw new Exception('Teacher with Employee ID already exists');
+                    }
+                    
+                    $existingEmail = $this->teacherModel->findByEmail($teacherData['email']);
+                    if ($existingEmail) {
+                        throw new Exception('Teacher with email already exists');
+                    }
+                    
+                    // Create teacher
+                    $result = $this->teacherModel->createTeacherWithUser($teacherData);
+                    
+                    if ($result) {
+                        $results['successful']++;
+                        $this->logAction('teacher_imported', 'Teacher imported from CSV', [
+                            'employee_id' => $teacherData['employee_id'],
+                            'email' => $teacherData['email']
+                        ]);
+                    } else {
+                        throw new Exception('Failed to create teacher');
+                    }
+                    
+                } catch (Exception $e) {
+                    $results['failed']++;
+                    $results['errors'][] = [
+                        'row' => $index + 2, // +2 because we skip header and arrays are 0-indexed
+                        'employee_id' => $row['Employee ID'] ?? 'N/A',
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $results,
+                'message' => 'Import completed. ' . $results['successful'] . ' teachers imported successfully, ' . $results['failed'] . ' failed.'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error importing teachers: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Log teacher actions for audit trail
      */
     private function logTeacherAction($action, $description, $details = []) {

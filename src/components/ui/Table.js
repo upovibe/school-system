@@ -19,6 +19,7 @@
  * - search-placeholder: string - Placeholder text for search input (default: 'Search...')
  * - refresh: boolean - Enable refresh button (default: false)
  * - print: boolean - Enable print button (default: false)
+ * - menu-items: string - JSON string of menu items for dropdown (default: '[]')
  * 
  * Events:
  * - table-sort: Fired when column is sorted (detail: { column: string, direction: string })
@@ -26,6 +27,7 @@
  * - table-page-change: Fired when page changes (detail: { page: number })
  * - table-search: Fired when search query changes (detail: { query: string, results: number })
  * - table-refresh: Fired when refresh button is clicked
+ * - table-menu-action: Fired when menu item is clicked (detail: { action: string, item: object })
  * 
  * Usage:
  * <ui-table data='[{"id":1,"name":"John","age":25}]' columns='[{"key":"name","label":"Name"}]'></ui-table>
@@ -39,7 +41,7 @@
  */
 class Table extends HTMLElement {
     static get observedAttributes() {
-        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'actions', 'custom-actions', 'refresh', 'print'];
+        return ['data', 'columns', 'title', 'sortable', 'selectable', 'pagination', 'page-size', 'striped', 'bordered', 'compact', 'searchable', 'search-placeholder', 'clickable', 'filterable', 'addable', 'action', 'actions', 'custom-actions', 'refresh', 'print', 'menu-items'];
     }
 
     constructor() {
@@ -66,6 +68,7 @@ class Table extends HTMLElement {
         this.print = this.hasAttribute('print');
         this.actions = (this.getAttribute('actions') || '').split(',').map(a => a.trim()).filter(Boolean);
         this.customActions = this.parseJSONAttribute('custom-actions', []);
+        this.menuItems = this.parseJSONAttribute('menu-items', []);
         
         // Internal state
         this.currentPage = 1;
@@ -742,6 +745,86 @@ class Table extends HTMLElement {
                     color: #6b7280;
                     font-style: italic;
                 }
+                
+                .upo-table-menu {
+                    position: relative;
+                    display: inline-block;
+                }
+                
+                .upo-table-menu-button {
+                    padding: 0.5rem;
+                    border: none;
+                    background: none;
+                    color: #6b7280;
+                    border-radius: 0.375rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    transition: background 0.15s;
+                }
+                
+                .upo-table-menu-button:hover {
+                    background-color: #f3f4f6;
+                    color: #2563eb;
+                }
+                
+                .upo-table-menu-dropdown {
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 0.375rem;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                    z-index: 50;
+                    min-width: 200px;
+                    display: none;
+                }
+                
+                .upo-table-menu-dropdown.show {
+                    display: block;
+                }
+                
+                .upo-table-menu-item {
+                    display: block;
+                    width: 100%;
+                    padding: 0.75rem 1rem;
+                    text-align: left;
+                    border: none;
+                    background: none;
+                    color: #374151;
+                    cursor: pointer;
+                    transition: background-color 0.15s;
+                    font-size: 0.875rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                
+                .upo-table-menu-item:hover {
+                    background-color: #f3f4f6;
+                }
+                
+                .upo-table-menu-item.danger:hover {
+                    background-color: #fef2f2;
+                    color: #dc2626;
+                }
+                
+                .upo-table-menu-separator {
+                    height: 1px;
+                    background-color: #e5e7eb;
+                    margin: 0.25rem 0;
+                }
+                
+                .upo-table-menu-title {
+                    padding: 0.5rem 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    border-bottom: 1px solid #e5e7eb;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -773,6 +856,8 @@ class Table extends HTMLElement {
                 this.actions = (newValue || '').split(',').map(a => a.trim()).filter(Boolean);
             } else if (name === 'custom-actions') {
                 this.customActions = this.parseJSONAttribute('custom-actions', []);
+            } else if (name === 'menu-items') {
+                this.menuItems = this.parseJSONAttribute('menu-items', []);
             } else if (name === 'page-size') {
                 this.pageSize = parseInt(newValue) || 10;
             } else if (name === 'search-placeholder') {
@@ -985,6 +1070,39 @@ class Table extends HTMLElement {
                 bubbles: true
             }));
         }
+    }
+
+    /**
+     * Toggle menu dropdown
+     */
+    toggleMenu() {
+        const dropdown = this.querySelector('.upo-table-menu-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('show');
+        }
+    }
+
+    /**
+     * Close menu dropdown
+     */
+    closeMenu() {
+        const dropdown = this.querySelector('.upo-table-menu-dropdown');
+        if (dropdown) {
+            dropdown.classList.remove('show');
+        }
+    }
+
+    /**
+     * Handle menu item click
+     * @param {string} action - The action name
+     * @param {object} item - The menu item object
+     */
+    handleMenuAction(action, item) {
+        this.closeMenu();
+        this.dispatchEvent(new CustomEvent('table-menu-action', {
+            detail: { action, item },
+            bubbles: true
+        }));
     }
 
     /**
@@ -1731,6 +1849,38 @@ class Table extends HTMLElement {
             `;
         }
         
+        // Menu dropdown (only if menu items are provided)
+        if (this.menuItems && this.menuItems.length > 0) {
+            tableHTML += `
+                <div class="upo-table-menu">
+                    <button class="upo-table-menu-button" onclick="event.stopPropagation(); this.closest('ui-table').toggleMenu()" aria-label="More actions">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </button>
+                    <div class="upo-table-menu-dropdown">
+                        ${this.menuItems.map(item => {
+                            if (item.type === 'separator') {
+                                return '<div class="upo-table-menu-separator"></div>';
+                            } else if (item.type === 'title') {
+                                return `<div class="upo-table-menu-title">${item.label}</div>`;
+                            } else {
+                                const dangerClass = item.danger ? 'danger' : '';
+                                return `
+                                    <button class="upo-table-menu-item ${dangerClass}" onclick="this.closest('ui-table').handleMenuAction('${item.action}', ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                                        ${item.icon ? `<i class="${item.icon}"></i>` : ''}
+                                        ${item.label}
+                                    </button>
+                                `;
+                            }
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
         tableHTML += `
                     </div>
                 </div>
@@ -2032,6 +2182,16 @@ class Table extends HTMLElement {
                     this.printTable();
                 });
             }
+        }
+
+        // Add menu dropdown event listeners
+        if (this.menuItems && this.menuItems.length > 0) {
+            // Close menu when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!this.contains(event.target)) {
+                    this.closeMenu();
+                }
+            });
         }
     }
 }

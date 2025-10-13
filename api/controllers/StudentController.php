@@ -2864,6 +2864,11 @@ class StudentController {
             // Get all students with their class and house information
             $students = $this->studentModel->findAllWithDetails();
             
+            // Clear any output buffer to ensure clean CSV
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
             // Set headers for CSV download
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename="students_export_' . date('Y-m-d_H-i-s') . '.csv"');
@@ -3008,23 +3013,23 @@ class StudentController {
                 try {
                     // Map CSV columns to database fields
                     $studentData = [
-                        'student_id' => trim($row['Student ID'] ?? ''),
-                        'first_name' => trim($row['First Name'] ?? ''),
-                        'last_name' => trim($row['Last Name'] ?? ''),
+                        'student_id' => trim($row['StudentID'] ?? ''),
+                        'first_name' => trim($row['FirstName'] ?? ''),
+                        'last_name' => trim($row['LastName'] ?? ''),
                         'email' => trim($row['Email'] ?? ''),
                         'phone' => trim($row['Phone'] ?? ''),
                         'address' => trim($row['Address'] ?? ''),
-                        'date_of_birth' => trim($row['Date of Birth'] ?? ''),
+                        'date_of_birth' => trim($row['DateOfBirth'] ?? ''),
                         'gender' => trim($row['Gender'] ?? ''),
-                        'admission_date' => trim($row['Admission Date'] ?? ''),
-                        'student_type' => trim($row['Student Type'] ?? 'day'),
-                        'parent_name' => trim($row['Parent Name'] ?? ''),
-                        'parent_phone' => trim($row['Parent Phone'] ?? ''),
-                        'parent_email' => trim($row['Parent Email'] ?? ''),
-                        'emergency_contact' => trim($row['Emergency Contact'] ?? ''),
-                        'emergency_phone' => trim($row['Emergency Phone'] ?? ''),
-                        'blood_group' => trim($row['Blood Group'] ?? ''),
-                        'medical_conditions' => trim($row['Medical Conditions'] ?? ''),
+                        'admission_date' => trim($row['AdmissionDate'] ?? ''),
+                        'student_type' => trim($row['StudentType'] ?? 'day'),
+                        'parent_name' => trim($row['ParentName'] ?? ''),
+                        'parent_phone' => trim($row['ParentPhone'] ?? ''),
+                        'parent_email' => trim($row['ParentEmail'] ?? ''),
+                        'emergency_contact' => trim($row['EmergencyContact'] ?? ''),
+                        'emergency_phone' => trim($row['EmergencyPhone'] ?? ''),
+                        'blood_group' => trim($row['BloodGroup'] ?? ''),
+                        'medical_conditions' => trim($row['MedicalConditions'] ?? ''),
                         'status' => trim($row['Status'] ?? 'active'),
                         'password' => 'student123' // Default password for imported students
                     ];
@@ -3048,9 +3053,9 @@ class StudentController {
                         throw new Exception('Invalid email format');
                     }
                     
-                    // Validate phone (10 digits)
-                    if (!preg_match('/^\d{10}$/', $studentData['phone'])) {
-                        throw new Exception('Phone must be exactly 10 digits');
+                    // Validate phone (at least 10 digits, can include country code)
+                    if (!preg_match('/^[\+]?[\d\s\-\(\)]{10,}$/', $studentData['phone'])) {
+                        throw new Exception('Phone must be at least 10 digits and can include country code');
                     }
                     
                     // Validate gender

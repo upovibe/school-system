@@ -4058,6 +4058,11 @@ class TeacherController {
             // Get all teachers with their class information
             $teachers = $this->teacherModel->findAllWithDetails();
             
+            // Clear any output buffer to ensure clean CSV
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
             // Set headers for CSV download
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename="teachers_export_' . date('Y-m-d_H-i-s') . '.csv"');
@@ -4190,17 +4195,17 @@ class TeacherController {
                 try {
                     // Map CSV columns to database fields
                     $teacherData = [
-                        'employee_id' => trim($row['Employee ID'] ?? ''),
-                        'first_name' => trim($row['First Name'] ?? ''),
-                        'last_name' => trim($row['Last Name'] ?? ''),
+                        'employee_id' => trim($row['EmployeeID'] ?? ''),
+                        'first_name' => trim($row['FirstName'] ?? ''),
+                        'last_name' => trim($row['LastName'] ?? ''),
                         'email' => trim($row['Email'] ?? ''),
                         'phone' => trim($row['Phone'] ?? ''),
                         'address' => trim($row['Address'] ?? ''),
-                        'date_of_birth' => trim($row['Date of Birth'] ?? ''),
+                        'date_of_birth' => trim($row['DateOfBirth'] ?? ''),
                         'gender' => trim($row['Gender'] ?? ''),
                         'qualification' => trim($row['Qualification'] ?? ''),
                         'specialization' => trim($row['Specialization'] ?? ''),
-                        'hire_date' => trim($row['Hire Date'] ?? ''),
+                        'hire_date' => trim($row['HireDate'] ?? ''),
                         'salary' => !empty($row['Salary']) ? floatval($row['Salary']) : null,
                         'status' => trim($row['Status'] ?? 'active'),
                         'password' => 'default123' // Default password for imported teachers
@@ -4225,9 +4230,9 @@ class TeacherController {
                         throw new Exception('Invalid email format');
                     }
                     
-                    // Validate phone (10 digits)
-                    if (!preg_match('/^\d{10}$/', $teacherData['phone'])) {
-                        throw new Exception('Phone must be exactly 10 digits');
+                    // Validate phone (at least 10 digits, can include country code)
+                    if (!preg_match('/^[\+]?[\d\s\-\(\)]{10,}$/', $teacherData['phone'])) {
+                        throw new Exception('Phone must be at least 10 digits and can include country code');
                     }
                     
                     // Validate gender

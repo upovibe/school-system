@@ -678,10 +678,129 @@ class AcademicYearRecordController {
             <?php if ($students > 0): ?>
             <div class="details-section">
                 <div class="details-title">Students (<?php echo $students; ?>)</div>
-                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
-                    Detailed student information is not available in this lightweight archive format.
-                    Total students archived: <?php echo $students; ?>
-                </div>
+                
+                <?php
+                // Get grades and grading periods from the record data
+                $grades = $recordData['grades'] ?? [];
+                $gradingPeriods = $recordData['grading_periods'] ?? [];
+                $classes = $recordData['classes_summary'] ?? [];
+                
+                if (!empty($grades) && !empty($gradingPeriods) && !empty($classes)):
+                    // Group grades by class
+                    $gradesByClass = [];
+                    foreach ($grades as $grade) {
+                        $classId = $grade['class_name'] . ' (' . $grade['class_section'] . ')';
+                        if (!isset($gradesByClass[$classId])) {
+                            $gradesByClass[$classId] = [];
+                        }
+                        $gradesByClass[$classId][] = $grade;
+                    }
+                    
+                    // Sort classes alphabetically
+                    ksort($gradesByClass);
+                    
+                    // Process each class
+                    foreach ($gradesByClass as $className => $classGrades):
+                        // Get unique students in this class
+                        $studentsInClass = [];
+                        foreach ($classGrades as $grade) {
+                            $studentKey = $grade['student_id'];
+                            if (!isset($studentsInClass[$studentKey])) {
+                                $studentsInClass[$studentKey] = [
+                                    'student_id' => $grade['student_id'],
+                                    'student_name' => $grade['student_first_name'] . ' ' . $grade['student_last_name']
+                                ];
+                            }
+                        }
+                        
+                        // Get subjects for this class
+                        $subjectsInClass = [];
+                        foreach ($classGrades as $grade) {
+                            $subjectName = $grade['subject_name'];
+                            if (!in_array($subjectName, $subjectsInClass)) {
+                                $subjectsInClass[] = $subjectName;
+                            }
+                        }
+                        sort($subjectsInClass);
+                        
+                        // Get grading periods for this class
+                        $periodsInClass = [];
+                        foreach ($classGrades as $grade) {
+                            $periodName = $grade['grading_period_name'];
+                            if (!in_array($periodName, $periodsInClass)) {
+                                $periodsInClass[] = $periodName;
+                            }
+                        }
+                        sort($periodsInClass);
+                        
+                        // Display class header
+                        echo '<div style="margin-bottom: 30px;">';
+                        echo '<h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #333; background: #e9ecef; padding: 12px; border-left: 4px solid #007bff;">';
+                        echo 'Class: ' . htmlspecialchars($className) . ' - ' . count($studentsInClass) . ' students';
+                        echo '</h3>';
+                        
+                        // Display each grading period
+                        foreach ($periodsInClass as $periodName):
+                            echo '<h4 style="margin: 10px 0 5px 0; font-size: 14px; font-weight: bold; color: #666;">';
+                            echo '=== ' . htmlspecialchars($periodName) . ' ===';
+                            echo '</h4>';
+                            
+                            // Create table for this period
+                            echo '<table class="details-table" style="margin-bottom: 20px;">';
+                            echo '<thead><tr>';
+                            echo '<th>No.</th>';
+                            echo '<th>Student ID</th>';
+                            echo '<th>Student Name</th>';
+                            
+                            // Add subject columns
+                            foreach ($subjectsInClass as $subjectName) {
+                                echo '<th>' . htmlspecialchars($subjectName) . '</th>';
+                            }
+                            echo '</tr></thead>';
+                            echo '<tbody>';
+                            
+                            // Add student rows
+                            $studentIndex = 1;
+                            foreach ($studentsInClass as $studentKey => $student):
+                                echo '<tr>';
+                                echo '<td>' . $studentIndex . '</td>';
+                                echo '<td>' . htmlspecialchars($student['student_id']) . '</td>';
+                                echo '<td>' . htmlspecialchars($student['student_name']) . '</td>';
+                                
+                                // Add grade cells for each subject
+                                foreach ($subjectsInClass as $subjectName) {
+                                    $gradeFound = false;
+                                    foreach ($classGrades as $grade) {
+                                        if ($grade['student_id'] == $student['student_id'] && 
+                                            $grade['subject_name'] == $subjectName && 
+                                            $grade['grading_period_name'] == $periodName) {
+                                            
+                                            $percentage = $grade['final_percentage'] ?? 0;
+                                            $letterGrade = $grade['final_letter_grade'] ?? 'N/A';
+                                            echo '<td>' . number_format($percentage, 1) . '% (' . htmlspecialchars($letterGrade) . ')</td>';
+                                            $gradeFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!$gradeFound) {
+                                        echo '<td>—</td>';
+                                    }
+                                }
+                                echo '</tr>';
+                                $studentIndex++;
+                            endforeach;
+                            
+                            echo '</tbody></table>';
+                        endforeach;
+                        
+                        echo '</div>';
+                    endforeach;
+                else: ?>
+                    <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                        Detailed student grade information is not available in this lightweight archive format.<br>
+                        Total students archived: <?php echo $students; ?>
+                    </div>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
 
@@ -764,53 +883,6 @@ class AcademicYearRecordController {
             </div>
             <?php endif; ?>
 
-            <!-- Teacher Subject Assignments -->
-            <?php if ($teachers > 0 && !empty($classes) && $subjects > 0): ?>
-            <div class="details-section">
-                <div class="details-title">Teacher Subject Assignments</div>
-                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
-                    Detailed assignment information is not available in this lightweight archive format.
-                    Contact system administrator for detailed assignment records.
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <div class="section-separator"></div>
-
-            <!-- Grades Details -->
-            <?php if ($grades > 0 && !empty($classes) && $subjects > 0): ?>
-            <div class="details-section">
-                <div class="details-title">Student Grades Summary</div>
-                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
-                    Detailed grade information is not available in this lightweight archive format.
-                    Total grade records archived: <?php echo $grades; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-            <div class="section-separator"></div>
-
-            <!-- Subjects Details -->
-            <?php if ($subjects > 0): ?>
-            <div class="details-section">
-                <div class="details-title">Subjects (<?php echo $subjects; ?>)</div>
-                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
-                    Detailed subject information is not available in this lightweight archive format.
-                    Total subjects archived: <?php echo $subjects; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-            <div class="section-separator"></div>
-
-            <!-- Grading Periods Details -->
-            <?php if ($gradingPeriods > 0): ?>
-            <div class="details-section">
-                <div class="details-title">Grading Periods (<?php echo $gradingPeriods; ?>)</div>
-                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
-                    Detailed grading period information is not available in this lightweight archive format.
-                    Total grading periods archived: <?php echo $gradingPeriods; ?>
-                </div>
-            </div>
-            <?php endif; ?>
 
                 <div class="school-contact">
                     <?php if (!empty($schoolSettings['contact_address'])): ?>

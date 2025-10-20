@@ -78,6 +78,8 @@ class AcademicYearRecordModel extends BaseModel {
             $recordData = [
                 'classes_summary' => $this->createClassesSummary($yearData, $academicYearId),
                 'teacher_assignments' => $yearData['teacher_assignments'], // Include teacher assignments for print
+                'grades' => $this->getGradesByYear($academicYearId), // Include grades for print
+                'grading_periods' => $yearData['grading_periods'], // Include grading periods for print
                 'summary' => [
                     'total_classes' => count($yearData['classes']),
                     'total_students' => $yearData['students'], // Now a count
@@ -618,6 +620,7 @@ class AcademicYearRecordModel extends BaseModel {
             return [];
         }
     }
+    
     
     /**
      * Get class-subject relationships by academic year

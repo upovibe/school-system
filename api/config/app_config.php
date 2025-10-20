@@ -27,6 +27,12 @@ return [
 
 // cd school-system; php api/index.php --fresh    # Drop tables, create tables, add default data
 
+// cd school-system; php api/index.php --seed:admin   # Create only the admin user account
+
+// cd school-system; php api/index.php --seed:essential   # Create essential system components
+
+// cd school-system; php api/index.php --clear:data   # Remove all data from tables
+
 // cd school-system; php api/index.php --migrate    # Create tables
 
 // cd school-system; php api/index.php --seed       # Add default data

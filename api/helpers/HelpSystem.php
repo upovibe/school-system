@@ -20,11 +20,20 @@ class HelpSystem
         echo "  --seed                       Run all database seeders\n";
         echo "                               Populates database with default data\n\n";
         
+        echo "  --seed:admin                  Seed admin user only\n";
+        echo "                               Creates only the admin user account\n\n";
+        
+        echo "  --seed:essential              Seed essential system components\n";
+        echo "                               Creates roles, admin user, academic years, pages & settings\n\n";
+        
         echo "  --migrate:seed               Run migrations then seeders\n";
         echo "                               Complete database setup in one command\n\n";
         
         echo "  --clear                      Clear all database tables\n";
         echo "                               ⚠️  WARNING: This will delete all data!\n\n";
+        
+        echo "  --clear:data                 Clear all data from tables\n";
+        echo "                               Keeps table structure, removes all records\n\n";
         
         echo "  --fresh                      Fresh database setup\n";
         echo "                               Clears DB → Runs migrations → Seeds data\n\n";
@@ -42,12 +51,18 @@ class HelpSystem
         echo "  php api/index.php --help\n";
         echo "  php api/index.php --fresh\n";
         echo "  php api/index.php --migrate\n";
+        echo "  php api/index.php --seed:admin\n";
+        echo "  php api/index.php --seed:essential\n";
+        echo "  php api/index.php --clear:data\n";
         echo "  php api/index.php --email:test@gmail.com\n\n";
         
         echo "Database Commands Explained:\n";
         echo "---------------------------\n";
         echo "• --migrate: Creates database tables and structure\n";
         echo "• --seed: Adds default data (admin users, settings, etc.)\n";
+        echo "• --seed:admin: Creates only the admin user account\n";
+        echo "• --seed:essential: Creates roles, admin user, academic years, pages & settings\n";
+        echo "• --clear:data: Removes all records but keeps table structure\n";
         echo "• --fresh: Complete reset - clears everything and starts fresh\n";
         echo "• --clear: Only removes all tables (use with caution)\n\n";
         
@@ -55,6 +70,7 @@ class HelpSystem
         echo "• Always run from the project root directory\n";
         echo "• Database connection must be configured in config/database.php\n";
         echo "• --fresh is recommended for new installations\n";
+        echo "• --clear:data preserves table structure, --clear drops tables\n";
         echo "• --clear will permanently delete all data\n\n";
     }
 

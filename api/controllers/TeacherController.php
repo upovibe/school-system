@@ -4166,6 +4166,9 @@ class TeacherController {
             if (($handle = fopen($file['tmp_name'], 'r')) !== FALSE) {
                 $headers = fgetcsv($handle); // Skip header row
                 
+                // Trim all headers to remove leading/trailing spaces
+                $headers = array_map('trim', $headers);
+                
                 while (($data = fgetcsv($handle)) !== FALSE) {
                     if (count($data) >= 8) { // Minimum required fields
                         $csvData[] = array_combine($headers, $data);

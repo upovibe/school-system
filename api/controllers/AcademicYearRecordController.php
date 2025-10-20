@@ -786,18 +786,24 @@ class AcademicYearRecordController {
                                 $key = $student['student_id'] . '_' . $subject['name'] . '_' . $periodName;
                                 
                                 if (isset($gradesLookup[$key])) {
-                                        $grade = $gradesLookup[$key];
-                                        $percentage = $grade['final_percentage'] ?? 0;
-                                        $letterGrade = $grade['final_letter_grade'] ?? 'N/A';
-                                        echo '<div style="margin-bottom: 2px;">';
-                                        echo '<strong>' . htmlspecialchars($subject['name']) . ':</strong> ';
-                                        echo number_format($percentage, 1) . '% (' . htmlspecialchars($letterGrade) . ')';
-                                        echo '</div>';
-                                    } else {
-                                        echo '<div style="margin-bottom: 2px;">';
-                                        echo '<strong>' . htmlspecialchars($subject['name']) . ':</strong> —';
-                                        echo '</div>';
-                                    }
+                                    $grade = $gradesLookup[$key];
+                                    $assignmentTotal = $grade['assignment_total'] ?? 0;
+                                    $examTotal = $grade['exam_total'] ?? 0;
+                                    $percentage = $grade['final_percentage'] ?? 0;
+                                    $letterGrade = $grade['final_letter_grade'] ?? 'N/A';
+                                    echo '<div style="margin-bottom: 3px; padding: 2px; border-left: 2px solid #007bff;">';
+                                    echo htmlspecialchars($subject['name']) . ':<br>';
+                                    echo '<span style="font-size: 11px; color: #666;">';
+                                    echo '<strong>Assignment: ' . number_format($assignmentTotal, 1) . '% | ';
+                                    echo 'Exam: ' . number_format($examTotal, 1) . '% | ';
+                                    echo 'Final: ' . number_format($percentage, 1) . '% (' . htmlspecialchars($letterGrade) . ')</strong>';
+                                    echo '</span>';
+                                    echo '</div>';
+                                } else {
+                                    echo '<div style="margin-bottom: 3px; padding: 2px; border-left: 2px solid #ddd;">';
+                                    echo htmlspecialchars($subject['name']) . ': —';
+                                    echo '</div>';
+                                }
                                 }
                                 
                                 echo '</td>';

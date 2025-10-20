@@ -2956,6 +2956,10 @@ class StudentController {
             global $pdo;
             RoleMiddleware::requireAdmin($pdo);
             
+            // Import required models
+            require_once __DIR__ . '/../models/ClassModel.php';
+            require_once __DIR__ . '/../models/HouseModel.php';
+            
             // Check if file was uploaded
             if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
                 http_response_code(400);
@@ -3026,6 +3030,8 @@ class StudentController {
                         'gender' => trim($row['Gender'] ?? ''),
                         'admission_date' => trim($row['AdmissionDate'] ?? ''),
                         'student_type' => trim($row['StudentType'] ?? 'day'),
+                        'current_class_id' => null, // Will be set based on CurrentClass if provided
+                        'house_id' => null, // Will be set based on HouseName if provided
                         'parent_name' => trim($row['ParentName'] ?? ''),
                         'parent_phone' => trim($row['ParentPhone'] ?? ''),
                         'parent_email' => trim($row['ParentEmail'] ?? ''),
@@ -3036,6 +3042,31 @@ class StudentController {
                         'status' => trim($row['Status'] ?? 'active'),
                         'password' => 'student123' // Default password for imported students
                     ];
+                    
+                    // Map class if provided
+                    if (!empty($row['CurrentClass'])) {
+                        $className = trim($row['CurrentClass']);
+                        $classModel = new ClassModel($this->pdo);
+                        // Try to find class by name (assuming section A for now)
+                        $class = $classModel->findByNameAndSection($className, 'A');
+                        if ($class) {
+                            $studentData['current_class_id'] = $class['id'];
+                        }
+                    }
+                    
+                    // Map house if provided
+                    if (!empty($row['HouseName'])) {
+                        $houseName = trim($row['HouseName']);
+                        $houseModel = new HouseModel($this->pdo);
+                        // Get all houses and find by name
+                        $houses = $houseModel->getAllHouses();
+                        foreach ($houses as $house) {
+                            if ($house['name'] === $houseName) {
+                                $studentData['house_id'] = $house['id'];
+                                break;
+                            }
+                        }
+                    }
                     
                     // Validate required fields
                     $requiredFields = ['student_id', 'first_name', 'last_name', 'email', 'phone', 'address', 'date_of_birth', 'gender', 'admission_date'];

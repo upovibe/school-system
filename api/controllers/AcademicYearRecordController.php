@@ -298,6 +298,43 @@ class AcademicYearRecordController {
     }
 
     /**
+     * Get all students in a class
+     */
+    private function getAllStudentsInClass($classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT student_id, first_name, last_name
+                FROM students 
+                WHERE current_class_id = ?
+                ORDER BY first_name, last_name
+            ");
+            $stmt->execute([$classId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+    
+    /**
+     * Get all subjects for a class
+     */
+    private function getAllSubjectsInClass($classId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT s.name, s.code
+                FROM subjects s
+                JOIN class_subjects cs ON s.id = cs.subject_id
+                WHERE cs.class_id = ?
+                ORDER BY s.name
+            ");
+            $stmt->execute([$classId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
      * Generate print HTML for academic year record
      */
     private function generatePrintHTML($archivedRecord, $recordData, $schoolSettings) {
@@ -685,53 +722,33 @@ class AcademicYearRecordController {
                 $gradingPeriods = $recordData['grading_periods'] ?? [];
                 $classes = $recordData['classes_summary'] ?? [];
                 
-                if (!empty($grades) && !empty($gradingPeriods) && !empty($classes)):
-                    // Group grades by class
-                    $gradesByClass = [];
-                    foreach ($grades as $grade) {
-                        $classId = $grade['class_name'] . ' (' . $grade['class_section'] . ')';
-                        if (!isset($gradesByClass[$classId])) {
-                            $gradesByClass[$classId] = [];
-                        }
-                        $gradesByClass[$classId][] = $grade;
-                    }
-                    
-                    // Sort classes alphabetically
-                    ksort($gradesByClass);
-                    
-                    // Process each class
-                    foreach ($gradesByClass as $className => $classGrades):
-                        // Get unique students in this class
-                        $studentsInClass = [];
-                        foreach ($classGrades as $grade) {
-                            $studentKey = $grade['student_id'];
-                            if (!isset($studentsInClass[$studentKey])) {
-                                $studentsInClass[$studentKey] = [
-                                    'student_id' => $grade['student_id'],
-                                    'student_name' => $grade['student_first_name'] . ' ' . $grade['student_last_name']
-                                ];
-                            }
-                        }
+                if (!empty($classes)):
+                    // Process each class from classes_summary
+                    foreach ($classes as $class):
+                        $className = $class['class_name'] . ' (' . $class['class_section'] . ')';
                         
-                        // Get subjects for this class
-                        $subjectsInClass = [];
-                        foreach ($classGrades as $grade) {
-                            $subjectName = $grade['subject_name'];
-                            if (!in_array($subjectName, $subjectsInClass)) {
-                                $subjectsInClass[] = $subjectName;
-                            }
-                        }
-                        sort($subjectsInClass);
+                        // Get ALL students in this class (not just those with grades)
+                        $studentsInClass = $this->getAllStudentsInClass($class['class_id']);
                         
-                        // Get grading periods for this class
+                        // Get ALL subjects for this class (not just those with grades)
+                        $subjectsInClass = $this->getAllSubjectsInClass($class['class_id']);
+                        
+                        // Get grading periods for this academic year
                         $periodsInClass = [];
-                        foreach ($classGrades as $grade) {
-                            $periodName = $grade['grading_period_name'];
-                            if (!in_array($periodName, $periodsInClass)) {
-                                $periodsInClass[] = $periodName;
-                            }
+                        foreach ($gradingPeriods as $period) {
+                            $periodsInClass[] = $period['name'];
                         }
                         sort($periodsInClass);
+                        
+                        // Create grades lookup for this class
+                        $gradesLookup = [];
+                        foreach ($grades as $grade) {
+                            if ($grade['class_name'] == $class['class_name'] && $grade['class_section'] == $class['class_section']) {
+                                $key = $grade['admission_number'] . '_' . $grade['subject_name'] . '_' . $grade['grading_period_name'];
+                                $gradesLookup[$key] = $grade;
+                            }
+                        }
+                        
                         
                         // Display class header
                         echo '<div style="margin-bottom: 30px;">';
@@ -751,41 +768,39 @@ class AcademicYearRecordController {
                             echo '<th>No.</th>';
                             echo '<th>Student ID</th>';
                             echo '<th>Student Name</th>';
-                            
-                            // Add subject columns
-                            foreach ($subjectsInClass as $subjectName) {
-                                echo '<th>' . htmlspecialchars($subjectName) . '</th>';
-                            }
+                            echo '<th>Subjects & Grades</th>';
                             echo '</tr></thead>';
                             echo '<tbody>';
                             
                             // Add student rows
                             $studentIndex = 1;
-                            foreach ($studentsInClass as $studentKey => $student):
+                            foreach ($studentsInClass as $student):
                                 echo '<tr>';
                                 echo '<td>' . $studentIndex . '</td>';
                                 echo '<td>' . htmlspecialchars($student['student_id']) . '</td>';
-                                echo '<td>' . htmlspecialchars($student['student_name']) . '</td>';
+                                echo '<td>' . htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) . '</td>';
+                                echo '<td>';
                                 
-                                // Add grade cells for each subject
-                                foreach ($subjectsInClass as $subjectName) {
-                                    $gradeFound = false;
-                                    foreach ($classGrades as $grade) {
-                                        if ($grade['student_id'] == $student['student_id'] && 
-                                            $grade['subject_name'] == $subjectName && 
-                                            $grade['grading_period_name'] == $periodName) {
-                                            
-                                            $percentage = $grade['final_percentage'] ?? 0;
-                                            $letterGrade = $grade['final_letter_grade'] ?? 'N/A';
-                                            echo '<td>' . number_format($percentage, 1) . '% (' . htmlspecialchars($letterGrade) . ')</td>';
-                                            $gradeFound = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!$gradeFound) {
-                                        echo '<td>—</td>';
+                            // List all subjects with grades for this student
+                            foreach ($subjectsInClass as $subject) {
+                                $key = $student['student_id'] . '_' . $subject['name'] . '_' . $periodName;
+                                
+                                if (isset($gradesLookup[$key])) {
+                                        $grade = $gradesLookup[$key];
+                                        $percentage = $grade['final_percentage'] ?? 0;
+                                        $letterGrade = $grade['final_letter_grade'] ?? 'N/A';
+                                        echo '<div style="margin-bottom: 2px;">';
+                                        echo '<strong>' . htmlspecialchars($subject['name']) . ':</strong> ';
+                                        echo number_format($percentage, 1) . '% (' . htmlspecialchars($letterGrade) . ')';
+                                        echo '</div>';
+                                    } else {
+                                        echo '<div style="margin-bottom: 2px;">';
+                                        echo '<strong>' . htmlspecialchars($subject['name']) . ':</strong> —';
+                                        echo '</div>';
                                     }
                                 }
+                                
+                                echo '</td>';
                                 echo '</tr>';
                                 $studentIndex++;
                             endforeach;

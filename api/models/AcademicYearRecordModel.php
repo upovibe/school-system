@@ -74,11 +74,14 @@ class AcademicYearRecordModel extends BaseModel {
                 $this->debugStudentsIssue($academicYearId);
             }
             
+            // Get grades data for print functionality
+            $gradesData = $this->getGradesByYear($academicYearId);
+            
             // Create ultra-lightweight year snapshot (summary only)
             $recordData = [
                 'classes_summary' => $this->createClassesSummary($yearData, $academicYearId),
                 'teacher_assignments' => $yearData['teacher_assignments'], // Include teacher assignments for print
-                'grades' => $this->getGradesByYear($academicYearId), // Include grades for print
+                'grades' => $gradesData, // Include grades for print
                 'grading_periods' => $yearData['grading_periods'], // Include grading periods for print
                 'summary' => [
                     'total_classes' => count($yearData['classes']),
@@ -118,7 +121,9 @@ class AcademicYearRecordModel extends BaseModel {
                 'notes' => $notes
             ];
             
-            return $this->create($data);
+            $result = $this->create($data);
+            
+            return $result;
         } catch (Exception $e) {
             throw new Exception('Error archiving complete year: ' . $e->getMessage());
         }

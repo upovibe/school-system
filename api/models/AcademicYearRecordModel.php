@@ -45,10 +45,10 @@ class AcademicYearRecordModel extends BaseModel {
             // Debug: Log the data counts
             error_log("Archive Debug - Academic Year ID: $academicYearId");
             error_log("Classes: " . count($yearData['classes']));
-            error_log("Students: " . count($yearData['students']));
-            error_log("Teachers: " . count($yearData['teachers']));
+            error_log("Students: " . $yearData['students']); // Now a count, not array
+            error_log("Teachers: " . $yearData['teachers']); // Now a count, not array
             error_log("Subjects: " . count($yearData['subjects']));
-            error_log("Grades: " . count($yearData['grades']));
+            error_log("Grades: " . $yearData['grades']); // Now a count, not array
             error_log("Fees: " . count($yearData['fees']));
             error_log("Grading Periods: " . count($yearData['grading_periods']));
             error_log("Teacher Assignments: " . count($yearData['teacher_assignments']));
@@ -58,12 +58,7 @@ class AcademicYearRecordModel extends BaseModel {
             if (!empty($yearData['classes'])) {
                 error_log("Sample Class: " . json_encode($yearData['classes'][0]));
             }
-            if (!empty($yearData['students'])) {
-                error_log("Sample Student: " . json_encode($yearData['students'][0]));
-            }
-            if (!empty($yearData['grades'])) {
-                error_log("Sample Grade: " . json_encode($yearData['grades'][0]));
-            }
+            // Skip student/grade samples since they're now counts
             if (!empty($yearData['fees'])) {
                 error_log("Sample Fee: " . json_encode($yearData['fees'][0]));
             }
@@ -74,45 +69,42 @@ class AcademicYearRecordModel extends BaseModel {
                 $this->debugFeesIssue($academicYearId);
             }
             
-            if (count($yearData['students']) <= 1) {
+            if ($yearData['students'] <= 1) {
                 error_log("⚠️  STUDENTS COUNT IS LOW - Checking why...");
                 $this->debugStudentsIssue($academicYearId);
             }
             
-            // Create complete year snapshot
+            // Create ultra-lightweight year snapshot (summary only)
             $recordData = [
-                'classes' => $yearData['classes'],
-                'students' => $yearData['students'],
-                'teachers' => $yearData['teachers'],
-                'subjects' => $yearData['subjects'],
-                'grades' => $yearData['grades'],
-                'fees' => $yearData['fees'],
-                'grading_periods' => $yearData['grading_periods'],
-                'teacher_assignments' => $yearData['teacher_assignments'],
-                'class_subject_relationships' => $yearData['class_subject_relationships'],
+                'classes_summary' => $this->createClassesSummary($yearData, $academicYearId),
+                'teacher_assignments' => $yearData['teacher_assignments'], // Include teacher assignments for print
+                'summary' => [
+                    'total_classes' => count($yearData['classes']),
+                    'total_students' => $yearData['students'], // Now a count
+                    'total_teachers' => $yearData['teachers'], // Now a count
+                    'total_subjects' => count($yearData['subjects']),
+                    'total_grades' => $yearData['grades'], // Now a count
+                    'total_fees' => count($yearData['fees']),
+                    'total_grading_periods' => count($yearData['grading_periods']),
+                    'total_teacher_assignments' => count($yearData['teacher_assignments']),
+                    'total_class_subject_relationships' => count($yearData['class_subject_relationships'])
+                ],
                 'archive_timestamp' => date('Y-m-d H:i:s')
             ];
             
-            // Calculate accurate totals
-            $totalRecords = count($yearData['classes']) + count($yearData['students']) + 
-                           count($yearData['teachers']) + count($yearData['subjects']) + 
-                           count($yearData['grades']) + count($yearData['fees']) + 
-                           count($yearData['grading_periods']) + count($yearData['teacher_assignments']) +
-                           count($yearData['class_subject_relationships']);
+            // Calculate accurate totals from summary
+            $totalRecords = $recordData['summary']['total_classes'] + 
+                           $recordData['summary']['total_students'] + 
+                           $recordData['summary']['total_teachers'] + 
+                           $recordData['summary']['total_subjects'] + 
+                           $recordData['summary']['total_grades'] + 
+                           $recordData['summary']['total_fees'] + 
+                           $recordData['summary']['total_grading_periods'] + 
+                           $recordData['summary']['total_teacher_assignments'] +
+                           $recordData['summary']['total_class_subject_relationships'];
             
-            // Add summary information
-            $recordData['summary'] = [
-                'total_classes' => count($yearData['classes']),
-                'total_students' => count($yearData['students']),
-                'total_teachers' => count($yearData['teachers']),
-                'total_subjects' => count($yearData['subjects']),
-                'total_grades' => count($yearData['grades']),
-                'total_fees' => count($yearData['fees']),
-                'total_grading_periods' => count($yearData['grading_periods']),
-                'total_teacher_assignments' => count($yearData['teacher_assignments']),
-                'total_class_subject_relationships' => count($yearData['class_subject_relationships']),
-                'total_records' => $totalRecords
-            ];
+            // Add total records to summary
+            $recordData['summary']['total_records'] = $totalRecords;
             
             $data = [
                 'academic_year_id' => $academicYearId,
@@ -131,6 +123,53 @@ class AcademicYearRecordModel extends BaseModel {
     }
     
     /**
+     * Create ultra-lightweight classes summary (no detailed data)
+     */
+    private function createClassesSummary($yearData, $academicYearId) {
+        $classesSummary = [];
+        
+        // Get actual student data for counting by class (we need this for the summary)
+        $students = $this->getStudentEnrollmentsByYear($academicYearId);
+        
+        // Group students by class (count only)
+        $studentsByClass = [];
+        foreach ($students as $student) {
+            $classId = $student['current_class_id'];
+            if (!isset($studentsByClass[$classId])) {
+                $studentsByClass[$classId] = 0;
+            }
+            $studentsByClass[$classId]++;
+        }
+        
+        // Group teachers by class (count only)
+        $teachersByClass = [];
+        foreach ($yearData['teacher_assignments'] as $assignment) {
+            $classId = $assignment['class_id'];
+            if (!isset($teachersByClass[$classId])) {
+                $teachersByClass[$classId] = [];
+            }
+            $teachersByClass[$classId][$assignment['teacher_id']] = true;
+        }
+        
+        // Create minimal class summary
+        foreach ($yearData['classes'] as $class) {
+            $classId = $class['id'];
+            $studentCount = $studentsByClass[$classId] ?? 0;
+            $teacherCount = isset($teachersByClass[$classId]) ? count($teachersByClass[$classId]) : 0;
+            
+            $classesSummary[] = [
+                'class_id' => $class['id'],
+                'class_name' => $class['name'],
+                'class_section' => $class['section'],
+                'student_count' => $studentCount,
+                'teacher_count' => $teacherCount
+            ];
+        }
+        
+        return $classesSummary;
+    }
+    
+    /**
      * Get complete year data for archiving
      */
     private function getCompleteYearData($academicYearId) {
@@ -139,17 +178,17 @@ class AcademicYearRecordModel extends BaseModel {
         // Get classes and their related data
         $data['classes'] = $this->getClassesWithRelations($academicYearId);
         
-        // Get students
-        $data['students'] = $this->getStudentEnrollmentsByYear($academicYearId);
+        // Get students count only (lightweight)
+        $data['students'] = $this->getStudentsCountByYear($academicYearId);
         
-        // Get unique teachers (avoid duplicates)
-        $data['teachers'] = $this->getUniqueTeachersByYear($academicYearId);
+        // Get teachers count only (lightweight)
+        $data['teachers'] = $this->getTeachersCountByYear($academicYearId);
         
         // Get unique subjects (avoid duplicates)
         $data['subjects'] = $this->getUniqueSubjectsByYear($academicYearId);
         
-        // Get comprehensive grades (all students for all subjects and periods)
-        $data['grades'] = $this->getComprehensiveGradesByYear($academicYearId);
+        // Skip detailed grades to save memory - only get count
+        $data['grades'] = $this->getGradesCountByYear($academicYearId);
         
         // Get fees
         $data['fees'] = $this->getFeesByYear($academicYearId);
@@ -209,6 +248,51 @@ class AcademicYearRecordModel extends BaseModel {
     }
     
     /**
+     * Get students count by academic year (lightweight - count only)
+     */
+    private function getStudentsCountByYear($academicYearId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as count
+                FROM students s
+                JOIN classes c ON s.current_class_id = c.id
+                WHERE c.academic_year_id = ?
+            ");
+            $stmt->execute([$academicYearId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . $result['count'] . " students for academic year $academicYearId");
+            return $result['count'];
+        } catch (PDOException $e) {
+            error_log("Error getting students count: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Get teachers count by academic year (lightweight - count only)
+     */
+    private function getTeachersCountByYear($academicYearId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(DISTINCT t.id) as count
+                FROM teachers t
+                JOIN teacher_assignments ta ON t.id = ta.teacher_id
+                JOIN classes c ON ta.class_id = c.id
+                WHERE c.academic_year_id = ?
+            ");
+            $stmt->execute([$academicYearId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . $result['count'] . " teachers for academic year $academicYearId");
+            return $result['count'];
+        } catch (PDOException $e) {
+            error_log("Error getting teachers count: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
      * Get students by academic year
      */
     private function getStudentsByYear($academicYearId) {
@@ -263,6 +347,31 @@ class AcademicYearRecordModel extends BaseModel {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             return [];
+        }
+    }
+    
+    /**
+     * Get grades count by academic year (lightweight - count only)
+     */
+    private function getGradesCountByYear($academicYearId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as count
+                FROM student_grades sg
+                JOIN grading_periods gp ON sg.grading_period_id = gp.id
+                JOIN students s ON sg.student_id = s.id
+                JOIN classes c ON s.current_class_id = c.id
+                WHERE gp.academic_year_id = ? 
+                AND c.academic_year_id = ?
+            ");
+            $stmt->execute([$academicYearId, $academicYearId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . $result['count'] . " grades for academic year $academicYearId");
+            return $result['count'];
+        } catch (PDOException $e) {
+            error_log("Error getting grades count: " . $e->getMessage());
+            return 0;
         }
     }
     

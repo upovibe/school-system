@@ -310,15 +310,15 @@ class AcademicYearRecordController {
         // Format record type
         $recordType = ucwords(str_replace('_', ' ', $archivedRecord['record_type']));
         
-        // Get summary data
+        // Get summary data (handle both old and new structure)
         $summary = $recordData['summary'] ?? [];
-        $classes = $recordData['classes'] ?? [];
-        $students = $recordData['students'] ?? [];
-        $teachers = $recordData['teachers'] ?? [];
-        $subjects = $recordData['subjects'] ?? [];
-        $grades = $recordData['grades'] ?? [];
-        $fees = $recordData['fees'] ?? [];
-        $gradingPeriods = $recordData['grading_periods'] ?? [];
+        $classes = $recordData['classes_summary'] ?? []; // New structure
+        $students = $summary['total_students'] ?? 0; // Now a count
+        $teachers = $summary['total_teachers'] ?? 0; // Now a count
+        $subjects = $summary['total_subjects'] ?? 0; // Now a count
+        $grades = $summary['total_grades'] ?? 0; // Now a count
+        $fees = $summary['total_fees'] ?? 0; // Now a count
+        $gradingPeriods = $summary['total_grading_periods'] ?? 0; // Now a count
         
         ob_start();
         ?>
@@ -619,27 +619,27 @@ class AcademicYearRecordController {
                         <div class="summary-label">Classes</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($students); ?></div>
+                        <div class="summary-number"><?php echo $students; ?></div>
                         <div class="summary-label">Students</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($teachers); ?></div>
+                        <div class="summary-number"><?php echo $teachers; ?></div>
                         <div class="summary-label">Teachers</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($subjects); ?></div>
+                        <div class="summary-number"><?php echo $subjects; ?></div>
                         <div class="summary-label">Subjects</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($grades); ?></div>
+                        <div class="summary-number"><?php echo $grades; ?></div>
                         <div class="summary-label">Grade Records</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($fees); ?></div>
+                        <div class="summary-number"><?php echo $fees; ?></div>
                         <div class="summary-label">Fee Records</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-number"><?php echo count($gradingPeriods); ?></div>
+                        <div class="summary-number"><?php echo $gradingPeriods; ?></div>
                         <div class="summary-label">Grading Periods</div>
                     </div>
                 </div>
@@ -656,17 +656,15 @@ class AcademicYearRecordController {
                             <th>Section</th>
                             <th>Students</th>
                             <th>Teachers</th>
-                            <th>Subjects</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($classes as $class): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($class['name']); ?></td>
-                            <td><?php echo htmlspecialchars($class['section'] ?? '—'); ?></td>
+                            <td><?php echo htmlspecialchars($class['class_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($class['class_section'] ?? '—'); ?></td>
                             <td><?php echo $class['student_count'] ?? 0; ?></td>
                             <td><?php echo $class['teacher_count'] ?? 0; ?></td>
-                            <td><?php echo $class['subject_count'] ?? 0; ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -677,292 +675,140 @@ class AcademicYearRecordController {
             <div class="section-separator"></div>
 
             <!-- Students Details -->
-            <?php if (!empty($students)): ?>
+            <?php if ($students > 0): ?>
             <div class="details-section">
-                <div class="details-title">Students (<?php echo count($students); ?>)</div>
-                
-                <?php
-                // Group students by class
-                $studentsByClass = [];
-                foreach ($students as $student) {
-                    $className = $student['class_name'] ?? 'Unknown Class';
-                    $classSection = $student['class_section'] ?? '';
-                    $classKey = $className . ($classSection ? ' - ' . $classSection : '');
-                    
-                    if (!isset($studentsByClass[$classKey])) {
-                        $studentsByClass[$classKey] = [];
-                    }
-                    $studentsByClass[$classKey][] = $student;
-                }
-                
-                // Sort classes alphabetically
-                ksort($studentsByClass);
-                ?>
-                
-                <?php foreach ($studentsByClass as $classKey => $classStudents): ?>
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #333; background: #f0f0f0; padding: 8px; border-left: 4px solid #007bff;">
-                        <?= htmlspecialchars($classKey) ?> (<?= count($classStudents) ?> students)
-                    </h4>
-                    <table class="details-table">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Admission Number</th>
-                                <th>Full Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($classStudents as $index => $student): ?>
-                            <tr>
-                                <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($student['admission_number'] ?? $student['student_id'] ?? '—') ?></td>
-                                <td><?= htmlspecialchars($student['full_name'] ?? $student['first_name'] . ' ' . $student['last_name']) ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div class="details-title">Students (<?php echo $students; ?>)</div>
+                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                    Detailed student information is not available in this lightweight archive format.
+                    Total students archived: <?php echo $students; ?>
                 </div>
-                <?php endforeach; ?>
             </div>
             <?php endif; ?>
 
             <div class="section-separator"></div>
 
             <!-- Teachers Details -->
-            <?php if (!empty($teachers)): ?>
+            <?php if ($teachers > 0): ?>
             <div class="details-section">
-                <div class="details-title">Teachers (<?php echo count($teachers); ?>)</div>
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>Employee ID</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($teachers as $teacher): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($teacher['employee_id'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></td>
-                            <td><?php echo htmlspecialchars($teacher['email'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($teacher['phone'] ?? '—'); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <?php endif; ?>
-
-            <!-- Teacher Subject Assignments -->
-            <?php if (!empty($teachers) && !empty($classes) && !empty($subjects)): ?>
-            <div class="details-section">
-                <div class="details-title">Teacher Subject Assignments</div>
+                <div class="details-title">Teachers (<?php echo $teachers; ?>)</div>
                 
                 <?php
                 // Get teacher assignments from the record data
                 $teacherAssignments = $recordData['teacher_assignments'] ?? [];
                 
-                if (!empty($teacherAssignments)): ?>
-                    <?php
-                    // Create a lookup array for teacher names
-                    $teacherLookup = [];
-                    foreach ($teachers as $teacher) {
-                        $teacherLookup[$teacher['id']] = $teacher['first_name'] . ' ' . $teacher['last_name'];
-                    }
-                    
+                // Debug: Log what we have
+                error_log("Teacher assignments count: " . count($teacherAssignments));
+                if (!empty($teacherAssignments)) {
+                    error_log("Sample teacher assignment: " . json_encode($teacherAssignments[0]));
+                }
+                
+                if (!empty($teacherAssignments)):
                     // Group assignments by teacher
-                    $assignmentsByTeacher = [];
+                    $teachersWithAssignments = [];
                     foreach ($teacherAssignments as $assignment) {
                         $teacherId = $assignment['teacher_id'] ?? null;
                         if ($teacherId) {
-                            if (!isset($assignmentsByTeacher[$teacherId])) {
-                                $teacherName = $teacherLookup[$teacherId] ?? $assignment['teacher_name'] ?? 'Unknown Teacher';
-                                $assignmentsByTeacher[$teacherId] = [
-                                    'teacher_name' => $teacherName,
+                            if (!isset($teachersWithAssignments[$teacherId])) {
+                                $teachersWithAssignments[$teacherId] = [
+                                    'teacher_name' => $assignment['first_name'] . ' ' . $assignment['last_name'],
+                                    'employee_id' => $assignment['employee_id'] ?? 'N/A',
                                     'assignments' => []
                                 ];
                             }
-                            $assignmentsByTeacher[$teacherId]['assignments'][] = $assignment;
+                            $teachersWithAssignments[$teacherId]['assignments'][] = [
+                                'class_name' => $assignment['class_name'] ?? 'N/A',
+                                'subject_name' => $assignment['subject_name'] ?? 'N/A'
+                            ];
                         }
                     }
                     
                     // Sort by teacher name
-                    uasort($assignmentsByTeacher, function($a, $b) {
+                    uasort($teachersWithAssignments, function($a, $b) {
                         return strcmp($a['teacher_name'], $b['teacher_name']);
                     });
-                    ?>
-                    
-                    <?php foreach ($assignmentsByTeacher as $teacherId => $teacherData): ?>
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #333; background: #f0f0f0; padding: 8px; border-left: 4px solid #28a745;">
-                            <?= htmlspecialchars($teacherData['teacher_name']) ?> (<?= count($teacherData['assignments']) ?> assignments)
-                        </h4>
-                        <table class="details-table">
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>Class</th>
-                                    <th>Subject</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($teacherData['assignments'] as $index => $assignment): ?>
-                                <tr>
-                                    <td><?= $index + 1 ?></td>
-                                    <td><?= htmlspecialchars($assignment['class_name'] ?? '—') ?></td>
-                                    <td><?= htmlspecialchars($assignment['subject_name'] ?? '—') ?></td>
-                                    <td><?= htmlspecialchars($assignment['status'] ?? 'Active') ?></td>
-                                </tr>
+                ?>
+                
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Teacher Name</th>
+                            <th>Employee ID</th>
+                            <th>Classes & Subjects</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($teachersWithAssignments as $index => $teacherData): ?>
+                        <tr>
+                            <td><?php echo $index + 1; ?></td>
+                            <td><?php echo htmlspecialchars($teacherData['teacher_name']); ?></td>
+                            <td><?php echo htmlspecialchars($teacherData['employee_id']); ?></td>
+                            <td>
+                                <?php foreach ($teacherData['assignments'] as $assignment): ?>
+                                    <div style="margin-bottom: 2px;">
+                                        <strong><?php echo htmlspecialchars($assignment['class_name']); ?></strong> - 
+                                        <?php echo htmlspecialchars($assignment['subject_name']); ?>
+                                    </div>
                                 <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php endforeach; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
                 <?php else: ?>
-                    <div class="no-data">
-                        <p>No teacher assignments found in this record.</p>
+                    <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                        No teacher assignment details available in this archive format.<br>
+                        <small>Teacher assignments count: <?php echo count($teacherAssignments); ?></small>
                     </div>
                 <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- Teacher Subject Assignments -->
+            <?php if ($teachers > 0 && !empty($classes) && $subjects > 0): ?>
+            <div class="details-section">
+                <div class="details-title">Teacher Subject Assignments</div>
+                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                    Detailed assignment information is not available in this lightweight archive format.
+                    Contact system administrator for detailed assignment records.
+                </div>
             </div>
             <?php endif; ?>
 
             <div class="section-separator"></div>
 
             <!-- Grades Details -->
-            <?php if (!empty($grades) && !empty($classes) && !empty($subjects)): ?>
+            <?php if ($grades > 0 && !empty($classes) && $subjects > 0): ?>
             <div class="details-section">
                 <div class="details-title">Student Grades Summary</div>
-                
-                <?php
-                // Group grades by class
-                $gradesByClass = [];
-                foreach ($grades as $grade) {
-                    $classId = $grade['class_id'] ?? null;
-                    $studentId = $grade['student_id'] ?? null;
-                    
-                    if ($classId && $studentId) {
-                        $classKey = $grade['class_name'] ?? 'Unknown Class';
-                        $classSection = $grade['class_section'] ?? '';
-                        $fullClassKey = $classKey . ($classSection ? ' - ' . $classSection : '');
-                        
-                        if (!isset($gradesByClass[$fullClassKey])) {
-                            $gradesByClass[$fullClassKey] = [];
-                        }
-                        
-                        $gradesByClass[$fullClassKey][] = $grade;
-                    }
-                }
-                
-                // Sort classes alphabetically
-                ksort($gradesByClass);
-                ?>
-                
-                <?php foreach ($gradesByClass as $classKey => $classGrades): ?>
-                <div style="margin-bottom: 30px;">
-                    <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #333; background: #e9ecef; padding: 12px; border-left: 4px solid #007bff;">
-                        <?= htmlspecialchars($classKey) ?> (<?= count($classGrades) ?> grade records)
-                    </h3>
-                    
-                    <table class="details-table">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Student ID</th>
-                                <th>Student Name</th>
-                                <th>Subject</th>
-                                <th>Period</th>
-                                <th>Assignment Total</th>
-                                <th>Exam Total</th>
-                                <th>Final %</th>
-                                <th>Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            // Sort grades by student name
-                            usort($classGrades, function($a, $b) {
-                                $nameA = ($a['student_first_name'] ?? '') . ' ' . ($a['student_last_name'] ?? '');
-                                $nameB = ($b['student_first_name'] ?? '') . ' ' . ($b['student_last_name'] ?? '');
-                                return strcmp($nameA, $nameB);
-                            });
-                            
-                            foreach ($classGrades as $index => $grade): ?>
-                            <tr>
-                                <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($grade['student_id'] ?? '—') ?></td>
-                                <td><?= htmlspecialchars(($grade['student_first_name'] ?? '') . ' ' . ($grade['student_last_name'] ?? '')) ?></td>
-                                <td><?= htmlspecialchars($grade['subject_name'] ?? '—') ?></td>
-                                <td><?= htmlspecialchars($grade['grading_period_name'] ?? '—') ?></td>
-                                <td class="grade-cell"><?= $grade['assignment_total'] !== null ? number_format($grade['assignment_total'], 2) : '—' ?></td>
-                                <td class="grade-cell"><?= $grade['exam_total'] !== null ? number_format($grade['exam_total'], 2) : '—' ?></td>
-                                <td class="grade-cell"><?= $grade['final_percentage'] !== null ? number_format($grade['final_percentage'], 2) . '%' : '—' ?></td>
-                                <td class="grade-cell"><?= $grade['final_letter_grade'] ? htmlspecialchars($grade['final_letter_grade']) : '—' ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                    Detailed grade information is not available in this lightweight archive format.
+                    Total grade records archived: <?php echo $grades; ?>
                 </div>
-                <?php endforeach; ?>
             </div>
             <?php endif; ?>
-
             <div class="section-separator"></div>
 
             <!-- Subjects Details -->
-            <?php if (!empty($subjects)): ?>
+            <?php if ($subjects > 0): ?>
             <div class="details-section">
-                <div class="details-title">Subjects (<?php echo count($subjects); ?>)</div>
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>Subject Name</th>
-                            <th>Code</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($subjects as $subject): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($subject['name']); ?></td>
-                            <td><?php echo htmlspecialchars($subject['code'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($subject['description'] ?? '—'); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="details-title">Subjects (<?php echo $subjects; ?>)</div>
+                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                    Detailed subject information is not available in this lightweight archive format.
+                    Total subjects archived: <?php echo $subjects; ?>
+                </div>
             </div>
             <?php endif; ?>
-
             <div class="section-separator"></div>
 
             <!-- Grading Periods Details -->
-            <?php if (!empty($gradingPeriods)): ?>
+            <?php if ($gradingPeriods > 0): ?>
             <div class="details-section">
-                <div class="details-title">Grading Periods (<?php echo count($gradingPeriods); ?>)</div>
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>Period Name</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Weight</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($gradingPeriods as $period): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($period['name']); ?></td>
-                            <td><?php echo date('M j, Y', strtotime($period['start_date'])); ?></td>
-                            <td><?php echo date('M j, Y', strtotime($period['end_date'])); ?></td>
-                            <td><?php echo $period['weight'] ?? '—'; ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="details-title">Grading Periods (<?php echo $gradingPeriods; ?>)</div>
+                <div style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                    Detailed grading period information is not available in this lightweight archive format.
+                    Total grading periods archived: <?php echo $gradingPeriods; ?>
+                </div>
             </div>
             <?php endif; ?>
 

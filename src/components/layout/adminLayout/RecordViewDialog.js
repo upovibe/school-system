@@ -140,12 +140,6 @@ class RecordViewDialog extends HTMLElement {
         }
     }
 
-    formatCount(data) {
-        if (!data) return 0;
-        if (Array.isArray(data)) return data.length;
-        return 0;
-    }
-
     formatRecordType(recordType) {
         if (!recordType) return '—';
         
@@ -214,19 +208,19 @@ class RecordViewDialog extends HTMLElement {
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <div class="bg-blue-50 p-3 rounded-lg text-center">
-                                <div class="text-2xl font-bold text-blue-600">${this.formatCount(recordData.classes)}</div>
+                                <div class="text-2xl font-bold text-blue-600">${recordData.summary?.total_classes || 0}</div>
                                 <div class="text-xs text-blue-600">Classes</div>
                             </div>
                             <div class="bg-green-50 p-3 rounded-lg text-center">
-                                <div class="text-2xl font-bold text-green-600">${this.formatCount(recordData.students)}</div>
+                                <div class="text-2xl font-bold text-green-600">${recordData.summary?.total_students || 0}</div>
                                 <div class="text-xs text-green-600">Students</div>
                             </div>
                             <div class="bg-purple-50 p-3 rounded-lg text-center">
-                                <div class="text-2xl font-bold text-purple-600">${this.formatCount(recordData.teachers)}</div>
+                                <div class="text-2xl font-bold text-purple-600">${recordData.summary?.total_teachers || 0}</div>
                                 <div class="text-xs text-purple-600">Teachers</div>
                             </div>
                             <div class="bg-orange-50 p-3 rounded-lg text-center">
-                                <div class="text-2xl font-bold text-orange-600">${this.formatCount(recordData.subjects)}</div>
+                                <div class="text-2xl font-bold text-orange-600">${recordData.summary?.total_subjects || 0}</div>
                                 <div class="text-xs text-orange-600">Subjects</div>
                             </div>
                         </div>
@@ -240,14 +234,14 @@ class RecordViewDialog extends HTMLElement {
                         </div>
                         
                         <!-- Classes Section -->
-                        ${recordData.classes && recordData.classes.length > 0 ? `
+                        ${recordData.classes_summary && recordData.classes_summary.length > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Classes (${recordData.classes.length})</h5>
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Classes (${recordData.classes_summary.length})</h5>
                                 <div class="space-y-2 max-h-32 overflow-y-auto">
-                                    ${recordData.classes.map(cls => `
+                                    ${recordData.classes_summary.map(cls => `
                                         <div class="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
-                                            <span class="font-medium text-gray-900">${cls.name} ${cls.section ? `(${cls.section})` : ''}</span>
-                                            <span class="text-gray-600">${cls.student_count || 0} students</span>
+                                            <span class="font-medium text-gray-900">${cls.class_name} ${cls.class_section ? `(${cls.class_section})` : ''}</span>
+                                            <span class="text-gray-600">${cls.student_count || 0} students, ${cls.teacher_count || 0} teachers</span>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -255,75 +249,72 @@ class RecordViewDialog extends HTMLElement {
                         ` : ''}
 
                         <!-- Students Section -->
-                        ${recordData.students && recordData.students.length > 0 ? `
+                        ${recordData.summary?.total_students > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Students (${recordData.students.length})</h5>
-                                <div class="space-y-2 max-h-32 overflow-y-auto">
-                                    ${recordData.students.map(student => `
-                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
-                                            <span class="font-medium text-gray-900">${student.student_id} - ${student.first_name} ${student.last_name}</span>
-                                            <span class="text-gray-600">${student.class_name || 'Unknown Class'}</span>
-                                        </div>
-                                    `).join('')}
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Students (${recordData.summary.total_students})</h5>
+                                <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                    Student records archived for historical reference. Use the Print function to view detailed student information with grades.
                                 </div>
                             </div>
                         ` : ''}
 
                         <!-- Teachers Section -->
-                        ${recordData.teachers && recordData.teachers.length > 0 ? `
+                        ${recordData.teacher_assignments && recordData.teacher_assignments.length > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Teachers (${recordData.teachers.length})</h5>
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Teachers (${recordData.summary?.total_teachers || 0})</h5>
                                 <div class="space-y-2 max-h-32 overflow-y-auto">
-                                    ${recordData.teachers.map(teacher => `
+                                    ${recordData.teacher_assignments.slice(0, 10).map(teacher => `
                                         <div class="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
                                             <span class="font-medium text-gray-900">${teacher.first_name} ${teacher.last_name}</span>
-                                            <span class="text-gray-600">${teacher.email || 'No email'}</span>
+                                            <span class="text-gray-600">${teacher.class_name} - ${teacher.subject_name}</span>
                                         </div>
                                     `).join('')}
+                                    ${recordData.teacher_assignments.length > 10 ? `
+                                        <div class="text-xs text-gray-500 text-center p-2">
+                                            ... and ${recordData.teacher_assignments.length - 10} more assignments
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         ` : ''}
 
                         <!-- Subjects Section -->
-                        ${recordData.subjects && recordData.subjects.length > 0 ? `
+                        ${recordData.summary?.total_subjects > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Subjects (${recordData.subjects.length})</h5>
-                                <div class="space-y-2 max-h-32 overflow-y-auto">
-                                    ${recordData.subjects.map(subject => `
-                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
-                                            <span class="font-medium text-gray-900">${subject.name}</span>
-                                            <span class="text-gray-600">${subject.code || 'No code'}</span>
-                                        </div>
-                                    `).join('')}
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Subjects (${recordData.summary.total_subjects})</h5>
+                                <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                    Subject records archived for historical reference. Use the Print function to view detailed subject information.
                                 </div>
                             </div>
                         ` : ''}
 
                         <!-- Other Data Types -->
-                        ${recordData.grades && recordData.grades.length > 0 ? `
+                        ${recordData.summary?.total_grades > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Grades (${recordData.grades.length})</h5>
-                                <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">Grade records archived for historical reference</div>
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Grades (${recordData.summary.total_grades})</h5>
+                                <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                    Grade records archived for historical reference. Use the Print function to view detailed student grades by class and period.
+                                </div>
                             </div>
                         ` : ''}
 
-                        ${recordData.fees && recordData.fees.length > 0 ? `
+                        ${recordData.summary?.total_fees > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Fees (${recordData.fees.length})</h5>
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Fees (${recordData.summary.total_fees})</h5>
                                 <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">Fee schedule records archived for historical reference</div>
                             </div>
                         ` : ''}
 
-                        ${recordData.grading_periods && recordData.grading_periods.length > 0 ? `
+                        ${recordData.summary?.total_grading_periods > 0 ? `
                             <div class="mb-4">
-                                <h5 class="text-sm font-medium text-gray-700 mb-2">Grading Periods (${recordData.grading_periods.length})</h5>
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">Grading Periods (${recordData.summary.total_grading_periods})</h5>
                                 <div class="space-y-2 max-h-32 overflow-y-auto">
-                                    ${recordData.grading_periods.map(period => `
+                                    ${recordData.grading_periods ? recordData.grading_periods.map(period => `
                                         <div class="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
                                             <span class="font-medium text-gray-900">${period.name}</span>
                                             <span class="text-gray-600">${period.start_date} - ${period.end_date}</span>
                                         </div>
-                                    `).join('')}
+                                    `).join('') : '<div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">Grading period records archived for historical reference</div>'}
                                 </div>
                             </div>
                         ` : ''}
@@ -334,7 +325,7 @@ class RecordViewDialog extends HTMLElement {
                     <ui-button 
                         color="primary" 
                         onclick="this.closest('record-view-dialog').printRecord()"
-                        class="flex items-center gap-2">
+                        class="flex items-center gap-2 mr-2">
                         <i class="fas fa-print"></i>
                         Print Record
                     </ui-button>

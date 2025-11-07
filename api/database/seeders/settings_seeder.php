@@ -40,17 +40,17 @@ class SettingsSeeder
             ['setting_key' => 'font_family', 'setting_value' => 'Inter, sans-serif', 'setting_type' => 'text', 'category' => 'theme', 'description' => 'Primary font family'],
 
             // Branding Settings
-            ['setting_key' => 'application_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School name'],
+            ['setting_key' => 'application_name', 'setting_value' => 'Our School', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School Name'],
             ['setting_key' => 'application_description', 'setting_value' => 'Empowering students with quality education and fostering academic excellence for a brighter future.', 'setting_type' => 'textarea', 'category' => 'branding', 'description' => 'School description'],
-            ['setting_key' => 'application_logo', 'setting_value' => 'uploads/settings/logo_1752712977_687847114ab44.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School logo path'],
+            ['setting_key' => 'application_logo', 'setting_value' => 'uploads/settings/paystack_1762370998_690ba5b6876b8.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School logo path'],
             ['setting_key' => 'application_favicon', 'setting_value' => 'uploads/settings/favicon_1752713006_6878472e10dc2.png', 'setting_type' => 'file', 'category' => 'branding', 'description' => 'School favicon path'],
             ['setting_key' => 'application_tagline', 'setting_value' => 'Excellence in Education', 'setting_type' => 'text', 'category' => 'branding', 'description' => 'School tagline'],
 
             // Contact Settings
             ['setting_key' => 'contact_address', 'setting_value' => '123 School Street, City, Country', 'setting_type' => 'textarea', 'category' => 'contact', 'description' => 'School address'],
             ['setting_key' => 'contact_phone', 'setting_value' => '+233-54-283-8165', 'setting_type' => 'text', 'category' => 'contact', 'description' => 'Contact phone number'],
-            ['setting_key' => 'contact_email', 'setting_value' => 'info@school.com', 'setting_type' => 'text', 'category' => 'contact', 'description' => 'Contact email address'],
-            ['setting_key' => 'contact_website', 'setting_value' => 'https://school.com', 'setting_type' => 'text', 'category' => 'contact', 'description' => 'School website'],
+            ['setting_key' => 'contact_email', 'setting_value' => 'info@schoolname.com', 'setting_type' => 'text', 'category' => 'contact', 'description' => 'Contact email address'],
+            ['setting_key' => 'contact_website', 'setting_value' => 'https://schoolname.com', 'setting_type' => 'text', 'category' => 'contact', 'description' => 'School website'],
 
             // Social Media Settings
             ['setting_key' => 'facebook_url', 'setting_value' => 'https://github.com/upovibe', 'setting_type' => 'text', 'category' => 'social', 'description' => 'Facebook page URL'],
@@ -61,15 +61,15 @@ class SettingsSeeder
             ['setting_key' => 'youtube_url', 'setting_value' => 'https://github.com/upovibe', 'setting_type' => 'text', 'category' => 'social', 'description' => 'YouTube channel URL'],
 
             // Map Settings
-            ['setting_key' => 'map_location_name', 'setting_value' => 'Our School Campus', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Location name for map'],
-            ['setting_key' => 'map_address', 'setting_value' => '123 School Street, City, Country', 'setting_type' => 'textarea', 'category' => 'map', 'description' => 'Full address for map'],
-            ['setting_key' => 'map_latitude', 'setting_value' => '40.7128', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Latitude coordinate'],
-            ['setting_key' => 'map_longitude', 'setting_value' => '-74.0060', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Longitude coordinate'],
+            ['setting_key' => 'map_location_name', 'setting_value' => 'School Campus', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Location name for map'],
+            ['setting_key' => 'map_address', 'setting_value' => '123 School Street, Country', 'setting_type' => 'textarea', 'category' => 'map', 'description' => 'Full address for map'],
+            ['setting_key' => 'map_latitude', 'setting_value' => '41.7128', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Latitude coordinate'],
+            ['setting_key' => 'map_longitude', 'setting_value' => '-75.0060', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Longitude coordinate'],
             ['setting_key' => 'map_embed_url', 'setting_value' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1!2d-73.9!3d40.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQyJzAwLjAiTiA3M8KwNTQnMDAuMCJX!5e0!3m2!1sen!2sus!4v1600000000000!5m2!1sen!2sus', 'setting_type' => 'text', 'category' => 'map', 'description' => 'Google Maps embed URL'],
             ['setting_key' => 'map_zoom_level', 'setting_value' => '15', 'setting_type' => 'number', 'category' => 'map', 'description' => 'Map zoom level (1-20)'],
 
             // General Settings
-            ['setting_key' => 'footer_copyright', 'setting_value' => '© 2024 Our School. All rights reserved.', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Footer copyright text'],
+            ['setting_key' => 'footer_copyright', 'setting_value' => '© 2025 Our School. All rights reserved.', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Footer copyright text'],
             ['setting_key' => 'meta_keywords', 'setting_value' => 'school, education, learning, students', 'setting_type' => 'text', 'category' => 'general', 'description' => 'SEO meta keywords'],
             ['setting_key' => 'google_analytics', 'setting_value' => '', 'setting_type' => 'text', 'category' => 'general', 'description' => 'Google Analytics tracking code'],
             ['setting_key' => 'maintenance_mode', 'setting_value' => '0', 'setting_type' => 'boolean', 'category' => 'general', 'description' => 'Enable maintenance mode'],

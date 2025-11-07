@@ -25,7 +25,7 @@ class AcademicYearSeeder {
             return;
         }
 
-        // Sample academic year data
+        // Academic year data from JSON
         $academicYears = [
             [
                 'year_code' => '2023-2024',
@@ -42,7 +42,7 @@ class AcademicYearSeeder {
                 'start_date' => '2024-09-01',
                 'end_date' => '2025-08-31',
                 'is_active' => 1,
-                'is_current' => 1,
+                'is_current' => 0,
                 'status' => 'active'
             ],
             [
@@ -51,7 +51,7 @@ class AcademicYearSeeder {
                 'start_date' => '2025-09-01',
                 'end_date' => '2026-08-31',
                 'is_active' => 1,
-                'is_current' => 0,
+                'is_current' => 1,
                 'status' => 'active'
             ]
         ];

@@ -8,6 +8,13 @@ class Migration_20250101000003addhouseidtostudentstable {
     }
 
     public function up() {
+        // Check if house_id column already exists
+        $checkColumn = $this->pdo->query("SHOW COLUMNS FROM students LIKE 'house_id'");
+        if ($checkColumn->rowCount() > 0) {
+            echo "⚠️  Column 'house_id' already exists in students table, skipping...\n";
+            return;
+        }
+
         // Add house_id column to students table
         $this->pdo->exec("
             ALTER TABLE students 

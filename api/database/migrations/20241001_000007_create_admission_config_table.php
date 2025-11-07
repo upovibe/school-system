@@ -101,15 +101,25 @@ class Migration_20241001000007createadmissionconfigtable {
         $currentYear = $currentYearStmt->fetch(PDO::FETCH_ASSOC);
         $academicYearId = $currentYear ? $currentYear['id'] : null;
 
-        // Only insert config if there's an active academic year
+        // Only insert config if there's an active academic year and config doesn't already exist
         if ($academicYearId) {
+            // Check if config already exists for this academic year
+            $checkStmt = $this->pdo->prepare("SELECT id FROM admission_config WHERE academic_year_id = ? LIMIT 1");
+            $checkStmt->execute([$academicYearId]);
+            
+            if ($checkStmt->fetch()) {
+                echo "⚠️  Admission config already exists for academic year ID {$academicYearId}, skipping...\n";
+                return;
+            }
+
             $stmt = $this->pdo->prepare("
                 INSERT INTO admission_config (
-                    academic_year_id, school_types, enabled_levels, level_classes, shs_programmes,
+                    academic_year_id, admission_status, max_applications_per_ip_per_day,
+                    school_types, enabled_levels, level_classes, shs_programmes,
                     student_info_fields, parent_guardian_fields, academic_background_fields, health_info_fields
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, 'open', 3, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([
+            $result = $stmt->execute([
                 $academicYearId,
                 $schoolTypes,
                 $enabledLevels,
@@ -120,6 +130,14 @@ class Migration_20241001000007createadmissionconfigtable {
                 $academicBackgroundFields,
                 $healthInfoFields
             ]);
+            
+            if ($result) {
+                echo "✅ Admission config created for academic year ID {$academicYearId}\n";
+            } else {
+                echo "❌ Failed to create admission config\n";
+            }
+        } else {
+            echo "⚠️  No current academic year found. Admission config will be created when an academic year is set as current.\n";
         }
     }
 

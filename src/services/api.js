@@ -23,6 +23,29 @@ const apiClient = axios.create({
     },
 });
 
+// Helper function to handle 401 errors
+function handle401Error() {
+    // Clear authentication data immediately
+    try {
+        localStorage.removeItem('userData');
+        localStorage.removeItem('token');
+        localStorage.removeItem('requiresPasswordChange');
+        localStorage.removeItem('lastActivity');
+        localStorage.removeItem('sessionStart');
+        localStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('session_active');
+    } catch (error) {
+        console.error('Error clearing auth storage:', error);
+    }
+    
+    // Set flag to prevent further rendering
+    sessionStorage.setItem('auth_redirecting', 'true');
+    
+    // Use replace instead of href to prevent back button issues
+    // This is more immediate than router navigation
+    window.location.replace('/auth/login');
+}
+
 // --- API Methods ---
 
 const api = {
@@ -116,6 +139,17 @@ const api = {
             },
         });
 
+        // Add interceptor for authenticated requests to handle 401 errors
+        authedApiClient.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response && error.response.status === 401) {
+                    handle401Error();
+                }
+                return Promise.reject(error);
+            }
+        );
+
         return {
             get: (endpoint, params = {}) => authedApiClient.get(endpoint, { params }),
             post: (endpoint, data) => {
@@ -156,18 +190,17 @@ const api = {
     },
 };
 
-// --- Centralized Error Handling (Example) ---
-// Intercept all responses to handle errors globally if needed
+// --- Centralized Error Handling ---
+// Intercept all responses to handle errors globally
 apiClient.interceptors.response.use(
     (response) => response, // Any status code within 2xx cause this function to trigger
     (error) => {
         // Any status codes outside 2xx cause this function to trigger
         console.error('API Error:', error.response || error.message);
         
-        // You could add logic here to redirect to a login page on 401 Unauthorized errors
+        // Handle 401 Unauthorized errors - redirect to login
         if (error.response && error.response.status === 401) {
-            // Example: Clear user data and redirect to login
-            // window.router.navigate('/login'); 
+            handle401Error();
         }
 
         return Promise.reject(error);

@@ -28,10 +28,17 @@ class DashboardLayout extends App {
 
     async connectedCallback() {
         super.connectedCallback();
+        
+        // Check if we're in the middle of an auth redirect
+        if (sessionStorage.getItem('auth_redirecting') === 'true') {
+            sessionStorage.removeItem('auth_redirecting');
+            return; // Don't render anything, redirect is happening
+        }
+        
         document.title = 'Dashboard | School System';
         await this.fetchLogoSetting();
         await this.fetchColorSettings();
-        this.loadUserData();
+        await this.loadUserData();
         this.setupEventListeners();
         this.checkPasswordChangeRequirement();
         
@@ -67,7 +74,12 @@ class DashboardLayout extends App {
                 const role = (storedUser?.role || apiUser?.role || '').toString().toLowerCase();
                 this.currentUser = { ...apiUser, ...storedUser, role };
             } catch (error) {
-                // If API fails, fallback entirely to localStorage
+                // If 401 error, the interceptor will handle redirect
+                // Don't render anything if we're redirecting
+                if (error.response && error.response.status === 401) {
+                    return; // Exit early, redirect is happening
+                }
+                // If API fails for other reasons, fallback entirely to localStorage
                 this.currentUser = storedUser;
             }
         } else {

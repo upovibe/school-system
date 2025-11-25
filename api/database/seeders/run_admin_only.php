@@ -2,7 +2,7 @@
 // api/database/seeders/run_admin_only.php - Standalone script to seed admin user only
 
 // Include database connection
-require_once __DIR__ . '/../../core/database/connection.php';
+require_once __DIR__ . '/../connection.php';
 
 // Include the admin only seeder
 require_once __DIR__ . '/admin_only_seeder.php';
